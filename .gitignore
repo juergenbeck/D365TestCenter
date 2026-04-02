@@ -1,0 +1,32 @@
+# Build output
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.nupkg
+
+# IDE
+.vs/
+.vscode/settings.json
+.idea/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# NuGet
+packages/
+
+# Logs
+*.log
+
+# Temporary
+*.tmp
+*.bak
