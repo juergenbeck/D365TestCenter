@@ -1684,77 +1684,6 @@ const _sharedIttMeta = {
             { LogicalName: "parentaccountid", DisplayName: { UserLocalizedLabel: { Label: "Parent Account" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
             { LogicalName: "createdon", DisplayName: { UserLocalizedLabel: { Label: "Created On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
             { LogicalName: "modifiedon", DisplayName: { UserLocalizedLabel: { Label: "Modified On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
-            // Markant custom fields
-            { LogicalName: "markant_accountdatafinal", DisplayName: { UserLocalizedLabel: { Label: "Account data final" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_accounttypecode", DisplayName: { UserLocalizedLabel: { Label: "Account Type" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_address", DisplayName: { UserLocalizedLabel: { Label: "Address" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_address1_countryid", DisplayName: { UserLocalizedLabel: { Label: "Country" } }, AttributeType: "LookupType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_address2_countryid", DisplayName: { UserLocalizedLabel: { Label: "Post Office Box: Country" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_cbid", DisplayName: { UserLocalizedLabel: { Label: "CB" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_checkcompanynamededupcode", DisplayName: { UserLocalizedLabel: { Label: "Company name deduplication check" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_checkcompanynamepartnerpoolcode", DisplayName: { UserLocalizedLabel: { Label: "Company Name Partnerpool Check" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_customergroupcode", DisplayName: { UserLocalizedLabel: { Label: "Customer group" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_customerhasecrcontract", DisplayName: { UserLocalizedLabel: { Label: "has ECS Contract" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_customertypefreshdesk", DisplayName: { UserLocalizedLabel: { Label: "Customer type Freshdesk" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_customertypemulticode", DisplayName: { UserLocalizedLabel: { Label: "Commercial Groups" } }, AttributeType: "MultiSelectPicklistType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_dataqualityscore", DisplayName: { UserLocalizedLabel: { Label: "Data Quality Score" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_dataqualityscoreintfx", DisplayName: { UserLocalizedLabel: { Label: "Data Quality Score (Whole number)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_facebook", DisplayName: { UserLocalizedLabel: { Label: "Facebook" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_foodnonfoodcode", DisplayName: { UserLocalizedLabel: { Label: "Food / Nonfood" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskcreationerror", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk Creation Error" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskerrormessage", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk Error Message" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskid", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_furtherkins", DisplayName: { UserLocalizedLabel: { Label: "Further KINs" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionconfigid", DisplayName: { UserLocalizedLabel: { Label: "Retention Category" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionstart", DisplayName: { UserLocalizedLabel: { Label: "Retention Start" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionuntil", DisplayName: { UserLocalizedLabel: { Label: "Retention Until" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprstatuscode", DisplayName: { UserLocalizedLabel: { Label: "GDPR Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gln", DisplayName: { UserLocalizedLabel: { Label: "GLN" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_groupofcompaniescode", DisplayName: { UserLocalizedLabel: { Label: "Group of Companies" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_hasannualreview", DisplayName: { UserLocalizedLabel: { Label: "Annual Review" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_hierarchylevelcode", DisplayName: { UserLocalizedLabel: { Label: "Hierarchylevel" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_if_import_source", DisplayName: { UserLocalizedLabel: { Label: "IF Import Source" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_industryaffiliationcode", DisplayName: { UserLocalizedLabel: { Label: "Industry affiliation" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_instagram", DisplayName: { UserLocalizedLabel: { Label: "Instagram" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isfirstmover", DisplayName: { UserLocalizedLabel: { Label: "First Mover MNET Fusion" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_istestdata", DisplayName: { UserLocalizedLabel: { Label: "Is Test Dataset" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_kin", DisplayName: { UserLocalizedLabel: { Label: "KIN" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_lastupdatedpartnerpool", DisplayName: { UserLocalizedLabel: { Label: "Last Update (Partner Pool)" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_lastupdatequalificationlevel", DisplayName: { UserLocalizedLabel: { Label: "Last Update (Qualification level)" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_linkedin", DisplayName: { UserLocalizedLabel: { Label: "LinkedIn" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mandanten", DisplayName: { UserLocalizedLabel: { Label: "Client(s)" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_markantcompany", DisplayName: { UserLocalizedLabel: { Label: "Markant Company" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_markantid", DisplayName: { UserLocalizedLabel: { Label: "Markant ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_masterkin", DisplayName: { UserLocalizedLabel: { Label: "Master KIN" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mastertradingpartner", DisplayName: { UserLocalizedLabel: { Label: "Master Trading Partner" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_membershipcode", DisplayName: { UserLocalizedLabel: { Label: "Member" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetid", DisplayName: { UserLocalizedLabel: { Label: "MNET ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetkin", DisplayName: { UserLocalizedLabel: { Label: "KIN (from Mnet)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Mnet Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_negotiationteamid", DisplayName: { UserLocalizedLabel: { Label: "Negotiation team" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_partnerpooldatasource", DisplayName: { UserLocalizedLabel: { Label: "Datasource (Partner Pool)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_partnerpoolresponse", DisplayName: { UserLocalizedLabel: { Label: "Response (Partner Pool)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_partnerpoolresponseextended", DisplayName: { UserLocalizedLabel: { Label: "Extended Response (Partner Pool)" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformcustomernumber", DisplayName: { UserLocalizedLabel: { Label: "Platform Customer Number" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformid", DisplayName: { UserLocalizedLabel: { Label: "Platform ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformprogresscode", DisplayName: { UserLocalizedLabel: { Label: "Platform Progress" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Platform Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_potential", DisplayName: { UserLocalizedLabel: { Label: "Potential" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_qualificationlevelcode", DisplayName: { UserLocalizedLabel: { Label: "Qualification level" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_relationshipstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Relationship status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_sourcesystemcode", DisplayName: { UserLocalizedLabel: { Label: "Source system" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_tax_number", DisplayName: { UserLocalizedLabel: { Label: "Tax No." } }, AttributeType: "StringType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_testscenarioid", DisplayName: { UserLocalizedLabel: { Label: "Test Scenario" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_tiktok", DisplayName: { UserLocalizedLabel: { Label: "Tik Tok" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_traderegister", DisplayName: { UserLocalizedLabel: { Label: "Trade register" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_traderegisternumber", DisplayName: { UserLocalizedLabel: { Label: "Trade register number" } }, AttributeType: "StringType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_trigger_freshdesksync_date", DisplayName: { UserLocalizedLabel: { Label: "Trigger Freshdesk Sync" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_typeforaddresscode", DisplayName: { UserLocalizedLabel: { Label: "Address type" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_validatedglns", DisplayName: { UserLocalizedLabel: { Label: "Validated GLNs" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_validatedon", DisplayName: { UserLocalizedLabel: { Label: "Validated on" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_validationstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Validationstatus" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_vat_number", DisplayName: { UserLocalizedLabel: { Label: "VAT No." } }, AttributeType: "StringType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_xing", DisplayName: { UserLocalizedLabel: { Label: "Xing" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true }
         ],
         contact: [
             // Standard OOB fields
@@ -1783,153 +1712,6 @@ const _sharedIttMeta = {
             { LogicalName: "statuscode", DisplayName: { UserLocalizedLabel: { Label: "Status Reason" } }, AttributeType: "StatusType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
             { LogicalName: "createdon", DisplayName: { UserLocalizedLabel: { Label: "Created On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
             { LogicalName: "modifiedon", DisplayName: { UserLocalizedLabel: { Label: "Modified On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
-            // Markant custom fields
-            { LogicalName: "markant_academictitle", DisplayName: { UserLocalizedLabel: { Label: "Academic Title" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_address1_countryid", DisplayName: { UserLocalizedLabel: { Label: "Country (business)" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_address2_countryid", DisplayName: { UserLocalizedLabel: { Label: "Country (alternative)" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_adresse", DisplayName: { UserLocalizedLabel: { Label: "Address" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_allowinggenericemail", DisplayName: { UserLocalizedLabel: { Label: "Allowing Generic Email Adress" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_birthdayplace", DisplayName: { UserLocalizedLabel: { Label: "Birthday Place" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_bouncestatuscode", DisplayName: { UserLocalizedLabel: { Label: "Bounce Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_businesscard", DisplayName: { UserLocalizedLabel: { Label: "Businesscard" } }, AttributeType: "ImageType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_changeprivateaddresscode", DisplayName: { UserLocalizedLabel: { Label: "Change private Address" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_communicationlanguageid", DisplayName: { UserLocalizedLabel: { Label: "Communication language" } }, AttributeType: "LookupType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true },
-            { LogicalName: "markant_companynametext", DisplayName: { UserLocalizedLabel: { Label: "Company Name (Text)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_consentedversion", DisplayName: { UserLocalizedLabel: { Label: "Consented version" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_contactnumber", DisplayName: { UserLocalizedLabel: { Label: "Contact Number" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_contactofleadid", DisplayName: { UserLocalizedLabel: { Label: "Contact of Lead" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_contactsourceupdatedon", DisplayName: { UserLocalizedLabel: { Label: "Contact Source Updated On (FG)" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_dataqualityscore", DisplayName: { UserLocalizedLabel: { Label: "Data Quality Score" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_dataqualityscoreintfx", DisplayName: { UserLocalizedLabel: { Label: "Data Quality Score (Whole number)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_department", DisplayName: { UserLocalizedLabel: { Label: "markant Department" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_departmentmulticode", DisplayName: { UserLocalizedLabel: { Label: "Department (Markant)" } }, AttributeType: "MultiSelectPicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_email_mnet", DisplayName: { UserLocalizedLabel: { Label: "Email (Mnet)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_email_pisa", DisplayName: { UserLocalizedLabel: { Label: "Email (Pisa)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_email_platform", DisplayName: { UserLocalizedLabel: { Label: "Email (Platform)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_facebook", DisplayName: { UserLocalizedLabel: { Label: "Facebook" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_fieldgovernancelasterror", DisplayName: { UserLocalizedLabel: { Label: "Field Governance Last Error" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_fieldgovernancelastprocessedon", DisplayName: { UserLocalizedLabel: { Label: "Field Governance Last Processed On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_fieldgovernancerequestcode", DisplayName: { UserLocalizedLabel: { Label: "Field Governance Request" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_fieldgovernancerequestedon", DisplayName: { UserLocalizedLabel: { Label: "Field Governance Requested On" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_formalsalutationgerman", DisplayName: { UserLocalizedLabel: { Label: "Formal salutation (german)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_foundduplicatesgoldenrecord", DisplayName: { UserLocalizedLabel: { Label: "Found Duplicates" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_foundmaster", DisplayName: { UserLocalizedLabel: { Label: "Found Master" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskcreationerror", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk Creation Error" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskerrormessage", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk Error Message" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_freshdeskid", DisplayName: { UserLocalizedLabel: { Label: "Freshdesk ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionconfigid", DisplayName: { UserLocalizedLabel: { Label: "Retention Category" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionstart", DisplayName: { UserLocalizedLabel: { Label: "Retention Start" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprretentionuntil", DisplayName: { UserLocalizedLabel: { Label: "Retention Until" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gdprstatuscode", DisplayName: { UserLocalizedLabel: { Label: "GDPR Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_gln_contact", DisplayName: { UserLocalizedLabel: { Label: "GLN" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_goldenrecordid", DisplayName: { UserLocalizedLabel: { Label: "Golden Record ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_goldenrecordidnumber", DisplayName: { UserLocalizedLabel: { Label: "Golden Record ID Autonumber" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_grantedondate", DisplayName: { UserLocalizedLabel: { Label: "Granted" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_hasconsent", DisplayName: { UserLocalizedLabel: { Label: "Consent" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_hastracking", DisplayName: { UserLocalizedLabel: { Label: "Tracking" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_identifikationcode", DisplayName: { UserLocalizedLabel: { Label: "Identifikation" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_if_import_source", DisplayName: { UserLocalizedLabel: { Label: "IF Import Source" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_informationisgiven", DisplayName: { UserLocalizedLabel: { Label: "Information given" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_instagram", DisplayName: { UserLocalizedLabel: { Label: "Instagram" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isauthorizedtosign", DisplayName: { UserLocalizedLabel: { Label: "Authorized to sign" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isderivingaddress1fromaccount", DisplayName: { UserLocalizedLabel: { Label: "Derive Address 1 from Account" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceadministrationofspecialoffers", DisplayName: { UserLocalizedLabel: { Label: "Administration of Special Offers" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicecomplaintsubmission", DisplayName: { UserLocalizedLabel: { Label: "Complaint Submission (WebRekla)" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceconditiondataelki", DisplayName: { UserLocalizedLabel: { Label: "Condition Data ELKI" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicecrisismanagerdatabase", DisplayName: { UserLocalizedLabel: { Label: "Crisis Manager Database" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicedigidoconline", DisplayName: { UserLocalizedLabel: { Label: "DigiDoc Online" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceecmpublicwebservices", DisplayName: { UserLocalizedLabel: { Label: "ECM Public Web Services" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceecsmasterdata", DisplayName: { UserLocalizedLabel: { Label: "ECS Master Data" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceedidashboard", DisplayName: { UserLocalizedLabel: { Label: "EDI Dashboard" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceeinvoicingonboardingoverview", DisplayName: { UserLocalizedLabel: { Label: "E-Invoicing Onboarding Overview" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceemdstatistic", DisplayName: { UserLocalizedLabel: { Label: "EMD Statistic" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicehandlingtradeforum", DisplayName: { UserLocalizedLabel: { Label: "Handling Trade Forum" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceinformationplatform", DisplayName: { UserLocalizedLabel: { Label: "Information Platform" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceinformationplatformonline", DisplayName: { UserLocalizedLabel: { Label: "Information Platform Online" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceinsolvencyliquidationsplatform", DisplayName: { UserLocalizedLabel: { Label: "Insolvency & Liquidations Platform" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceisae3402reports", DisplayName: { UserLocalizedLabel: { Label: "ISAE 3402 Reports" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemareko", DisplayName: { UserLocalizedLabel: { Label: "MAREKO" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemarekoanalytics", DisplayName: { UserLocalizedLabel: { Label: "MAREKO Analytics" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemarkantpricemonitor", DisplayName: { UserLocalizedLabel: { Label: "Markant Price Monitor" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemarketinsightsforum", DisplayName: { UserLocalizedLabel: { Label: "Market Insights Forum" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicempim", DisplayName: { UserLocalizedLabel: { Label: "m.PIM" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicempimfree", DisplayName: { UserLocalizedLabel: { Label: "m.PIM free" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemrostatistic", DisplayName: { UserLocalizedLabel: { Label: "MRO Statistic" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemrosystem", DisplayName: { UserLocalizedLabel: { Label: "MRO System" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicemrox", DisplayName: { UserLocalizedLabel: { Label: "MRO X" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceoneglobe", DisplayName: { UserLocalizedLabel: { Label: "One Globe" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceonlinearchive", DisplayName: { UserLocalizedLabel: { Label: "Online Archive" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicepartnerdatarala", DisplayName: { UserLocalizedLabel: { Label: "Partner data RALA" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicepersonaluseportal", DisplayName: { UserLocalizedLabel: { Label: "Personal Use Portal" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicepimmedia", DisplayName: { UserLocalizedLabel: { Label: "PIM Media" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceserviceforeurocapitalinvestag", DisplayName: { UserLocalizedLabel: { Label: "Service for Eurocapital Invest AG" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceshareplace", DisplayName: { UserLocalizedLabel: { Label: "SharePlace" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseserviceshelfpricemonitor", DisplayName: { UserLocalizedLabel: { Label: "Shelf Price Monitor" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicesustainabilityservicesapi", DisplayName: { UserLocalizedLabel: { Label: "Sustainability Services API" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicetenderandauctiontool", DisplayName: { UserLocalizedLabel: { Label: "Tender and Auction Tool" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicetradeforum", DisplayName: { UserLocalizedLabel: { Label: "Trade Forum" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicevoilathestartuparena", DisplayName: { UserLocalizedLabel: { Label: "voila! The Start Up Arena" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_iseservicewebedi20", DisplayName: { UserLocalizedLabel: { Label: "Web-EDI 2.0" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isfirstmover", DisplayName: { UserLocalizedLabel: { Label: "First Mover MNET Fusion" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isincludedinvisitreport", DisplayName: { UserLocalizedLabel: { Label: "Included in visit report" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ismailbox", DisplayName: { UserLocalizedLabel: { Label: "Is E-Mail Box?" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ismarkantemployee", DisplayName: { UserLocalizedLabel: { Label: "Markant Employee" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ismaster", DisplayName: { UserLocalizedLabel: { Label: "Is Main Contact?" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ismnetadmin", DisplayName: { UserLocalizedLabel: { Label: "mnet-Admin" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ismnetuser", DisplayName: { UserLocalizedLabel: { Label: "mnet-User" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_ispimservicebooked", DisplayName: { UserLocalizedLabel: { Label: "PIM service booked?" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_isplatformcontact", DisplayName: { UserLocalizedLabel: { Label: "Is Platform Contact?" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_issendemailtrackingconsent", DisplayName: { UserLocalizedLabel: { Label: "E-Mail Tracking Consent sent" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_istestdata", DisplayName: { UserLocalizedLabel: { Label: "Is Test Dataset" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_kin", DisplayName: { UserLocalizedLabel: { Label: "KIN" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_linkedin", DisplayName: { UserLocalizedLabel: { Label: "LinkedIn" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_maincontactpersoncode", DisplayName: { UserLocalizedLabel: { Label: "Main contact person for Markant" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_marketingcampaignoptionmulticode", DisplayName: { UserLocalizedLabel: { Label: "Marketing Campaign Options" } }, AttributeType: "MultiSelectPicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_marketingcampaigntextfield", DisplayName: { UserLocalizedLabel: { Label: "Marketing Campaign Textfield" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mastercontactid", DisplayName: { UserLocalizedLabel: { Label: "Main contact" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mergingnote", DisplayName: { UserLocalizedLabel: { Label: "Merging note" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetentrydate", DisplayName: { UserLocalizedLabel: { Label: "Mnet Entry date" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetid", DisplayName: { UserLocalizedLabel: { Label: "MNET ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetposition", DisplayName: { UserLocalizedLabel: { Label: "Mnet Position" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_mnetstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Mnet Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_nationalitycode", DisplayName: { UserLocalizedLabel: { Label: "Nationality" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_oneglobeevents", DisplayName: { UserLocalizedLabel: { Label: "One Globe Events" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_oneglobeinterest", DisplayName: { UserLocalizedLabel: { Label: "One Globe Interest" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_oneglobelastchangedate", DisplayName: { UserLocalizedLabel: { Label: "OneGlobe Last Change Date" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_opportunitytestproductid", DisplayName: { UserLocalizedLabel: { Label: "Opportunity Test product" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_organizationalunitcode", DisplayName: { UserLocalizedLabel: { Label: "Organizational Unit" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_originofcontactcode", DisplayName: { UserLocalizedLabel: { Label: "Origin of contact" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_pisa_if_changedate", DisplayName: { UserLocalizedLabel: { Label: "Pisa IF Change Date" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_pisadeletedate", DisplayName: { UserLocalizedLabel: { Label: "Pisa Delete Date" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_pisanumber", DisplayName: { UserLocalizedLabel: { Label: "Pisa Number" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_pisastatuscode", DisplayName: { UserLocalizedLabel: { Label: "Pisa Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformid", DisplayName: { UserLocalizedLabel: { Label: "Platform ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformrole", DisplayName: { UserLocalizedLabel: { Label: "Platform role" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_platformstatuscode", DisplayName: { UserLocalizedLabel: { Label: "Platform Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_position", DisplayName: { UserLocalizedLabel: { Label: "Position" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_positioncode", DisplayName: { UserLocalizedLabel: { Label: "Function" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_positionlevelcode", DisplayName: { UserLocalizedLabel: { Label: "Position Level" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_positionroleid", DisplayName: { UserLocalizedLabel: { Label: "Position (Role)" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_qualitytested", DisplayName: { UserLocalizedLabel: { Label: "Quality tested" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_reasonforconsentcode", DisplayName: { UserLocalizedLabel: { Label: "Reason for Consent" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_reasonforsigningoffcode", DisplayName: { UserLocalizedLabel: { Label: "Reason for signing off" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_sourceimport", DisplayName: { UserLocalizedLabel: { Label: "Information Source import" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_sourcesystemcode", DisplayName: { UserLocalizedLabel: { Label: "Source system" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_telephone_mnet", DisplayName: { UserLocalizedLabel: { Label: "Phone (Mnet)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_telephone_pisa", DisplayName: { UserLocalizedLabel: { Label: "Phone (Pisa)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_telephone_platform", DisplayName: { UserLocalizedLabel: { Label: "Phone (Platform)" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_testscenarioid", DisplayName: { UserLocalizedLabel: { Label: "Test Scenario" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_tiktok", DisplayName: { UserLocalizedLabel: { Label: "Tik Tok" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_timestampinformationprovidedondate", DisplayName: { UserLocalizedLabel: { Label: "Timestamp information provided" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_trackinggrantedondate", DisplayName: { UserLocalizedLabel: { Label: "Tracking granted" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_trackingwithdrawnondate", DisplayName: { UserLocalizedLabel: { Label: "Tracking withdrawn" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_trigger_freshdesksync_date", DisplayName: { UserLocalizedLabel: { Label: "Trigger Freshdesk Sync" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_typeforaddresscode", DisplayName: { UserLocalizedLabel: { Label: "Address type" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_uuid", DisplayName: { UserLocalizedLabel: { Label: "UU ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_validatedondate", DisplayName: { UserLocalizedLabel: { Label: "Validated on" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_validationresultgoldenrecordcode", DisplayName: { UserLocalizedLabel: { Label: "Validierungsergebnis Golden Record" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_withdrawnondate", DisplayName: { UserLocalizedLabel: { Label: "Withdrawn" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true },
-            { LogicalName: "markant_xing", DisplayName: { UserLocalizedLabel: { Label: "XING" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true }
         ],
         lead: [
             { LogicalName: "leadid", DisplayName: { UserLocalizedLabel: { Label: "Lead ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false },
@@ -2090,11 +1872,54 @@ const _sharedIttMeta = {
 };
 
 // ================================================================
+//  Demo-Metadata-Loader: Externe JSON-Dateien für Demo-Metadaten
+// ================================================================
+// Demo-Metadaten (zusätzliche Entities und Attribute) werden aus
+// packs/demo-*.json geladen und in _sharedIttMeta gemerged.
+// So kann jedes Projekt eigene Demo-Metadaten mitliefern.
+
+async function _loadDemoMetadata() {
+    const demoFiles = ["packs/demo-standard.json"];
+    for (const file of demoFiles) {
+        try {
+            const resp = await fetch(file);
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            // Merge additional entities
+            if (data.additionalEntities) {
+                for (const ent of data.additionalEntities) {
+                    if (!_sharedIttMeta.entities.find(e => e.LogicalName === ent.LogicalName)) {
+                        _sharedIttMeta.entities.push(ent);
+                    }
+                }
+            }
+            // Merge additional attributes
+            if (data.additionalAttributes) {
+                for (const [entity, attrs] of Object.entries(data.additionalAttributes)) {
+                    if (!_sharedIttMeta.attributes[entity]) {
+                        _sharedIttMeta.attributes[entity] = attrs;
+                    } else {
+                        const existing = new Set(_sharedIttMeta.attributes[entity].map(a => a.LogicalName));
+                        for (const attr of attrs) {
+                            if (!existing.has(attr.LogicalName)) {
+                                _sharedIttMeta.attributes[entity].push(attr);
+                            }
+                        }
+                    }
+                }
+            }
+            ITTLog.info("DemoMeta", "Loaded: " + file + " (" + (data.additionalEntities?.length || 0) + " entities, " + Object.keys(data.additionalAttributes || {}).length + " entity attributes)");
+        } catch (e) {
+            // Silently skip if file not found (e.g. in live mode)
+        }
+    }
+}
+
+// ================================================================
 //  Pack-Loader: Externe JSON-Dateien
 // ================================================================
 // Packs werden dynamisch aus packs/*.json geladen statt hardcodiert.
-// _sharedIttMeta (oben) bleibt unverändert und wird bei Metadaten-Abfragen
-// mit den Pack-spezifischen Attributen zusammengeführt.
+// _sharedIttMeta wird mit den Pack-spezifischen Attributen zusammengeführt.
 
 const DemoPacks = {};
 let DemoData = null;
@@ -8806,6 +8631,9 @@ function updatePackIndicator() {
 async function activateDemoMode() {
     _demoModeActive = true;
     console.log("Integration Test Center: Demo-Modus aktiviert");
+
+    // Demo-Metadaten aus externen JSON-Dateien laden (packs/demo-*.json)
+    await _loadDemoMetadata();
 
     // Packs aus externen JSON-Dateien laden
     await PackLoader.loadAll();
