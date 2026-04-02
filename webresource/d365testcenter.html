@@ -1622,6 +1622,61 @@ const CONFIG = {
     },
     actions: {
         runTests: "itt_RunIntegrationTests"
+    },
+    // User story link pattern. {key} is replaced with the story ID.
+    // Set to "" to disable links. Examples:
+    //   "https://your-org.atlassian.net/browse/{key}"
+    //   "https://dev.azure.com/org/project/_workitems/edit/{key}"
+    storyLinkPattern: "",
+    // Governance configuration: customize for your plugin chain.
+    // These settings control the async polling and auto-date-fields behavior.
+    governance: {
+        // The entity that receives source data (e.g. ContactSource)
+        sourceEntity: "markant_cdh_contactsources",
+        sourceEntitySet: "markant_cdh_contactsources",
+        // The logging entity that the governance plugin writes to
+        loggingEntity: "markant_cdh_loggings",
+        loggingEntitySet: "markant_cdh_loggings",
+        // Primary key and display name fields on the logging entity
+        loggingPk: "markant_cdh_loggingid",
+        loggingName: "markant_name",
+        loggingDiagnostics: "markant_diagonstics_text",
+        // Lookup from source entity to contact
+        contactLookup: "markant_contactid",
+        contactLookupOdata: "_markant_contactid_value",
+        // Lookup from logging to source
+        sourceIdLookup: "_markant_cdhcontactsourceid_value",
+        // Default Custom API for governance trigger
+        governanceApi: "markant_RunFieldGovernanceForContact",
+        // Source system field on source entity
+        sourceSystemField: "markant_sourcesystem",
+        // ExternalId field (used for timestamp guard detection)
+        externalIdField: "markant_externalid",
+        // Fields that trigger auto-date-setting (governance timestamp mappings).
+        // Key = value field, Value = corresponding _modifiedondate timestamp field.
+        autoDateFields: {
+            "markant_firstname":               "markant_cdh_firstname_modifiedondate",
+            "markant_lastname":                "markant_cdh_lastname_modifiedondate",
+            "markant_emailaddress1":           "markant_cdh_emailaddress1_modifiedondate",
+            "markant_gendercode":              "markant_cdh_gendercode_modifiedondate",
+            "markant_jobtitle":                "markant_cdh_markant_jobtitle_modifiedondate",
+            "markant_telephone1":              "markant_cdh_markant_telephone1_modifiedondate",
+            "markant_telephone2":              "markant_cdh_markant_telephone2_modifiedondate",
+            "markant_mobilephone":             "markant_cdh_markant_mobilephone_modifiedondate",
+            "markant_middlename":              "markant_cdh_middlename_modifiedondate",
+            "markant_academictitle":           "markant_cdh_academictitle_modifiedondate",
+            "markant_parentcustomerid":        "markant_cdh_parentcustomerid_modifiedondate",
+            "markant_communicationlanguageid": "markant_cdh_communicationlanguageid_modifiedon"
+        },
+        // Lookup fields that need _value suffix in OData queries
+        lookupFields: [
+            "markant_contactid",
+            "markant_parentcustomerid"
+        ],
+        // Polling settings
+        pollingIntervalMs: 2000,
+        pollingTimeoutMs: 120000,
+        pollingInitialDelayMs: 1500
     }
 };
 
@@ -2657,21 +2712,8 @@ const PlaceholderResolver = {
 /* ====== Visual Editor: FieldRegistry ====== */
 
 const FieldRegistry = {
-    // Date-field mapping (mirrors StepExecutor._autoSetDateFields)
-    DATE_MAPPING: {
-        "markant_firstname":              "markant_cdh_firstname_modifiedondate",
-        "markant_lastname":               "markant_cdh_lastname_modifiedondate",
-        "markant_emailaddress1":          "markant_cdh_emailaddress1_modifiedondate",
-        "markant_gendercode":             "markant_cdh_gendercode_modifiedondate",
-        "markant_jobtitle":               "markant_cdh_markant_jobtitle_modifiedondate",
-        "markant_telephone1":             "markant_cdh_markant_telephone1_modifiedondate",
-        "markant_telephone2":             "markant_cdh_markant_telephone2_modifiedondate",
-        "markant_mobilephone":            "markant_cdh_markant_mobilephone_modifiedondate",
-        "markant_middlename":             "markant_cdh_middlename_modifiedondate",
-        "markant_academictitle":          "markant_cdh_academictitle_modifiedondate",
-        "markant_parentcustomerid":       "markant_cdh_parentcustomerid_modifiedondate",
-        "markant_communicationlanguageid":"markant_cdh_communicationlanguageid_modifiedon"
-    },
+    // Date-field mapping (from CONFIG.governance.autoDateFields)
+    DATE_MAPPING: CONFIG.governance.autoDateFields,
 
     // FG-relevant fields for ContactSource cards
     _fgFields: null,
@@ -2708,11 +2750,11 @@ const FieldRegistry = {
 
     getFieldsForContactSource() {
         return [
-            { logicalName: "markant_sourcesystemcode", displayName: "Source System", type: "PicklistType" },
-            { logicalName: "markant_externalid", displayName: "External ID", type: "StringType" },
+            { logicalName: CONFIG.governance.sourceSystemField, displayName: "Source System", type: "PicklistType" },
+            { logicalName: CONFIG.governance.externalIdField, displayName: "External ID", type: "StringType" },
             { logicalName: "contactid@odata.bind", displayName: "Contact (Bind)", type: "LookupBind" },
             ...this._getFgFields(),
-            { logicalName: "markant_cdh_requestcode", displayName: "Request Code", type: "PicklistType" }
+            { logicalName: "requestcode", displayName: "Request Code", type: "PicklistType" }
         ];
     },
 
@@ -2809,7 +2851,7 @@ const EditorModel = {
             for (const src of sources) {
                 this._data.preconditions.push({
                     _id: this._uid(),
-                    entity: "markant_cdh_contactsources",
+                    entity: CONFIG.governance.sourceEntitySet,
                     alias: src.alias || "",
                     fields: { ...(src.fields || {}) },
                     sourceSystem: src.sourceSystem || null,
@@ -2868,7 +2910,7 @@ const EditorModel = {
                 ent.LogicalName === e || ent.EntitySetName === e || ent.LogicalName === entity);
             if (meta?.EntitySetName) return meta.EntitySetName;
         }
-        // Already correct (e.g. "markant_cdhcontactsources", "accounts") or unknown
+        // Already correct (e.g. standard entity set name) or unknown
         return entity;
     },
 
@@ -3089,8 +3131,10 @@ const EditorModel = {
 
     // Auto-generate alias from entity
     generateAlias(entity) {
-        const base = entity.toLowerCase().includes("contactsource") ? "" :
-                     entity.toLowerCase().replace("markant_cdh_", "").replace("markant_", "");
+        const lower = entity.toLowerCase();
+        const govEntity = CONFIG.governance.sourceEntity.toLowerCase();
+        const base = lower === govEntity || lower.includes("contactsource") ? "" :
+                     lower.replace(CONFIG.prefix + "_", "");
         const existing = [...this._data.preconditions, ...this._data.steps].map(x => x.alias);
         let name = base || "rec";
         let counter = 1;
@@ -3127,7 +3171,8 @@ const CardRenderer = {
         if (e === "account") return "Account";
         if (e === "contact") return "Contact";
         if (e.includes("contactsource")) return "ContactSource";
-        return entity.replace("markant_", "");
+        // Strip common prefixes for display
+        return entity.replace(/^\w+_/, "");
     },
 
     // Render field rows for a card
@@ -3150,7 +3195,7 @@ const CardRenderer = {
         for (const [fieldName, fieldValue] of entries) {
             const isAuto = FieldRegistry.isAutoDateField(fieldName) ||
                            fieldName === "contactid@odata.bind" ||
-                           fieldName === "markant_externalid";
+                           fieldName === CONFIG.governance.externalIdField;
             const label = FieldRegistry.getFieldLabel(entityName, fieldName);
             html += `<div class="ve-field-row${isAuto ? ' auto-field' : ''}" data-field="${escapeHtml(fieldName)}">`;
             html += `<div class="ve-field-name"><input type="text" value="${escapeHtml(fieldName)}" ${isAuto ? 'readonly' : `list="${dlId}" data-rename-field="${escapeHtml(fieldName)}"`} title="${escapeHtml(label)}"></div>`;
@@ -3172,7 +3217,7 @@ const CardRenderer = {
         const isCS = entity && entity.toLowerCase().includes("contactsource");
 
         // Known entities for datalist (always available)
-        const knownEntities = ["accounts", "contacts", "markant_cdhcontactsources", "leads", "opportunities", "incidents", "tasks", "emails", "phonecalls", "appointments", "annotations"];
+        const knownEntities = ["accounts", "contacts", CONFIG.governance.sourceEntitySet, "leads", "opportunities", "incidents", "tasks", "emails", "phonecalls", "appointments", "annotations"];
 
         let html = `<div class="ve-card ${cls}" data-card-id="${item._id}" data-phase="precondition" draggable="true">`;
         html += `<div class="ve-card-header">`;
@@ -3180,7 +3225,7 @@ const CardRenderer = {
         // Entity is ALWAYS editable - badge shown as visual hint, input always present
         html += `<span class="ve-entity-badge ${this._badgeClass(entity)}" style="cursor:default;pointer-events:none">${escapeHtml(this._entityLabel(entity) || "?")}</span>`;
         html += `<datalist id="dl-entity-${item._id}">${knownEntities.map(e => `<option value="${e}">`).join("")}</datalist>`;
-        html += `<input class="ve-entity-input" value="${escapeHtml(entity)}" list="dl-entity-${item._id}" data-entity-for="${item._id}" placeholder="Entity-Name" title="Entity-Name aenderbar (z.B. accounts, leads, markant_cdhcontactsources)" style="width:100px;font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-tertiary);color:var(--text-primary)">`;
+        html += `<input class="ve-entity-input" value="${escapeHtml(entity)}" list="dl-entity-${item._id}" data-entity-for="${item._id}" placeholder="Entity-Name" title="Entity-Name aenderbar (z.B. accounts, leads, contacts)" style="width:100px;font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-tertiary);color:var(--text-primary)">`;
         html += `<input class="ve-alias-input" value="${escapeHtml(item.alias)}" placeholder="Alias" data-alias-for="${item._id}" title="Alias fuer Referenzierung">`;
         html += `<span class="ve-card-title"></span>`;
         html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="precondition" title="Entfernen">x</button>`;
@@ -3216,7 +3261,7 @@ const CardRenderer = {
         html += `<div class="ve-checkbox-row"><label><input type="checkbox" data-wfa-for="${item._id}"${item.waitForAsync !== false ? ' checked' : ''}> waitForAsync</label></div>`;
 
         // FG-relevant fields
-        html += this._renderFieldRows(item, "markant_cdh_contactsources");
+        html += this._renderFieldRows(item, CONFIG.governance.sourceEntitySet);
         return html;
     },
 
@@ -3256,14 +3301,12 @@ const CardRenderer = {
         } else if (action === "ExecuteAction") {
             // Dynamic Custom API dropdown from metadata + cache
             const cachedApis = MetaCache.customApis || _sharedIttMeta.customapis || [];
-            const markantApis = [
-                { uniquename: "markant_RunFieldGovernanceForContact", displayname: "FG für Contact" },
-                { uniquename: "markant_RunFieldGovernanceForContactSource", displayname: "FG für ContactSource" },
-                { uniquename: "markant_RecomputeFieldGovernance", displayname: "Recompute FG" }
+            // Use governance API as first suggestion, then all from cache
+            const defaultApis = [
+                { uniquename: CONFIG.governance.governanceApi, displayname: "Governance API" }
             ];
-            // Merge: markant APIs first, then all from cache (deduplicated)
-            const seen = new Set(markantApis.map(a => a.uniquename));
-            const allApis = [...markantApis];
+            const seen = new Set(defaultApis.map(a => a.uniquename));
+            const allApis = [...defaultApis];
             for (const a of cachedApis) {
                 if (!seen.has(a.uniquename)) { allApis.push(a); seen.add(a.uniquename); }
             }
@@ -3363,10 +3406,10 @@ const CardRenderer = {
 
         // Query-specific: Entity and Filter
         if (targetLower === "query") {
-            const queryEntities = ["contacts", "markant_cdhcontactsources", "markant_cdh_loggings", "accounts", "leads"];
+            const queryEntities = ["contacts", CONFIG.governance.sourceEntitySet, CONFIG.governance.loggingEntitySet, "accounts", "leads"];
             html += `<div class="ve-field-row"><div class="ve-field-name"><span style="font-size:11px;color:var(--text-secondary)">Entity</span></div>`;
             html += `<div class="ve-field-value"><datalist id="dl-qe-${item._id}">${queryEntities.map(e => `<option value="${e}">`).join("")}</datalist>`;
-            html += `<input type="text" value="${escapeHtml(item.entity || '')}" list="dl-qe-${item._id}" data-assert-entity="${item._id}" class="ve-value-input" placeholder="z.B. markant_cdhcontactsources"></div></div>`;
+            html += `<input type="text" value="${escapeHtml(item.entity || '')}" list="dl-qe-${item._id}" data-assert-entity="${item._id}" class="ve-value-input" placeholder="e.g. contacts, accounts"></div></div>`;
             // Filter key-value pairs
             const filter = item.filter || {};
             const filterEntries = Object.entries(filter);
@@ -3684,136 +3727,88 @@ const EditorValidator = {
 const TemplateLibrary = {
     templates: [
         {
-            id: "update-source", name: "Einzelquelle: Feld\u00e4nderung", category: "Update Source",
-            description: "ContactSource-Update mit FG-Verarbeitung und Kontakt-Pr\u00fcfung",
-            preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } },
-                { entity: "markant_cdh_contactsources", alias: "pisa1", sourceSystem: 4, waitForAsync: true, fields: { markant_firstname: "{GENERATED:firstname}", markant_lastname: "{GENERATED:lastname}" } }
-            ],
+            id: "account-crud", name: "Account CRUD", category: "Standard",
+            description: "Create, update, and verify an account record",
+            preconditions: [],
             steps: [
-                { action: "UpdateRecord", entity: "markant_cdh_contactsources", alias: "pisa1", fields: { markant_firstname: "{GENERATED:firstname}" } },
-                { action: "Wait", waitSeconds: 10 },
-                { action: "ExecuteAction", apiName: "RunFieldGovernanceForContact", target: "{contact1.id}" }
+                { action: "CreateRecord", entity: "accounts", alias: "acc1", fields: { name: "{GENERATED:company}", websiteurl: "https://example.com" } },
+                { action: "UpdateRecord", entity: "accounts", alias: "acc1", fields: { telephone1: "{GENERATED:phone}" } }
             ],
             assertions: [
-                { type: "FieldEquals", target: "Contact", field: "firstname", operator: "Equals", expected: "{pisa1.markant_firstname}" }
+                { type: "FieldEquals", target: "Query", entity: "accounts", field: "name", operator: "IsNotNull", filter: { accountid: "{acc1.id}" } },
+                { type: "FieldEquals", target: "Query", entity: "accounts", field: "telephone1", operator: "IsNotNull", filter: { accountid: "{acc1.id}" } }
             ]
         },
         {
-            id: "create-source", name: "Neue ContactSource", category: "Create Source",
-            description: "ContactSource anlegen und Governance-Verarbeitung pr\u00fcfen",
+            id: "contact-with-account", name: "Contact with Account", category: "Standard",
+            description: "Create a contact linked to an account via lookup",
             preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } }
+                { entity: "accounts", alias: "account1", fields: { name: "{GENERATED:company}" } }
             ],
             steps: [
-                { action: "CreateContactSource", entity: "markant_cdh_contactsources", alias: "pisa1", fields: { markant_sourcesystemcode: 4, markant_firstname: "{GENERATED:firstname}" } },
-                { action: "Wait", waitSeconds: 10 }
+                { action: "CreateRecord", entity: "contacts", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", emailaddress1: "{GENERATED:email}", "parentcustomerid_account@odata.bind": "/accounts({account1.id})" } }
             ],
             assertions: [
-                { type: "Exists", target: "contactsource", targetAlias: "pisa1", field: "markant_cdh_contactsourceid", operator: "Exists" }
+                { type: "FieldEquals", target: "Contact", field: "firstname", operator: "IsNotNull" },
+                { type: "FieldEquals", target: "Contact", field: "parentcustomerid", operator: "Equals", expected: "{account1.id}" }
             ]
         },
         {
-            id: "pisa-delivery", name: "PISA-Datenlieferung", category: "PISA",
-            description: "PISA-Quelldaten pr\u00fcfen mit Zeitstempel-Validierung",
-            preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } },
-                { entity: "markant_cdh_contactsources", alias: "pisa1", sourceSystem: 4, waitForAsync: true, fields: { markant_firstname: "{GENERATED:firstname}", markant_lastname: "{GENERATED:lastname}" } }
-            ],
+            id: "lead-qualify", name: "Lead Qualification", category: "Sales",
+            description: "Create a lead and verify its fields",
+            preconditions: [],
             steps: [
-                { action: "Wait", waitSeconds: 15 }
+                { action: "CreateRecord", entity: "leads", alias: "lead1", fields: { subject: "ITT Demo Lead {TIMESTAMP}", firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", companyname: "{GENERATED:company}", emailaddress1: "{GENERATED:email}" } }
             ],
             assertions: [
-                { type: "FieldEquals", target: "Contact", field: "markant_pisa_if_changedate", operator: "DateSetRecently" }
+                { type: "FieldEquals", target: "Query", entity: "leads", field: "subject", operator: "Contains", expected: "ITT Demo Lead", filter: { leadid: "{lead1.id}" } }
             ]
         },
         {
-            id: "multi-source", name: "Multi-Source Priorit\u00e4t", category: "Multi-Source",
-            description: "Zwei Quellen mit unterschiedlicher Priorit\u00e4t, h\u00f6here gewinnt",
+            id: "opportunity-pipeline", name: "Opportunity Pipeline", category: "Sales",
+            description: "Create account, contact, and opportunity in a pipeline",
             preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } },
-                { entity: "markant_cdh_contactsources", alias: "pisa1", sourceSystem: 4, waitForAsync: true, fields: { markant_firstname: "PisaFirst" } },
-                { entity: "markant_cdh_contactsources", alias: "dynamics1", sourceSystem: 1, waitForAsync: true, fields: { markant_firstname: "DynFirst" } }
+                { entity: "accounts", alias: "account1", fields: { name: "{GENERATED:company}" } },
+                { entity: "contacts", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid_account@odata.bind": "/accounts({account1.id})" } }
             ],
             steps: [
-                { action: "UpdateRecord", entity: "markant_cdh_contactsources", alias: "pisa1", fields: { markant_firstname: "{GENERATED:firstname}" } },
-                { action: "Wait", waitSeconds: 10 },
-                { action: "ExecuteAction", apiName: "RunFieldGovernanceForContact", target: "{contact1.id}" }
+                { action: "CreateRecord", entity: "opportunities", alias: "opp1", fields: { name: "ITT Test Opportunity {TIMESTAMP}", "parentaccountid@odata.bind": "/accounts({account1.id})", "parentcontactid@odata.bind": "/contacts({contact1.id})" } },
+                { action: "UpdateRecord", entity: "opportunities", alias: "opp1", fields: { estimatedvalue: 50000 } }
             ],
             assertions: [
-                { type: "FieldEquals", target: "Contact", field: "firstname", operator: "Equals", expected: "{pisa1.markant_firstname}" }
+                { type: "FieldEquals", target: "Query", entity: "opportunities", field: "name", operator: "Contains", expected: "ITT Test", filter: { opportunityid: "{opp1.id}" } },
+                { type: "FieldEquals", target: "Query", entity: "opportunities", field: "estimatedvalue", operator: "Equals", expected: "50000", filter: { opportunityid: "{opp1.id}" } }
             ]
         },
         {
-            id: "additional-fields", name: "Zusatzfelder", category: "Additional Fields",
-            description: "middlename und telephone-Felder pr\u00fcfen",
+            id: "task-activity", name: "Task Activity", category: "Activities",
+            description: "Create a task linked to a contact",
             preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } },
-                { entity: "markant_cdh_contactsources", alias: "pisa1", sourceSystem: 4, waitForAsync: true, fields: { markant_firstname: "{GENERATED:firstname}", markant_middlename: "{GENERATED:text}", markant_telephone1: "{GENERATED:phone}" } }
+                { entity: "contacts", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}" } }
             ],
             steps: [
-                { action: "UpdateRecord", entity: "markant_cdh_contactsources", alias: "pisa1", fields: { markant_middlename: "{GENERATED:text}" } },
-                { action: "Wait", waitSeconds: 10 },
-                { action: "ExecuteAction", apiName: "RunFieldGovernanceForContact", target: "{contact1.id}" }
+                { action: "CreateRecord", entity: "tasks", alias: "task1", fields: { subject: "Follow up {TIMESTAMP}", description: "Auto-generated test task", "regardingobjectid_contact@odata.bind": "/contacts({contact1.id})" } }
             ],
             assertions: [
-                { type: "FieldEquals", target: "Contact", field: "markant_middlename", operator: "Equals", expected: "{pisa1.markant_middlename}" },
-                { type: "FieldEquals", target: "Contact", field: "telephone1", operator: "Equals", expected: "{pisa1.markant_telephone1}" }
+                { type: "FieldEquals", target: "Query", entity: "tasks", field: "subject", operator: "Contains", expected: "Follow up", filter: { activityid: "{task1.id}" } }
             ]
         },
         {
-            id: "snapshot-writer", name: "SnapshotWriter", category: "Bridge",
-            description: "Bridge-Snapshot f\u00fcr ContactSource-Existenz pr\u00fcfen",
+            id: "delete-verify", name: "Delete and Verify", category: "Standard",
+            description: "Create a record, delete it, and verify it no longer exists",
             preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } }
+                { entity: "accounts", alias: "tempAcc", fields: { name: "ITT Temp Delete Test {TIMESTAMP}" } }
             ],
             steps: [
-                { action: "Wait", waitSeconds: 15 }
+                { action: "DeleteRecord", entity: "accounts", alias: "tempAcc" }
             ],
             assertions: [
-                { type: "Exists", target: "Query", field: "markant_cdh_contactsourceid", operator: "Exists", filter: { "_markant_contactid_value": "{contact1.id}" } }
+                { type: "NotExists", target: "Query", entity: "accounts", operator: "NotExists", filter: { accountid: "{tempAcc.id}" } }
             ]
         },
         {
-            id: "recompute", name: "Recompute", category: "Recompute",
-            description: "Request-Code setzen und Neuberechnung pr\u00fcfen",
-            preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } },
-                { entity: "markant_cdh_contactsources", alias: "pisa1", sourceSystem: 4, waitForAsync: true, fields: { markant_firstname: "{GENERATED:firstname}" } }
-            ],
-            steps: [
-                { action: "UpdateRecord", entity: "markant_cdh_contactsources", alias: "pisa1", fields: { markant_cdh_requestcode: 1 } },
-                { action: "Wait", waitSeconds: 15 }
-            ],
-            assertions: [
-                { type: "FieldEquals", target: "contactsource", targetAlias: "pisa1", field: "markant_cdh_requestcode", operator: "Equals", expected: "Done" }
-            ]
-        },
-        {
-            id: "error-injection", name: "Fehler-Injektion", category: "Error Injection",
-            description: "Ung\u00fcltige Daten senden und Fehlerbehandlung pr\u00fcfen",
-            preconditions: [
-                { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } },
-                { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid@odata.bind": "{account1.id}" } }
-            ],
-            steps: [
-                { action: "CreateContactSource", entity: "markant_cdh_contactsources", alias: "bad1", fields: { markant_sourcesystemcode: 4, markant_firstname: "" } },
-                { action: "Wait", waitSeconds: 10 }
-            ],
-            assertions: [
-                { type: "FieldEquals", target: "Contact", field: "markant_cdh_lasterror", operator: "IsNotNull" }
-            ]
-        },
-        {
-            id: "empty", name: "Leerer Test", category: "",
-            description: "Leere Vorlage zum freien Aufbau",
+            id: "empty", name: "Empty Template", category: "",
+            description: "Blank template for custom test cases",
             preconditions: [],
             steps: [],
             assertions: []
@@ -4298,29 +4293,26 @@ const VisualEditor = {
         let items = [];
         if (phase === "precondition") {
             items = [
-                { label: "Account", desc: "Firma als Vorbedingung", data: { entity: "account", alias: "account1", fields: { name: "{GENERATED:company}" } } },
-                { label: "Contact", desc: "Kontakt als Vorbedingung", data: { entity: "contact", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}" } } },
-                { label: "ContactSource (PISA)", desc: "PISA-Quelle mit FG-Feldern", data: { entity: "markant_cdh_contactsources", alias: "", sourceSystem: 4, waitForAsync: true, fields: {} } },
-                { label: "ContactSource (Dynamics)", desc: "Dynamics-Quelle", data: { entity: "markant_cdh_contactsources", alias: "", sourceSystem: 1, waitForAsync: true, fields: {} } },
-                { label: "ContactSource (Platform)", desc: "Platform-Quelle", data: { entity: "markant_cdh_contactsources", alias: "", sourceSystem: 5, waitForAsync: true, fields: {} } },
-                { label: "Create Record", desc: "Beliebige Entity, Name frei wählbar", data: { entity: "", alias: "", fields: {} } }
+                { label: "Account", desc: "Account as precondition", data: { entity: "accounts", alias: "account1", fields: { name: "{GENERATED:company}" } } },
+                { label: "Contact", desc: "Contact as precondition", data: { entity: "contacts", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}" } } },
+                { label: "Lead", desc: "Lead as precondition", data: { entity: "leads", alias: "lead1", fields: { subject: "Test Lead {TIMESTAMP}", lastname: "{GENERATED:lastname}" } } },
+                { label: "Custom Record", desc: "Any entity, name freely choosable", data: { entity: "", alias: "", fields: {} } }
             ];
         } else if (phase === "step") {
             items = [
-                { label: "Update Record", desc: "Datensatz aktualisieren", data: { action: "UpdateRecord", entity: "markant_cdh_contactsources" } },
-                { label: "Create Record", desc: "Datensatz erstellen", data: { action: "CreateRecord", entity: "" } },
-                { label: "Create ContactSource", desc: "ContactSource erstellen", data: { action: "CreateContactSource", entity: "markant_cdh_contactsources" } },
-                { label: "Wait", desc: "Wartezeit (Sekunden)", data: { action: "Wait", waitSeconds: 10 } },
-                { label: "Execute Action (FG-API)", desc: "RunFieldGovernanceForContact", data: { action: "ExecuteAction", apiName: "RunFieldGovernanceForContact" } },
-                { label: "Delete Record", desc: "Datensatz l\u00f6schen", data: { action: "DeleteRecord" } }
+                { label: "Update Record", desc: "Update an existing record", data: { action: "UpdateRecord", entity: "" } },
+                { label: "Create Record", desc: "Create a new record", data: { action: "CreateRecord", entity: "" } },
+                { label: "Wait", desc: "Wait (seconds)", data: { action: "Wait", waitSeconds: 10 } },
+                { label: "Execute Action", desc: "Call a Custom API", data: { action: "ExecuteAction", apiName: "" } },
+                { label: "Delete Record", desc: "Delete a record", data: { action: "DeleteRecord" } }
             ];
         } else if (phase === "assertion") {
             items = [
-                { label: "Feld-Vergleich (Equals)", desc: "Contact-Feld pr\u00fcfen", data: { type: "FieldEquals", target: "Contact", operator: "Equals" } },
-                { label: "Feld nicht leer", desc: "Feld soll gesetzt sein", data: { type: "FieldEquals", target: "Contact", operator: "IsNotNull" } },
-                { label: "Datum k\u00fcrzlich", desc: "Zeitstempel-Pr\u00fcfung", data: { type: "FieldEquals", target: "Contact", operator: "DateSetRecently" } },
-                { label: "Existenz-Pr\u00fcfung", desc: "Datensatz soll existieren", data: { type: "Exists", target: "Query", operator: "Exists" } },
-                { label: "ContactSource-Feld", desc: "ContactSource-Wert pr\u00fcfen", data: { type: "FieldEquals", target: "contactsource", operator: "Equals" } }
+                { label: "Field Equals", desc: "Check a field value", data: { type: "FieldEquals", target: "Contact", operator: "Equals" } },
+                { label: "Field Not Null", desc: "Field must be set", data: { type: "FieldEquals", target: "Contact", operator: "IsNotNull" } },
+                { label: "Date Recently", desc: "Timestamp check", data: { type: "FieldEquals", target: "Contact", operator: "DateSetRecently" } },
+                { label: "Record Exists", desc: "Record must exist", data: { type: "Exists", target: "Query", operator: "Exists" } },
+                { label: "Record Not Exists", desc: "Record must not exist", data: { type: "NotExists", target: "Query", operator: "NotExists" } }
             ];
         }
 
@@ -4683,11 +4675,11 @@ const StepExecutor = {
         }
         if (preconditions.existingContactSources) {
             for (const cs of preconditions.existingContactSources) {
-                const fields = { ...(cs.fields || {}), markant_sourcesystem: cs.sourceSystem };
-                if (!fields["markant_contactid@odata.bind"]) {
-                    fields["markant_contactid@odata.bind"] = "/contacts({contact1.id})";
+                const fields = { ...(cs.fields || {}), [CONFIG.governance.sourceSystemField]: cs.sourceSystem };
+                if (!fields[CONFIG.governance.contactLookup + "@odata.bind"]) {
+                    fields[CONFIG.governance.contactLookup + "@odata.bind"] = "/contacts({contact1.id})";
                 }
-                result.push({ action: "CreateRecord", entity: "markant_cdh_contactsources",
+                result.push({ action: "CreateRecord", entity: CONFIG.governance.sourceEntitySet,
                     alias: cs.alias || `cs_${result.length}`, fields,
                     waitForAsync: cs.waitForAsync !== false }); // Default: true fuer ContactSources
             }
@@ -4758,7 +4750,7 @@ const StepExecutor = {
                 }
                 case "ExecuteAction":
                 case "CallGovernanceApiContact": {
-                    const apiName = step.apiName || "markant_RunFieldGovernanceForContact";
+                    const apiName = step.apiName || CONFIG.governance.governanceApi;
                     logEntry.inputData = resolvedParams;
                     logEntry.entity = apiName;
                     const resp = await API.executeAction(apiName, resolvedParams);
@@ -4770,13 +4762,14 @@ const StepExecutor = {
                     // Legacy actions mapped to generic CRUD
                     this._autoSetDateFields(resolvedFields);
                     if (action === "CreateContactSource") {
-                        const resp = await API.create("markant_cdh_contactsources", resolvedFields);
-                        const pk = this._findPrimaryKey(resp, "markant_cdh_contactsources");
+                        const csEntity = CONFIG.governance.sourceEntitySet;
+                        const resp = await API.create(csEntity, resolvedFields);
+                        const pk = this._findPrimaryKey(resp, csEntity);
                         logEntry.recordId = pk;
                         logEntry.outputData = resp;
-                        logEntry.entity = "markant_cdh_contactsources";
-                        if (step.alias) aliasMap[step.alias] = { id: pk, entity: "markant_cdh_contactsources", fields: resp };
-                        tracker.track("markant_cdh_contactsources", pk, step.alias);
+                        logEntry.entity = csEntity;
+                        if (step.alias) aliasMap[step.alias] = { id: pk, entity: csEntity, fields: resp };
+                        tracker.track(csEntity, pk, step.alias);
                     } else {
                         const target = aliasMap[step.alias];
                         if (!target) throw new Error(`Alias "${step.alias}" nicht gefunden`);
@@ -4795,7 +4788,7 @@ const StepExecutor = {
             // Auto-waitForAsync fuer alle ContactSource-Creates (Preconditions UND Steps),
             // damit die FG zwischen jedem Create abschliesst. Kann mit waitForAsync:false deaktiviert werden.
             const shouldWaitForAsync = step.waitForAsync !== undefined ? step.waitForAsync
-                : (action === "CreateRecord" || action === "CreateContactSource") && this._isContactSourceEntity(step.entity || "markant_cdh_contactsources");
+                : (action === "CreateRecord" || action === "CreateContactSource") && this._isContactSourceEntity(step.entity || CONFIG.governance.sourceEntitySet);
             if (shouldWaitForAsync) {
                 const timeoutMs = step.maxDurationMs || 120000;
                 const pollingMs = step.pollingIntervalMs || 2000;
@@ -4807,7 +4800,7 @@ const StepExecutor = {
                 logEntry.inputData = { ...logEntry.inputData, waitForAsync: true, timeoutMs, pollingMs };
 
                 if (contactId && this._isContactSourceEntity(step.entity || aliasMap[step.alias]?.entity)) {
-                    // Smart Governance Polling auf markant_cdh_loggings
+                    // Smart Governance Polling on logging entity
                     ITTLog.info("StepExecutor", `    Governance-Polling: warte auf CDH-Log für Contact ${contactId.substring(0,8)}... (timeout ${timeoutMs/1000}s, alle ${pollingMs/1000}s)`);
                     const result = await this._waitForGovernance(contactId, contactSourceId, actionTimestamp, timeoutMs, pollingMs);
                     if (result.found) {
@@ -4843,7 +4836,9 @@ const StepExecutor = {
     _isContactSourceEntity(entity) {
         if (!entity) return false;
         const lower = entity.toLowerCase();
-        return lower.includes("contactsource") || lower.includes("contact_source");
+        const govEntity = CONFIG.governance.sourceEntity.toLowerCase();
+        return lower === govEntity || lower === CONFIG.governance.sourceEntitySet.toLowerCase()
+            || lower.includes("contactsource") || lower.includes("contact_source");
     },
 
     /**
@@ -4853,20 +4848,7 @@ const StepExecutor = {
      * This is required for the CDH Field Governance plugin to detect changes.
      */
     _autoSetDateFields(fields) {
-        const DATE_MAPPING = {
-            "markant_firstname":              "markant_cdh_firstname_modifiedondate",
-            "markant_lastname":               "markant_cdh_lastname_modifiedondate",
-            "markant_emailaddress1":          "markant_cdh_emailaddress1_modifiedondate",
-            "markant_gendercode":             "markant_cdh_gendercode_modifiedondate",
-            "markant_jobtitle":               "markant_cdh_markant_jobtitle_modifiedondate",
-            "markant_telephone1":             "markant_cdh_markant_telephone1_modifiedondate",
-            "markant_telephone2":             "markant_cdh_markant_telephone2_modifiedondate",
-            "markant_mobilephone":            "markant_cdh_markant_mobilephone_modifiedondate",
-            "markant_middlename":             "markant_cdh_middlename_modifiedondate",
-            "markant_academictitle":          "markant_cdh_academictitle_modifiedondate",
-            "markant_parentcustomerid":       "markant_cdh_parentcustomerid_modifiedondate",
-            "markant_communicationlanguageid":"markant_cdh_communicationlanguageid_modifiedon"
-        };
+        const DATE_MAPPING = CONFIG.governance.autoDateFields;
         const now = new Date().toISOString();
         let added = 0;
         for (const [valueField, dateField] of Object.entries(DATE_MAPPING)) {
@@ -4892,18 +4874,19 @@ const StepExecutor = {
         while ((performance.now() - startTime) < timeoutMs) {
             polls++;
             try {
-                // Query markant_cdh_loggings: Filter auf contactId und Timestamp
-                let filter = `_markant_contactid_value eq '${contactId}' and createdon ge ${isoAfter}`;
-                // Nur echte Felder abfragen (kein markant_cdh_contactupdated, das steht im Diagnostics-Text)
-                const select = "markant_cdh_loggingid,markant_name,markant_diagonstics_text,createdon,_markant_cdhcontactsourceid_value";
-                const url = `/markant_cdh_loggings?$filter=${encodeURIComponent(filter)}&$select=${select}&$orderby=createdon desc&$top=10`;
+                // Query governance logging entity: filter by contactId and timestamp
+                const gov = CONFIG.governance;
+                let filter = `${gov.contactLookupOdata} eq '${contactId}' and createdon ge ${isoAfter}`;
+                // Only query real fields (ContactUpdated etc. are in the diagnostics text)
+                const select = `${gov.loggingPk},${gov.loggingName},${gov.loggingDiagnostics},createdon,${gov.sourceIdLookup}`;
+                const url = `/${gov.loggingEntitySet}?$filter=${encodeURIComponent(filter)}&$select=${select}&$orderby=createdon desc&$top=10`;
                 const resp = await API.fetch(url);
                 let logs = resp?.value || [];
 
                 // Filter nach ContactSourceId (wie WinForms-Tool)
                 if (contactSourceId && logs.length > 0) {
                     const filtered = logs.filter(l =>
-                        l._markant_cdhcontactsourceid_value === contactSourceId
+                        l[gov.sourceIdLookup] === contactSourceId
                     );
                     if (filtered.length > 0) logs = filtered;
                 }
@@ -4911,7 +4894,7 @@ const StepExecutor = {
                 if (logs.length > 0) {
                     const log = logs[0];
                     // ContactUpdated und PisaTriggered aus Diagnostics-Text parsen
-                    const diag = log.markant_diagonstics_text || "";
+                    const diag = log[gov.loggingDiagnostics] || "";
                     const contactUpdated = /ContactUpdated[=:]\s*(True|true)/i.test(diag) ? true :
                                            /ContactUpdated[=:]\s*(False|false)/i.test(diag) ? false : null;
                     const pisaTriggered = /PisaTriggered[=:]\s*(True|true)/i.test(diag) ? true :
@@ -4920,8 +4903,8 @@ const StepExecutor = {
                         found: true,
                         polls,
                         duration: Math.round(performance.now() - startTime),
-                        logId: log.markant_cdh_loggingid,
-                        logName: log.markant_name || "(kein Name)",
+                        logId: log[gov.loggingPk],
+                        logName: log[gov.loggingName] || "(no name)",
                         contactUpdated,
                         pisaTriggered,
                         diagnostics: diag.substring(0, 500),
@@ -4960,10 +4943,12 @@ const StepExecutor = {
             const LOOKUP_FIELDS = {
                 "parentcustomerid": "_parentcustomerid_value",
                 "ownerid": "_ownerid_value",
-                "transactioncurrencyid": "_transactioncurrencyid_value",
-                "markant_contactid": "_markant_contactid_value",
-                "markant_parentcustomerid": "_markant_parentcustomerid_value"
+                "transactioncurrencyid": "_transactioncurrencyid_value"
             };
+            // Add governance lookup fields dynamically
+            for (const lf of CONFIG.governance.lookupFields) {
+                LOOKUP_FIELDS[lf] = `_${lf}_value`;
+            }
             const selectField = LOOKUP_FIELDS[field] || field;
 
             if (target === "Contact" || target === "contact") {
@@ -4989,11 +4974,11 @@ const StepExecutor = {
                 logEntry.recordId = ref.id;
                 logEntry.alias = alias;
             } else if (target === "Query" || target === "CdhLogging" || target === "AuditLog") {
-                const entity = assertion.entity || "markant_cdh_loggings";
+                const entity = assertion.entity || CONFIG.governance.loggingEntitySet;
                 let filterObj = assertion.filter ? PlaceholderResolver.resolve(assertion.filter, aliasMap, context) : {};
                 // Bei CdhLogging/AuditLog automatisch Contact-Filter setzen wenn kein Filter definiert
                 if ((target === "CdhLogging" || target === "AuditLog") && Object.keys(filterObj).length === 0 && context.contactId) {
-                    filterObj = { _markant_contactid_value: context.contactId };
+                    filterObj = { [CONFIG.governance.contactLookupOdata]: context.contactId };
                 }
                 const filterParts = Object.entries(filterObj).map(([k, v]) => {
                     // Numbers and booleans without quotes, strings/GUIDs with quotes
@@ -5003,7 +4988,7 @@ const StepExecutor = {
                 let query = `$top=1&$orderby=createdon desc`;
                 // CdhLogging: immer Diagnostics-Text laden (ContactUpdated/PisaTriggered stehen dort)
                 if (target === "CdhLogging") {
-                    query += `&$select=markant_cdh_loggingid,markant_name,markant_diagonstics_text,createdon`;
+                    query += `&$select=${CONFIG.governance.loggingPk},${CONFIG.governance.loggingName},${CONFIG.governance.loggingDiagnostics},createdon`;
                 } else if (field) {
                     query += `&$select=${field}`;
                 }
@@ -5012,7 +4997,7 @@ const StepExecutor = {
                 record = results?.[0] || null;
                 // CdhLogging: virtuelle Felder aus Diagnostics-Text parsen
                 if (target === "CdhLogging" && record) {
-                    const diag = record.markant_diagonstics_text || "";
+                    const diag = record[CONFIG.governance.loggingDiagnostics] || "";
                     record.ContactUpdated = /ContactUpdated[=:]\s*(True|true)/i.test(diag) ? "true" :
                                             /ContactUpdated[=:]\s*(False|false)/i.test(diag) ? "false" : null;
                     record.PisaTriggered = /PisaTriggered[=:]\s*(True|true)/i.test(diag) ? "true" :
@@ -6857,7 +6842,11 @@ async function _renderLiveDetail(runId, testId) {
     if (testCase?.itt_userstories) {
         const stories = testCase.itt_userstories.split(",").filter(Boolean).map(s => {
             const key = s.trim();
-            return `<a class="story-link" href="https://www.mnet.markant.de/jira/browse/${encodeURIComponent(key)}" target="_blank">${escapeHtml(key)}</a>`;
+            if (CONFIG.storyLinkPattern) {
+                const url = CONFIG.storyLinkPattern.replace("{key}", encodeURIComponent(key));
+                return `<a class="story-link" href="${url}" target="_blank">${escapeHtml(key)}</a>`;
+            }
+            return `<span class="story-link">${escapeHtml(key)}</span>`;
         }).join(" ");
         html += `<div class="meta-row"><span class="meta-label">Stories</span><span>${stories}</span></div>`;
     }
@@ -6981,7 +6970,7 @@ async function _renderLiveDetail(runId, testId) {
                 const iconCls = s.itt_stepstatus === 105710000 ? "ok" : s.itt_stepstatus === 105710001 ? "fail" : "skip";
                 const iconChar = iconCls === "ok" ? "&#10004;" : iconCls === "fail" ? "&#10008;" : "-";
                 const durStr = s.itt_durationms ? (s.itt_durationms / 1000).toFixed(1) + "s" : "";
-                const entityDisplay = s.itt_entity ? s.itt_entity.replace("markant_cdh", "CS") : "";
+                const entityDisplay = s.itt_entity ? s.itt_entity.replace(/^\w+_/, "") : "";
                 const aliasDisplay = s.itt_alias ? " (" + escapeHtml(s.itt_alias) + ")" : "";
 
                 html += `<div class="step-row step-row-expandable" onclick="_toggleStepExpand(this)">`;
@@ -7165,7 +7154,7 @@ async function _renderLiveDetail(runId, testId) {
             html += `<tr>`;
             html += `<td style="padding:2px 6px">${s.itt_stepnumber || ""}</td>`;
             html += `<td style="padding:2px 6px">${escapeHtml(s.itt_action || "")}</td>`;
-            html += `<td style="padding:2px 6px">${escapeHtml((s.itt_entity || "").replace("markant_cdh", "CS"))}</td>`;
+            html += `<td style="padding:2px 6px">${escapeHtml((s.itt_entity || "").replace(/^\w+_/, ""))}</td>`;
             html += `<td style="padding:2px 6px;color:${statusColor}">${statusLabel}</td>`;
             html += `<td style="padding:2px 6px;text-align:right">${s.itt_durationms ? (s.itt_durationms / 1000).toFixed(1) + "s" : ""}</td>`;
             html += `</tr>`;
