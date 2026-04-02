@@ -1536,12 +1536,12 @@ body {
 </header>
 
 <nav id="app-nav">
-    <a href="#dashboard" data-view="dashboard">Dashboard</a>
-    <a href="#cases" data-view="cases">Testfälle</a>
-    <a href="#run/new" data-view="run">Testlauf</a>
-    <a href="#runs" data-view="runs">Verlauf</a>
-    <a href="#stories" data-view="stories">User Stories</a>
-    <a href="#metadata" data-view="metadata">Metadaten</a>
+    <a href="#dashboard" data-view="dashboard" data-lang="nav_dashboard">Dashboard</a>
+    <a href="#cases" data-view="cases" data-lang="nav_testcases">Test Cases</a>
+    <a href="#run/new" data-view="run" data-lang="nav_testrun">Test Run</a>
+    <a href="#runs" data-view="runs" data-lang="nav_history">History</a>
+    <a href="#stories" data-view="stories" data-lang="nav_userstories">User Stories</a>
+    <a href="#metadata" data-view="metadata" data-lang="nav_metadata">Metadata</a>
 </nav>
 
 <main id="app-content">
@@ -1682,6 +1682,107 @@ const CONFIG = {
 
 // ── Demo Mode: Data + MockAPI ───────────────────────────────────
 // Provides realistic demo data when the app runs outside Dynamics 365.
+
+// ================================================================
+//  Localization (i18n)
+// ================================================================
+// All user-visible strings. Switch language by replacing this object.
+// Default: English. German translations in comments for reference.
+
+const LANG = {
+    // Navigation
+    nav_dashboard: "Dashboard",
+    nav_testcases: "Test Cases",           // DE: Testfälle
+    nav_testrun: "Test Run",               // DE: Testlauf
+    nav_history: "History",                // DE: Verlauf
+    nav_userstories: "User Stories",
+    nav_metadata: "Metadata",              // DE: Metadaten
+    nav_help: "Help",                      // DE: Hilfe
+
+    // Dashboard
+    dash_testcases: "TEST CASES",          // DE: TESTFÄLLE
+    dash_passrate: "PASS RATE",
+    dash_recent_runs: "RECENT RUNS",       // DE: LETZTE LÄUFE
+    dash_open_failures: "OPEN FAILURES",   // DE: OFFENE FEHLER
+    dash_last_runs: "RECENT TEST RUNS",    // DE: LETZTE TESTLÄUFE
+    dash_distribution: "RESULT DISTRIBUTION", // DE: ERGEBNISVERTEILUNG
+    dash_failed_tests: "FAILED TESTS (LAST 7 DAYS)", // DE: FEHLGESCHLAGENE TESTS (LETZTE 7 TAGE)
+    dash_no_failed: "No failed tests in the last 7 days", // DE: Keine fehlgeschlagenen Tests in den letzten 7 Tagen
+    dash_date: "DATE",                     // DE: DATUM
+    dash_status: "STATUS",
+    dash_passed: "PASSED",                 // DE: BESTANDEN
+    dash_failed: "FAILED",                 // DE: FEHLGESCHLAGEN
+    dash_total: "TOTAL",                   // DE: GESAMT
+    dash_details: "Details",
+
+    // Test Cases
+    cases_search: "Search by ID, title or tag...", // DE: Suche nach ID, Titel oder Tag...
+    cases_all_categories: "All Categories",  // DE: Alle Kategorien
+    cases_user_story: "User Story (e.g. PROJ-1234)",
+    cases_active_only: "Active only",        // DE: Nur aktive
+    cases_new: "+ New Test Case",             // DE: + Neuer Testfall
+    cases_id: "ID",
+    cases_title: "TITLE",                    // DE: TITEL
+    cases_category: "CATEGORY",              // DE: KATEGORIE
+    cases_tags: "TAGS",
+    cases_stories: "USER STORIES",
+    cases_status: "STATUS",
+    cases_edit: "Edit",                      // DE: Bearbeiten
+    cases_active: "Active",                  // DE: Aktiv
+    cases_inactive: "Inactive",              // DE: Inaktiv
+    cases_count: "test cases",               // DE: Testfälle
+
+    // Test Run
+    run_start: "Start Test Run",             // DE: Testlauf starten
+    run_start_keep: "Start + Keep Data",     // DE: Starten + Daten beibehalten
+    run_running: "Running...",               // DE: Läuft...
+    run_all: "All",                          // DE: Alle
+    run_passed: "Passed",                    // DE: Bestanden
+    run_failed: "Failed",                    // DE: Fehlgeschlagen
+    run_error: "Error",                      // DE: Fehler
+    run_skipped: "Skipped",                  // DE: Übersprungen
+
+    // Editor
+    editor_save: "Save",                     // DE: Speichern
+    editor_cancel: "Cancel",                 // DE: Abbrechen
+    editor_delete: "Delete",                 // DE: Löschen
+    editor_ready: "Ready to save",           // DE: Bereit zum Speichern
+    editor_preconditions: "Preconditions",    // DE: Vorbedingungen
+    editor_steps: "Steps",                   // DE: Schritte
+    editor_assertions: "Assertions",          // DE: Prüfungen
+    editor_visual: "Visual",                 // DE: Visuell
+    editor_json: "JSON",
+    editor_flow: "Flow",
+
+    // Metadata Explorer
+    meta_explorer: "Metadata Explorer",       // DE: Metadaten-Explorer
+    meta_tables: "Tables",                   // DE: Tabellen
+    meta_optionsets: "OptionSets",
+    meta_customapis: "Custom APIs",
+    meta_search: "Search table (e.g. contact, itt_)...", // DE: Tabelle suchen (z.B. contact, itt_)...
+    meta_custom_only: "Custom only",          // DE: Nur Custom
+    meta_itt_only: "itt_ only",              // DE: Nur itt_
+    meta_schema: "SCHEMA NAME",              // DE: SCHEMA-NAME
+    meta_display: "DISPLAY NAME",            // DE: ANZEIGENAME
+    meta_custom: "CUSTOM",
+    meta_entityset: "ENTITYSET",
+    meta_attributes: "Attributes",           // DE: Attribute
+    meta_back: "Back to Tables",             // DE: Zurück zu Tabellen
+
+    // Common
+    common_yes: "Yes",                       // DE: Ja
+    common_no: "No",                         // DE: Nein
+    common_loading: "Loading...",             // DE: Laden...
+    common_error: "Error",                   // DE: Fehler
+    common_planned: "Planned",               // DE: Geplant
+    common_completed: "Completed",           // DE: Abgeschlossen
+    common_demo_banner: "Demo Mode: All data is simulated", // DE: Demo-Modus: Alle Daten sind simuliert
+
+    // Logging
+    log_autodate: "AutoSetDateFields: {count} _modifiedondate field(s) set automatically",
+    log_governance_poll: "Governance-Poll {n} Error: {msg}",
+    log_testrun_started: "=== Test run started (Concurrency: {conc}) ===",
+};
 
 let _demoModeActive = false;
 
@@ -8644,7 +8745,7 @@ async function activateDemoMode() {
         const banner = document.createElement("div");
         banner.id = "demo-banner";
         banner.style.cssText = "background:var(--accent-yellow-bg);color:var(--accent-yellow);text-align:center;padding:4px;font-size:12px";
-        banner.textContent = "Demo-Modus: Alle Daten sind simuliert";
+        banner.textContent = LANG.common_demo_banner;
         nav.insertAdjacentElement("afterend", banner);
     }
 
