@@ -1058,18 +1058,13 @@ Write-Host "-- Schritt 9/10: Web Resources ------------------------------------"
 $webresourceDir = Join-Path (Split-Path $scriptDir -Parent) "webresource"
 
 $webResources = @(
-    @{ Name = "itt_/testcenter.html";              File = "itt_testcenter.html";         Type = 1  } # 1 = HTML
+    @{ Name = "itt_/testcenter.html";              File = "d365testcenter.html";         Type = 1  } # 1 = HTML
     @{ Name = "itt_/packs/manifest.json";          File = "packs/manifest.json";         Type = 3  } # 3 = Script (JSON)
     @{ Name = "itt_/packs/standard.json";          File = "packs/standard.json";         Type = 3  }
-    @{ Name = "itt_/packs/field-governance.json";   File = "packs/field-governance.json"; Type = 3  }
-    @{ Name = "itt_/packs/membership.json";         File = "packs/membership.json";       Type = 3  }
+    @{ Name = "itt_/packs/demo-standard.json";     File = "packs/demo-standard.json";    Type = 3  }
+    @{ Name = "itt_/packs/empty.json";              File = "packs/empty.json";            Type = 3  }
     # Add custom packs here:
     # @{ Name = "itt_/packs/custom-pack.json";     File = "packs/custom-pack.json";    Type = 3  }
-    @{ Name = "itt_/packs/fg-testtool.json";        File = "packs/fg-testtool.json";      Type = 3  }
-    @{ Name = "itt_/packs/fg-testtool-v2.json";     File = "packs/fg-testtool-v2.json";   Type = 3  }
-    @{ Name = "itt_/packs/fg-testtool-legacy.json"; File = "packs/fg-testtool-legacy.json"; Type = 3  }
-    @{ Name = "itt_/packs/snapshot-recompute.json"; File = "packs/snapshot-recompute.json"; Type = 3  }
-    @{ Name = "itt_/packs/empty.json";              File = "packs/empty.json";            Type = 3  }
 )
 
 foreach ($wr in $webResources) {
