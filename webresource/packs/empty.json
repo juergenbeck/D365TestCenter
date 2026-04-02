@@ -1,0 +1,35 @@
+{
+  "packId": "empty",
+  "name": "Leere Vorlage",
+  "description": "Leere Umgebung zum Erstellen eigener Testfälle und Demo-Daten.",
+  "color": "#78909c",
+  "testCases": [
+    {
+      "itt_testcaseid": "00000000-0000-4000-8000-000000000001",
+      "itt_testid": "EXAMPLE-01",
+      "itt_title": "Beispiel-Testfall (bitte anpassen)",
+      "itt_category": 100000005,
+      "itt_tags": "Beispiel",
+      "itt_userstories": "",
+      "itt_enabled": true,
+      "itt_definitionjson": {
+        "preconditions": { "createAccount": true, "createContact": true },
+        "steps": [
+          { "action": "CreateRecord", "entity": "account", "alias": "acc1", "fields": { "name": "Testfirma GmbH" } },
+          { "action": "Wait", "waitSeconds": 3 }
+        ],
+        "assertions": [
+          { "target": "Record:acc1", "field": "name", "operator": "Equals", "value": "Testfirma GmbH" }
+        ]
+      }
+    }
+  ],
+  "testRuns": [],
+  "testRunResults": [],
+  "userStories": [],
+  "metadata": {
+    "entities": [],
+    "attributes": {},
+    "optionsets": []
+  }
+}

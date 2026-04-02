@@ -1,0 +1,1069 @@
+{
+  "suiteId": "Bridge",
+  "suiteName": "Bridge E2E Tests",
+  "testCases": [
+    {
+      "id": "BTC01",
+      "title": "UserUpdatedEvent → ContactSource korrekt angelegt",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "userupdated", "happy-path"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC01_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC01_First", "lastname": "{PREFIX}_BTC01_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Platform Bridge Record erstellen mit UserUpdatedEvent",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"salutation\": \"m\", \"firstname\": \"{PREFIX}_BTC01_First\", \"searchableFirstname\": \"{PREFIX}_btc01_first\", \"lastname\": \"{PREFIX}_BTC01_Last\", \"searchableLastname\": \"{PREFIX}_btc01_last\", \"email\": \"btc01_{TIMESTAMP}@test.markant.com\", \"language\": \"de-de\", \"preferredLanguage\": \"de-de\", \"phone\": null, \"position\": null, \"address\": null, \"organizationMemberships\": [{ \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationName\": \"{PREFIX}_BTC01_Account\", \"userOrganizationStatus\": \"ACTIVE\", \"position\": null, \"phone\": null, \"department\": null, \"address\": null, \"platformRequests\": [], \"becameActiveAt\": \"{NOW_UTC}\", \"createdAt\": \"{NOW_UTC}\", \"originatedFrom\": \"REGISTRATION\" }], \"subOrganizationMemberships\": [], \"lastModifiedAt\": \"{NOW_UTC}\", \"createdAt\": \"{NOW_UTC}\", \"version\": 1, \"userType\": \"NATURAL\", \"fromMnet\": false, \"externalId\": null, \"verified\": true } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC01_First", "description": "CS hat korrekten Vornamen" },
+        { "target": "ContactSource", "field": "markant_lastname", "operator": "Equals", "value": "{PREFIX}_BTC01_Last", "description": "CS hat korrekten Nachnamen" },
+        { "target": "ContactSource", "field": "markant_cdh_sourcesystemcode", "operator": "Equals", "value": "5", "description": "Quellsystem = Platform" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet" }
+      ]
+    },
+    {
+      "id": "BTC02",
+      "title": "UserUpdatedEvent → MembershipSource angelegt",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "userupdated", "membership", "happy-path"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC02_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC02_First", "lastname": "{PREFIX}_BTC02_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Platform Bridge Record erstellen mit UserUpdatedEvent inkl. Membership",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"salutation\": \"f\", \"firstname\": \"{PREFIX}_BTC02_First\", \"lastname\": \"{PREFIX}_BTC02_Last\", \"email\": \"btc02_{TIMESTAMP}@test.markant.com\", \"language\": \"en\", \"preferredLanguage\": \"en\", \"phone\": \"+49 123 4567890\", \"position\": \"EDI responsible person\", \"organizationMemberships\": [{ \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationName\": \"{PREFIX}_BTC02_Account\", \"userOrganizationStatus\": \"ACTIVE\", \"position\": \"Key Account Manager\", \"phone\": \"+49 987 6543210\", \"department\": \"Einkauf\", \"becameActiveAt\": \"{NOW_UTC}\", \"createdAt\": \"{NOW_UTC}\", \"originatedFrom\": \"INVITATION\" }], \"subOrganizationMemberships\": [], \"lastModifiedAt\": \"{NOW_UTC}\", \"createdAt\": \"{NOW_UTC}\", \"version\": 1, \"userType\": \"NATURAL\", \"verified\": true } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_platformuserid", "operator": "Equals", "value": "{CONTACT_PLATFORMID}", "description": "MS hat korrekte UserId" },
+        { "target": "MembershipSource", "field": "markant_platformorganizationid", "operator": "Equals", "value": "{ORG_PLATFORMID}", "description": "MS hat korrekte OrgId" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status = ACTIVE" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet" }
+      ]
+    },
+    {
+      "id": "BTC03",
+      "title": "OrganizationMembershipUpdatedEvent → MS Status aktualisiert",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "membership-updated", "happy-path"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC03_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC03_First", "lastname": "{PREFIX}_BTC03_Last" },
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent senden mit Status ACTIVE",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"email\": \"btc03_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 100, \"platformRequests\": [], \"qualificationLevel\": \"LEVEL_3\", \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status wurde auf ACTIVE gesetzt" },
+        { "target": "MembershipSource", "field": "markant_qualificationlevel", "operator": "Equals", "value": "LEVEL_3", "description": "QualificationLevel korrekt" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet" }
+      ]
+    },
+    {
+      "id": "BTC04",
+      "title": "UserRolesChangedEvent → Rollen-Snapshot geschrieben",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "roles", "happy-path"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC04_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC04_First", "lastname": "{PREFIX}_BTC04_Last" },
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserRolesChangedEvent senden mit Rollen für eine Organisation",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"role001\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": null, \"suborganizationId\": null, \"allowSkipMfa\": false }, { \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"role002\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": \"leistung001\", \"suborganizationId\": null, \"allowSkipMfa\": false }], \"addedRoles\": null, \"deletedRoles\": null, \"type\": \"UserRolesChangedEvent\", \"version\": \"{NOW_UTC}\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "IsNotNull", "description": "RolesData wurde geschrieben" },
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "ORGANIZATION_MEMBER", "description": "RolesData enthält ORGANIZATION_MEMBER" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet" }
+      ]
+    },
+    {
+      "id": "BTC05",
+      "title": "Unbekannter EventType → Bridge-Status Verarbeitet, Log übersprungen",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "unknown-event", "edge-case"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC05_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC05_First", "lastname": "{PREFIX}_BTC05_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record mit unbekanntem EventType erstellen",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UnbekannterEventType",
+            "eventdata": "{ \"type\": \"UnbekannterEventType\", \"someField\": \"someValue\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet (kein Fehler)" },
+        { "target": "PlatformBridgeLog", "field": "markant_status", "operator": "Equals", "value": "595300002", "description": "Log-Status = Übersprungen" },
+        { "target": "PlatformBridgeLog", "field": "markant_message", "operator": "Contains", "value": "Kein Handler", "description": "Log enthält 'Kein Handler'" }
+      ]
+    },
+    {
+      "id": "BTC06",
+      "title": "Event mit ungültigem Payload → Fehler-Status und Fehlermeldung",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "error", "invalid-payload"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC06_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC06_First", "lastname": "{PREFIX}_BTC06_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record mit ungültigem JSON-Payload erstellen",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ UNGÜLTIGES JSON }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300003", "description": "Bridge-Status = Fehler" },
+        { "target": "PlatformBridge", "field": "markant_bridgeerrormessage", "operator": "IsNotNull", "description": "Fehlermeldung ist gesetzt" },
+        { "target": "PlatformBridgeLog", "field": "markant_status", "operator": "Equals", "value": "595300001", "description": "Log-Status = Fehler" }
+      ]
+    },
+    {
+      "id": "BTC07",
+      "title": "Bridge-Toggle deaktiviert → keine Verarbeitung",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "toggle", "config"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC07_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC07_First", "lastname": "{PREFIX}_BTC07_Last" },
+        "environmentVariables": { "markant_bridge_enabled": "false" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record erstellen bei deaktiviertem Toggle",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC07_First\", \"lastname\": \"{PREFIX}_BTC07_Last\", \"email\": \"btc07_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1 } }"
+          },
+          "waitForProcessing": false,
+          "timeoutSeconds": 30
+        },
+        {
+          "stepNumber": 2,
+          "description": "Scheduled Processor manuell auslösen",
+          "action": "TriggerScheduledProcessor",
+          "waitForProcessing": true,
+          "timeoutSeconds": 30
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300000", "description": "Bridge-Status bleibt Neu (nicht verarbeitet)" }
+      ],
+      "cleanup": {
+        "restoreEnvironmentVariables": { "markant_bridge_enabled": "true" }
+      }
+    },
+    {
+      "id": "BTC08",
+      "title": "Batch verarbeitet mehrere Events in korrekter Reihenfolge",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "batch", "reihenfolge"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC08_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC08_First", "lastname": "{PREFIX}_BTC08_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Ersten Bridge Record erstellen (UserUpdatedEvent)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC08_First\", \"lastname\": \"{PREFIX}_BTC08_Last\", \"email\": \"btc08a_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [{ \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationName\": \"{PREFIX}_BTC08_Account\", \"userOrganizationStatus\": \"ACTIVE\" }] } }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": false
+        },
+        {
+          "stepNumber": 2,
+          "description": "Zweiten Bridge Record erstellen (MembershipUpdatedEvent)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationMembershipStatus\": \"ACTIVE\", \"qualificationLevel\": \"LEVEL_2\", \"version\": 50, \"type\": \"OrganizationMembershipUpdatedEvent\" }",
+            "createdon_source": "2026-03-26T10:01:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC08_First", "description": "CS wurde durch erstes Event erstellt" },
+        { "target": "MembershipSource", "field": "markant_qualificationlevel", "operator": "Equals", "value": "LEVEL_2", "description": "MS wurde durch zweites Event aktualisiert" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Beide Bridge-Records Verarbeitet", "scope": "all" }
+      ]
+    },
+    {
+      "id": "BTC09",
+      "title": "Stuck-Record-Recovery → Zurücksetzen auf Neu",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "stuck-recovery", "resilience"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC09_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC09_First", "lastname": "{PREFIX}_BTC09_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record erstellen und direkt auf InVerarbeitung setzen (simuliert stuck)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC09_First\", \"lastname\": \"{PREFIX}_BTC09_Last\", \"email\": \"btc09_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1 } }"
+          },
+          "waitForProcessing": false
+        },
+        {
+          "stepNumber": 2,
+          "description": "Status auf InVerarbeitung setzen und modifiedon in die Vergangenheit setzen",
+          "action": "SimulateStuckRecord",
+          "data": {
+            "bridgestatus": 595300001,
+            "modifiedon_offset_minutes": -15
+          }
+        },
+        {
+          "stepNumber": 3,
+          "description": "Scheduled Processor auslösen (Stuck-Recovery)",
+          "action": "TriggerScheduledProcessor",
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet (nach Recovery)" },
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC09_First", "description": "CS wurde nach Recovery korrekt erstellt" }
+      ]
+    },
+    {
+      "id": "BTC10",
+      "title": "Batch-Statistik wird korrekt geschrieben",
+      "category": "Bridge E2E",
+      "tags": ["bridge", "statistik", "batch"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC10_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC10_First", "lastname": "{PREFIX}_BTC10_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record erstellen",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC10_First\", \"lastname\": \"{PREFIX}_BTC10_Last\", \"email\": \"btc10_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet" },
+        { "target": "BatchStatistic", "field": "markant_batchtype", "operator": "Equals", "value": "595300000", "description": "BatchType = Bridge" },
+        { "target": "BatchStatistic", "field": "markant_processed_count", "operator": "IsNotNull", "description": "ProcessedCount ist gesetzt" },
+        { "target": "BatchStatistic", "field": "markant_duration_ms", "operator": "IsNotNull", "description": "Dauer ist gesetzt" }
+      ]
+    },
+    {
+      "id": "BTC11",
+      "title": "Vollständiges Feld-Mapping: Vorname, Nachname, E-Mail, Telefon, Position",
+      "category": "UserUpdated → CS",
+      "tags": ["bridge", "userupdated", "feld-mapping"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC11_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC11_First", "lastname": "{PREFIX}_BTC11_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserUpdatedEvent mit allen Feldern senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"salutation\": \"f\", \"firstname\": \"{PREFIX}_BTC11_First\", \"lastname\": \"{PREFIX}_BTC11_Last\", \"email\": \"btc11_{TIMESTAMP}@test.markant.com\", \"language\": \"de-de\", \"preferredLanguage\": \"de-de\", \"phone\": \"+49 711 1234567\", \"position\": \"Managing Director\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC11_First", "description": "Vorname korrekt" },
+        { "target": "ContactSource", "field": "markant_lastname", "operator": "Equals", "value": "{PREFIX}_BTC11_Last", "description": "Nachname korrekt" },
+        { "target": "ContactSource", "field": "markant_emailaddress1", "operator": "Contains", "value": "btc11_", "description": "E-Mail korrekt" },
+        { "target": "ContactSource", "field": "markant_telephone1", "operator": "Equals", "value": "+49 711 1234567", "description": "Telefon korrekt" },
+        { "target": "ContactSource", "field": "markant_jobtitle", "operator": "Equals", "value": "Managing Director", "description": "Position korrekt" },
+        { "target": "ContactSource", "field": "markant_gender", "operator": "Equals", "value": "f", "description": "Anrede korrekt" },
+        { "target": "ContactSource", "field": "markant_communicationlanguage", "operator": "Equals", "value": "de-de", "description": "Sprache korrekt" }
+      ]
+    },
+    {
+      "id": "BTC12",
+      "title": "Multi-Membership → je eine MembershipSource pro Organisation",
+      "category": "UserUpdated → CS",
+      "tags": ["bridge", "userupdated", "multi-membership"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": [
+          { "name": "{PREFIX}_BTC12_Account_A", "ref": "ORG_A" },
+          { "name": "{PREFIX}_BTC12_Account_B", "ref": "ORG_B" }
+        ],
+        "contactData": { "firstname": "{PREFIX}_BTC12_First", "lastname": "{PREFIX}_BTC12_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserUpdatedEvent mit zwei Memberships senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC12_First\", \"lastname\": \"{PREFIX}_BTC12_Last\", \"email\": \"btc12_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [{ \"organizationId\": \"{ORG_A_PLATFORMID}\", \"organizationName\": \"{PREFIX}_BTC12_Account_A\", \"userOrganizationStatus\": \"ACTIVE\", \"becameActiveAt\": \"{NOW_UTC}\" }, { \"organizationId\": \"{ORG_B_PLATFORMID}\", \"organizationName\": \"{PREFIX}_BTC12_Account_B\", \"userOrganizationStatus\": \"INVITED\" }] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_platformorganizationid", "operator": "Equals", "value": "{ORG_A_PLATFORMID}", "scope": "ORG_A", "description": "MS für Org A existiert" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "scope": "ORG_A", "description": "MS Org A Status = ACTIVE" },
+        { "target": "MembershipSource", "field": "markant_platformorganizationid", "operator": "Equals", "value": "{ORG_B_PLATFORMID}", "scope": "ORG_B", "description": "MS für Org B existiert" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "INVITED", "scope": "ORG_B", "description": "MS Org B Status = INVITED" }
+      ]
+    },
+    {
+      "id": "BTC13",
+      "title": "Timestamp-Schutz → älteres Event überschreibt CS nicht",
+      "category": "UserUpdated → CS",
+      "tags": ["bridge", "userupdated", "timestamp-guard"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC13_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC13_First", "lastname": "{PREFIX}_BTC13_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Neueres Event senden (Timestamp T2)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC13_Neu\", \"lastname\": \"{PREFIX}_BTC13_Last\", \"email\": \"btc13_neu_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 2, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T12:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Älteres Event senden (Timestamp T1 < T2)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC13_Alt\", \"lastname\": \"{PREFIX}_BTC13_Last\", \"email\": \"btc13_alt_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC13_Neu", "description": "Vorname bleibt vom neueren Event" },
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "NotEquals", "value": "{PREFIX}_BTC13_Alt", "description": "Älteres Event hat Vorname nicht überschrieben" }
+      ]
+    },
+    {
+      "id": "BTC14",
+      "title": "Non-NATURAL UserType → wird übersprungen",
+      "category": "UserUpdated → CS",
+      "tags": ["bridge", "userupdated", "usertype-filter"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC14_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC14_First", "lastname": "{PREFIX}_BTC14_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserUpdatedEvent mit userType=TECHNICAL senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC14_First\", \"lastname\": \"{PREFIX}_BTC14_Last\", \"email\": \"btc14_{TIMESTAMP}@test.markant.com\", \"userType\": \"TECHNICAL\", \"version\": 1, \"organizationMemberships\": [] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_externalid", "operator": "IsNull", "description": "Keine CS für TECHNICAL User angelegt" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet (kein Fehler)" }
+      ]
+    },
+    {
+      "id": "BTC15",
+      "title": "Sprach-Fallback → preferredLanguage wenn language null",
+      "category": "UserUpdated → CS",
+      "tags": ["bridge", "userupdated", "sprache", "fallback"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC15_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC15_First", "lastname": "{PREFIX}_BTC15_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserUpdatedEvent mit language=null und preferredLanguage=fr senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC15_First\", \"lastname\": \"{PREFIX}_BTC15_Last\", \"email\": \"btc15_{TIMESTAMP}@test.markant.com\", \"language\": null, \"preferredLanguage\": \"fr\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_communicationlanguage", "operator": "Equals", "value": "fr", "description": "Sprache = fr (Fallback von preferredLanguage)" }
+      ]
+    },
+    {
+      "id": "BTC16",
+      "title": "MembershipUpdated ACTIVE → MS korrekt geschrieben",
+      "category": "Membership → MS",
+      "tags": ["bridge", "membership-updated", "active"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC16_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC16_First", "lastname": "{PREFIX}_BTC16_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent mit Status ACTIVE senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"email\": \"btc16_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 1, \"platformRequests\": [], \"qualificationLevel\": \"LEVEL_1\", \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status = ACTIVE" },
+        { "target": "MembershipSource", "field": "markant_qualificationlevel", "operator": "Equals", "value": "LEVEL_1", "description": "QualificationLevel = LEVEL_1" }
+      ]
+    },
+    {
+      "id": "BTC17",
+      "title": "MembershipUpdated INVITED → MS korrekt geschrieben",
+      "category": "Membership → MS",
+      "tags": ["bridge", "membership-updated", "invited"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC17_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC17_First", "lastname": "{PREFIX}_BTC17_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent mit Status INVITED senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"email\": \"btc17_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"INVITED\", \"version\": 1, \"platformRequests\": [], \"qualificationLevel\": null, \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "INVITED", "description": "MS-Status = INVITED" }
+      ]
+    },
+    {
+      "id": "BTC18",
+      "title": "MembershipUpdated DELETED → MS korrekt geschrieben",
+      "category": "Membership → MS",
+      "tags": ["bridge", "membership-updated", "deleted"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC18_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC18_First", "lastname": "{PREFIX}_BTC18_Last" },
+        "existingContactSource": true,
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent mit Status DELETED senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"email\": \"btc18_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"DELETED\", \"version\": 200, \"platformRequests\": [], \"qualificationLevel\": null, \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "DELETED", "description": "MS-Status = DELETED" }
+      ]
+    },
+    {
+      "id": "BTC19",
+      "title": "MembershipUpdated → QualificationLevel korrekt auf MS geschrieben",
+      "category": "Membership → MS",
+      "tags": ["bridge", "membership-updated", "qualification"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC19_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC19_First", "lastname": "{PREFIX}_BTC19_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent mit QualificationLevel LEVEL_3 senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"email\": \"btc19_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 50, \"platformRequests\": [], \"qualificationLevel\": \"LEVEL_3\", \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_qualificationlevel", "operator": "Equals", "value": "LEVEL_3", "description": "QualificationLevel = LEVEL_3" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status = ACTIVE" }
+      ]
+    },
+    {
+      "id": "BTC20",
+      "title": "On-Demand-Anlage → neue MS bei unbekannter User/Org-Kombination",
+      "category": "Membership → MS",
+      "tags": ["bridge", "membership-updated", "on-demand"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC20_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC20_First", "lastname": "{PREFIX}_BTC20_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "MembershipUpdatedEvent für neue User/Org-Kombination senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{NEW_ORG_PLATFORMID}\", \"email\": \"btc20_{TIMESTAMP}@test.markant.com\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 1, \"platformRequests\": [], \"qualificationLevel\": \"LEVEL_2\", \"type\": \"OrganizationMembershipUpdatedEvent\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_platformuserid", "operator": "Equals", "value": "{CONTACT_PLATFORMID}", "description": "Neue MS wurde angelegt mit korrekter UserId" },
+        { "target": "MembershipSource", "field": "markant_platformorganizationid", "operator": "Equals", "value": "{NEW_ORG_PLATFORMID}", "description": "Neue MS mit neuer OrgId" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status = ACTIVE" }
+      ]
+    },
+    {
+      "id": "BTC21",
+      "title": "RolesChanged Init-Snapshot → alle Rollen pro Org geschrieben",
+      "category": "Rollen → MS",
+      "tags": ["bridge", "roles", "init-snapshot"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC21_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC21_First", "lastname": "{PREFIX}_BTC21_Last" },
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserRolesChangedEvent Init-Snapshot mit mehreren Rollen senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"r001\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": null }, { \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"r002\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": \"l001\" }, { \"internalRoleName\": \"DVA_CLAIM_EDITOR\", \"roleId\": \"r003\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": \"l002\" }], \"addedRoles\": null, \"deletedRoles\": null, \"type\": \"UserRolesChangedEvent\", \"version\": \"{NOW_UTC}\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "ORGANIZATION_MEMBER", "description": "RolesData enthält ORGANIZATION_MEMBER" },
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "LEISTUNG_ADMIN", "description": "RolesData enthält LEISTUNG_ADMIN" },
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "DVA_CLAIM_EDITOR", "description": "RolesData enthält DVA_CLAIM_EDITOR" }
+      ]
+    },
+    {
+      "id": "BTC22",
+      "title": "RolesChanged Multi-Org → je eine MS pro Organisation aktualisiert",
+      "category": "Rollen → MS",
+      "tags": ["bridge", "roles", "multi-org"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": [
+          { "name": "{PREFIX}_BTC22_Account_A", "ref": "ORG_A" },
+          { "name": "{PREFIX}_BTC22_Account_B", "ref": "ORG_B" }
+        ],
+        "contactData": { "firstname": "{PREFIX}_BTC22_First", "lastname": "{PREFIX}_BTC22_Last" },
+        "existingMembershipSources": ["ORG_A", "ORG_B"]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserRolesChangedEvent mit Rollen für zwei Organisationen senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"r001\", \"organizationId\": \"{ORG_A_PLATFORMID}\", \"leistungId\": null }, { \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"r002\", \"organizationId\": \"{ORG_B_PLATFORMID}\", \"leistungId\": \"l001\" }], \"addedRoles\": null, \"deletedRoles\": null, \"type\": \"UserRolesChangedEvent\", \"version\": \"{NOW_UTC}\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "ORGANIZATION_MEMBER", "scope": "ORG_A", "description": "MS Org A hat ORGANIZATION_MEMBER-Rolle" },
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "LEISTUNG_ADMIN", "scope": "ORG_B", "description": "MS Org B hat LEISTUNG_ADMIN-Rolle" }
+      ]
+    },
+    {
+      "id": "BTC23",
+      "title": "RolesChanged → Optimistic Concurrency bei parallelem Update",
+      "category": "Rollen → MS",
+      "tags": ["bridge", "roles", "optimistic-concurrency"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC23_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC23_First", "lastname": "{PREFIX}_BTC23_Last" },
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Erstes RolesChanged-Event senden (Version T1)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"r001\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": null }], \"type\": \"UserRolesChangedEvent\", \"version\": \"2026-03-26T10:00:00Z\" }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Zweites RolesChanged-Event quasi-gleichzeitig senden (Version T2)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"r001\", \"organizationId\": \"{ORG_PLATFORMID}\" }, { \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"r002\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": \"l001\" }], \"type\": \"UserRolesChangedEvent\", \"version\": \"2026-03-26T10:01:00Z\" }",
+            "createdon_source": "2026-03-26T10:01:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "Contains", "value": "LEISTUNG_ADMIN", "description": "Neueres Event hat gewonnen — LEISTUNG_ADMIN vorhanden" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Beide Bridge-Records Verarbeitet", "scope": "all" }
+      ]
+    },
+    {
+      "id": "BTC24",
+      "title": "RolesChanged → Rollen ohne OrganizationId werden ignoriert",
+      "category": "Rollen → MS",
+      "tags": ["bridge", "roles", "filter"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC24_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC24_First", "lastname": "{PREFIX}_BTC24_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserRolesChangedEvent senden – nur Rollen ohne organizationId",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"r001\", \"organizationId\": null, \"leistungId\": \"l001\" }, { \"internalRoleName\": \"LEISTUNG_ADMIN\", \"roleId\": \"r002\", \"organizationId\": null, \"leistungId\": \"l002\" }], \"type\": \"UserRolesChangedEvent\", \"version\": \"{NOW_UTC}\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_rolesdata", "operator": "IsNull", "description": "Keine MS angelegt (alle Rollen ohne OrgId)" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet (kein Fehler)" }
+      ]
+    },
+    {
+      "id": "BTC25",
+      "title": "RolesChanged → Version-Timestamp korrekt als RolesTimestamp gesetzt",
+      "category": "Rollen → MS",
+      "tags": ["bridge", "roles", "timestamp"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC25_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC25_First", "lastname": "{PREFIX}_BTC25_Last" },
+        "existingMembershipSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "UserRolesChangedEvent mit bekanntem Version-Timestamp senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserRolesChangedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"roles\": [{ \"internalRoleName\": \"ORGANIZATION_MEMBER\", \"roleId\": \"r001\", \"organizationId\": \"{ORG_PLATFORMID}\", \"leistungId\": null }], \"type\": \"UserRolesChangedEvent\", \"version\": \"2026-03-26T14:30:00.000Z\" }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_ms_roles_on", "operator": "IsNotNull", "description": "RolesTimestamp ist gesetzt" },
+        { "target": "MembershipSource", "field": "markant_cdh_eventtimestamp", "operator": "Equals", "value": "2026-03-26T14:30:00.000Z", "description": "EventTimestamp = Version-Wert" }
+      ]
+    },
+    {
+      "id": "BTC26",
+      "title": "Doppelter UserUpdatedEvent → keine doppelte ContactSource",
+      "category": "Idempotenz",
+      "tags": ["bridge", "idempotenz", "userupdated", "duplikat"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC26_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC26_First", "lastname": "{PREFIX}_BTC26_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Erstes UserUpdatedEvent senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC26_First\", \"lastname\": \"{PREFIX}_BTC26_Last\", \"email\": \"btc26_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Identisches UserUpdatedEvent nochmals senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC26_First\", \"lastname\": \"{PREFIX}_BTC26_Last\", \"email\": \"btc26_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T10:00:01Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_externalid", "operator": "Equals", "value": "{CONTACT_PLATFORMID}", "description": "Genau eine CS vorhanden" },
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC26_First", "description": "CS-Daten unverändert" },
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Beide Bridge-Records Verarbeitet", "scope": "all" }
+      ]
+    },
+    {
+      "id": "BTC27",
+      "title": "Doppeltes MembershipUpdatedEvent → keine doppelte MembershipSource",
+      "category": "Idempotenz",
+      "tags": ["bridge", "idempotenz", "membership", "duplikat"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC27_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC27_First", "lastname": "{PREFIX}_BTC27_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Erstes MembershipUpdatedEvent senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 10, \"qualificationLevel\": \"LEVEL_1\", \"type\": \"OrganizationMembershipUpdatedEvent\" }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Identisches MembershipUpdatedEvent nochmals senden",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 10, \"qualificationLevel\": \"LEVEL_1\", \"type\": \"OrganizationMembershipUpdatedEvent\" }",
+            "createdon_source": "2026-03-26T10:00:01Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status bleibt ACTIVE" },
+        { "target": "MembershipSource", "field": "markant_platformuserid", "operator": "Equals", "value": "{CONTACT_PLATFORMID}", "description": "Genau eine MS vorhanden (Upsert)" }
+      ]
+    },
+    {
+      "id": "BTC28",
+      "title": "Reihenfolge-Verletzung CS → älteres UserUpdatedEvent wird ignoriert",
+      "category": "Idempotenz",
+      "tags": ["bridge", "idempotenz", "reihenfolge", "timestamp-guard"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC28_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC28_First", "lastname": "{PREFIX}_BTC28_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Neueres Event senden (T2 = 12:00)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC28_Aktuell\", \"lastname\": \"{PREFIX}_BTC28_Last\", \"email\": \"btc28_aktuell@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 5, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T12:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Älteres Event senden (T1 = 10:00 < T2)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC28_Veraltet\", \"lastname\": \"{PREFIX}_BTC28_Last\", \"email\": \"btc28_veraltet@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 3, \"organizationMemberships\": [] } }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC28_Aktuell", "description": "CS behält Wert vom neueren Event" },
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "NotEquals", "value": "{PREFIX}_BTC28_Veraltet", "description": "Älteres Event hat CS nicht überschrieben" }
+      ]
+    },
+    {
+      "id": "BTC29",
+      "title": "Reihenfolge-Verletzung MS → älteres MembershipUpdatedEvent wird ignoriert",
+      "category": "Idempotenz",
+      "tags": ["bridge", "idempotenz", "reihenfolge", "membership"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC29_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC29_First", "lastname": "{PREFIX}_BTC29_Last" },
+        "existingContactSource": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Neueres MembershipUpdatedEvent senden (T2 = 12:00)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationMembershipStatus\": \"ACTIVE\", \"version\": 200, \"qualificationLevel\": \"LEVEL_3\", \"type\": \"OrganizationMembershipUpdatedEvent\" }",
+            "createdon_source": "2026-03-26T12:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Älteres MembershipUpdatedEvent senden (T1 = 10:00)",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "OrganizationMembershipUpdatedEvent",
+            "eventdata": "{ \"userId\": \"{CONTACT_PLATFORMID}\", \"organizationId\": \"{ORG_PLATFORMID}\", \"organizationMembershipStatus\": \"INVITED\", \"version\": 100, \"qualificationLevel\": \"LEVEL_1\", \"type\": \"OrganizationMembershipUpdatedEvent\" }",
+            "createdon_source": "2026-03-26T10:00:00Z"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "description": "MS-Status bleibt ACTIVE (neueres Event)" },
+        { "target": "MembershipSource", "field": "markant_qualificationlevel", "operator": "Equals", "value": "LEVEL_3", "description": "QualificationLevel bleibt LEVEL_3 (neueres Event)" }
+      ]
+    },
+    {
+      "id": "BTC30",
+      "title": "Reprocess-Flag → erneute Verarbeitung eines Bridge-Records",
+      "category": "Idempotenz",
+      "tags": ["bridge", "idempotenz", "reprocess"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_BTC30_Account" },
+        "contactData": { "firstname": "{PREFIX}_BTC30_First", "lastname": "{PREFIX}_BTC30_Last" }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge Record erstellen und verarbeiten lassen",
+          "action": "CreatePlatformBridgeRecord",
+          "data": {
+            "eventtype": "UserUpdatedEvent",
+            "eventdata": "{ \"type\": \"UserUpdatedEvent\", \"userId\": \"{CONTACT_PLATFORMID}\", \"user\": { \"id\": \"{CONTACT_PLATFORMID}\", \"firstname\": \"{PREFIX}_BTC30_First\", \"lastname\": \"{PREFIX}_BTC30_Last\", \"email\": \"btc30_{TIMESTAMP}@test.markant.com\", \"userType\": \"NATURAL\", \"version\": 1, \"organizationMemberships\": [] } }"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        },
+        {
+          "stepNumber": 2,
+          "description": "Reprocess-Flag setzen → Status zurück auf Neu",
+          "action": "SetReprocessFlag",
+          "data": {
+            "markant_reprocessrequested": true
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "PlatformBridge", "field": "markant_bridgestatus", "operator": "Equals", "value": "595300002", "description": "Bridge-Status = Verarbeitet (nach Reprocess)" },
+        { "target": "ContactSource", "field": "markant_firstname", "operator": "Equals", "value": "{PREFIX}_BTC30_First", "description": "CS-Daten nach Reprocess korrekt" }
+      ]
+    }
+  ]
+}

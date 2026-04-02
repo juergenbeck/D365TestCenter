@@ -1,0 +1,43 @@
+{
+  "$schema": "ITT Pack Manifest v1.0",
+  "description": "Verfügbare Demo-Packs für das Integration Test Center. Neue Packs hier registrieren.",
+  "packs": [
+    {
+      "packId": "standard",
+      "file": "standard.json",
+      "default": true
+    },
+    {
+      "packId": "field-governance",
+      "file": "field-governance.json"
+    },
+    {
+      "packId": "membership",
+      "file": "membership.json"
+    },
+    {
+      "packId": "markant-base",
+      "file": "markant-base.json"
+    },
+    {
+      "packId": "fg-testtool",
+      "file": "fg-testtool.json"
+    },
+    {
+      "packId": "fg-testtool-v2",
+      "file": "fg-testtool-v2.json"
+    },
+    {
+      "packId": "fg-testtool-legacy",
+      "file": "fg-testtool-legacy.json"
+    },
+    {
+      "packId": "snapshot-recompute",
+      "file": "snapshot-recompute.json"
+    },
+    {
+      "packId": "empty",
+      "file": "empty.json"
+    }
+  ]
+}

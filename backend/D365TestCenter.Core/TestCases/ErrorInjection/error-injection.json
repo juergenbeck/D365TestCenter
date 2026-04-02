@@ -1,0 +1,269 @@
+{
+  "suiteId": "ErrorInjection",
+  "suiteName": "Fehlerinjektionstests (basierend auf PROD-Fehlerszenarien)",
+  "suiteDescription": "Prüft die Fehlerbehandlung der Bridge und FG bei ungültigen, unvollständigen oder unerwarteten Eingabedaten. Basiert auf den häufigsten Produktions-Fehlern: Account not found (58%), Duplicate Contacts (18%), Contact not found (13%), JSON-Parsing (11%).",
+  "testCases": [
+    {
+      "id": "ERR01",
+      "title": "Ungültiger Event-Typ wird protokolliert, kein Absturz",
+      "description": "Bridge-Record mit unbekanntem Event-Typ. Erwartet: Status Error, Fehlermeldung gesetzt.",
+      "category": "Error Injection",
+      "tags": ["error", "bridge", "invalid-eventtype"],
+      "enabled": true,
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": false,
+        "createAccount": false
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge-Record mit unbekanntem Event-Typ",
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "badBridge",
+          "fields": {
+            "markant_eventtype": "CompletlyBogusEvent",
+            "markant_eventdata": "{\"userId\": \"test123\", \"type\": \"CompletlyBogusEvent\"}",
+            "markant_bridgestatus": 595300000
+          }
+        },
+        {
+          "stepNumber": 2,
+          "description": "Warte bis Bridge-Status auf Error wechselt",
+          "action": "WaitForFieldValue",
+          "recordRef": "{RECORD:badBridge}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgestatus",
+          "expectedValue": 595300004,
+          "timeoutSeconds": 60
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Fehlermeldung ist gesetzt",
+          "target": "Record",
+          "recordRef": "{RECORD:badBridge}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgeerrormessage",
+          "operator": "IsNotNull"
+        }
+      ]
+    },
+    {
+      "id": "ERR02",
+      "title": "Ungültiges JSON im eventdata",
+      "description": "Bridge-Record mit kaputtem JSON. Erwartet: Status Error mit JSON-Parsing-Hinweis.",
+      "category": "Error Injection",
+      "tags": ["error", "bridge", "invalid-json"],
+      "enabled": true,
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": false,
+        "createAccount": false
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge-Record mit kaputtem JSON",
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "brokenJson",
+          "fields": {
+            "markant_eventtype": "UserUpdatedEvent",
+            "markant_eventdata": "{ this is not valid json at all !!!",
+            "markant_bridgestatus": 595300000
+          }
+        },
+        {
+          "stepNumber": 2,
+          "description": "Warte bis Bridge-Status auf Error wechselt",
+          "action": "WaitForFieldValue",
+          "recordRef": "{RECORD:brokenJson}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgestatus",
+          "expectedValue": 595300004,
+          "timeoutSeconds": 60
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Fehlermeldung enthält JSON-Hinweis",
+          "target": "Record",
+          "recordRef": "{RECORD:brokenJson}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgeerrormessage",
+          "operator": "IsNotNull"
+        }
+      ]
+    },
+    {
+      "id": "ERR03",
+      "title": "Account not found: ContactSource trotzdem angelegt (PROD-Fehler #1, 58%)",
+      "description": "UserUpdatedEvent mit OrganizationId die keinem Account entspricht. Im Ist-SSIS bricht das ab. Die Bridge soll den ContactSource trotzdem anlegen (ohne parentcustomerid).",
+      "category": "Error Injection",
+      "tags": ["error", "bridge", "account-not-found", "prod-top1"],
+      "enabled": true,
+      "notImplemented": true,
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": false
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge-Record mit nicht existierender OrganizationId",
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "noAccountBridge",
+          "fields": {
+            "markant_eventtype": "UserUpdatedEvent",
+            "markant_eventdata": "{PAYLOAD:UserUpdatedEvent}",
+            "markant_bridgestatus": 595300000
+          },
+          "payloadOverrides": {
+            "$.user.externalId": "{GENERATED:noAccExtId}",
+            "$.user.organizationMemberships[0].organizationId": "000000000000000000000000"
+          }
+        },
+        {
+          "stepNumber": 2,
+          "description": "Warte bis ContactSource erscheint (trotz fehlendem Account)",
+          "action": "WaitForRecord",
+          "entity": "markant_cdh_contactsource",
+          "alias": "csNoAccount",
+          "filter": [
+            { "field": "markant_externalid", "operator": "eq", "value": "{GENERATED:noAccExtId}" }
+          ],
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        {
+          "description": "ContactSource existiert",
+          "target": "Record",
+          "recordRef": "{RECORD:csNoAccount}",
+          "entity": "markant_cdh_contactsource",
+          "field": "markant_externalid",
+          "operator": "Equals",
+          "value": "{GENERATED:noAccExtId}"
+        },
+        {
+          "description": "parentcustomerid ist NULL (kein Account gefunden)",
+          "target": "Record",
+          "recordRef": "{RECORD:csNoAccount}",
+          "entity": "markant_cdh_contactsource",
+          "field": "markant_parentcustomerid",
+          "operator": "IsNull"
+        }
+      ]
+    },
+    {
+      "id": "ERR04",
+      "title": "Fehlende Pflichtfelder im Payload",
+      "description": "UserUpdatedEvent ohne firstName und lastName. Bridge soll den Record trotzdem verarbeiten (Rohwerte: leere Strings).",
+      "category": "Error Injection",
+      "tags": ["error", "bridge", "missing-fields"],
+      "enabled": true,
+      "notImplemented": true,
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Bridge-Record mit minimalen Feldern",
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "minimalBridge",
+          "fields": {
+            "markant_eventtype": "UserUpdatedEvent",
+            "markant_eventdata": "{\"userId\": \"{GENERATED:minUserId}\", \"user\": {\"externalId\": \"{GENERATED:minUserId}\", \"organizationMemberships\": []}, \"type\": \"UserUpdatedEvent\"}",
+            "markant_bridgestatus": 595300000
+          }
+        },
+        {
+          "stepNumber": 2,
+          "description": "Warte auf Verarbeitung",
+          "action": "WaitForFieldValue",
+          "recordRef": "{RECORD:minimalBridge}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgestatus",
+          "expectedValue": 595300002,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Bridge wurde verarbeitet (nicht Error)",
+          "target": "Record",
+          "recordRef": "{RECORD:minimalBridge}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgestatus",
+          "operator": "Equals",
+          "value": "595300002"
+        }
+      ]
+    },
+    {
+      "id": "ERR05",
+      "title": "Rollen-Burst: 5 gleichzeitige UserRolesChangedEvents",
+      "description": "Simuliert den PROD-Burst (bis zu 24 Events gleichzeitig). Prüft dass Optimistic Concurrency korrekt konvergiert.",
+      "category": "Error Injection",
+      "tags": ["error", "bridge", "roles-burst", "concurrency"],
+      "enabled": true,
+      "notImplemented": true,
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "burst1",
+          "description": "Rollen-Event 1 (1 Rolle)",
+          "fields": {
+            "markant_eventtype": "UserRolesChangedEvent",
+            "markant_eventdata": "{\"userId\": \"{GENERATED:burstUser}\", \"roles\": [{\"roleId\": \"role1\", \"organizationId\": \"org1\", \"internalRoleName\": \"ORGANIZATION_MEMBER\"}], \"type\": \"UserRolesChangedEvent\", \"version\": \"2026-03-28T14:30:01.000Z\"}",
+            "markant_bridgestatus": 595300000
+          }
+        },
+        {
+          "stepNumber": 2,
+          "action": "CreateRecord",
+          "entity": "markant_platformbridge",
+          "alias": "burst2",
+          "description": "Rollen-Event 2 (2 Rollen)",
+          "fields": {
+            "markant_eventtype": "UserRolesChangedEvent",
+            "markant_eventdata": "{\"userId\": \"{GENERATED:burstUser}\", \"roles\": [{\"roleId\": \"role1\", \"organizationId\": \"org1\", \"internalRoleName\": \"ORGANIZATION_MEMBER\"}, {\"roleId\": \"role2\", \"organizationId\": \"org1\", \"internalRoleName\": \"PARTNERPOOL_VIEWER\"}], \"type\": \"UserRolesChangedEvent\", \"version\": \"2026-03-28T14:30:02.000Z\"}",
+            "markant_bridgestatus": 595300000
+          }
+        },
+        {
+          "stepNumber": 3,
+          "action": "Wait",
+          "description": "Warte auf parallele Verarbeitung",
+          "waitSeconds": 30
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Alle Bridge-Records verarbeitet",
+          "target": "Record",
+          "recordRef": "{RECORD:burst2}",
+          "entity": "markant_platformbridge",
+          "field": "markant_bridgestatus",
+          "operator": "NotEquals",
+          "value": "595300000"
+        }
+      ]
+    }
+  ]
+}

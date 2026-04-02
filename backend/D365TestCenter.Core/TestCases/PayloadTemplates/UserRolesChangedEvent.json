@@ -1,0 +1,34 @@
+{
+  "userId": "69b831d8f6c94c5afc9d3d67",
+  "roles": [
+    {
+      "internalRoleName": "ORGANIZATION_MEMBER",
+      "roleId": "64b52e99ab83a434aa416738",
+      "organizationId": "6992c3ae722d466a654e949b",
+      "leistungId": null,
+      "suborganizationId": null,
+      "allowSkipMfa": false
+    },
+    {
+      "internalRoleName": "PARTNERPOOL_VIEWER",
+      "roleId": "6966228c1c3d0b25dce9f56b",
+      "organizationId": "6992c3ae722d466a654e949b",
+      "leistungId": "66e02a2c76d16b5d0800947a",
+      "suborganizationId": null,
+      "allowSkipMfa": false
+    }
+  ],
+  "addedRoles": [
+    {
+      "internalRoleName": "PARTNERPOOL_VIEWER",
+      "roleId": "6966228c1c3d0b25dce9f56b",
+      "organizationId": "6992c3ae722d466a654e949b",
+      "leistungId": "66e02a2c76d16b5d0800947a",
+      "suborganizationId": null,
+      "allowSkipMfa": false
+    }
+  ],
+  "deletedRoles": [],
+  "type": "UserRolesChangedEvent",
+  "version": "2026-03-28T14:30:00.000000Z"
+}

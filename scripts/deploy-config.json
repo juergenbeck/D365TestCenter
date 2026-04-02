@@ -1,0 +1,7 @@
+{
+    "resource": "https://markant-dev.crm4.dynamics.com/",
+    "solutionUniqueName": "IntegrationTestCenter",
+    "publisherUniqueName": "itt",
+    "publisherPrefix": "itt",
+    "publisherOptionValuePrefix": 10571
+}

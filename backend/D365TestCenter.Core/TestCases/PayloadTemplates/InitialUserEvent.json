@@ -1,0 +1,46 @@
+{
+  "userId": "69b831d8f6c94c5afc9d3d67",
+  "user": {
+    "externalId": "auth0|69b831d8f6c94c5afc9d3d67",
+    "firstName": "Anna",
+    "lastName": "Beispiel",
+    "salutation": "FEMALE",
+    "email": "anna.beispiel@testfirma.de",
+    "phone": "+49 30 98765432",
+    "mobilePhone": null,
+    "language": "de",
+    "preferredLanguage": "de",
+    "academicTitle": "Dr.",
+    "middleName": null,
+    "position": "Key Account Manager",
+    "department": "Vertrieb",
+    "becameActiveAt": "2025-01-10T10:00:00.000Z",
+    "organizationMemberships": [
+      {
+        "organizationId": "6ab12cd3456e789f01234567",
+        "organizationMembershipStatus": "ACTIVE",
+        "createdAt": "2025-01-10T10:00:00.000Z",
+        "qualification": "VERIFIED",
+        "address": {
+          "streetNameAndNumber": "Industriestr. 42",
+          "zip": "10115",
+          "city": "Berlin",
+          "countryCode": "DE"
+        },
+        "phone": "+49 30 123456-0",
+        "department": "Vertrieb"
+      },
+      {
+        "organizationId": "7bc23de4567f890a12345678",
+        "organizationMembershipStatus": "INVITED",
+        "createdAt": "2025-03-20T14:00:00.000Z",
+        "qualification": null,
+        "address": null,
+        "phone": null,
+        "department": null
+      }
+    ]
+  },
+  "type": "InitialUserEvent",
+  "version": null
+}

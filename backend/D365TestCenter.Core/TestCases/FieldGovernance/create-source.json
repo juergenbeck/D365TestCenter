@@ -1,0 +1,458 @@
+{
+  "suiteId": "FG-CreateSource",
+  "suiteName": "FGTC – Existing Contact – Create Source Record",
+  "suiteDescription": "Tests für das Erstellen neuer CDH Contact Source Records und Überprüfung der Field Governance Ergebnisse. Basiert auf DYN-T686, DYN-T687.",
+  "testCases": [
+    {
+      "id": "TCC01",
+      "title": "Create Single Source – Last Update Wins – Update Single Field",
+      "description": "Contact existiert. Neues CDH Contact Source (Pisa) wird erstellt → firstname übernommen.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "SingleSource", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "contactData": {
+          "firstname": "TCC01_ORIG",
+          "lastname": "TCC01_Kontakt_{TIMESTAMP}"
+        }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: markant_firstname = C01_FN",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "C01_FN",
+            "markant_lastname": "TCC01_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should be C01_FN",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "C01_FN"
+        },
+        {
+          "description": "CDH Log should exist",
+          "target": "CdhLogging",
+          "operator": "Exists"
+        }
+      ]
+    },
+    {
+      "id": "TCC02",
+      "title": "Create Single Source – Last Update Wins – Update All Fields",
+      "description": "Contact existiert. Neues CDH Contact Source (Pisa) mit allen Feldern.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "SingleSource", "MultiField", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "contactData": {
+          "firstname": "TCC02_ORIG_FN",
+          "lastname": "TCC02_Kontakt_{TIMESTAMP}"
+        }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source with all fields",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "FN_NEW",
+            "markant_lastname": "LN_NEW",
+            "markant_jobtitle": "JT_NEW"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should be FN_NEW",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "FN_NEW"
+        },
+        {
+          "description": "Contact.lastname should be LN_NEW",
+          "target": "Contact",
+          "field": "lastname",
+          "operator": "Equals",
+          "value": "LN_NEW"
+        },
+        {
+          "description": "Contact.jobtitle should be JT_NEW",
+          "target": "Contact",
+          "field": "jobtitle",
+          "operator": "Equals",
+          "value": "JT_NEW"
+        }
+      ]
+    },
+    {
+      "id": "TCC03",
+      "title": "Create Single Source – Last Update Wins – No Effective Change",
+      "description": "Contact existiert mit firstname=C03_FN. Neuer PisaRecord mit identischem Wert.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "NoOp", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "contactData": {
+          "firstname": "C03_FN",
+          "lastname": "TCC03_Kontakt_{TIMESTAMP}"
+        }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source with identical firstname",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "C03_FN",
+            "markant_lastname": "TCC03_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should remain C03_FN (no effective change)",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "C03_FN"
+        }
+      ]
+    },
+    {
+      "id": "TCC05",
+      "title": "Create Multi Source – Last Update Wins – Update One Snapshot",
+      "description": "Contact existiert. Zwei Sources (Pisa, Plattform). Neuer Pisa-Record erstellt.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "MultiSource", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "existingContactSources": [
+          {
+            "alias": "platform1",
+            "sourceSystem": 5,
+            "fields": {
+              "markant_firstname": "TCC05_PLAT_ORIG",
+              "markant_lastname": "TCC05_Kontakt_{TIMESTAMP}"
+            },
+            "linkToContact": true,
+            "waitForGovernance": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: firstname = PISA_FN",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "PISA_FN",
+            "markant_lastname": "TCC05_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should be PISA_FN (newest timestamp)",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "PISA_FN"
+        }
+      ]
+    },
+    {
+      "id": "TCC06",
+      "title": "Create Multi Source – Last Update Wins – Create Multiple Snapshots",
+      "description": "Contact existiert. Zwei neue Snapshots erstellt (Pisa & Plattform). Letzter gewinnt.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "MultiSource", "MultiCreate"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: firstname = PISA_FN",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "PISA_FN",
+            "markant_lastname": "TCC06_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        },
+        {
+          "stepNumber": 2,
+          "description": "Wait 2s to ensure timestamp difference",
+          "action": "Delay",
+          "delayMs": 2000
+        },
+        {
+          "stepNumber": 3,
+          "description": "Create Platform Source: firstname = PLAT_FN (later)",
+          "action": "CreateContactSource",
+          "targetAlias": "platform1",
+          "sourceSystem": 5,
+          "fields": {
+            "markant_firstname": "PLAT_FN",
+            "markant_lastname": "TCC06_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should be PLAT_FN (Platform created later → latest timestamp wins)",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "PLAT_FN"
+        }
+      ]
+    },
+    {
+      "id": "TCC08",
+      "title": "Create Multi Source – Last Update Wins – No Effective Change",
+      "description": "Contact firstname=EXISTING. Neuer PisaRecord mit identischem Wert.",
+      "category": "Create Source Record",
+      "tags": ["LUW", "MultiSource", "NoOp", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "contactData": {
+          "firstname": "EXISTING",
+          "lastname": "TCC08_Kontakt_{TIMESTAMP}"
+        }
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source with identical value",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_firstname": "EXISTING",
+            "markant_lastname": "TCC08_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.firstname should remain EXISTING",
+          "target": "Contact",
+          "field": "firstname",
+          "operator": "Equals",
+          "value": "EXISTING"
+        }
+      ]
+    },
+    {
+      "id": "TCC09",
+      "title": "Create Multi Source – Priority Order – Higher Priority Exists",
+      "description": "Dynamics hat Email-Wert. Neuer Pisa-Record → Contact bleibt bei Dynamics.",
+      "category": "Create Source Record",
+      "tags": ["PriorityOrder", "MultiSource", "Create"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "existingContactSources": [
+          {
+            "alias": "dynamics1",
+            "sourceSystem": 1,
+            "fields": {
+              "markant_emailaddress1": "tcc09_dyn@mail.com",
+              "markant_firstname": "TCC09_FN",
+              "markant_lastname": "TCC09_Kontakt_{TIMESTAMP}"
+            },
+            "linkToContact": true,
+            "waitForGovernance": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: emailaddress1 = pisa@mail.com",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_emailaddress1": "pisa@mail.com",
+            "markant_firstname": "TCC09_FN",
+            "markant_lastname": "TCC09_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.emailaddress1 should remain tcc09_dyn@mail.com (Dynamics higher priority)",
+          "target": "Contact",
+          "field": "emailaddress1",
+          "operator": "Equals",
+          "value": "tcc09_dyn@mail.com"
+        }
+      ]
+    },
+    {
+      "id": "TCC10",
+      "title": "Create Multi Source – Priority Order – Higher Priority Empty",
+      "description": "Dynamics leer. Pisa erstellt → Pisa gewinnt, da Dynamics keinen Wert hat.",
+      "category": "Create Source Record",
+      "tags": ["PriorityOrder", "MultiSource", "Create", "FallbackPriority"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true,
+        "existingContactSources": [
+          {
+            "alias": "dynamics1",
+            "sourceSystem": 1,
+            "fields": {
+              "markant_firstname": "TCC10_FN",
+              "markant_lastname": "TCC10_Kontakt_{TIMESTAMP}"
+            },
+            "linkToContact": true,
+            "waitForGovernance": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: emailaddress1 = pisa@mail.com",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_emailaddress1": "pisa@mail.com",
+            "markant_firstname": "TCC10_FN",
+            "markant_lastname": "TCC10_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.emailaddress1 should be pisa@mail.com (Dynamics empty → Pisa wins)",
+          "target": "Contact",
+          "field": "emailaddress1",
+          "operator": "Equals",
+          "value": "pisa@mail.com"
+        }
+      ]
+    },
+    {
+      "id": "TCC12",
+      "title": "Create Multi Source – Priority Order – Create Multiple Snapshots",
+      "description": "Dynamics leer. Pisa & Plattform erstellt → Pisa gewinnt (höhere Priorität als Plattform).",
+      "category": "Create Source Record",
+      "tags": ["PriorityOrder", "MultiSource", "MultiCreate"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "createContact": true,
+        "createAccount": true
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create Pisa Source: emailaddress1 = pisa@mail.com",
+          "action": "CreateContactSource",
+          "targetAlias": "pisa1",
+          "sourceSystem": 4,
+          "fields": {
+            "markant_emailaddress1": "pisa@mail.com",
+            "markant_firstname": "TCC12_FN",
+            "markant_lastname": "TCC12_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        },
+        {
+          "stepNumber": 2,
+          "description": "Create Platform Source: emailaddress1 = plat@mail.com",
+          "action": "CreateContactSource",
+          "targetAlias": "platform1",
+          "sourceSystem": 5,
+          "fields": {
+            "markant_emailaddress1": "plat@mail.com",
+            "markant_firstname": "TCC12_FN",
+            "markant_lastname": "TCC12_Kontakt_{TIMESTAMP}"
+          },
+          "linkToContact": true,
+          "waitForGovernance": true
+        }
+      ],
+      "assertions": [
+        {
+          "description": "Contact.emailaddress1 should be pisa@mail.com (Pisa > Plattform in priority)",
+          "target": "Contact",
+          "field": "emailaddress1",
+          "operator": "Equals",
+          "value": "pisa@mail.com"
+        }
+      ]
+    }
+  ]
+}

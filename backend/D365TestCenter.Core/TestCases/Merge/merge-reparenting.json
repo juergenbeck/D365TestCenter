@@ -1,0 +1,199 @@
+{
+  "suiteId": "Merge",
+  "suiteName": "Merge Reparenting Tests",
+  "testCases": [
+    {
+      "id": "MTC01",
+      "title": "Merge reparentiert ContactSources",
+      "category": "Merge-Reparenting",
+      "tags": ["merge", "contactsource", "reparenting"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_MTC01_Account" },
+        "contactData": [
+          { "firstname": "{PREFIX}_MTC01_Master_First", "lastname": "{PREFIX}_MTC01_Master_Last", "ref": "MASTER" },
+          { "firstname": "{PREFIX}_MTC01_Sub_First", "lastname": "{PREFIX}_MTC01_Sub_Last", "ref": "SUB" }
+        ],
+        "contactSourceData": [
+          { "contactRef": "MASTER", "externalId": "{MASTER_PLATFORMID}", "sourceSystemCode": 5, "firstname": "{PREFIX}_MTC01_Master_First", "lastname": "{PREFIX}_MTC01_Master_Last" },
+          { "contactRef": "SUB", "externalId": "{SUB_PLATFORMID}", "sourceSystemCode": 5, "firstname": "{PREFIX}_MTC01_Sub_First", "lastname": "{PREFIX}_MTC01_Sub_Last" }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Sub-Kontakt in Master-Kontakt mergen",
+          "action": "MergeContacts",
+          "data": {
+            "masterContactRef": "MASTER",
+            "subordinateContactRef": "SUB"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "contactid", "operator": "Equals", "value": "{MASTER_CONTACTID}", "scope": "SUB_CS", "description": "CS des Sub-Kontakts wurde auf Master umgehängt" },
+        { "target": "ContactSource", "field": "markant_externalid", "operator": "Equals", "value": "{SUB_PLATFORMID}", "scope": "SUB_CS", "description": "ExternalId der Sub-CS bleibt erhalten" },
+        { "target": "ContactSource", "field": "markant_externalid", "operator": "Equals", "value": "{MASTER_PLATFORMID}", "scope": "MASTER_CS", "description": "Master-CS unverändert" }
+      ]
+    },
+    {
+      "id": "MTC02",
+      "title": "Merge reparentiert MembershipSources",
+      "category": "Merge-Reparenting",
+      "tags": ["merge", "membershipsource", "reparenting"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": [
+          { "name": "{PREFIX}_MTC02_Account_A", "ref": "ORG_A" },
+          { "name": "{PREFIX}_MTC02_Account_B", "ref": "ORG_B" }
+        ],
+        "contactData": [
+          { "firstname": "{PREFIX}_MTC02_Master_First", "lastname": "{PREFIX}_MTC02_Master_Last", "ref": "MASTER" },
+          { "firstname": "{PREFIX}_MTC02_Sub_First", "lastname": "{PREFIX}_MTC02_Sub_Last", "ref": "SUB" }
+        ],
+        "contactSourceData": [
+          { "contactRef": "MASTER", "externalId": "{MASTER_PLATFORMID}", "sourceSystemCode": 5 },
+          { "contactRef": "SUB", "externalId": "{SUB_PLATFORMID}", "sourceSystemCode": 5 }
+        ],
+        "membershipSourceData": [
+          { "contactSourceRef": "MASTER_CS", "accountRef": "ORG_A", "platformUserId": "{MASTER_PLATFORMID}", "platformOrganizationId": "{ORG_A_PLATFORMID}", "membershipStatus": "ACTIVE" },
+          { "contactSourceRef": "SUB_CS", "accountRef": "ORG_B", "platformUserId": "{SUB_PLATFORMID}", "platformOrganizationId": "{ORG_B_PLATFORMID}", "membershipStatus": "ACTIVE" }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Sub-Kontakt in Master-Kontakt mergen",
+          "action": "MergeContacts",
+          "data": {
+            "masterContactRef": "MASTER",
+            "subordinateContactRef": "SUB"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "MembershipSource", "field": "markant_contactsourceid", "operator": "IsNotNull", "scope": "SUB_MS", "description": "MS des Sub-Kontakts hat noch CS-Referenz" },
+        { "target": "MembershipSource", "field": "markant_platformuserid", "operator": "Equals", "value": "{SUB_PLATFORMID}", "scope": "SUB_MS", "description": "MS behält ursprüngliche PlatformUserId" },
+        { "target": "MembershipSource", "field": "markant_membershipstatus", "operator": "Equals", "value": "ACTIVE", "scope": "SUB_MS", "description": "MS-Status bleibt ACTIVE" },
+        { "target": "ContactSource", "field": "contactid", "operator": "Equals", "value": "{MASTER_CONTACTID}", "scope": "SUB_CS", "description": "CS des Sub wurde auf Master umgehängt → MS folgt über CS" }
+      ]
+    },
+    {
+      "id": "MTC03",
+      "title": "Merge mit AK-Duplikat → Source deaktiviert",
+      "category": "Merge-Reparenting",
+      "tags": ["merge", "duplikat", "deaktivierung"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_MTC03_Account" },
+        "contactData": [
+          { "firstname": "{PREFIX}_MTC03_Master_First", "lastname": "{PREFIX}_MTC03_Master_Last", "ref": "MASTER" },
+          { "firstname": "{PREFIX}_MTC03_Sub_First", "lastname": "{PREFIX}_MTC03_Sub_Last", "ref": "SUB" }
+        ],
+        "contactSourceData": [
+          { "contactRef": "MASTER", "externalId": "SHARED_EXTERNAL_ID", "sourceSystemCode": 5, "firstname": "{PREFIX}_MTC03_Master_First" },
+          { "contactRef": "SUB", "externalId": "SHARED_EXTERNAL_ID", "sourceSystemCode": 5, "firstname": "{PREFIX}_MTC03_Sub_First" }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Sub-Kontakt in Master mergen → AK-Duplikat (gleiche ExternalId + SourceSystem)",
+          "action": "MergeContacts",
+          "data": {
+            "masterContactRef": "MASTER",
+            "subordinateContactRef": "SUB"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "ContactSource", "field": "statecode", "operator": "Equals", "value": "1", "scope": "SUB_CS", "description": "Sub-CS wurde deaktiviert (AK-Duplikat)" },
+        { "target": "ContactSource", "field": "statecode", "operator": "Equals", "value": "0", "scope": "MASTER_CS", "description": "Master-CS bleibt aktiv" }
+      ]
+    },
+    {
+      "id": "MTC04",
+      "title": "Merge löst ExternalId-Reaggregation aus",
+      "category": "Merge-Reparenting",
+      "tags": ["merge", "reaggregation", "externalid"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_MTC04_Account" },
+        "contactData": [
+          { "firstname": "{PREFIX}_MTC04_Master_First", "lastname": "{PREFIX}_MTC04_Master_Last", "ref": "MASTER" },
+          { "firstname": "{PREFIX}_MTC04_Sub_First", "lastname": "{PREFIX}_MTC04_Sub_Last", "ref": "SUB" }
+        ],
+        "contactSourceData": [
+          { "contactRef": "MASTER", "externalId": "{MASTER_PLATFORMID}", "sourceSystemCode": 5 },
+          { "contactRef": "SUB", "externalId": "{SUB_PLATFORMID}", "sourceSystemCode": 5 }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Sub-Kontakt in Master mergen → Reaggregation der ExternalIds",
+          "action": "MergeContacts",
+          "data": {
+            "masterContactRef": "MASTER",
+            "subordinateContactRef": "SUB"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 120
+        }
+      ],
+      "assertions": [
+        { "target": "Contact", "field": "markant_cdh_externalids", "operator": "Contains", "value": "{MASTER_PLATFORMID}", "scope": "MASTER", "description": "Master-Kontakt enthält eigene ExternalId" },
+        { "target": "Contact", "field": "markant_cdh_externalids", "operator": "Contains", "value": "{SUB_PLATFORMID}", "scope": "MASTER", "description": "Master-Kontakt enthält ExternalId des Sub-Kontakts" },
+        { "target": "CdhLogging", "operator": "Exists", "scope": "MASTER", "description": "CDH-Log für Reaggregation vorhanden" }
+      ]
+    },
+    {
+      "id": "MTC05",
+      "title": "Merge ohne Sources → kein Fehler",
+      "category": "Merge-Reparenting",
+      "tags": ["merge", "edge-case", "no-sources"],
+      "enabled": true,
+      "dataMode": "template",
+      "cleanupAfterTest": true,
+      "preconditions": {
+        "accountData": { "name": "{PREFIX}_MTC05_Account" },
+        "contactData": [
+          { "firstname": "{PREFIX}_MTC05_Master_First", "lastname": "{PREFIX}_MTC05_Master_Last", "ref": "MASTER" },
+          { "firstname": "{PREFIX}_MTC05_Sub_First", "lastname": "{PREFIX}_MTC05_Sub_Last", "ref": "SUB" }
+        ]
+      },
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Sub-Kontakt ohne CS/MS in Master mergen",
+          "action": "MergeContacts",
+          "data": {
+            "masterContactRef": "MASTER",
+            "subordinateContactRef": "SUB"
+          },
+          "waitForProcessing": true,
+          "timeoutSeconds": 60
+        }
+      ],
+      "assertions": [
+        { "target": "Contact", "field": "statecode", "operator": "Equals", "value": "0", "scope": "MASTER", "description": "Master-Kontakt bleibt aktiv" },
+        { "target": "Contact", "field": "statecode", "operator": "Equals", "value": "1", "scope": "SUB", "description": "Sub-Kontakt wurde deaktiviert" },
+        { "target": "ContactSource", "field": "markant_externalid", "operator": "IsNull", "scope": "SUB", "description": "Keine CS für Sub vorhanden → kein Fehler" }
+      ]
+    }
+  ]
+}

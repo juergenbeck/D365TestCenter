@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>itt.IntegrationTests.CrmPlugin</RootNamespace>
+    <AssemblyName>itt.IntegrationTests.CrmPlugin</AssemblyName>
+    <Authors>Integration Test Center Team</Authors>
+    <Description>Integration Test Center — CRM Plugin (Custom API itt_RunIntegrationTests)</Description>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.*" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\itt.IntegrationTests.Core\itt.IntegrationTests.Core.csproj" />
+  </ItemGroup>
+
+</Project>
