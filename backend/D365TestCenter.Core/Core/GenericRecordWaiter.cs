@@ -4,7 +4,7 @@ using System.Threading;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Generic polling-based waiter: waits until a record matching given filter criteria

@@ -3,7 +3,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Microsoft.Xrm.Sdk;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 // ═══════════════════════════════════════════════════════════════════════
 //  JSON-Testfall-Definitionen (deserialisiert aus Testsuite-JSON)

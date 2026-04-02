@@ -1,7 +1,7 @@
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Wartet auf asynchrone Plugin-Verarbeitung durch Polling auf

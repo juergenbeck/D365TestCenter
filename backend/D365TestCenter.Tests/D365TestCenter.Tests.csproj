@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\itt.IntegrationTests.Core\itt.IntegrationTests.Core.csproj" />
+    <ProjectReference Include="..\D365TestCenter.Core\D365TestCenter.Core.csproj" />
   </ItemGroup>
 
 </Project>

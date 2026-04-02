@@ -2,7 +2,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json.Linq;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Wertet Assertions gegen Dataverse-Entities und CDH-Logs aus.

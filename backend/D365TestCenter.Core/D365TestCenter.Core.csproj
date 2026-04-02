@@ -5,8 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>itt.IntegrationTests.Core</RootNamespace>
-    <AssemblyName>itt.IntegrationTests.Core</AssemblyName>
+    <RootNamespace>D365TestCenter.Core</RootNamespace>
+    <AssemblyName>D365TestCenter.Core</AssemblyName>
     <Authors>Integration Test Center Team</Authors>
     <Description>Integration Test Center — Core-Bibliothek (Modelle, TestRunner, Assertions, Platzhalter)</Description>
   </PropertyGroup>

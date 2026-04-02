@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Orchestriert die Integrationstestausführung:

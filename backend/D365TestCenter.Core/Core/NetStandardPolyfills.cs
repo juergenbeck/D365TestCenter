@@ -1,6 +1,6 @@
 using System;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Extension methods for netstandard2.0 compatibility.

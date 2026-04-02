@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json.Linq;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Central placeholder resolution engine. Replaces placeholders in strings and dictionaries.

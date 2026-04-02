@@ -2,7 +2,7 @@ using Bogus;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Erzeugt Testdaten in zwei Modi:

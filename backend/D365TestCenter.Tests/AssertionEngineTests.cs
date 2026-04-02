@@ -1,8 +1,8 @@
-using itt.IntegrationTests.Core;
+using D365TestCenter.Core;
 using Microsoft.Xrm.Sdk;
 using Xunit;
 
-namespace itt.IntegrationTests.Tests;
+namespace D365TestCenter.Tests;
 
 public class AssertionEngineTests
 {

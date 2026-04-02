@@ -2,7 +2,7 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 
-namespace itt.IntegrationTests.Core;
+namespace D365TestCenter.Core;
 
 /// <summary>
 /// Stellt eine Dataverse-Verbindung her über MSAL Device Code Flow

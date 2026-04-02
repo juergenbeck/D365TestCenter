@@ -1,10 +1,10 @@
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using itt.IntegrationTests.Core;
+using D365TestCenter.Core;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace itt.IntegrationTests.CrmPlugin;
+namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
 /// Custom API: itt_RunIntegrationTests
