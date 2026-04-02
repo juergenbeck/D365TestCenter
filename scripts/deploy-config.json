@@ -1,5 +1,5 @@
 {
-    "resource": "https://markant-dev.crm4.dynamics.com/",
+    "resource": "https://YOUR-ORG.crm4.dynamics.com/",
     "solutionUniqueName": "IntegrationTestCenter",
     "publisherUniqueName": "itt",
     "publisherPrefix": "itt",

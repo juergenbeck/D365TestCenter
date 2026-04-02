@@ -29,21 +29,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# TokenVault laden
-$vaultPath = Join-Path $PSScriptRoot ".." ".." ".." ".." ".." "common" "auth" "TokenVault.ps1"
-if (Test-Path $vaultPath) {
-    . $vaultPath
-} else {
-    Write-Error "TokenVault.ps1 nicht gefunden unter: $vaultPath"
+# Auth: $headers and $baseUrl must be set before running this script
+if (-not $headers) {
+    Write-Error "No authentication headers provided. Set `$headers before running this script."
     return
 }
 
-$system = "dataverse_$($Environment.ToLower())"
-$headers = Get-VaultHeaders -System $system
-$baseUrl = switch ($Environment) {
-    "DEV"  { "https://markant-dev.crm4.dynamics.com" }
-    "TEST" { "https://markant-test.crm4.dynamics.com" }
-}
+$config = Get-Content (Join-Path $PSScriptRoot "deploy-config.json") -Raw | ConvertFrom-Json
+$baseUrl = $config.resource.TrimEnd("/")
 $apiUrl = "$baseUrl/api/data/v9.2"
 
 Write-Host "=== Testing Entities erstellen ===" -ForegroundColor Cyan

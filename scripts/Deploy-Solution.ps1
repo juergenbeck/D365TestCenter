@@ -15,9 +15,13 @@
 
     Idempotent: checks existence before creating each component.
 
+.PARAMETER Headers
+    Hashtable with Authorization header. Example:
+    @{ "Authorization" = "Bearer eyJ0..." }
+
 .NOTES
-    Requires: PowerShell 5.1+ (Windows), TokenVault (common/auth)
-    Target: DEV only
+    Requires: PowerShell 5.1+ (Windows)
+    Pass authentication headers via -Headers parameter.
 #>
 
 $ErrorActionPreference = "Stop"
@@ -33,10 +37,12 @@ Start-Transcript -Path $logFile
 try {
 
 # -- Auth -------------------------------------------------------------------
-# TokenVault liegt unter projekte/common/auth/
-$repoRoot = "C:\Users\Juerg\Source\repo\Markant"
-. (Join-Path $repoRoot "projekte\common\auth\TokenVault.ps1")
-$headers = Get-VaultHeaders -System 'dataverse_dev'
+# Pass headers as parameter or set them before running this script.
+# Example: $headers = @{ "Authorization" = "Bearer $token" }
+if (-not $headers) {
+    Write-Error "No authentication headers provided. Set `$headers before running this script."
+    exit 1
+}
 
 $config       = Get-Content (Join-Path $scriptDir "deploy-config.json") -Raw | ConvertFrom-Json
 $baseUrl      = $config.resource.TrimEnd("/") + "/api/data/v9.2"
@@ -1057,7 +1063,8 @@ $webResources = @(
     @{ Name = "itt_/packs/standard.json";          File = "packs/standard.json";         Type = 3  }
     @{ Name = "itt_/packs/field-governance.json";   File = "packs/field-governance.json"; Type = 3  }
     @{ Name = "itt_/packs/membership.json";         File = "packs/membership.json";       Type = 3  }
-    @{ Name = "itt_/packs/markant-base.json";       File = "packs/markant-base.json";     Type = 3  }
+    # Add custom packs here:
+    # @{ Name = "itt_/packs/custom-pack.json";     File = "packs/custom-pack.json";    Type = 3  }
     @{ Name = "itt_/packs/fg-testtool.json";        File = "packs/fg-testtool.json";      Type = 3  }
     @{ Name = "itt_/packs/fg-testtool-v2.json";     File = "packs/fg-testtool-v2.json";   Type = 3  }
     @{ Name = "itt_/packs/fg-testtool-legacy.json"; File = "packs/fg-testtool-legacy.json"; Type = 3  }

@@ -1,23 +1,25 @@
 <#
 .SYNOPSIS
-    Imports test cases from fg-testtool-legacy.json into Dataverse itt_testcases on markant-dev.
+    Imports test cases from pack JSON files into Dataverse itt_testcases.
 
 .DESCRIPTION
-    Reads all 47 test cases from the pack file and creates them as records
+    Reads test cases from a pack file and creates them as records
     in the itt_testcases entity. Idempotent: skips records where itt_testid
     already exists.
 
 .NOTES
-    Requires TokenVault for authentication.
-    Target: https://markant-dev.crm4.dynamics.com
+    Requires: $headers variable with Authorization header set before running.
+    Requires: deploy-config.json with target environment URL.
 #>
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Continue'
 
-# --- TokenVault laden ---
-. "C:\Users\Juerg\Source\repo\Markant\projekte\common\auth\TokenVault.ps1"
-$headers = Get-VaultHeaders -System 'dataverse_dev'
+# --- Auth: $headers must be set before running this script ---
+if (-not $headers) {
+    Write-Error "No authentication headers provided. Set `$headers before running this script."
+    exit 1
+}
 
 # Content-Type und OData-Header ergaenzen
 $createHeaders = @{}
