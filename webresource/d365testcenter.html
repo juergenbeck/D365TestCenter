@@ -5438,7 +5438,8 @@ const State = {
     testRuns: [],
     currentRunId: null,
     currentUserId: null,
-    pollingTimer: null
+    pollingTimer: null,
+    activeTagFilter: ""
 };
 
 // ── Router ──────────────────────────────────────────────────────
@@ -5900,6 +5901,13 @@ function filterCases() {
         });
     }
     if (activeOnly) filtered = filtered.filter(c => c.jbe_enabled !== false);
+
+    // Tag-Filter aus dem Header-Dropdown
+    if (State.activeTagFilter) {
+        const tagLower = State.activeTagFilter.toLowerCase();
+        filtered = filtered.filter(c =>
+            (c.jbe_tags || "").toLowerCase().split(",").map(t => t.trim()).includes(tagLower));
+    }
 
     renderCasesTable(filtered);
 }
@@ -8803,13 +8811,57 @@ async function activateDemoMode() {
     const versionEl = document.getElementById("app-version");
     if (versionEl) versionEl.textContent = "v" + CONFIG.version;
 
-    // Live-Modus: Pack-Selector durch Test Case-Info ersetzen
+    // Live-Modus: Pack-Selector als Tag-Filter mit Quick-Run
     if (!_demoModeActive) {
         const packSel = document.getElementById("pack-selector");
         if (packSel) {
             try {
-                const count = await API.count("jbe_testcases", "jbe_enabled eq true");
-                packSel.innerHTML = `<option value="">Live: ${count} Test Cases</option>`;
+                // Alle Tags aus Testfaellen aggregieren
+                const cases = await API.getMany("jbe_testcases",
+                    "$filter=jbe_enabled eq true&$select=jbe_tags&$top=500");
+                const tagCounts = {};
+                let totalCount = 0;
+                for (const c of cases) {
+                    totalCount++;
+                    if (c.jbe_tags) {
+                        for (const tag of c.jbe_tags.split(",").map(t => t.trim()).filter(Boolean)) {
+                            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                        }
+                    }
+                }
+                // Sortiert nach Haeufigkeit
+                const sortedTags = Object.entries(tagCounts).sort((a,b) => b[1] - a[1]);
+
+                packSel.innerHTML = `<option value="">All (${totalCount})</option>`;
+                for (const [tag, count] of sortedTags) {
+                    packSel.innerHTML += `<option value="${tag}">${tag} (${count})</option>`;
+                }
+
+                // Quick-Run Button neben dem Selector
+                const runBtn = document.createElement("button");
+                runBtn.className = "btn btn-sm btn-primary";
+                runBtn.style.cssText = "margin-left:6px;padding:4px 10px;font-size:11px";
+                runBtn.textContent = "Run";
+                runBtn.title = "Run filtered tests";
+                runBtn.onclick = () => {
+                    const tag = packSel.value;
+                    if (tag) {
+                        // Starte Testlauf mit Tag-Filter
+                        location.hash = `#run/new?tag=${encodeURIComponent(tag)}`;
+                    } else {
+                        location.hash = "#run/new";
+                    }
+                };
+                packSel.parentNode.insertBefore(runBtn, packSel.nextSibling);
+
+                // Filter-Event: filtere die Testfaelle-Liste wenn sichtbar
+                packSel.addEventListener("change", () => {
+                    State.activeTagFilter = packSel.value;
+                    if (location.hash.startsWith("#cases")) {
+                        renderTestCases();
+                    }
+                });
+                State.activeTagFilter = "";
             } catch {
                 packSel.innerHTML = `<option value="">Live Mode</option>`;
             }
