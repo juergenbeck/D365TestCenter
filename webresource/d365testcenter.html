@@ -6828,7 +6828,7 @@ async function _renderLiveDetail(runId, testId) {
             try {
                 steps = await API.getMany("itt_teststeps",
                     `$filter=_itt_testrunresultid_value eq '${result.itt_testrunresultid}'&$orderby=itt_stepnumber asc` +
-                    `&$select=itt_stepnumber,itt_phase,itt_action,itt_entity,itt_alias,itt_durationms,itt_stepstatus,itt_errormessage,itt_inputdata,itt_outputdata,itt_assertionfield,itt_expectedvalue,itt_actualvalue`);
+                    `&$select=itt_stepnumber,itt_phase,itt_action,itt_entity,itt_alias,itt_durationms,itt_stepstatus,itt_errormessage,itt_inputdata,itt_outputdata,itt_assertionfield,itt_expectedvalue,itt_actualvalue,itt_recordid,itt_recordurl`);
                 _detailStepsCache[result.itt_testrunresultid] = steps;
             } catch { /* Steps might not exist yet */ }
         }
@@ -7079,6 +7079,9 @@ async function _renderLiveDetail(runId, testId) {
                 html += `<span style="color:var(--text-muted);font-size:11px;width:24px">#${s.itt_stepnumber || ""}</span>`;
                 html += `<span class="step-action">${escapeHtml(s.itt_action) || phaseNames[s.itt_phase] || "?"}</span>`;
                 html += `<span class="step-entity">${escapeHtml(entityDisplay)}${aliasDisplay}</span>`;
+                if (s.itt_recordurl && s.itt_recordid) {
+                    html += `<a href="${escapeHtml(s.itt_recordurl)}" target="_blank" title="Open record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;
+                }
                 html += `<span class="step-dur">${durStr}</span>`;
                 html += `</div>`;
 
@@ -7103,7 +7106,11 @@ async function _renderLiveDetail(runId, testId) {
                             if (gl.logName) html += `<div style="color:var(--accent-purple)">CDH-Log: ${escapeHtml(gl.logName)}</div>`;
                         }
                         if (output.recordId) {
-                            html += `<div style="margin-top:4px;color:var(--text-muted)">Record-ID: ${escapeHtml(output.recordId)}</div>`;
+                            if (s.itt_recordurl) {
+                                html += `<div style="margin-top:4px"><a href="${escapeHtml(s.itt_recordurl)}" target="_blank" style="color:var(--accent-blue);text-decoration:none">Open in CRM: ${escapeHtml(output.recordId)}</a></div>`;
+                            } else {
+                                html += `<div style="margin-top:4px;color:var(--text-muted)">Record-ID: ${escapeHtml(output.recordId)}</div>`;
+                            }
                         }
                     } catch {}
                 }
