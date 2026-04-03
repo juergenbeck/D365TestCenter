@@ -1037,7 +1037,7 @@ body {
 .source-chip.dynamics { background: var(--accent-blue-bg); color: var(--accent-blue); }
 .source-chip.platform { background: var(--accent-green-bg); color: var(--accent-green); }
 
-/* Rohdaten */
+/* Raw Data */
 .raw-section { margin-bottom: 12px; }
 .raw-section h4 { font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
 .raw-json { background: var(--bg-input); border-radius: var(--radius); padding: 12px; font-family: var(--mono); font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; color: var(--text-secondary); }
@@ -1530,7 +1530,7 @@ body {
             <option value="TEST">TEST</option>
             <option value="DATATEST">DATATEST</option>
         </select>
-        <button class="help-btn" onclick="location.hash='#help'" title="Hilfe">?</button>
+        <button class="help-btn" onclick="location.hash='#help'" title="Help">?</button>
         <span id="user-display" style="color:var(--text-secondary);font-size:12px"></span>
     </div>
 </header>
@@ -1697,7 +1697,7 @@ const LANG = {
     nav_history: "History",                // DE: Verlauf
     nav_userstories: "User Stories",
     nav_metadata: "Metadata",              // DE: Metadaten
-    nav_help: "Help",                      // DE: Hilfe
+    nav_help: "Help",                      // DE: Help
 
     // Dashboard
     dash_testcases: "TEST CASES",          // DE: TESTFÄLLE
@@ -1707,7 +1707,7 @@ const LANG = {
     dash_last_runs: "RECENT TEST RUNS",    // DE: LETZTE TESTLÄUFE
     dash_distribution: "RESULT DISTRIBUTION", // DE: ERGEBNISVERTEILUNG
     dash_failed_tests: "FAILED TESTS (LAST 7 DAYS)", // DE: FEHLGESCHLAGENE TESTS (LETZTE 7 TAGE)
-    dash_no_failed: "No failed tests in the last 7 days", // DE: Keine fehlgeschlagenen Tests in den letzten 7 Tagen
+    dash_no_failed: "No failed tests in the last 7 days", // DE: ${LANG.dash_no_failed}
     dash_date: "DATE",                     // DE: DATUM
     dash_status: "STATUS",
     dash_passed: "PASSED",                 // DE: BESTANDEN
@@ -1720,7 +1720,7 @@ const LANG = {
     cases_all_categories: "All Categories",  // DE: Alle Kategorien
     cases_user_story: "User Story (e.g. PROJ-1234)",
     cases_active_only: "Active only",        // DE: Nur aktive
-    cases_new: "+ New Test Case",             // DE: + Neuer Testfall
+    cases_new: "+ New Test Case",             // DE: + New Test Case
     cases_id: "ID",
     cases_title: "TITLE",                    // DE: TITEL
     cases_category: "CATEGORY",              // DE: KATEGORIE
@@ -1733,33 +1733,33 @@ const LANG = {
     cases_count: "test cases",               // DE: Testfälle
 
     // Test Run
-    run_start: "Start Test Run",             // DE: Testlauf starten
-    run_start_keep: "Start + Keep Data",     // DE: Starten + Daten beibehalten
-    run_running: "Running...",               // DE: Läuft...
+    run_start: "Start Test Run",             // DE: Start test run
+    run_start_keep: "Start + Keep Data",     // DE: Start + Keep Data
+    run_running: "Running...",               // DE: Running...
     run_all: "All",                          // DE: Alle
     run_passed: "Passed",                    // DE: Bestanden
-    run_failed: "Failed",                    // DE: Fehlgeschlagen
+    run_failed: "Failed",                    // DE: Failed
     run_error: "Error",                      // DE: Fehler
-    run_skipped: "Skipped",                  // DE: Übersprungen
+    run_skipped: "Skipped",                  // DE: Skipped
 
     // Editor
     editor_save: "Save",                     // DE: Speichern
     editor_cancel: "Cancel",                 // DE: Abbrechen
-    editor_delete: "Delete",                 // DE: Löschen
-    editor_ready: "Ready to save",           // DE: Bereit zum Speichern
-    editor_preconditions: "Preconditions",    // DE: Vorbedingungen
-    editor_steps: "Steps",                   // DE: Schritte
-    editor_assertions: "Assertions",          // DE: Prüfungen
+    editor_delete: "Delete",                 // DE: Deleten
+    editor_ready: "Ready to save",           // DE: ${LANG.editor_ready}
+    editor_preconditions: "Preconditions",    // DE: Preconditions
+    editor_steps: "Steps",                   // DE: Steps
+    editor_assertions: "Assertions",          // DE: Assertions
     editor_visual: "Visual",                 // DE: Visuell
     editor_json: "JSON",
     editor_flow: "Flow",
 
     // Metadata Explorer
-    meta_explorer: "Metadata Explorer",       // DE: Metadaten-Explorer
+    meta_explorer: "Metadata Explorer",       // DE: ${LANG.meta_explorer}
     meta_tables: "Tables",                   // DE: Tabellen
     meta_optionsets: "OptionSets",
     meta_customapis: "Custom APIs",
-    meta_search: "Search table (e.g. contact, itt_)...", // DE: Tabelle suchen (z.B. contact, itt_)...
+    meta_search: "Search table (e.g. contact, itt_)...", // DE: ${LANG.meta_search}
     meta_custom_only: "Custom only",          // DE: Nur Custom
     meta_itt_only: "itt_ only",              // DE: Nur itt_
     meta_schema: "SCHEMA NAME",              // DE: SCHEMA-NAME
@@ -1767,7 +1767,7 @@ const LANG = {
     meta_custom: "CUSTOM",
     meta_entityset: "ENTITYSET",
     meta_attributes: "Attributes",           // DE: Attribute
-    meta_back: "Back to Tables",             // DE: Zurück zu Tabellen
+    meta_back: "Back to Tables",             // DE: ${LANG.meta_back}
 
     // Common
     common_yes: "Yes",                       // DE: Ja
@@ -1780,7 +1780,7 @@ const LANG = {
 
     // Logging
     log_autodate: "AutoSetDateFields: {count} _modifiedondate field(s) set automatically",
-    log_governance_poll: "Governance-Poll {n} Error: {msg}",
+    log_governance_poll: "Governance poll {n} Error: {msg}",
     log_testrun_started: "=== Test run started (Concurrency: {conc}) ===",
 };
 
@@ -1977,12 +1977,12 @@ const _sharedIttMeta = {
             { LogicalName: "itt_testrunid", DisplayName: { UserLocalizedLabel: { Label: "Testlauf ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "itt_testrunId" },
             { LogicalName: "itt_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestStatus" },
             { LogicalName: "itt_passed", DisplayName: { UserLocalizedLabel: { Label: "Bestanden" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Passed" },
-            { LogicalName: "itt_failed", DisplayName: { UserLocalizedLabel: { Label: "Fehlgeschlagen" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Failed" },
+            { LogicalName: "itt_failed", DisplayName: { UserLocalizedLabel: { Label: "Failed" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Failed" },
             { LogicalName: "itt_total", DisplayName: { UserLocalizedLabel: { Label: "Gesamt" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Total" },
             { LogicalName: "itt_startedon", DisplayName: { UserLocalizedLabel: { Label: "Gestartet" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_StartedOn" },
             { LogicalName: "itt_completedon", DisplayName: { UserLocalizedLabel: { Label: "Abgeschlossen" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_CompletedOn" },
             { LogicalName: "itt_testcasefilter", DisplayName: { UserLocalizedLabel: { Label: "Testfall-Filter" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestCaseFilter" },
-            { LogicalName: "itt_testsummary", DisplayName: { UserLocalizedLabel: { Label: "Zusammenfassung" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestSummary" },
+            { LogicalName: "itt_testsummary", DisplayName: { UserLocalizedLabel: { Label: "Summary" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestSummary" },
             { LogicalName: "itt_fulllog", DisplayName: { UserLocalizedLabel: { Label: "Vollständiges Log" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_FullLog" }
         ],
         itt_testrunresult: [
@@ -1990,14 +1990,14 @@ const _sharedIttMeta = {
             { LogicalName: "itt_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestId" },
             { LogicalName: "itt_outcome", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Outcome" },
             { LogicalName: "itt_durationms", DisplayName: { UserLocalizedLabel: { Label: "Dauer (ms)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_DurationMs" },
-            { LogicalName: "itt_errormessage", DisplayName: { UserLocalizedLabel: { Label: "Fehlermeldung" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_ErrorMessage" },
+            { LogicalName: "itt_errormessage", DisplayName: { UserLocalizedLabel: { Label: "Error message" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_ErrorMessage" },
             { LogicalName: "itt_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Ergebnisse" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_AssertionResults" }
         ]
     },
     optionsets: [
         { Name: "itt_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Teststatus" } }, OptionSetType: "Picklist", Options: [
             { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Geplant" } } },
-            { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Läuft" } } },
+            { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Running" } } },
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Abgeschlossen" } } },
             { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Fehler" } } }
         ]},
@@ -2160,7 +2160,7 @@ const PackLoader = {
         if (_packsManifest) return _packsManifest;
         try {
             const resp = await fetch(this._basePath + "manifest.json");
-            if (!resp.ok) throw new Error("Manifest nicht gefunden");
+            if (!resp.ok) throw new Error("Manifest not found");
             _packsManifest = await resp.json();
             return _packsManifest;
         } catch (e) {
@@ -2179,7 +2179,7 @@ const PackLoader = {
 
         try {
             const resp = await fetch(this._basePath + file);
-            if (!resp.ok) throw new Error("Pack '" + packId + "' nicht gefunden: " + resp.status);
+            if (!resp.ok) throw new Error("Pack '" + packId + "' not found: " + resp.status);
             const raw = await resp.json();
             const pack = this._hydrate(raw);
             DemoPacks[packId] = pack;
@@ -3300,13 +3300,13 @@ const CardRenderer = {
             const label = FieldRegistry.getFieldLabel(entityName, fieldName);
             html += `<div class="ve-field-row${isAuto ? ' auto-field' : ''}" data-field="${escapeHtml(fieldName)}">`;
             html += `<div class="ve-field-name"><input type="text" value="${escapeHtml(fieldName)}" ${isAuto ? 'readonly' : `list="${dlId}" data-rename-field="${escapeHtml(fieldName)}"`} title="${escapeHtml(label)}"></div>`;
-            html += `<div class="ve-field-value"><input type="text" value="${escapeHtml(String(fieldValue))}" data-field-key="${escapeHtml(fieldName)}" class="ve-value-input" placeholder="Wert"></div>`;
+            html += `<div class="ve-field-value"><input type="text" value="${escapeHtml(String(fieldValue))}" data-field-key="${escapeHtml(fieldName)}" class="ve-value-input" placeholder="Value"></div>`;
             if (!isAuto) {
                 html += `<button class="ve-field-remove" data-remove-field="${escapeHtml(fieldName)}" title="Feld entfernen">x</button>`;
             }
             html += `</div>`;
         }
-        html += `<button class="ve-field-add" data-add-field="${escapeHtml(item._id)}" title="Feld hinzufügen">+ Feld</button>`;
+        html += `<button class="ve-field-add" data-add-field="${escapeHtml(item._id)}" title="Add field">+ Field</button>`;
         return html;
     },
 
@@ -3322,14 +3322,14 @@ const CardRenderer = {
 
         let html = `<div class="ve-card ${cls}" data-card-id="${item._id}" data-phase="precondition" draggable="true">`;
         html += `<div class="ve-card-header">`;
-        html += `<span class="ve-drag-handle" title="Ziehen zum Umsortieren">\u2261</span>`;
+        html += `<span class="ve-drag-handle" title="Drag to reorder">\u2261</span>`;
         // Entity is ALWAYS editable - badge shown as visual hint, input always present
         html += `<span class="ve-entity-badge ${this._badgeClass(entity)}" style="cursor:default;pointer-events:none">${escapeHtml(this._entityLabel(entity) || "?")}</span>`;
         html += `<datalist id="dl-entity-${item._id}">${knownEntities.map(e => `<option value="${e}">`).join("")}</datalist>`;
-        html += `<input class="ve-entity-input" value="${escapeHtml(entity)}" list="dl-entity-${item._id}" data-entity-for="${item._id}" placeholder="Entity-Name" title="Entity-Name aenderbar (z.B. accounts, leads, contacts)" style="width:100px;font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-tertiary);color:var(--text-primary)">`;
-        html += `<input class="ve-alias-input" value="${escapeHtml(item.alias)}" placeholder="Alias" data-alias-for="${item._id}" title="Alias fuer Referenzierung">`;
+        html += `<input class="ve-entity-input" value="${escapeHtml(entity)}" list="dl-entity-${item._id}" data-entity-for="${item._id}" placeholder="Entity name" title="Entity name editable (z.B. accounts, leads, contacts)" style="width:100px;font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-tertiary);color:var(--text-primary)">`;
+        html += `<input class="ve-alias-input" value="${escapeHtml(item.alias)}" placeholder="Alias" data-alias-for="${item._id}" title="Alias for referencing">`;
         html += `<span class="ve-card-title"></span>`;
-        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="precondition" title="Entfernen">x</button>`;
+        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="precondition" title="Remove">x</button>`;
         html += `</div>`;
         html += `<div class="ve-card-body">`;
 
@@ -3374,7 +3374,7 @@ const CardRenderer = {
 
         let html = `<div class="ve-card ${cls}" data-card-id="${item._id}" data-phase="step" draggable="true">`;
         html += `<div class="ve-card-header">`;
-        html += `<span class="ve-drag-handle" title="Ziehen zum Umsortieren">\u2261</span>`;
+        html += `<span class="ve-drag-handle" title="Drag to reorder">\u2261</span>`;
 
         // Action type badge
         const actionColors = { CreateRecord: "accent-green", UpdateRecord: "accent-yellow", Wait: "text-muted", ExecuteAction: "accent-purple", DeleteRecord: "accent-red", CreateContactSource: "accent-purple" };
@@ -3388,7 +3388,7 @@ const CardRenderer = {
             html += `<input class="ve-alias-input" value="${escapeHtml(item.alias)}" data-alias-for="${item._id}" style="width:60px" title="Alias">`;
         }
         html += `<span class="ve-card-title"></span>`;
-        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="step" title="Entfernen">x</button>`;
+        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="step" title="Remove">x</button>`;
         html += `</div>`;
         html += `<div class="ve-card-body">`;
 
@@ -3398,7 +3398,7 @@ const CardRenderer = {
             html += `<div class="ve-wait-row">`;
             html += `<input type="range" min="1" max="120" value="${secs}" data-wait-range="${item._id}">`;
             html += `<input type="number" min="1" max="300" value="${secs}" data-wait-num="${item._id}">`;
-            html += `<span>Sek.</span></div>`;
+            html += `<span>sec.</span></div>`;
         } else if (action === "ExecuteAction") {
             // Dynamic Custom API dropdown from metadata + cache
             const cachedApis = MetaCache.customApis || _sharedIttMeta.customapis || [];
@@ -3414,7 +3414,7 @@ const CardRenderer = {
 
             html += `<div class="ve-field-row"><div class="ve-field-name"><span style="font-size:11px;color:var(--text-secondary)">API-Name</span></div>`;
             html += `<div class="ve-field-value">`;
-            html += `<input type="text" list="dl-apis-${item._id}" value="${escapeHtml(item.apiName || '')}" data-api-input="${item._id}" placeholder="API auswählen oder eingeben">`;
+            html += `<input type="text" list="dl-apis-${item._id}" value="${escapeHtml(item.apiName || '')}" data-api-input="${item._id}" placeholder="Select or enter API">`;
             html += `<datalist id="dl-apis-${item._id}">`;
             for (const a of allApis) {
                 html += `<option value="${escapeHtml(a.uniquename)}" label="${escapeHtml(a.displayname || a.uniquename)}">`;
@@ -3477,10 +3477,10 @@ const CardRenderer = {
 
         let html = `<div class="ve-card ${cls}" data-card-id="${item._id}" data-phase="assertion" draggable="true">`;
         html += `<div class="ve-card-header">`;
-        html += `<span class="ve-drag-handle" title="Ziehen zum Umsortieren">\u2261</span>`;
+        html += `<span class="ve-drag-handle" title="Drag to reorder">\u2261</span>`;
         html += `<span style="font-size:10px;font-weight:600;color:var(--accent-blue)">Assert</span>`;
         html += `<span class="ve-card-title" style="font-size:11px;color:var(--text-muted)">${escapeHtml(item.description || "")}</span>`;
-        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="assertion" title="Entfernen">x</button>`;
+        html += `<button class="ve-card-delete" data-delete="${item._id}" data-phase="assertion" title="Remove">x</button>`;
         html += `</div>`;
         html += `<div class="ve-card-body">`;
 
@@ -3548,7 +3548,7 @@ const CardRenderer = {
         const needsValue = !["IsNull", "IsNotNull", "Exists", "NotExists"].includes(item.operator);
         if (needsValue) {
             html += `<div class="ve-field-row"><div class="ve-field-name"><span style="font-size:11px;color:var(--text-secondary)">Erwartet</span></div>`;
-            html += `<div class="ve-field-value"><input type="text" value="${escapeHtml(String(item.expected ?? ''))}" data-assert-expected="${item._id}" class="ve-value-input" placeholder="Erwarteter Wert"></div></div>`;
+            html += `<div class="ve-field-value"><input type="text" value="${escapeHtml(String(item.expected ?? ''))}" data-assert-expected="${item._id}" class="ve-value-input" placeholder="Expected value"></div></div>`;
         }
 
         // Live text preview
@@ -3814,7 +3814,7 @@ const EditorValidator = {
         const warnings = issues.filter(i => i.severity === "warning").length;
 
         if (errors === 0 && warnings === 0) {
-            return `<div class="ve-validation-bar"><span class="ve-val-ok">Bereit zum Speichern</span><span></span></div>`;
+            return `<div class="ve-validation-bar"><span class="ve-val-ok">${LANG.editor_ready}</span><span></span></div>`;
         }
         let parts = [];
         if (errors > 0) parts.push(`<span class="ve-val-err">${errors} Fehler</span>`);
@@ -3926,8 +3926,8 @@ const TemplateLibrary = {
             html += `<div class="ve-tpl-name">${escapeHtml(tpl.name)} ${catBadge}</div>`;
             html += `<div class="ve-tpl-desc">${escapeHtml(tpl.description)}</div>`;
             html += `<div class="ve-tpl-meta">`;
-            html += `<span>${tpl.preconditions.length} Vorbedingungen</span>`;
-            html += `<span>${tpl.steps.length} Schritte</span>`;
+            html += `<span>${tpl.preconditions.length} Preconditions</span>`;
+            html += `<span>${tpl.steps.length} Steps</span>`;
             html += `<span>${tpl.assertions.length} Assertions</span>`;
             html += `</div></div>`;
         }
@@ -3975,26 +3975,26 @@ const VisualEditor = {
 
         // Column 1: Preconditions
         html += `<div class="ve-column" data-phase="precondition">`;
-        html += `<div class="ve-column-header"><span>Vorbedingungen</span><span class="ve-count" id="ve-pre-count">${EditorModel.preconditions.length}</span></div>`;
+        html += `<div class="ve-column-header"><span>Preconditions</span><span class="ve-count" id="ve-pre-count">${EditorModel.preconditions.length}</span></div>`;
         html += `<div class="ve-column-body" id="ve-pre-body">`;
         EditorModel.preconditions.forEach((p, i) => {
-            html += `<div class="ve-insert-zone" data-insert-phase="precondition" data-insert-idx="${i}" title="Hier einfügen"><span class="ve-insert-btn">+</span></div>`;
+            html += `<div class="ve-insert-zone" data-insert-phase="precondition" data-insert-idx="${i}" title="Insert here"><span class="ve-insert-btn">+</span></div>`;
             html += CardRenderer.renderPreconditionCard(p);
         });
         html += `</div>`;
-        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="precondition">+ Hinzufügen</button></div>`;
+        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="precondition">+ Add</button></div>`;
         html += `</div>`;
 
         // Column 2: Steps
         html += `<div class="ve-column" data-phase="step">`;
-        html += `<div class="ve-column-header"><span>Testschritte</span><span class="ve-count" id="ve-step-count">${EditorModel.steps.length}</span></div>`;
+        html += `<div class="ve-column-header"><span>Test Steps</span><span class="ve-count" id="ve-step-count">${EditorModel.steps.length}</span></div>`;
         html += `<div class="ve-column-body" id="ve-step-body">`;
         EditorModel.steps.forEach((s, i) => {
-            html += `<div class="ve-insert-zone" data-insert-phase="step" data-insert-idx="${i}" title="Hier einfügen"><span class="ve-insert-btn">+</span></div>`;
+            html += `<div class="ve-insert-zone" data-insert-phase="step" data-insert-idx="${i}" title="Insert here"><span class="ve-insert-btn">+</span></div>`;
             html += CardRenderer.renderStepCard(s);
         });
         html += `</div>`;
-        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="step">+ Hinzufügen</button></div>`;
+        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="step">+ Add</button></div>`;
         html += `</div>`;
 
         // Column 3: Assertions
@@ -4002,18 +4002,18 @@ const VisualEditor = {
         html += `<div class="ve-column-header"><span>Assertions</span><span class="ve-count" id="ve-assert-count">${EditorModel.assertions.length}</span></div>`;
         html += `<div class="ve-column-body" id="ve-assert-body">`;
         EditorModel.assertions.forEach((a, i) => {
-            html += `<div class="ve-insert-zone" data-insert-phase="assertion" data-insert-idx="${i}" title="Hier einfügen"><span class="ve-insert-btn">+</span></div>`;
+            html += `<div class="ve-insert-zone" data-insert-phase="assertion" data-insert-idx="${i}" title="Insert here"><span class="ve-insert-btn">+</span></div>`;
             html += CardRenderer.renderAssertionCard(a);
         });
         html += `</div>`;
-        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="assertion">+ Hinzufügen</button></div>`;
+        html += `<div style="padding:8px"><button class="ve-add-btn" data-add-phase="assertion">+ Add</button></div>`;
         html += `</div>`;
 
         // Column 4: Preview
         html += `<div class="ve-preview" id="ve-preview">`;
         html += `<div class="ve-preview-header">`;
-        html += `<button class="ve-preview-tab active" data-preview-tab="flow">Flow</button>`;
-        html += `<button class="ve-preview-tab" data-preview-tab="json">JSON</button>`;
+        html += `<button class="ve-preview-tab active" data-preview-tab="flow">${LANG.editor_flow}</button>`;
+        html += `<button class="ve-preview-tab" data-preview-tab="json">${LANG.editor_json}</button>`;
         html += `</div>`;
         html += `<div class="ve-preview-body" id="ve-preview-body"></div>`;
         html += `</div>`;
@@ -4714,13 +4714,13 @@ const StepExecutor = {
                     });
                     if (result.status === "Failed" && outcome === CONFIG.optionSets.outcomePassed) {
                         outcome = CONFIG.optionSets.outcomeFailed;
-                        errorMessage = `Assertion fehlgeschlagen: ${result.assertionField} ${result.assertionOperator} erwartet "${result.expectedValue}", tatsächlich "${result.actualValue}"`;
+                        errorMessage = `Assertion failed: ${result.assertionField} ${result.assertionOperator} expected "${result.expectedValue}", actual "${result.actualValue}"`;
                     }
                 }
             }
         } catch (err) {
             outcome = CONFIG.optionSets.outcomeError;
-            errorMessage = `Unerwarteter Fehler: ${err.message}`;
+            errorMessage = `Unerwarteter Error: ${err.message}`;
             stepLog.push({ phase: "Step", action: "Error", status: "Failed", error: err.message,
                 duration: Math.round(performance.now() - t0) });
         }
@@ -4729,7 +4729,7 @@ const StepExecutor = {
         if (!keepRecords) {
             const tracked = tracker.getTrackedRecords();
             if (tracked.length > 0) {
-                ITTLog.info("StepExecutor", `  [Cleanup] ${tracked.length} Records aufräumen...`);
+                ITTLog.info("StepExecutor", `  [Cleanup] ${tracked.length} Records cleanup...`);
             }
             await tracker.cleanup(stepLog);
         } else {
@@ -4796,10 +4796,10 @@ const StepExecutor = {
         const resolvedFields = PlaceholderResolver.resolve(step.fields || {}, aliasMap, context);
         const resolvedParams = PlaceholderResolver.resolve(step.parameters || {}, aliasMap, context);
         if (Object.keys(resolvedFields).length > 0) {
-            ITTLog.info("StepExecutor", `    Felder (aufgelöst):`, resolvedFields);
+            ITTLog.info("StepExecutor", `    Fields (resolved):`, resolvedFields);
         }
         if (Object.keys(resolvedParams).length > 0) {
-            ITTLog.info("StepExecutor", `    Parameter (aufgelöst):`, resolvedParams);
+            ITTLog.info("StepExecutor", `    Parameters (resolved):`, resolvedParams);
         }
         const logEntry = {
             phase, action, entity: step.entity || "", alias: step.alias || "",
@@ -4826,7 +4826,7 @@ const StepExecutor = {
                 }
                 case "UpdateRecord": {
                     const target = aliasMap[step.alias];
-                    if (!target) throw new Error(`Alias "${step.alias}" nicht gefunden`);
+                    if (!target) throw new Error(`Alias "${step.alias}" not found`);
                     if (this._isContactSourceEntity(target.entity)) this._autoSetDateFields(resolvedFields);
                     await API.update(target.entity, target.id, resolvedFields);
                     logEntry.entity = target.entity;
@@ -4837,7 +4837,7 @@ const StepExecutor = {
                 }
                 case "DeleteRecord": {
                     const target = aliasMap[step.alias];
-                    if (!target) throw new Error(`Alias "${step.alias}" nicht gefunden`);
+                    if (!target) throw new Error(`Alias "${step.alias}" not found`);
                     await API.del(target.entity, target.id);
                     logEntry.entity = target.entity;
                     logEntry.recordId = target.id;
@@ -4873,7 +4873,7 @@ const StepExecutor = {
                         tracker.track(csEntity, pk, step.alias);
                     } else {
                         const target = aliasMap[step.alias];
-                        if (!target) throw new Error(`Alias "${step.alias}" nicht gefunden`);
+                        if (!target) throw new Error(`Alias "${step.alias}" not found`);
                         await API.update(target.entity, target.id, resolvedFields);
                         logEntry.entity = target.entity;
                         logEntry.recordId = target.id;
@@ -4882,7 +4882,7 @@ const StepExecutor = {
                 }
                 default:
                     logEntry.status = "Skipped";
-                    logEntry.error = `Unbekannte Aktion: ${action}`;
+                    logEntry.error = `Unknown action: ${action}`;
             }
 
             // Handle waitForAsync: Smart Governance Polling statt fixem Timer
@@ -4902,7 +4902,7 @@ const StepExecutor = {
 
                 if (contactId && this._isContactSourceEntity(step.entity || aliasMap[step.alias]?.entity)) {
                     // Smart Governance Polling on logging entity
-                    ITTLog.info("StepExecutor", `    Governance-Polling: warte auf CDH-Log für Contact ${contactId.substring(0,8)}... (timeout ${timeoutMs/1000}s, alle ${pollingMs/1000}s)`);
+                    ITTLog.info("StepExecutor", `    Governance polling: waiting for governance log for contact ${contactId.substring(0,8)}... (timeout ${timeoutMs/1000}s, alle ${pollingMs/1000}s)`);
                     const result = await this._waitForGovernance(contactId, contactSourceId, actionTimestamp, timeoutMs, pollingMs);
                     if (result.found) {
                         ITTLog.info("StepExecutor", `    Governance abgeschlossen nach ${result.polls} Polls, ${(result.duration/1000).toFixed(1)}s`);
@@ -5013,7 +5013,7 @@ const StepExecutor = {
                     };
                 }
             } catch (err) {
-                ITTLog.warn("StepExecutor", `    Governance-Poll ${polls} Fehler: ${err.message}`);
+                ITTLog.warn("StepExecutor", `    Governance poll ${polls} Error: ${err.message}`);
             }
             await new Promise(r => setTimeout(r, pollingMs));
         }
@@ -5061,7 +5061,7 @@ const StepExecutor = {
             } else if (target.startsWith("Record:")) {
                 const alias = target.substring(7);
                 const ref = aliasMap[alias];
-                if (!ref) throw new Error(`Alias "${alias}" nicht gefunden`);
+                if (!ref) throw new Error(`Alias "${alias}" not found`);
                 record = await API.getOne(ref.entity, ref.id, field);
                 logEntry.entity = ref.entity;
                 logEntry.recordId = ref.id;
@@ -5069,7 +5069,7 @@ const StepExecutor = {
             } else if (target.startsWith("ContactSource:")) {
                 const alias = target.substring(14);
                 const ref = aliasMap[alias];
-                if (!ref) throw new Error(`Alias "${alias}" nicht gefunden`);
+                if (!ref) throw new Error(`Alias "${alias}" not found`);
                 record = await API.getOne(ref.entity, ref.id, field);
                 logEntry.entity = ref.entity;
                 logEntry.recordId = ref.id;
@@ -5133,12 +5133,12 @@ const StepExecutor = {
             logEntry.outputData = record;
             const displayField = field || operator; // Virtuelle Felder wie ContactUpdated haben kein field
             ITTLog.info("StepExecutor", `    Quelle: ${logEntry.entity} ${logEntry.recordId ? "("+logEntry.recordId.substring(0,8)+"...)" : ""}`);
-            ITTLog.info("StepExecutor", `    ${operator === "Exists" || operator === "NotExists" ? "Record: " + (record ? "gefunden" : "nicht gefunden") : 'Feld "' + displayField + '" = "' + (actual ?? "null") + '"'}`);
+            ITTLog.info("StepExecutor", `    ${operator === "Exists" || operator === "NotExists" ? "Record: " + (record ? "gefunden" : "not found") : 'Feld "' + displayField + '" = "' + (actual ?? "null") + '"'}`);
 
             const passed = this._evaluate(actual, operator, expected);
             logEntry.status = passed ? "Success" : "Failed";
             if (!passed) {
-                logEntry.error = `${displayField}: erwartet ${operator} "${expected}", tatsächlich "${actual}"`;
+                logEntry.error = `${displayField}: erwartet ${operator} "${expected}", actual "${actual}"`;
             }
         } catch (err) {
             logEntry.status = "Failed";
@@ -5229,7 +5229,7 @@ const StepLogger = {
             try {
                 await API.create("itt_teststeps", body);
             } catch (err) {
-                console.warn("StepLogger: Fehler beim Speichern von Schritt " + (i + 1) + ": " + err.message);
+                console.warn("StepLogger: Error saving step " + (i + 1) + ": " + err.message);
             }
         }
     }
@@ -5241,13 +5241,13 @@ const TestRunner = {
     _running: false,
 
     async execute(runId, concurrency) {
-        if (this._running) { ITTLog.warn("TestRunner", "Läuft bereits, Aufruf ignoriert"); return; }
+        if (this._running) { ITTLog.warn("TestRunner", "Already running, call ignored"); return; }
         this._running = true;
         const conc = concurrency || 1;
-        // CH-03: Pack-Wechsel während Testlauf verhindern
+        // CH-03: Prevent pack switch during test run
         const packSel = document.querySelector("select");
         if (packSel) packSel.disabled = true;
-        ITTLog.info("TestRunner", `=== Testlauf gestartet (Concurrency: ${conc}) ===`, { runId });
+        ITTLog.info("TestRunner", `=== Test run started (Concurrency: ${conc}) ===`, { runId });
 
         try {
             // 1. Run-Record laden
@@ -5262,9 +5262,9 @@ const TestRunner = {
             const allCases = await API.getMany("itt_testcases",
                 "$select=itt_testcaseid,itt_testid,itt_title,itt_category,itt_tags,itt_userstories,itt_enabled,itt_definitionjson&$orderby=itt_testid asc&$top=500");
             const matchingCases = this._filterCases(allCases, filter);
-            ITTLog.info("TestRunner", `${allCases.length} Testfälle geladen, ${matchingCases.length} nach Filter`);
+            ITTLog.info("TestRunner", `${allCases.length} test cases loaded, ${matchingCases.length} after filter`);
 
-            // 3. Run auf "Läuft" setzen
+            // 3. Run auf "Running" setzen
             await API.update("itt_testruns", runId, {
                 itt_teststatus: CONFIG.optionSets.statusRunning,
                 itt_total: matchingCases.length,
@@ -5283,7 +5283,7 @@ const TestRunner = {
 
             // 5. ProgressTracker initialisieren
             ProgressTracker.init(runId, matchingCases.length);
-            ProgressTracker.addLogLine("Testlauf gestartet, Filter: " + filter + ", Parallelität: " + conc);
+            ProgressTracker.addLogLine("Test run started, Filter: " + filter + ", Concurrency: " + conc);
 
             // 6. Tasks erstellen und parallel ausfuehren
             const tasks = matchingCases.map(tc => () => this._executeOneTest(tc, baseContext, keepRecords, runId));
@@ -5291,10 +5291,10 @@ const TestRunner = {
 
             // 7. Run abschliessen
             await ProgressTracker.finalize();
-            const summary = matchingCases.length + " Tests ausgeführt. " +
+            const summary = matchingCases.length + " tests executed. " +
                 ProgressTracker.passed + " bestanden, " + ProgressTracker.failed + " fehlgeschlagen.";
-            ProgressTracker.addLogLine("Testlauf abgeschlossen: " + ProgressTracker.passed + " Passed, " + ProgressTracker.failed + " Failed");
-            ITTLog.info("TestRunner", `=== Testlauf abgeschlossen: ${ProgressTracker.passed} Passed, ${ProgressTracker.failed} Failed (${matchingCases.length} Tests) ===`);
+            ProgressTracker.addLogLine("Test run completed: " + ProgressTracker.passed + " Passed, " + ProgressTracker.failed + " Failed");
+            ITTLog.info("TestRunner", `=== Test run completed: ${ProgressTracker.passed} Passed, ${ProgressTracker.failed} Failed (${matchingCases.length} Tests) ===`);
 
             await API.update("itt_testruns", runId, {
                 itt_teststatus: CONFIG.optionSets.statusCompleted,
@@ -5307,7 +5307,7 @@ const TestRunner = {
 
         } catch (err) {
             // Engine-Level error
-            ITTLog.error("TestRunner", "Engine-Fehler: " + err.message, err);
+            ITTLog.error("TestRunner", "Engine-Error: " + err.message, err);
             try { await ProgressTracker.finalize(); } catch { /* best effort */ }
             try {
                 await API.update("itt_testruns", runId, {
@@ -5335,11 +5335,11 @@ const TestRunner = {
             definition = typeof defJson === "string" ? JSON.parse(defJson) : defJson;
         } catch (err) {
             const resultBody = { itt_testid: tc.itt_testid, itt_outcome: CONFIG.optionSets.outcomeFailed, itt_durationms: 0,
-                itt_errormessage: "Ungültige JSON-Definition: " + err.message };
+                itt_errormessage: "Invalid JSON definition: " + err.message };
             if (_demoModeActive) resultBody["_itt_testrunid_value"] = runId;
             else resultBody["itt_TestRunId@odata.bind"] = `/itt_testruns(${runId})`;
             await API.create("itt_testrunresults", resultBody);
-            ProgressTracker.recordResult(tc.itt_testid, tc.itt_title, false, 0, "JSON-Fehler: " + err.message);
+            ProgressTracker.recordResult(tc.itt_testid, tc.itt_title, false, 0, "JSON-Error: " + err.message);
             return;
         }
 
@@ -5604,10 +5604,10 @@ function outcomeBadge(outcome) {
 
 function statusBadge(status) {
     const map = {};
-    map[CONFIG.optionSets.statusPlanned] = ["Geplant","badge-skipped"];
-    map[CONFIG.optionSets.statusRunning] = ["Läuft","badge-running"];
-    map[CONFIG.optionSets.statusCompleted] = ["Abgeschlossen","badge-passed"];
-    map[CONFIG.optionSets.statusError] = ["Fehler","badge-failed"];
+    map[CONFIG.optionSets.statusPlanned] = [LANG.common_planned,"badge-skipped"];
+    map[CONFIG.optionSets.statusRunning] = [LANG.run_running,"badge-running"];
+    map[CONFIG.optionSets.statusCompleted] = [LANG.common_completed,"badge-passed"];
+    map[CONFIG.optionSets.statusError] = [LANG.common_error,"badge-failed"];
     const [label, cls] = map[status] || ["?","badge-skipped"];
     return `<span class="badge ${cls}">${label}</span>`;
 }
@@ -5620,20 +5620,20 @@ function stopPolling() {
 
 async function renderDashboard() {
     render(`<div class="kpi-grid" id="kpi-grid">
-        <div class="kpi-tile kpi-blue"><div class="kpi-value">...</div><div class="kpi-label">Testfälle</div></div>
-        <div class="kpi-tile kpi-green"><div class="kpi-value">...</div><div class="kpi-label">Pass Rate</div></div>
-        <div class="kpi-tile kpi-blue"><div class="kpi-value">...</div><div class="kpi-label">Letzte Läufe</div></div>
-        <div class="kpi-tile kpi-red"><div class="kpi-value">...</div><div class="kpi-label">Offene Fehler</div></div>
+        <div class="kpi-tile kpi-blue"><div class="kpi-value">...</div><div class="kpi-label">${LANG.dash_testcases}</div></div>
+        <div class="kpi-tile kpi-green"><div class="kpi-value">...</div><div class="kpi-label">${LANG.dash_passrate}</div></div>
+        <div class="kpi-tile kpi-blue"><div class="kpi-value">...</div><div class="kpi-label">${LANG.dash_recent_runs}</div></div>
+        <div class="kpi-tile kpi-red"><div class="kpi-value">...</div><div class="kpi-label">${LANG.dash_open_failures}</div></div>
     </div>
     <div class="grid-2">
-        <div class="card"><div class="card-title">Letzte Testläufe</div><div id="recent-runs">Lade...</div></div>
-        <div class="card"><div class="card-title">Ergebnisverteilung</div><div id="result-chart" class="chart-container">Lade...</div></div>
+        <div class="card"><div class="card-title">${LANG.dash_last_runs}</div><div id="recent-runs">${LANG.common_loading}</div></div>
+        <div class="card"><div class="card-title">${LANG.dash_distribution}</div><div id="result-chart" class="chart-container">${LANG.common_loading}</div></div>
     </div>
-    <div class="card"><div class="card-title">Fehlgeschlagene Tests (letzte 7 Tage)</div><div id="failed-tests">Lade...</div></div>
+    <div class="card"><div class="card-title">${LANG.dash_failed_tests}</div><div id="failed-tests">${LANG.common_loading}</div></div>
     <div class="grid-3" style="margin-top:16px">
-        <div class="card sparkline-card"><div class="card-title">Trend (letzte 10 Läufe)</div><div id="insight-trend">Lade...</div></div>
-        <div class="card"><div class="card-title">Regressionen</div><div id="insight-regressions">Lade...</div></div>
-        <div class="card"><div class="card-title">Flaky Tests</div><div id="insight-flaky">Lade...</div></div>
+        <div class="card sparkline-card"><div class="card-title">Trend</div><div id="insight-trend">${LANG.common_loading}</div></div>
+        <div class="card"><div class="card-title">Regressions</div><div id="insight-regressions">${LANG.common_loading}</div></div>
+        <div class="card"><div class="card-title">Flaky Tests</div><div id="insight-flaky">${LANG.common_loading}</div></div>
     </div>`);
 
     try {
@@ -5660,7 +5660,7 @@ async function renderDashboard() {
 
         // Recent runs table
         if (runs.length > 0) {
-            let html = `<table class="data-table"><thead><tr><th>Datum</th><th>Status</th><th>Passed</th><th>Failed</th><th>Gesamt</th><th></th></tr></thead><tbody>`;
+            let html = `<table class="data-table"><thead><tr><th>${LANG.dash_date}</th><th>${LANG.dash_status}</th><th>${LANG.dash_passed}</th><th>${LANG.dash_failed}</th><th>${LANG.dash_total}</th><th></th></tr></thead><tbody>`;
             for (const r of runs.slice(0, 8)) {
                 const id = r.itt_testrunid;
                 html += `<tr>
@@ -5675,7 +5675,7 @@ async function renderDashboard() {
             html += `</tbody></table>`;
             $("#recent-runs").innerHTML = html;
         } else {
-            $("#recent-runs").innerHTML = `<div class="empty-state"><div class="empty-icon">&#x1f9ea;</div>Noch keine Testläufe vorhanden.<br><a href="#run/new" class="btn btn-primary" style="margin-top:12px">Ersten Testlauf starten</a></div>`;
+            $("#recent-runs").innerHTML = `<div class="empty-state"><div class="empty-icon">&#x1f9ea;</div>No test runs yet.<br><a href="#run/new" class="btn btn-primary" style="margin-top:12px">Start first test run</a></div>`;
         }
 
         // Pie chart
@@ -5694,7 +5694,7 @@ async function renderDashboard() {
             "&$filter=itt_outcome eq " + CONFIG.optionSets.outcomeFailed + "&$orderby=createdon desc&$top=10");
 
         if (results.length > 0) {
-            let fhtml = `<table class="data-table"><thead><tr><th>Test</th><th>Datum</th><th>Fehler</th><th></th></tr></thead><tbody>`;
+            let fhtml = `<table class="data-table"><thead><tr><th>Test</th><th>${LANG.dash_date}</th><th>${LANG.common_error}</th><th></th></tr></thead><tbody>`;
             for (const r of results) {
                 fhtml += `<tr>
                     <td><strong>${escapeHtml(r.itt_testid) || "?"}</strong></td>
@@ -5706,7 +5706,7 @@ async function renderDashboard() {
             fhtml += `</tbody></table>`;
             $("#failed-tests").innerHTML = fhtml;
         } else {
-            $("#failed-tests").innerHTML = `<div style="padding:20px;text-align:center;color:var(--accent-green)">Keine fehlgeschlagenen Tests in den letzten 7 Tagen</div>`;
+            $("#failed-tests").innerHTML = `<div style="padding:20px;text-align:center;color:var(--accent-green)">${LANG.dash_no_failed}</div>`;
         }
 
         // ── Insight: Trend-Sparkline ──────────────────────────
@@ -5725,7 +5725,7 @@ async function renderDashboard() {
             const last3 = rates.slice(-3).map(v => v + "%").join(" / ");
             $("#insight-trend").innerHTML = `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}"><polyline points="${points}" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="sparkline-rates">${last3}</div>`;
         } else {
-            $("#insight-trend").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Zu wenige Läufe für Trend</div>`;
+            $("#insight-trend").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Too few runs for trend</div>`;
         }
 
         // ── Insight: Regressionen ─────────────────────────────
@@ -5779,22 +5779,22 @@ async function renderDashboard() {
                         $("#insight-flaky").innerHTML = `<div style="color:var(--accent-green);font-size:13px">Keine flaky Tests</div>`;
                     }
                 } else {
-                    $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Zu wenige Läufe</div>`;
+                    $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Too few runs</div>`;
                 }
             } else {
-                $("#insight-regressions").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Zu wenige Läufe</div>`;
-                $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Zu wenige Läufe</div>`;
+                $("#insight-regressions").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Too few runs</div>`;
+                $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:13px">Too few runs</div>`;
             }
         } catch (insightErr) {
             console.warn("Insight-Daten konnten nicht geladen werden:", insightErr);
-            if ($("#insight-regressions")) $("#insight-regressions").innerHTML = `<div style="color:var(--text-muted);font-size:12px">Nicht verfügbar</div>`;
-            if ($("#insight-flaky")) $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:12px">Nicht verfügbar</div>`;
+            if ($("#insight-regressions")) $("#insight-regressions").innerHTML = `<div style="color:var(--text-muted);font-size:12px">Not available</div>`;
+            if ($("#insight-flaky")) $("#insight-flaky").innerHTML = `<div style="color:var(--text-muted);font-size:12px">Not available</div>`;
         }
 
     } catch (err) {
         render(`<div class="card"><div class="card-title">Verbindungsfehler</div>
             <p style="color:var(--accent-red)">${escapeHtml(err.message)}</p>
-            <p style="color:var(--text-secondary);margin-top:8px">Das Integration Test Center benötigt die Entities itt_testcase, itt_testrun und itt_testrunresult. Falls diese noch nicht angelegt sind, zeigt das Dashboard Dummy-Daten.</p>
+            <p style="color:var(--text-secondary);margin-top:8px">The Integration Test Center requires the entities itt_testcase, itt_testrun und itt_testrunresult. If not yet created, the dashboard shows dummy data.</p>
             <button class="btn btn-primary" style="margin-top:12px" onclick="renderDashboardDemo()">Demo-Ansicht laden</button></div>`);
     }
 }
@@ -5804,9 +5804,9 @@ async function renderDashboard() {
 window.renderDashboardDemo = function() {
     const tiles = $$(".kpi-tile .kpi-value");
     render(`<div class="kpi-grid">
-        <div class="kpi-tile kpi-blue"><div class="kpi-value">69</div><div class="kpi-label">Testfälle</div></div>
+        <div class="kpi-tile kpi-blue"><div class="kpi-value">69</div><div class="kpi-label">${LANG.cases_count}</div></div>
         <div class="kpi-tile kpi-green"><div class="kpi-value">94%</div><div class="kpi-label">Pass Rate</div></div>
-        <div class="kpi-tile kpi-blue"><div class="kpi-value">5</div><div class="kpi-label">Letzte Läufe</div></div>
+        <div class="kpi-tile kpi-blue"><div class="kpi-value">5</div><div class="kpi-label">Recent Runs</div></div>
         <div class="kpi-tile kpi-red"><div class="kpi-value">2</div><div class="kpi-label">Offene Fehler</div></div>
     </div>
     <div class="grid-2">
@@ -5831,7 +5831,7 @@ window.renderDashboardDemo = function() {
         </div>
     </div>
     <div class="card" style="text-align:center;padding:40px;color:var(--text-secondary)">
-        <p>Dies ist eine Demo-Ansicht. Die Entities (itt_testcase, itt_testrun, itt_testrunresult) müssen zuerst in Dataverse angelegt werden.</p>
+        <p>This is a demo view. The entities (itt_testcase, itt_testrun, itt_testrunresult) must be created in Dataverse first.</p>
         <p style="margin-top:8px">Skript: <code>scripts/Create-TestingEntities.ps1</code></p>
     </div>`);
 };
@@ -5840,9 +5840,9 @@ window.renderDashboardDemo = function() {
 
 async function renderTestCases() {
     render(`<div class="toolbar">
-        <input type="text" class="form-input search-input" id="case-search" placeholder="Suche nach ID, Titel oder Tag...">
+        <input type="text" class="form-input search-input" id="case-search" placeholder="${LANG.cases_search}">
         <select class="form-select" id="case-category" style="width:200px">
-            <option value="">Alle Kategorien</option>
+            <option value="">${LANG.cases_all_categories}</option>
             <option value="${CONFIG.optionSets.catUpdateSource}">Update Source</option>
             <option value="${CONFIG.optionSets.catCreateSource}">Create Source</option>
             <option value="${CONFIG.optionSets.catPISA}">PISA</option>
@@ -5853,11 +5853,11 @@ async function renderTestCases() {
             <option value="${CONFIG.optionSets.catRecompute}">Recompute</option>
             <option value="${CONFIG.optionSets.catErrorInjection}">Error Injection</option>
         </select>
-        <input type="text" class="form-input" id="case-story" placeholder="User Story (z.B. PROJ-1234)" style="width:180px">
-        <label class="checkbox-label"><input type="checkbox" id="case-active-only" checked> Nur aktive</label>
-        <button class="btn btn-primary" onclick="location.hash='#cases/new'">+ Neuer Testfall</button>
+        <input type="text" class="form-input" id="case-story" placeholder="${LANG.cases_user_story}" style="width:180px">
+        <label class="checkbox-label"><input type="checkbox" id="case-active-only" checked> ${LANG.cases_active_only}</label>
+        <button class="btn btn-primary" onclick="location.hash='#cases/new'">${LANG.cases_new}</button>
     </div>
-    <div class="card"><div id="cases-table">Lade Testfälle...</div></div>`);
+    <div class="card"><div id="cases-table">${LANG.common_loading}</div></div>`);
 
     try {
         const cases = await API.getMany("itt_testcases",
@@ -5872,7 +5872,7 @@ async function renderTestCases() {
         $("#case-active-only").addEventListener("change", () => filterCases());
     } catch (err) {
         $("#cases-table").innerHTML = `<div class="empty-state"><div class="empty-icon">&#x1f50d;</div>
-            <p>Testfälle konnten nicht geladen werden.</p>
+            <p>Failed to load test cases.</p>
             <p style="margin-top:8px;color:var(--accent-red);font-size:12px">${escapeHtml(err.message)}</p>
             <p style="margin-top:16px;color:var(--text-secondary)">Falls die Entity noch nicht existiert: <code>scripts/Create-TestingEntities.ps1</code></p></div>`;
     }
@@ -5906,7 +5906,7 @@ function filterCases() {
 
 function renderCasesTable(cases) {
     if (!cases.length) {
-        $("#cases-table").innerHTML = `<div class="empty-state">Keine Testfälle gefunden.</div>`;
+        $("#cases-table").innerHTML = `<div class="empty-state">No test cases found.</div>`;
         return;
     }
 
@@ -5922,17 +5922,17 @@ function renderCasesTable(cases) {
     categoryNames[CONFIG.optionSets.catErrorInjection] = "Error Injection";
 
     let html = `<div id="cases-selection-toolbar" style="display:none;padding:10px 16px;background:var(--bg-tertiary);border-radius:8px;margin-bottom:12px;align-items:center;gap:12px">
-        <span id="cases-sel-count" style="font-weight:600;color:var(--accent-blue)">0 ausgewählt</span>
-        <button class="btn btn-sm btn-primary" onclick="runSelectedCases()" title="Testlauf starten">Testlauf starten</button>
-        <select id="concurrency-select" style="padding:4px 8px;border-radius:4px;background:var(--bg-elevated);color:var(--text-primary);border:1px solid var(--border-color);font-size:12px" title="Parallelität">
-            <option value="1">Sequentiell</option>
+        <span id="cases-sel-count" style="font-weight:600;color:var(--accent-blue)">0 selected</span>
+        <button class="btn btn-sm btn-primary" onclick="runSelectedCases()" title="Start test run">Start test run</button>
+        <select id="concurrency-select" style="padding:4px 8px;border-radius:4px;background:var(--bg-elevated);color:var(--text-primary);border:1px solid var(--border-color);font-size:12px" title="Concurrency">
+            <option value="1">Sequential</option>
             <option value="3" selected>Parallel (3)</option>
             <option value="5">Parallel (5)</option>
             <option value="10">Parallel (10)</option>
         </select>
-        <button class="btn btn-sm" onclick="clearCaseSelection()" style="margin-left:auto;color:var(--text-muted)">Auswahl aufheben</button>
+        <button class="btn btn-sm" onclick="clearCaseSelection()" style="margin-left:auto;color:var(--text-muted)">Clear selection</button>
     </div>`;
-    html += `<table class="data-table"><thead><tr><th style="width:32px"><input type="checkbox" id="cases-select-all" onchange="toggleAllCases(this.checked)"></th><th>ID</th><th>Titel</th><th>Kategorie</th><th>Tags</th><th>User Stories</th><th>Status</th><th></th></tr></thead><tbody>`;
+    html += `<table class="data-table"><thead><tr><th style="width:32px"><input type="checkbox" id="cases-select-all" onchange="toggleAllCases(this.checked)"></th><th>${LANG.cases_id}</th><th>${LANG.cases_title}</th><th>${LANG.cases_category}</th><th>${LANG.cases_tags}</th><th>${LANG.cases_stories}</th><th>${LANG.cases_status}</th><th></th></tr></thead><tbody>`;
     for (const c of cases) {
         const tags = (c.itt_tags || "").split(",").filter(Boolean).map(t => `<span class="tag">${escapeHtml(t.trim())}</span>`).join("");
         const stories = (c.itt_userstories || "").split(",").filter(Boolean).map(s => {
@@ -5949,12 +5949,12 @@ function renderCasesTable(cases) {
             <td>${stories || "-"}</td>
             <td>${status}</td>
             <td style="white-space:nowrap">
-                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.itt_testid)}',false)" title="Testlauf starten" style="padding:2px 8px">&#9654;</button>
-                <a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">Bearbeiten</a>
+                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.itt_testid)}',false)" title="Start test run" style="padding:2px 8px">&#9654;</button>
+                <a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a>
             </td>
         </tr>`;
     }
-    html += `</tbody></table><div style="color:var(--text-muted);font-size:12px;margin-top:8px">${cases.length} Testfälle</div>`;
+    html += `</tbody></table><div style="color:var(--text-muted);font-size:12px;margin-top:8px">${cases.length} ${LANG.cases_count}</div>`;
     $("#cases-table").innerHTML = html;
 }
 
@@ -5965,7 +5965,7 @@ window.updateCaseSelection = function() {
     const toolbar = document.getElementById("cases-selection-toolbar");
     const countEl = document.getElementById("cases-sel-count");
     if (toolbar) toolbar.style.display = checked.length > 0 ? "flex" : "none";
-    if (countEl) countEl.textContent = checked.length + " ausgewählt";
+    if (countEl) countEl.textContent = checked.length + " selected";
 };
 
 window.toggleAllCases = function(checked) {
@@ -6026,7 +6026,7 @@ function showError(title, detail) {
                 <summary style="cursor:pointer">Technische Details</summary>
                 <pre style="white-space:pre-wrap;margin-top:4px;font-family:var(--mono);font-size:11px;max-height:200px;overflow-y:auto">${escapeHtml(detail)}</pre>
             </details>
-            <button onclick="this.closest('.itt-error-panel').remove()" style="margin-top:8px;padding:4px 12px;background:transparent;border:1px solid var(--text-muted);color:var(--text-secondary);border-radius:4px;cursor:pointer;font-size:12px">Schließen</button>
+            <button onclick="this.closest('.itt-error-panel').remove()" style="margin-top:8px;padding:4px 12px;background:transparent;border:1px solid var(--text-muted);color:var(--text-secondary);border-radius:4px;cursor:pointer;font-size:12px">Closen</button>
         </div>`;
     const target = document.getElementById("app-content") || document.querySelector("main") || document.body;
     target.prepend(el);
@@ -6034,7 +6034,7 @@ function showError(title, detail) {
 
 function _parseDataverseError(msg) {
     try {
-        // Versuche JSON aus der Fehlermeldung zu extrahieren
+        // Versuche JSON aus der Error message zu extrahieren
         const jsonMatch = msg.match(/\{[\s\S]*"error"[\s\S]*\}/);
         if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
@@ -6108,7 +6108,7 @@ async function renderTestCaseEditor(id) {
 
     // Render the editor layout: compact metadata row + mode tabs + editor area
     render(`<div style="margin-bottom:16px"><a href="#cases" style="color:var(--accent-blue);text-decoration:none">&larr; Zur\u00fcck zu Testf\u00e4lle</a></div>
-    <h2 style="margin-bottom:16px">${isNew ? "Neuer Testfall" : `${escapeHtml(tc?.itt_testid)}: ${escapeHtml(tc?.itt_title)}`}</h2>
+    <h2 style="margin-bottom:16px">${isNew ? "New Test Case" : `${escapeHtml(tc?.itt_testid)}: ${escapeHtml(tc?.itt_title)}`}</h2>
 
     <div class="ve-meta-row">
         <div class="form-group" style="flex:0 0 100px">
@@ -6146,15 +6146,15 @@ async function renderTestCaseEditor(id) {
             <label class="checkbox-label" style="font-size:12px"><input type="checkbox" id="tc-enabled" ${tc?.itt_enabled !== false ? 'checked' : ''}> Aktiv</label>
         </div>
         <div class="form-group" style="flex:0 0 auto;align-self:flex-end">
-            <button class="btn btn-primary btn-sm" onclick="saveTestCase('${isNew ? '' : id}')">Speichern</button>
+            <button class="btn btn-primary btn-sm" onclick="saveTestCase('${isNew ? '' : id}')">${LANG.editor_save}</button>
             ${!isNew ? `<button class="btn btn-sm" onclick="saveTestCaseAsCopy('${id}')" style="margin-left:4px" title="Als Kopie mit neuer ID speichern">Als Kopie speichern</button>` : ''}
         </div>
     </div>
 
     <div class="ve-mode-bar" id="ve-mode-bar">
-        <button class="ve-mode-btn active" data-mode="visual">Visuell</button>
-        <button class="ve-mode-btn" data-mode="json">JSON</button>
-        <button class="ve-mode-btn" data-mode="flow">Flow</button>
+        <button class="ve-mode-btn active" data-mode="visual">${LANG.editor_visual}</button>
+        <button class="ve-mode-btn" data-mode="json">${LANG.editor_json}</button>
+        <button class="ve-mode-btn" data-mode="flow">${LANG.editor_flow}</button>
     </div>
 
     <div id="editor-tab-visual"></div>
@@ -6311,7 +6311,7 @@ window.saveTestCase = async function(id) {
 };
 
 window.saveTestCaseAsCopy = async function(originalId) {
-    const newId = prompt("Neue Test-ID für die Kopie:", $("#tc-id").value + "_COPY");
+    const newId = prompt("New test ID for the copy:", $("#tc-id").value + "_COPY");
     if (!newId) return;
 
     let definitionJson;
@@ -6325,7 +6325,7 @@ window.saveTestCaseAsCopy = async function(originalId) {
         definitionJson = JSON.stringify(EditorModel.toJSON(), null, 2);
     } else {
         definitionJson = $("#tc-json").value;
-        try { JSON.parse(definitionJson); } catch (e) { alert("JSON ungültig: " + e.message); return; }
+        try { JSON.parse(definitionJson); } catch (e) { alert("Invalid JSON: " + e.message); return; }
     }
 
     const data = {
@@ -6350,7 +6350,7 @@ window.saveTestCaseAsCopy = async function(originalId) {
 // ── New Run View ────────────────────────────────────────────────
 
 function renderNewRun() {
-    render(`<h2 style="margin-bottom:16px">Testlauf starten</h2>
+    render(`<h2 style="margin-bottom:16px">Start test run</h2>
     <div class="card">
         <div class="form-group">
             <label class="form-label">Testauswahl</label>
@@ -6367,7 +6367,7 @@ function renderNewRun() {
             <input class="form-input" id="run-filter-value" placeholder="z.B. TC01,TC02 oder tag:LUW">
         </div>
         <div class="form-group">
-            <label class="checkbox-label"><input type="checkbox" id="run-preflight" checked> Pre-Flight-Diagnostics vorab ausführen</label>
+            <label class="checkbox-label"><input type="checkbox" id="run-preflight" checked> Run pre-flight diagnostics</label>
         </div>
         <div class="form-group">
             <label class="form-label">Timeout pro Test (Sekunden)</label>
@@ -6375,10 +6375,10 @@ function renderNewRun() {
         </div>
         <div class="form-group" style="margin-top:12px">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-secondary)">
-                <input type="checkbox" id="run-keep-records"> Testdaten beibehalten (nicht aufräumen)
+                <input type="checkbox" id="run-keep-records"> Keep test data (no cleanup)
             </label>
         </div>
-        <button class="btn btn-primary" onclick="startTestRun()" id="btn-start" style="margin-top:16px">Testlauf starten</button>
+        <button class="btn btn-primary" onclick="startTestRun()" id="btn-start" style="margin-top:16px">Start test run</button>
     </div>`);
 
     // Prefill von User Story View
@@ -6434,7 +6434,7 @@ window.startTestRun = async function() {
     } catch (err) {
         showError("Testlauf konnte nicht erstellt werden", err.message);
         $("#btn-start").disabled = false;
-        $("#btn-start").textContent = "Testlauf starten";
+        $("#btn-start").textContent = "Start test run";
     }
 };
 
@@ -6450,7 +6450,7 @@ async function renderRunDetail(runId) {
     LiveRunState.startTime = Date.now();
     LiveRunState.testCaseList = [];
 
-    render(`<div style="margin-bottom:12px"><a href="#runs" style="color:var(--accent-blue);text-decoration:none;font-size:13px">&larr; Zurück zu Verlauf</a></div>
+    render(`<div style="margin-bottom:12px"><a href="#runs" style="color:var(--accent-blue);text-decoration:none;font-size:13px">&larr; Back to history</a></div>
     <div class="live-run-header" id="live-header">
         <span class="run-title">Testlauf</span>
         <span id="live-status-badge"></span>
@@ -6470,7 +6470,7 @@ async function renderRunDetail(runId) {
             <div class="live-list-items" id="live-items"></div>
         </div>
         <div class="live-detail" id="live-detail">
-            <div class="empty-state"><div class="empty-icon">&#128269;</div><div>Test auswählen</div></div>
+            <div class="empty-state"><div class="empty-icon">&#128269;</div><div>Select a test</div></div>
         </div>
     </div>
     <div class="card" style="margin-top:16px"><div class="card-title">Log</div><div class="log-output" id="run-log" style="max-height:300px">Warte auf Log-Daten...</div></div>`);
@@ -6516,8 +6516,8 @@ function _renderFilterChips() {
     const el = document.getElementById("live-chips");
     if (!el) return;
     const chips = [
-        { id: "all", label: "Alle" }, { id: "failed", label: "Failed" },
-        { id: "passed", label: "Passed" }, { id: "running", label: "Läuft" }
+        { id: "all", label: "${LANG.run_all}" }, { id: "failed", label: "Failed" },
+        { id: "passed", label: "Passed" }, { id: "running", label: "Running" }
     ];
     el.innerHTML = chips.map(c =>
         `<span class="filter-chip${LiveRunState.filter === c.id ? ' active' : ''}" onclick="_liveFilterChip('${c.id}')">${c.label}</span>`
@@ -6558,7 +6558,7 @@ async function _updateLiveView(runId) {
             const dur = run.itt_completedon && run.itt_startedon
                 ? Math.round((new Date(run.itt_completedon) - new Date(run.itt_startedon)) / 1000)
                 : 0;
-            etaEl.textContent = dur > 0 ? `Dauer: ${Math.floor(dur/60)}m ${dur%60}s` : "";
+            etaEl.textContent = dur > 0 ? `Duration: ${Math.floor(dur/60)}m ${dur%60}s` : "";
         }
 
         // Progress bar
@@ -6580,7 +6580,7 @@ async function _updateLiveView(runId) {
             if (isActive) {
                 actEl.innerHTML = "";
             } else if (failed > 0) {
-                actEl.innerHTML = `<button class="btn btn-sm" style="border:1px solid var(--accent-red);color:var(--accent-red)" onclick="_rerunFailed('${runId}')">${failed} Fehlgeschlagene erneut starten</button>`;
+                actEl.innerHTML = `<button class="btn btn-sm" style="border:1px solid var(--accent-red);color:var(--accent-red)" onclick="_rerunFailed('${runId}')">${failed} Failede erneut starten</button>`;
             } else {
                 actEl.innerHTML = `<span style="color:var(--accent-green);font-weight:600">Alle bestanden</span>`;
             }
@@ -6629,7 +6629,7 @@ async function _updateLiveView(runId) {
         }
     } catch (err) {
         const logEl = document.getElementById("run-log");
-        if (logEl) logEl.innerHTML = `<span class="log-fail">Fehler: ${escapeHtml(err.message)}</span>`;
+        if (logEl) logEl.innerHTML = `<span class="log-fail">Error: ${escapeHtml(err.message)}</span>`;
     }
 }
 
@@ -6661,14 +6661,14 @@ function _renderLiveList(runId) {
         let dotClass, statusText, subText, subClass, durText;
 
         if (!r) {
-            // Parallel: erste N nicht abgeschlossene Tests = "Läuft", Rest = "Ausstehend"
+            // Parallel: erste N nicht abgeschlossene Tests = "Running", Rest = "Pending"
             const conc = LiveRunState.concurrency || 1;
             const pendingTests = allTests.filter(x => !x.result);
             const runningCount = Math.min(conc, pendingTests.length);
             const runningSet = new Set(pendingTests.slice(0, runningCount).map(x => x.id));
             dotClass = runningSet.has(t.id) ? "running" : "pending";
-            statusText = dotClass === "running" ? "Läuft..." : "";
-            subText = dotClass === "running" ? "Governance-Polling..." : "";
+            statusText = dotClass === "running" ? "Running..." : "";
+            subText = dotClass === "running" ? "Governance polling..." : "";
             subClass = dotClass === "running" ? "running-hint" : "";
             durText = "";
         } else if (r.itt_outcome === CONFIG.optionSets.outcomePassed) {
@@ -6697,7 +6697,7 @@ function _renderLiveList(runId) {
         </div>`;
     }
 
-    container.innerHTML = html || `<div style="padding:20px;color:var(--text-muted);text-align:center;font-size:12px">Keine Tests in diesem Filter</div>`;
+    container.innerHTML = html || `<div style="padding:20px;color:var(--text-muted);text-align:center;font-size:12px">No tests in diesem Filter</div>`;
 
     // Auto-Scroll zum laufenden Test
     const runningEl = container.querySelector(".live-item-dot.running");
@@ -6739,16 +6739,16 @@ function _parseGovernanceDecisions(diagnosticsText) {
 function _getFailureHint(assertion) {
     const actual = String(assertion.actual || "");
     if (actual.includes("_ORIG") || actual.includes("_PLAT_ORIG")) {
-        return "Mögliche Ursache: Field Governance hat das Feld nicht aktualisiert";
+        return "Possible cause: Field Governance did not update the field";
     }
     if (actual === "null" || actual === "" || actual === "undefined") {
-        return "Mögliche Ursache: Feld wurde nicht gesetzt";
+        return "Possible cause: Field was not set";
     }
     if (actual.includes("DYN_")) {
-        return "Mögliche Ursache: DYNAMICS-Quelle hat gewonnen statt erwarteter Quelle";
+        return "Possible cause: DYNAMICS source won instead of expected source";
     }
     if (actual.includes("ERROR")) {
-        return "Mögliche Ursache: API-Abfrage fehlgeschlagen";
+        return "Possible cause: API query failed";
     }
     return "";
 }
@@ -6794,7 +6794,7 @@ window._detailRerunTest = function(testId) {
     }
 };
 
-// Zum Rohdaten-Tab wechseln
+// Zum Raw Data-Tab wechseln
 window._detailGoToRaw = function() {
     _detailSwitchTab("raw");
 };
@@ -6807,7 +6807,7 @@ async function _renderLiveDetail(runId, testId) {
 
     if (!result) {
         container.innerHTML = `<div class="live-detail-header"><h3>${escapeHtml(testId)}</h3><span class="badge badge-running">Ausstehend</span></div>
-            <div style="padding:20px;color:var(--text-muted);font-size:13px">Wartet auf Ausführung...</div>`;
+            <div style="padding:20px;color:var(--text-muted);font-size:13px">Wartet auf Execution...</div>`;
         return;
     }
 
@@ -6902,17 +6902,17 @@ async function _renderLiveDetail(runId, testId) {
 
     // Tab-Leiste
     html += `<div class="detail-tabs">`;
-    html += `<div class="detail-tab active" data-tab="overview" onclick="_detailSwitchTab('overview')">Überblick</div>`;
+    html += `<div class="detail-tab active" data-tab="overview" onclick="_detailSwitchTab('overview')">Overview</div>`;
     html += `<div class="detail-tab" data-tab="steps" onclick="_detailSwitchTab('steps')">Steps</div>`;
     html += `<div class="detail-tab" data-tab="assertions" onclick="_detailSwitchTab('assertions')">Assertions</div>`;
     if (hasGovernance) {
         html += `<div class="detail-tab" data-tab="governance" onclick="_detailSwitchTab('governance')">Governance</div>`;
     }
-    html += `<div class="detail-tab" data-tab="raw" onclick="_detailSwitchTab('raw')">Rohdaten</div>`;
+    html += `<div class="detail-tab" data-tab="raw" onclick="_detailSwitchTab('raw')">Raw Data</div>`;
     html += `</div>`;
 
     // ════════════════════════════════════════════
-    // Tab 1: Überblick
+    // Tab 1: Overview
     // ════════════════════════════════════════════
     html += `<div class="detail-tab-content active" id="dtab-overview">`;
 
@@ -6985,7 +6985,7 @@ async function _renderLiveDetail(runId, testId) {
     html += `<button class="btn btn-sm" onclick="_detailRerunTest('${escapeHtml(testId)}')" style="border:1px solid var(--accent-blue);color:var(--accent-blue)">Erneut starten</button>`;
     html += `<button class="btn btn-sm" onclick="_detailGoToRaw()" style="border:1px solid var(--text-muted);color:var(--text-secondary)">Definition anzeigen</button>`;
     if (result?.itt_testrunresultid) {
-        html += `<button class="btn btn-sm" onclick="_cleanupTestRecords('${result.itt_testrunresultid}', this)" style="color:var(--text-muted);border:1px solid var(--border);font-size:11px" title="Testdaten dieses Tests aus Dataverse löschen">Testdaten löschen</button>`;
+        html += `<button class="btn btn-sm" onclick="_cleanupTestRecords('${result.itt_testrunresultid}', this)" style="color:var(--text-muted);border:1px solid var(--border);font-size:11px" title="Delete test data from Dataverse">Delete test data</button>`;
     }
     html += `</div>`;
     html += `</div>`; // /dtab-overview
@@ -7062,7 +7062,7 @@ async function _renderLiveDetail(runId, testId) {
 
             html += `<div class="step-group">`;
             html += `<div class="step-group-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">`;
-            html += `<span>${gName === "Precondition" ? "Preconditions" : gName === "Step" ? "Steps" : gName === "Assertion" ? "Assertions" : gName} (${gSteps.length} Schritte, ${(gDur / 1000).toFixed(1)}s)</span>`;
+            html += `<span>${gName === "Precondition" ? "Preconditions" : gName === "Step" ? "Steps" : gName === "Assertion" ? "Assertions" : gName} (${gSteps.length} Steps, ${(gDur / 1000).toFixed(1)}s)</span>`;
             html += `<span class="group-status ${allOk ? 'all-ok' : 'has-fail'}">${allOk ? 'alle OK' : gOk + '/' + gSteps.length + ' OK'}</span>`;
             html += `</div>`;
             html += `<div class="step-group-body">`;
@@ -7138,11 +7138,11 @@ async function _renderLiveDetail(runId, testId) {
             html += `</div>`;
             html += `<div class="assertion-card-body">`;
             if (a.passed) {
-                html += `<div class="assert-row"><span class="assert-label">Erwartet:</span><span class="assert-value">${escapeHtml(a.expected)}</span></div>`;
-                html += `<div class="assert-row"><span class="assert-label">Tatsächlich:</span><span class="assert-value">${escapeHtml(a.actual)}</span></div>`;
+                html += `<div class="assert-row"><span class="assert-label">Expected:</span><span class="assert-value">${escapeHtml(a.expected)}</span></div>`;
+                html += `<div class="assert-row"><span class="assert-label">Actual:</span><span class="assert-value">${escapeHtml(a.actual)}</span></div>`;
             } else {
-                html += `<div class="assert-row"><span class="assert-label">Erwartet:</span><span class="assert-value expected-fail">${escapeHtml(a.expected)}</span></div>`;
-                html += `<div class="assert-row"><span class="assert-label">Tatsächlich:</span><span class="assert-value actual-fail">${escapeHtml(a.actual)}</span></div>`;
+                html += `<div class="assert-row"><span class="assert-label">Expected:</span><span class="assert-value expected-fail">${escapeHtml(a.expected)}</span></div>`;
+                html += `<div class="assert-row"><span class="assert-label">Actual:</span><span class="assert-value actual-fail">${escapeHtml(a.actual)}</span></div>`;
                 const hint = _getFailureHint(a);
                 if (hint) {
                     html += `<div class="assertion-hint">${escapeHtml(hint)}</div>`;
@@ -7186,8 +7186,8 @@ async function _renderLiveDetail(runId, testId) {
             html += `<div class="governance-card-header">Governance-Zyklus #${govCycleIdx} (nach ${escapeHtml(actionLabel)} ${escapeHtml(aliasLabel)})</div>`;
             html += `<div class="governance-stats">`;
             html += `<span>Polls: <span class="governance-stat-value">${polls}</span></span>`;
-            html += `<span>Dauer: <span class="governance-stat-value">${(govDur / 1000).toFixed(1)}s</span></span>`;
-            html += `<span>Ergebnis: <span class="governance-stat-value" style="color:${found ? 'var(--accent-green)' : 'var(--accent-red)'}">${found ? 'Log gefunden' : 'Timeout'}</span></span>`;
+            html += `<span>Duration: <span class="governance-stat-value">${(govDur / 1000).toFixed(1)}s</span></span>`;
+            html += `<span>Result: <span class="governance-stat-value" style="color:${found ? 'var(--accent-green)' : 'var(--accent-red)'}">${found ? 'Log gefunden' : 'Timeout'}</span></span>`;
             html += `</div>`;
             if (logName) {
                 html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">CDH-Log: ${escapeHtml(logName)}</div>`;
@@ -7204,7 +7204,7 @@ async function _renderLiveDetail(runId, testId) {
                     html += `<td style="font-size:10px">${escapeHtml(d.Strategy || "")}</td>`;
                     html += `<td>${_sourceChip(d.WinnerSource || "")}</td>`;
                     html += `<td style="font-family:var(--mono);font-size:10px">${escapeHtml(d.Winner || "")}</td>`;
-                    html += `<td>${d.Updated === "True" ? '<span style="color:var(--accent-green)">Ja</span>' : '<span style="color:var(--text-muted)">Nein</span>'}</td>`;
+                    html += `<td>${d.Updated === "True" ? '<span style="color:var(--accent-green)">${LANG.common_yes}</span>' : '<span style="color:var(--text-muted)">${LANG.common_no}</span>'}</td>`;
                     html += `</tr>`;
                 }
                 html += `</tbody></table>`;
@@ -7224,7 +7224,7 @@ async function _renderLiveDetail(runId, testId) {
     }
 
     // ════════════════════════════════════════════
-    // Tab 5: Rohdaten
+    // Tab 5: Raw Data
     // ════════════════════════════════════════════
     html += `<div class="detail-tab-content" id="dtab-raw">`;
 
@@ -7239,7 +7239,7 @@ async function _renderLiveDetail(runId, testId) {
             html += `<div class="raw-json">${escapeHtml(testCase.itt_definitionjson)}</div>`;
         }
     } else {
-        html += `<div style="color:var(--text-muted);font-size:12px">Keine Definition verfügbar.</div>`;
+        html += `<div style="color:var(--text-muted);font-size:12px">No definition available.</div>`;
     }
     html += `</div>`;
 
@@ -7291,8 +7291,8 @@ async function _renderLiveDetail(runId, testId) {
 // Cleanup test records for a run (keeprecords=true -> manual cleanup)
 // Einzeltest-Cleanup via itt_trackedrecords (oder Fallback Steps)
 window._cleanupTestRecords = async function(resultId, btn) {
-    if (!confirm("Testdaten dieses Tests löschen?")) return;
-    if (btn) { btn.disabled = true; btn.textContent = "Lösche..."; }
+    if (!confirm("Delete test data for this test?")) return;
+    if (btn) { btn.disabled = true; btn.textContent = "Delete..."; }
     try {
         // Versuche zuerst tracked records aus itt_trackedrecords
         const result = await API.getOne("itt_testrunresults", resultId, "itt_trackedrecords");
@@ -7313,22 +7313,22 @@ window._cleanupTestRecords = async function(resultId, btn) {
             try {
                 await API.del(rec.entity, rec.id);
                 deleted++;
-                if (btn) btn.textContent = `${deleted}/${records.length} gelöscht...`;
+                if (btn) btn.textContent = `${deleted}/${records.length} deleted...`;
             } catch (e) {
                 ITTLog.warn("Cleanup", `  ${rec.entity} ${rec.id}: ${e.message}`);
             }
         }
         // Tracked records leeren
         try { await API.update("itt_testrunresults", resultId, { itt_trackedrecords: "[]" }); } catch {}
-        if (btn) { btn.textContent = `${deleted} Records gelöscht`; btn.style.color = "var(--accent-green)"; }
+        if (btn) { btn.textContent = `${deleted} records deleted`; btn.style.color = "var(--accent-green)"; }
     } catch (err) {
-        if (btn) { btn.textContent = "Fehler: " + err.message; btn.style.color = "var(--accent-red)"; }
+        if (btn) { btn.textContent = "Error: " + err.message; btn.style.color = "var(--accent-red)"; }
     }
 };
 
 window.cleanupRunRecords = async function(runId) {
-    if (!confirm("Alle Testdaten dieses Laufs aufräumen?")) return;
-    ITTLog.info("Cleanup", `Manuelle Bereinigung für Run ${runId}`);
+    if (!confirm("Alle Testdaten dieses Laufs cleanup?")) return;
+    ITTLog.info("Cleanup", `Manual cleanup for run ${runId}`);
     try {
         // Lade alle Steps mit RecordIds
         const results = await API.getMany("itt_testrunresults",
@@ -7341,20 +7341,20 @@ window.cleanupRunRecords = async function(runId) {
                 if (s.itt_action === "DeleteRecord" || !s.itt_recordid || !s.itt_entity) continue;
                 try {
                     await API.del(s.itt_entity, s.itt_recordid);
-                    ITTLog.info("Cleanup", `  Gelöscht: ${s.itt_entity} ${s.itt_recordid}`);
+                    ITTLog.info("Cleanup", `  Deleted: ${s.itt_entity} ${s.itt_recordid}`);
                     deleted++;
                 } catch (e) {
-                    ITTLog.warn("Cleanup", `  Fehler: ${s.itt_entity} ${s.itt_recordid} - ${e.message}`);
+                    ITTLog.warn("Cleanup", `  Error: ${s.itt_entity} ${s.itt_recordid} - ${e.message}`);
                 }
             }
         }
         // Update Run: keeprecords auf false setzen
         await API.update("itt_testruns", runId, { itt_keeprecords: false });
         const bar = document.getElementById("run-cleanup-bar");
-        if (bar) bar.innerHTML = `<span style="color:var(--accent-green);font-size:13px">${deleted} Testdaten-Records aufgeräumt.</span>`;
-        ITTLog.info("Cleanup", `Fertig: ${deleted} Records gelöscht`);
+        if (bar) bar.innerHTML = `<span style="color:var(--accent-green);font-size:13px">${deleted} Testdaten-Records cleaned up.</span>`;
+        ITTLog.info("Cleanup", `Fertig: ${deleted} records deleted`);
     } catch (err) {
-        showError("Aufräumen fehlgeschlagen", err.message);
+        showError("Cleanup fehlgeschlagen", err.message);
     }
 };
 
@@ -7381,7 +7381,7 @@ window.showTestFlow = async function(testId, runId) {
             const nodes = FlowViz.parseDefinition(cases[0].itt_definitionjson, assertionResults);
             FlowViz.renderSvg(nodes, "#run-flow-viz");
         } else {
-            $("#run-flow-viz").innerHTML = `<div class="empty-state">Testfall-Definition für ${escapeHtml(testId)} nicht gefunden.</div>`;
+            $("#run-flow-viz").innerHTML = `<div class="empty-state">Test case definition for ${escapeHtml(testId)} not found.</div>`;
         }
     } catch (err) {
         $("#run-flow-viz").innerHTML = `<span style="color:var(--accent-red)">${escapeHtml(err.message)}</span>`;
@@ -7403,7 +7403,7 @@ async function renderRunHistory() {
         <button class="btn btn-sm" onclick="_exportRunsCsv()" title="Als CSV exportieren">Exportieren</button>
     </div>
     <div id="runs-timeline-chart"></div>
-    <div id="runs-table">Lade...</div>`);
+    <div id="runs-table">${LANG.common_loading}</div>`);
 
     try {
         const runs = await API.getMany("itt_testruns",
@@ -7479,7 +7479,7 @@ function renderRunsCards(runs) {
     const container = $("#runs-table");
     if (!container) return;
     if (runs.length === 0) {
-        container.innerHTML = `<div class="empty-state">Keine Testläufe gefunden.</div>`;
+        container.innerHTML = `<div class="empty-state">No test runs found.</div>`;
         return;
     }
 
@@ -7515,7 +7515,7 @@ function renderRunsCards(runs) {
             </div>
         </div>`;
     }
-    html += `<div style="color:var(--text-muted);font-size:12px;margin-top:8px">${runs.length} Testläufe</div>`;
+    html += `<div style="color:var(--text-muted);font-size:12px;margin-top:8px">${runs.length} test runs</div>`;
     container.innerHTML = html;
 }
 
@@ -7524,7 +7524,7 @@ function renderRunsCards(runs) {
 window._exportRunsCsv = function() {
     const runs = State.testRuns;
     if (!runs || runs.length === 0) {
-        alert("Keine Testläufe zum Exportieren vorhanden.");
+        alert("No test runs to export.");
         return;
     }
     const sep = ";";
@@ -7538,7 +7538,7 @@ window._exportRunsCsv = function() {
         const rate = total > 0 ? Math.round(passed / total * 100) : 0;
         const statusMap = {};
         statusMap[CONFIG.optionSets.statusPlanned] = "Geplant";
-        statusMap[CONFIG.optionSets.statusRunning] = "Läuft";
+        statusMap[CONFIG.optionSets.statusRunning] = "Running";
         statusMap[CONFIG.optionSets.statusCompleted] = "Abgeschlossen";
         statusMap[CONFIG.optionSets.statusError] = "Fehler";
         const statusText = statusMap[r.itt_teststatus] || "?";
@@ -7569,7 +7569,7 @@ window._exportRunsCsv = function() {
 // ── Test History View ───────────────────────────────────────────
 
 async function renderTestHistory(testId) {
-    render(`<div style="margin-bottom:16px"><a href="#cases" style="color:var(--accent-blue);text-decoration:none">&larr; Zurück</a></div>
+    render(`<div style="margin-bottom:16px"><a href="#cases" style="color:var(--accent-blue);text-decoration:none">&larr; Back</a></div>
     <h2 style="margin-bottom:16px">Verlauf: ${escapeHtml(testId)}</h2>
     <div class="grid-2">
         <div class="card"><div class="card-title">Ergebnisverlauf</div><div id="history-chart" class="chart-container"></div></div>
@@ -7582,7 +7582,7 @@ async function renderTestHistory(testId) {
             `&$filter=itt_testid eq '${testId}'&$orderby=createdon desc&$top=20`);
 
         if (results.length === 0) {
-            $("#history-chart").innerHTML = `<div class="empty-state">Keine Ergebnisse für ${escapeHtml(testId)}</div>`;
+            $("#history-chart").innerHTML = `<div class="empty-state">No results for ${escapeHtml(testId)}</div>`;
             return;
         }
 
@@ -7624,7 +7624,7 @@ async function renderUserStories() {
     <div class="toolbar">
         <input type="text" class="form-input search-input" id="story-search" placeholder="Suche nach Story-ID (z.B. PROJ-1234)...">
     </div>
-    <div class="card"><div id="stories-table">Lade...</div></div>`);
+    <div class="card"><div id="stories-table">${LANG.common_loading}</div></div>`);
 
     try {
         const cases = await API.getMany("itt_testcases",
@@ -7663,11 +7663,11 @@ async function renderUserStories() {
 function renderStoriesTable(storyMap) {
     const stories = Object.values(storyMap).sort((a, b) => a.key.localeCompare(b.key));
     if (!stories.length) {
-        $("#stories-table").innerHTML = `<div class="empty-state">Keine User Stories mit zugeordneten Testfällen gefunden.<br><span style="color:var(--text-muted);font-size:12px">Testfälle können im Editor über das Feld "User Stories" einer Story zugeordnet werden.</span></div>`;
+        $("#stories-table").innerHTML = `<div class="empty-state">No user stories with assigned test cases found.<br><span style="color:var(--text-muted);font-size:12px">Test cases can be assigned to a story via the "User Stories" field in the editor.</span></div>`;
         return;
     }
 
-    let html = `<table class="data-table"><thead><tr><th>User Story</th><th>Testfälle</th><th>Aktiv</th><th>Abdeckung</th><th></th></tr></thead><tbody>`;
+    let html = `<table class="data-table"><thead><tr><th>User Story</th><th>Test Cases</th><th>Active</th><th>Coverage</th><th></th></tr></thead><tbody>`;
     for (const s of stories) {
         const total = s.cases.length;
         const active = s.cases.filter(c => c.itt_enabled !== false).length;
@@ -7675,7 +7675,7 @@ function renderStoriesTable(storyMap) {
         const barColor = pct === 100 ? "var(--accent-green)" : pct >= 50 ? "var(--accent-yellow)" : "var(--accent-red)";
         html += `<tr>
             <td><a href="#stories/${escapeHtml(s.key)}" style="color:var(--accent-purple);text-decoration:none;font-weight:600">${escapeHtml(s.key)}</a></td>
-            <td>${total} Testfälle</td>
+            <td>${total} test cases</td>
             <td>${active} aktiv</td>
             <td>
                 <div style="display:flex;align-items:center;gap:8px">
@@ -7702,11 +7702,11 @@ window.prefillStoryRun = function(storyKey) {
 };
 
 async function renderStoryDetail(storyKey) {
-    render(`<div style="margin-bottom:16px"><a href="#stories" style="color:var(--accent-blue);text-decoration:none">&larr; Zurück zu User Stories</a></div>
+    render(`<div style="margin-bottom:16px"><a href="#stories" style="color:var(--accent-blue);text-decoration:none">&larr; Back to User Stories</a></div>
     <h2 style="margin-bottom:16px">User Story: <span style="color:var(--accent-purple)">${escapeHtml(storyKey)}</span></h2>
     <div class="grid-2">
-        <div class="card"><div class="card-title">Zugeordnete Testfälle</div><div id="story-cases">Lade...</div></div>
-        <div class="card"><div class="card-title">Testergebnisse</div><div id="story-results">Lade...</div></div>
+        <div class="card"><div class="card-title">Zugeordnete ${LANG.cases_count}</div><div id="story-cases">${LANG.common_loading}</div></div>
+        <div class="card"><div class="card-title">Testergebnisse</div><div id="story-results">${LANG.common_loading}</div></div>
     </div>
     <div style="margin-top:16px">
         <button class="btn btn-primary" onclick="prefillStoryRun('${escapeHtml(storyKey)}'); location.hash='#run/new';">Alle Tests dieser Story starten</button>
@@ -7737,13 +7737,13 @@ async function renderStoryDetail(storyKey) {
                     <td>${escapeHtml(c.itt_title) || "-"}</td>
                     <td>${categoryNames[c.itt_category] || "-"}</td>
                     <td>${status}</td>
-                    <td><a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">Bearbeiten</a></td>
+                    <td><a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a></td>
                 </tr>`;
             }
             html += `</tbody></table>`;
             $("#story-cases").innerHTML = html;
         } else {
-            $("#story-cases").innerHTML = `<div class="empty-state">Keine Testfälle für ${escapeHtml(storyKey)} gefunden.</div>`;
+            $("#story-cases").innerHTML = `<div class="empty-state">No test cases for ${escapeHtml(storyKey)} found.</div>`;
         }
 
         // Testergebnisse: die TestIDs dieser Story in den Results suchen
@@ -7806,7 +7806,7 @@ async function renderStoryDetail(storyKey) {
             </div>`;
             $("#story-results").innerHTML = summary + rhtml;
         } else {
-            $("#story-results").innerHTML = `<div class="empty-state">Keine Testfälle zum Auswerten.</div>`;
+            $("#story-results").innerHTML = `<div class="empty-state">No test cases to evaluate.</div>`;
         }
 
     } catch (err) {
@@ -7842,13 +7842,13 @@ window.copyToClipboard = copyToClipboard;
 
 async function renderMetadata(tab, entityId) {
     const activeTab = tab || "entities";
-    render(`<h2 style="margin-bottom:16px">Metadaten-Explorer</h2>
+    render(`<h2 style="margin-bottom:16px">${LANG.meta_explorer}</h2>
     <div class="meta-tabs">
-        <button class="${activeTab==='entities'?'active':''}" onclick="location.hash='#metadata/entities'">Tabellen</button>
-        <button class="${activeTab==='optionsets'?'active':''}" onclick="location.hash='#metadata/optionsets'">OptionSets</button>
-        <button class="${activeTab==='customapis'?'active':''}" onclick="location.hash='#metadata/customapis'">Custom APIs</button>
+        <button class="${activeTab==='entities'?'active':''}" onclick="location.hash='#metadata/entities'">${LANG.meta_tables}</button>
+        <button class="${activeTab==='optionsets'?'active':''}" onclick="location.hash='#metadata/optionsets'">${LANG.meta_optionsets}</button>
+        <button class="${activeTab==='customapis'?'active':''}" onclick="location.hash='#metadata/customapis'">${LANG.meta_customapis}</button>
     </div>
-    <div id="meta-content">Lade...</div>`);
+    <div id="meta-content">${LANG.common_loading}</div>`);
 
     switch (activeTab) {
         case "entities": entityId ? await loadEntityAttributes(entityId) : await loadEntities(); break;
@@ -7868,7 +7868,7 @@ async function loadEntities() {
 
         // Filter UI
         let html = `<div class="toolbar" style="margin-bottom:16px">
-            <input type="text" class="form-input search-input" id="meta-entity-search" placeholder="Tabelle suchen (z.B. contact, itt_)...">
+            <input type="text" class="form-input search-input" id="meta-entity-search" placeholder="${LANG.meta_search}">
             <label class="checkbox-label"><input type="checkbox" id="meta-custom-only"> Nur Custom</label>
             <label class="checkbox-label"><input type="checkbox" id="meta-publisher-only" checked> Nur itt_</label>
         </div>`;
@@ -7877,13 +7877,13 @@ async function loadEntities() {
             let t = `<table class="data-table"><thead><tr><th>Schema-Name</th><th>Anzeigename</th><th>Custom</th><th>EntitySet</th><th></th></tr></thead><tbody>`;
             for (const e of list.slice(0, 200)) {
                 const displayName = e.DisplayName?.UserLocalizedLabel?.Label || e.DisplayName?.LocalizedLabels?.[0]?.Label || "-";
-                const isCustom = e.IsCustomEntity ? `<span class="badge badge-active">Ja</span>` : `<span class="badge badge-disabled">Nein</span>`;
+                const isCustom = e.IsCustomEntity ? `<span class="badge badge-active">${LANG.common_yes}</span>` : `<span class="badge badge-disabled">${LANG.common_no}</span>`;
                 t += `<tr>
                     <td><button class="copy-btn" onclick="copyToClipboard('${e.LogicalName}', this)">${e.LogicalName}</button></td>
                     <td>${displayName}</td>
                     <td>${isCustom}</td>
                     <td style="font-size:11px;color:var(--text-muted)">${e.EntitySetName || "-"}</td>
-                    <td><a href="#metadata/entities/${e.LogicalName}" class="btn btn-sm">Attribute</a></td>
+                    <td><a href="#metadata/entities/${e.LogicalName}" class="btn btn-sm">${LANG.meta_attributes}</a></td>
                 </tr>`;
             }
             t += `</tbody></table><div style="color:var(--text-muted);font-size:12px;margin-top:8px">${list.length} Tabellen${list.length > 200 ? " (erste 200 angezeigt)" : ""}</div>`;
@@ -7909,7 +7909,7 @@ async function loadEntities() {
         $("#meta-publisher-only").addEventListener("change", applyFilter);
 
     } catch (err) {
-        $("#meta-content").innerHTML = `<div class="empty-state" style="color:var(--accent-red)">${escapeHtml(err.message)}<br><span style="color:var(--text-secondary)">Metadaten-API nur im CRM verfügbar.</span></div>`;
+        $("#meta-content").innerHTML = `<div class="empty-state" style="color:var(--accent-red)">${escapeHtml(err.message)}<br><span style="color:var(--text-secondary)">Metadata API only available inside CRM.</span></div>`;
     }
 }
 
@@ -8132,12 +8132,12 @@ window.showApiSnippet = function(apiName) {
 
 const HelpContent = {
     sections: [
-        { group: "Erste Schritte", id: "intro", title: "\u00dcberblick", roles: ["tester","dev","admin"], content: `
+        { group: "Erste Steps", id: "intro", title: "\u00dcberblick", roles: ["tester","dev","admin"], content: `
 <h2>Integration Test Center: \u00dcberblick</h2>
-<p>Das Integration Test Center ist eine in Dynamics 365 integrierte Webanwendung zum Erstellen, Ausf\u00fchren und Auswerten von Integrationstests.</p>
+<p>Das Integration Test Center ist eine in Dynamics 365 integrierte Webanwendung zum Createn, Ausf\u00fchren und Auswerten von Integrationstests.</p>
 <h3>Was kann das Test Center?</h3>
 <ul>
-<li><strong>Testf\u00e4lle verwalten:</strong> Erstellen, bearbeiten, kategorisieren, taggen und User Stories zuordnen</li>
+<li><strong>Testf\u00e4lle verwalten:</strong> Createn, bearbeiten, kategorisieren, taggen und User Stories zuordnen</li>
 <li><strong>Testl\u00e4ufe starten:</strong> Einzeln, nach Kategorie, Tag, User Story oder als Gesamtlauf</li>
 <li><strong>Live-Ergebnisse:</strong> Echtzeit-Fortschritt w\u00e4hrend der Ausf\u00fchrung</li>
 <li><strong>Auswertung:</strong> Charts, Verlauf, Fehleranalyse, Flow-Visualisierung</li>
@@ -8154,17 +8154,17 @@ const HelpContent = {
 </table>
 <div class="help-tip">Das Test Center nutzt automatisch die CRM-Authentifizierung. Kein separater Login n\u00f6tig.</div>
 ` },
-        { group: "Erste Schritte", id: "quickstart", title: "Schnelleinstieg", roles: ["tester"], content: `
+        { group: "Erste Steps", id: "quickstart", title: "Schnelleinstieg", roles: ["tester"], content: `
 <h2>Schnelleinstieg</h2>
 <h3>1. Testfall ansehen</h3>
-<p>Klicke auf <strong>Testf\u00e4lle</strong>. Nutze Suchleiste und Filter um Testf\u00e4lle zu finden.</p>
+<p>Click auf <strong>Testf\u00e4lle</strong>. Nutze Suchleiste und Filter um Testf\u00e4lle zu finden.</p>
 <h3>2. Testfall verstehen</h3>
-<p>Klicke <strong>Bearbeiten</strong>. Zwei Tabs: <strong>JSON-Editor</strong> und <strong>Flow-Visualisierung</strong> (drei Spalten: Vorbedingungen, Testschritte, Assertions). Klicke auf Knoten f\u00fcr Details.</p>
-<h3>3. Testlauf starten</h3>
+<p>Click <strong>Bearbeiten</strong>. Zwei Tabs: <strong>JSON-Editor</strong> und <strong>Flow-Visualisierung</strong> (drei Spalten: Preconditions, Test Steps, Assertions). Click auf Knoten f\u00fcr Details.</p>
+<h3>3. Start test run</h3>
 <ol>
 <li>Gehe zu <strong>Testlauf</strong></li>
 <li>W\u00e4hle Filter: Alle, Kategorie, Tag, User Story oder einzelne IDs</li>
-<li>Klicke <strong>Testlauf starten</strong></li>
+<li>Click <strong>Start test run</strong></li>
 </ol>
 <h3>4. Ergebnisse auswerten</h3>
 <p>Live-Fortschritt, Passed/Failed-Z\u00e4hler, Log. Nach Abschluss: Pie-Chart, Einzelergebnisse mit "Flow anzeigen".</p>
@@ -8173,8 +8173,8 @@ const HelpContent = {
 <h2>Testfall erstellen</h2>
 <table class="help-table">
 <tr><th>Feld</th><th>Pflicht</th><th>Beschreibung</th></tr>
-<tr><td><strong>Test ID</strong></td><td>Ja</td><td>Eindeutige ID (z.B. TC01, BTC12, ERR03)</td></tr>
-<tr><td><strong>Titel</strong></td><td>Ja</td><td>Beschreibender Titel</td></tr>
+<tr><td><strong>Test ID</strong></td><td>${LANG.common_yes}</td><td>Eindeutige ID (z.B. TC01, BTC12, ERR03)</td></tr>
+<tr><td><strong>Titel</strong></td><td>${LANG.common_yes}</td><td>Beschreibender Titel</td></tr>
 <tr><td><strong>Kategorie</strong></td><td>Empfohlen</td><td>Update Source, Create Source, Bridge, etc.</td></tr>
 <tr><td><strong>Tags</strong></td><td>Optional</td><td>Kommagetrennt (z.B. "LUW,SingleSource")</td></tr>
 <tr><td><strong>User Stories</strong></td><td>Optional</td><td>Jira-Keys (z.B. "PROJ-1234,PROJ-5678")</td></tr>
@@ -8241,8 +8241,8 @@ const HelpContent = {
 <h3>Story-Detail</h3>
 <p>Klick auf Story-Key zeigt: zugeordnete Tests, letztes Ergebnis, Abdeckung in Prozent.</p>
 ` },
-        { group: "Testl\u00e4ufe", id: "run-start", title: "Testlauf starten", roles: ["tester"], content: `
-<h2>Testlauf starten</h2>
+        { group: "Testl\u00e4ufe", id: "run-start", title: "Start test run", roles: ["tester"], content: `
+<h2>Start test run</h2>
 <table class="help-table">
 <tr><th>Filter</th><th>Eingabe</th></tr>
 <tr><td>Alle aktiven Tests</td><td>(keine)</td></tr>
@@ -8285,7 +8285,7 @@ const HelpContent = {
 <tr><td style="color:#4caf50">Gr\u00fcn</td><td>Assertion Passed</td></tr>
 <tr><td style="color:#f44336">Rot</td><td>Assertion Failed</td></tr>
 </table>
-<p>Klicke auf Knoten f\u00fcr Details (Felder, erwartete/tats\u00e4chliche Werte).</p>
+<p>Click auf Knoten f\u00fcr Details (Felder, erwartete/tats\u00e4chliche Werte).</p>
 ` },
         { group: "FAQ", id: "faq-general", title: "Allgemein", roles: ["tester","dev","admin"], content: `
 <h2>FAQ: Allgemein</h2>
@@ -8318,7 +8318,7 @@ const HelpContent = {
 <h3>Expected X but got Y?</h3>
 <p>Flow-Ansicht nutzen um fehlerhafte Assertion zu identifizieren.</p>
 <h3>Account not found?</h3>
-<p>platformId nicht gefunden. Account deaktiviert (58%), leer (7%), Timing.</p>
+<p>platformId not found. Account deaktiviert (58%), leer (7%), Timing.</p>
 ` },
         { group: "Deployment", id: "deploy-prereq", title: "Voraussetzungen", roles: ["admin"], content: `
 <h2>Voraussetzungen</h2>
@@ -8369,7 +8369,7 @@ function renderHelp(sectionId) {
     const groups = HelpContent.getGroups();
     const activeId = sectionId || "intro";
     const activeSection = HelpContent.sections.find(s => s.id === activeId) || HelpContent.sections[0];
-    let sidebar = `<input type="text" class="form-input help-search" id="help-search" placeholder="Hilfe durchsuchen...">`;
+    let sidebar = `<input type="text" class="form-input help-search" id="help-search" placeholder="Help durchsuchen...">`;
     for (const [group, sections] of Object.entries(groups)) {
         sidebar += `<div class="help-nav-group"><div class="help-nav-group-title">${group}</div>`;
         for (const s of sections) {
@@ -8480,7 +8480,7 @@ const FlowViz = {
     // Render SVG flow diagram
     renderSvg(nodes, containerId) {
         if (!nodes.length) {
-            $(containerId).innerHTML = `<div class="empty-state">Keine Schritte im Testfall gefunden.</div>`;
+            $(containerId).innerHTML = `<div class="empty-state">Keine Steps im Testfall found.</div>`;
             return;
         }
 
@@ -8642,7 +8642,7 @@ const FlowViz = {
         if (n.alias) html += `<dt>Alias</dt><dd>${n.alias}</dd>`;
         if (n.operator) html += `<dt>Operator</dt><dd>${n.operator}</dd>`;
         if (n.expected != null) html += `<dt>Erwartet</dt><dd>${escapeHtml(n.expected)}</dd>`;
-        if (n.actual != null) html += `<dt>Tatsächlich</dt><dd style="color:${n.type === 'assert_failed' ? 'var(--accent-red)' : 'var(--accent-green)'}">${escapeHtml(n.actual)}</dd>`;
+        if (n.actual != null) html += `<dt>Actual</dt><dd style="color:${n.type === 'assert_failed' ? 'var(--accent-red)' : 'var(--accent-green)'}">${escapeHtml(n.actual)}</dd>`;
         if (n.waitSeconds) html += `<dt>Timeout</dt><dd>${n.waitSeconds}s</dd>`;
 
         // Fields
@@ -8793,7 +8793,7 @@ async function activateDemoMode() {
     if (versionEl) versionEl.textContent = "v" + CONFIG.version;
     ITTLog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
 
-    // CH-02: Warnung bei Tab-Schließen während Testlauf
+    // CH-02: Warnung bei Tab-Closen während Testlauf
     window.addEventListener("beforeunload", e => {
         if (TestRunner._running) { e.preventDefault(); e.returnValue = ""; }
     });
