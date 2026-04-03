@@ -1561,7 +1561,7 @@ body {
 // Standard-Prefix: "jbe" (Integration Test Tool)
 const CONFIG = {
     version: "3.1.1",                  // Bei jedem Deployment hochzählen
-    buildDate: "2026-03-31",          // Build-Datum
+    buildDate: "2026-03-31",          // Build-Date
     prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
     optionSetBase: 100570000,         // Basis fuer OptionSet-Werte (Publisher 10571 * 10000)
     entities: {
@@ -1693,7 +1693,7 @@ const LANG = {
     // Navigation
     nav_dashboard: "Dashboard",
     nav_testcases: "Test Cases",           // DE: Testfälle
-    nav_testrun: "Test Run",               // DE: Testlauf
+    nav_testrun: "Test Run",               // DE: Test Run
     nav_history: "History",                // DE: Verlauf
     nav_userstories: "User Stories",
     nav_metadata: "Metadata",              // DE: Metadaten
@@ -1786,7 +1786,7 @@ const LANG = {
 
 let _demoModeActive = false;
 
-// ── Hilfsfunktion für Datumserzeugung ──────────────────────────
+// ── Hilfsfunktion für Dateserzeugung ──────────────────────────
 function _makeDate(daysAgo, hours, minutes) {
     const d = new Date();
     d.setDate(d.getDate() - daysAgo);
@@ -1798,22 +1798,22 @@ function _makeDate(daysAgo, hours, minutes) {
 const _sharedIttMeta = {
     entities: [
         // Standard CRM Entities
-        { LogicalName: "account", SchemaName: "Account", DisplayName: { UserLocalizedLabel: { Label: "Firma" } }, IsCustomEntity: false, EntitySetName: "accounts" },
-        { LogicalName: "contact", SchemaName: "Contact", DisplayName: { UserLocalizedLabel: { Label: "Kontakt" } }, IsCustomEntity: false, EntitySetName: "contacts" },
+        { LogicalName: "account", SchemaName: "Account", DisplayName: { UserLocalizedLabel: { Label: "Company" } }, IsCustomEntity: false, EntitySetName: "accounts" },
+        { LogicalName: "contact", SchemaName: "Contact", DisplayName: { UserLocalizedLabel: { Label: "Contact" } }, IsCustomEntity: false, EntitySetName: "contacts" },
         { LogicalName: "lead", SchemaName: "Lead", DisplayName: { UserLocalizedLabel: { Label: "Lead" } }, IsCustomEntity: false, EntitySetName: "leads" },
-        { LogicalName: "opportunity", SchemaName: "Opportunity", DisplayName: { UserLocalizedLabel: { Label: "Verkaufschance" } }, IsCustomEntity: false, EntitySetName: "opportunities" },
-        { LogicalName: "incident", SchemaName: "Incident", DisplayName: { UserLocalizedLabel: { Label: "Anfrage" } }, IsCustomEntity: false, EntitySetName: "incidents" },
-        { LogicalName: "task", SchemaName: "Task", DisplayName: { UserLocalizedLabel: { Label: "Aufgabe" } }, IsCustomEntity: false, EntitySetName: "tasks" },
-        { LogicalName: "systemuser", SchemaName: "SystemUser", DisplayName: { UserLocalizedLabel: { Label: "Benutzer" } }, IsCustomEntity: false, EntitySetName: "systemusers" },
+        { LogicalName: "opportunity", SchemaName: "Opportunity", DisplayName: { UserLocalizedLabel: { Label: "Opportunity" } }, IsCustomEntity: false, EntitySetName: "opportunities" },
+        { LogicalName: "incident", SchemaName: "Incident", DisplayName: { UserLocalizedLabel: { Label: "Case" } }, IsCustomEntity: false, EntitySetName: "incidents" },
+        { LogicalName: "task", SchemaName: "Task", DisplayName: { UserLocalizedLabel: { Label: "Task" } }, IsCustomEntity: false, EntitySetName: "tasks" },
+        { LogicalName: "systemuser", SchemaName: "SystemUser", DisplayName: { UserLocalizedLabel: { Label: "User" } }, IsCustomEntity: false, EntitySetName: "systemusers" },
         { LogicalName: "activitypointer", SchemaName: "ActivityPointer", DisplayName: { UserLocalizedLabel: { Label: "Aktivität" } }, IsCustomEntity: false, EntitySetName: "activitypointers" },
-        { LogicalName: "annotation", SchemaName: "Annotation", DisplayName: { UserLocalizedLabel: { Label: "Notiz" } }, IsCustomEntity: false, EntitySetName: "annotations" },
+        { LogicalName: "annotation", SchemaName: "Annotation", DisplayName: { UserLocalizedLabel: { Label: "Note" } }, IsCustomEntity: false, EntitySetName: "annotations" },
         { LogicalName: "email", SchemaName: "Email", DisplayName: { UserLocalizedLabel: { Label: "E-Mail" } }, IsCustomEntity: false, EntitySetName: "emails" },
         { LogicalName: "phonecall", SchemaName: "PhoneCall", DisplayName: { UserLocalizedLabel: { Label: "Telefonanruf" } }, IsCustomEntity: false, EntitySetName: "phonecalls" },
-        { LogicalName: "appointment", SchemaName: "Appointment", DisplayName: { UserLocalizedLabel: { Label: "Termin" } }, IsCustomEntity: false, EntitySetName: "appointments" },
+        { LogicalName: "appointment", SchemaName: "Appointment", DisplayName: { UserLocalizedLabel: { Label: "Appointment" } }, IsCustomEntity: false, EntitySetName: "appointments" },
         // ITT Framework Entities
-        { LogicalName: "jbe_testcase", SchemaName: "jbe_testcase", DisplayName: { UserLocalizedLabel: { Label: "Testfall" } }, IsCustomEntity: true, EntitySetName: "jbe_testcases" },
-        { LogicalName: "jbe_testrun", SchemaName: "jbe_testrun", DisplayName: { UserLocalizedLabel: { Label: "Testlauf" } }, IsCustomEntity: true, EntitySetName: "jbe_testruns" },
-        { LogicalName: "jbe_testrunresult", SchemaName: "jbe_testrunresult", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, IsCustomEntity: true, EntitySetName: "jbe_testrunresults" }
+        { LogicalName: "jbe_testcase", SchemaName: "jbe_testcase", DisplayName: { UserLocalizedLabel: { Label: "Test Case" } }, IsCustomEntity: true, EntitySetName: "jbe_testcases" },
+        { LogicalName: "jbe_testrun", SchemaName: "jbe_testrun", DisplayName: { UserLocalizedLabel: { Label: "Test Run" } }, IsCustomEntity: true, EntitySetName: "jbe_testruns" },
+        { LogicalName: "jbe_testrunresult", SchemaName: "jbe_testrunresult", DisplayName: { UserLocalizedLabel: { Label: "Test Result" } }, IsCustomEntity: true, EntitySetName: "jbe_testrunresults" }
     ],
     attributes: {
         account: [
@@ -1964,7 +1964,7 @@ const _sharedIttMeta = {
             { LogicalName: "statuscode", DisplayName: { UserLocalizedLabel: { Label: "Status Reason" } }, AttributeType: "StatusType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false }
         ],
         jbe_testcase: [
-            { LogicalName: "jbe_testcaseid", DisplayName: { UserLocalizedLabel: { Label: "Testfall ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testcaseId" },
+            { LogicalName: "jbe_testcaseid", DisplayName: { UserLocalizedLabel: { Label: "Test Case ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testcaseId" },
             { LogicalName: "jbe_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "jbe_TestId" },
             { LogicalName: "jbe_title", DisplayName: { UserLocalizedLabel: { Label: "Titel" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "jbe_Title" },
             { LogicalName: "jbe_category", DisplayName: { UserLocalizedLabel: { Label: "Kategorie" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true, SchemaName: "jbe_Category" },
@@ -1974,14 +1974,14 @@ const _sharedIttMeta = {
             { LogicalName: "jbe_enabled", DisplayName: { UserLocalizedLabel: { Label: "Aktiv" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Enabled" }
         ],
         jbe_testrun: [
-            { LogicalName: "jbe_testrunid", DisplayName: { UserLocalizedLabel: { Label: "Testlauf ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testrunId" },
+            { LogicalName: "jbe_testrunid", DisplayName: { UserLocalizedLabel: { Label: "Test Run ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testrunId" },
             { LogicalName: "jbe_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestStatus" },
             { LogicalName: "jbe_passed", DisplayName: { UserLocalizedLabel: { Label: "Bestanden" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Passed" },
             { LogicalName: "jbe_failed", DisplayName: { UserLocalizedLabel: { Label: "Failed" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Failed" },
             { LogicalName: "jbe_total", DisplayName: { UserLocalizedLabel: { Label: "Gesamt" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Total" },
             { LogicalName: "jbe_startedon", DisplayName: { UserLocalizedLabel: { Label: "Gestartet" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_StartedOn" },
             { LogicalName: "jbe_completedon", DisplayName: { UserLocalizedLabel: { Label: "Abgeschlossen" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_CompletedOn" },
-            { LogicalName: "jbe_testcasefilter", DisplayName: { UserLocalizedLabel: { Label: "Testfall-Filter" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestCaseFilter" },
+            { LogicalName: "jbe_testcasefilter", DisplayName: { UserLocalizedLabel: { Label: "Test Case-Filter" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestCaseFilter" },
             { LogicalName: "jbe_testsummary", DisplayName: { UserLocalizedLabel: { Label: "Summary" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestSummary" },
             { LogicalName: "jbe_fulllog", DisplayName: { UserLocalizedLabel: { Label: "Vollständiges Log" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_FullLog" }
         ],
@@ -1989,9 +1989,9 @@ const _sharedIttMeta = {
             { LogicalName: "jbe_testrunresultid", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testrunresultId" },
             { LogicalName: "jbe_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestId" },
             { LogicalName: "jbe_outcome", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Outcome" },
-            { LogicalName: "jbe_durationms", DisplayName: { UserLocalizedLabel: { Label: "Dauer (ms)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_DurationMs" },
+            { LogicalName: "jbe_durationms", DisplayName: { UserLocalizedLabel: { Label: "Duration (ms)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_DurationMs" },
             { LogicalName: "jbe_errormessage", DisplayName: { UserLocalizedLabel: { Label: "Error message" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_ErrorMessage" },
-            { LogicalName: "jbe_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Ergebnisse" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_AssertionResults" }
+            { LogicalName: "jbe_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Results" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_AssertionResults" }
         ]
     },
     optionsets: [
@@ -2001,7 +2001,7 @@ const _sharedIttMeta = {
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Abgeschlossen" } } },
             { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Fehler" } } }
         ]},
-        { Name: "jbe_testoutcome", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, OptionSetType: "Picklist", Options: [
+        { Name: "jbe_testoutcome", DisplayName: { UserLocalizedLabel: { Label: "Test Result" } }, OptionSetType: "Picklist", Options: [
             { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Passed" } } },
             { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Failed" } } },
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Error" } } },
@@ -2021,7 +2021,7 @@ const _sharedIttMeta = {
     ],
     customapis: [
         { uniquename: "jbe_RunIntegrationTests", displayname: "Run Integration Tests", description: "Startet einen Integrationstestlauf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
-        { uniquename: "jbe_GovernanceApiContact", displayname: "Governance API Contact", description: "Ruft die Governance-API für einen Kontakt auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
+        { uniquename: "jbe_GovernanceApiContact", displayname: "Governance API Contact", description: "Ruft die Governance-API für einen Contact auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
         { uniquename: "jbe_GovernanceApiContactSource", displayname: "Governance API ContactSource", description: "Ruft die Governance-API für eine Quell-Entität auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
         { uniquename: "jbe_AssertEnvironment", displayname: "Assert Environment", description: "Prüft die Umgebungsvoraussetzungen für Integrationstests", isfunction: true, bindingtype: 0, allowedcustomprocessingsteptype: 0 }
     ]
@@ -3463,7 +3463,7 @@ const CardRenderer = {
             { value: "IsNotNull", label: "Nicht null" },
             { value: "GreaterThan", label: "Gr\u00f6\u00dfer als" },
             { value: "LessThan", label: "Kleiner als" },
-            { value: "DateSetRecently", label: "Datum k\u00fcrzlich gesetzt" },
+            { value: "DateSetRecently", label: "Date k\u00fcrzlich gesetzt" },
             { value: "Exists", label: "Existiert" },
             { value: "NotExists", label: "Existiert nicht" }
         ];
@@ -3817,8 +3817,8 @@ const EditorValidator = {
             return `<div class="ve-validation-bar"><span class="ve-val-ok">${LANG.editor_ready}</span><span></span></div>`;
         }
         let parts = [];
-        if (errors > 0) parts.push(`<span class="ve-val-err">${errors} Fehler</span>`);
-        if (warnings > 0) parts.push(`<span class="ve-val-warn">${warnings} Warnung${warnings > 1 ? "en" : ""}</span>`);
+        if (errors > 0) parts.push(`<span class="ve-val-err">${errors} Error(s)</span>`);
+        if (warnings > 0) parts.push(`<span class="ve-val-warn">${warnings} Warning${warnings > 1 ? "en" : ""}</span>`);
         return `<div class="ve-validation-bar"><span>${parts.join(", ")}</span><span></span></div>`;
     }
 };
@@ -3918,7 +3918,7 @@ const TemplateLibrary = {
 
     renderTemplateGrid(onSelect) {
         let html = `<h2 style="margin-bottom:16px">Vorlage w\u00e4hlen</h2>`;
-        html += `<p style="color:var(--text-secondary);margin-bottom:16px;font-size:13px">W\u00e4hlen Sie eine Vorlage als Ausgangspunkt f\u00fcr Ihren Testfall:</p>`;
+        html += `<p style="color:var(--text-secondary);margin-bottom:16px;font-size:13px">W\u00e4hlen Sie eine Vorlage als Ausgangspunkt f\u00fcr Ihren Test Case:</p>`;
         html += `<div class="ve-template-grid">`;
         for (const tpl of this.templates) {
             const catBadge = tpl.category ? `<span class="badge badge-active" style="font-size:10px">${escapeHtml(tpl.category)}</span>` : "";
@@ -5700,7 +5700,7 @@ async function renderDashboard() {
                     <td><strong>${escapeHtml(r.jbe_testid) || "?"}</strong></td>
                     <td>${formatDate(r.createdon)}</td>
                     <td style="color:var(--accent-red);font-size:12px">${escapeHtml((r.jbe_errormessage || "").substring(0, 80))}</td>
-                    <td><a href="#history/${escapeHtml(r.jbe_testid)}" class="btn btn-sm">Verlauf</a></td>
+                    <td><a href="#history/${escapeHtml(r.jbe_testid)}" class="btn btn-sm">History</a></td>
                 </tr>`;
             }
             fhtml += `</tbody></table>`;
@@ -5807,17 +5807,17 @@ window.renderDashboardDemo = function() {
         <div class="kpi-tile kpi-blue"><div class="kpi-value">69</div><div class="kpi-label">${LANG.cases_count}</div></div>
         <div class="kpi-tile kpi-green"><div class="kpi-value">94%</div><div class="kpi-label">Pass Rate</div></div>
         <div class="kpi-tile kpi-blue"><div class="kpi-value">5</div><div class="kpi-label">Recent Runs</div></div>
-        <div class="kpi-tile kpi-red"><div class="kpi-value">2</div><div class="kpi-label">Offene Fehler</div></div>
+        <div class="kpi-tile kpi-red"><div class="kpi-value">2</div><div class="kpi-label">Open Failures</div></div>
     </div>
     <div class="grid-2">
-        <div class="card"><div class="card-title">Ergebnisverteilung (Demo)</div>
+        <div class="card"><div class="card-title">Result Distribution (Demo)</div>
             <div class="chart-container">${Charts.pie([
                 { label: "Passed", value: 65, color: "var(--accent-green)" },
                 { label: "Failed", value: 2, color: "var(--accent-red)" },
                 { label: "Skipped", value: 2, color: "var(--text-muted)" }
             ])}</div>
         </div>
-        <div class="card"><div class="card-title">Dauer pro Test (Demo)</div>
+        <div class="card"><div class="card-title">Duration pro Test (Demo)</div>
             <div class="chart-container">${Charts.timeline([
                 { label: "TC01", duration: 1200, passed: true },
                 { label: "TC02", duration: 1400, passed: true },
@@ -5997,7 +5997,7 @@ window.runSingleCase = async function(testId) {
 async function _startRunWithFilter(filter, keepRecords, concurrency) {
     const conc = concurrency || LiveRunState.concurrency || 3;
     const keep = keepRecords !== false; // Default: true (Retain by Default)
-    JBELog.info("TestRunner", `Testlauf wird erstellt: Filter="${filter}", keepRecords=${keep}, concurrency=${conc}`);
+    JBELog.info("TestRunner", `Creating test run: Filter="${filter}", keepRecords=${keep}, concurrency=${conc}`);
     try {
         const run = await API.create("jbe_testruns", {
             jbe_teststatus: CONFIG.optionSets.statusPlanned,
@@ -6009,8 +6009,8 @@ async function _startRunWithFilter(filter, keepRecords, concurrency) {
         TestRunner.execute(runId, conc);
         location.hash = `#run/${runId}`;
     } catch (err) {
-        JBELog.error("TestRunner", "Testlauf konnte nicht erstellt werden: " + err.message);
-        showError("Testlauf konnte nicht erstellt werden", err.message);
+        JBELog.error("TestRunner", "Could not create test run: " + err.message);
+        showError("Could not create test run", err.message);
     }
 }
 
@@ -6433,7 +6433,7 @@ window.startTestRun = async function() {
 
         location.hash = `#run/${runId}`;
     } catch (err) {
-        showError("Testlauf konnte nicht erstellt werden", err.message);
+        showError("Could not create test run", err.message);
         $("#btn-start").disabled = false;
         $("#btn-start").textContent = "Start test run";
     }
@@ -6453,7 +6453,7 @@ async function renderRunDetail(runId) {
 
     render(`<div style="margin-bottom:12px"><a href="#runs" style="color:var(--accent-blue);text-decoration:none;font-size:13px">&larr; Back to history</a></div>
     <div class="live-run-header" id="live-header">
-        <span class="run-title">Testlauf</span>
+        <span class="run-title">Test Run</span>
         <span id="live-status-badge"></span>
         <span class="run-counters" id="live-counters"></span>
         <span class="run-eta" id="live-eta"></span>
@@ -6465,7 +6465,7 @@ async function renderRunDetail(runId) {
     <div class="live-split">
         <div class="live-list">
             <div class="live-list-toolbar">
-                <input id="live-search" placeholder="Suchen..." oninput="window._liveSearch(this.value)">
+                <input id="live-search" placeholder="Search..." oninput="window._liveSearch(this.value)">
                 <div class="filter-chips" id="live-chips"></div>
             </div>
             <div class="live-list-items" id="live-items"></div>
@@ -6476,7 +6476,7 @@ async function renderRunDetail(runId) {
     </div>
     <div class="card" style="margin-top:16px"><div class="card-title">Log</div><div class="log-output" id="run-log" style="max-height:300px">Warte auf Log-Daten...</div></div>`);
 
-    // Testfall-Liste initial laden (alle Tests des Testlaufs aus dem Filter)
+    // Test Case-Liste initial laden (alle Tests des Test Runs aus dem Filter)
     try {
         const run = await API.getOne("jbe_testruns", runId, "jbe_testcasefilter,jbe_teststatus,jbe_startedon,jbe_total");
         const filter = run.jbe_testcasefilter || "*";
@@ -6872,7 +6872,7 @@ async function _renderLiveDetail(runId, testId) {
         phaseSummary[pName].dur += (s.jbe_durationms || 0);
     }
 
-    // Governance-Dauer separat berechnen
+    // Governance-Duration separat berechnen
     let govTotalPolls = 0;
     let govTotalDur = 0;
     for (const s of steps) {
@@ -7259,7 +7259,7 @@ async function _renderLiveDetail(runId, testId) {
         html += `<div class="raw-section">`;
         html += `<h4>API-Log (chronologisch)</h4>`;
         html += `<table style="width:100%;font-size:11px;border-collapse:collapse;font-family:var(--mono)">`;
-        html += `<thead><tr><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">#</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Aktion</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Entity</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Status</th><th style="text-align:right;padding:2px 6px;color:var(--text-muted)">Dauer</th></tr></thead><tbody>`;
+        html += `<thead><tr><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">#</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Aktion</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Entity</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Status</th><th style="text-align:right;padding:2px 6px;color:var(--text-muted)">Duration</th></tr></thead><tbody>`;
         for (const s of steps) {
             const statusLabel = s.jbe_stepstatus === 105710000 ? "OK" : s.jbe_stepstatus === 105710001 ? "FAIL" : "SKIP";
             const statusColor = s.jbe_stepstatus === 105710000 ? "var(--accent-green)" : s.jbe_stepstatus === 105710001 ? "var(--accent-red)" : "var(--text-muted)";
@@ -7275,10 +7275,10 @@ async function _renderLiveDetail(runId, testId) {
         html += `</div>`;
     }
 
-    // Fehler-Dump
+    // Error Dump
     if (!isPassed && result.jbe_errormessage) {
         html += `<div class="raw-section">`;
-        html += `<h4>Fehler-Dump</h4>`;
+        html += `<h4>Error Dump</h4>`;
         html += `<div class="raw-json" style="color:var(--accent-red)">${escapeHtml(result.jbe_errormessage)}</div>`;
         html += `</div>`;
     }
@@ -7372,7 +7372,7 @@ window.cleanupRunRecords = async function(runId) {
 // Show flow visualization for a specific test in a run
 window.showTestFlow = async function(testId, runId) {
     const container = "#run-flow-container";
-    $(container).innerHTML = `<div class="card"><div class="card-title">Flow: ${escapeHtml(testId)}</div><div id="run-flow-viz">Lade Testfall-Definition...</div></div>`;
+    $(container).innerHTML = `<div class="card"><div class="card-title">Flow: ${escapeHtml(testId)}</div><div id="run-flow-viz">Loading test case definition...</div></div>`;
 
     try {
         // Load the test case definition
@@ -7402,7 +7402,7 @@ window.showTestFlow = async function(testId, runId) {
 // ── Run History View ────────────────────────────────────────────
 
 async function renderRunHistory() {
-    render(`<h2 style="margin-bottom:16px">Testlauf-Verlauf</h2>
+    render(`<h2 style="margin-bottom:16px">Test Run History</h2>
     <div class="toolbar">
         <input type="text" class="form-input search-input" id="runs-search" placeholder="Filter (z.B. PROJ-1234, tag:LUW, category:Bridge)...">
         <div class="filter-chips">
@@ -7483,7 +7483,7 @@ function renderRunsTimeline(runs) {
         value: r.jbe_total > 0 ? Math.round((r.jbe_passed || 0) / r.jbe_total * 100) : 0,
         color: r.jbe_total > 0 && Math.round((r.jbe_passed || 0) / r.jbe_total * 100) >= 80 ? "var(--accent-green)" : "var(--accent-red)"
     }));
-    container.innerHTML = `<div class="timeline-chart-container"><div class="card-title">Pass-Rate pro Testlauf</div>${Charts.bar(barData, Math.max(400, barData.length * 40), 120)}</div>`;
+    container.innerHTML = `<div class="timeline-chart-container"><div class="card-title">Pass rate per test run</div>${Charts.bar(barData, Math.max(400, barData.length * 40), 120)}</div>`;
 }
 
 function renderRunsCards(runs) {
@@ -7539,7 +7539,7 @@ window._exportRunsCsv = function() {
         return;
     }
     const sep = ";";
-    const header = ["Datum", "Status", "Filter", "Passed", "Failed", "Gesamt", "Dauer (s)", "Pass-Rate (%)"].join(sep);
+    const header = ["Date", "Status", "Filter", "Passed", "Failed", "Gesamt", "Duration (s)", "Pass-Rate (%)"].join(sep);
     const rows = runs.map(r => {
         const durMs = r.jbe_completedon && r.jbe_startedon
             ? new Date(r.jbe_completedon) - new Date(r.jbe_startedon) : 0;
@@ -7570,7 +7570,7 @@ window._exportRunsCsv = function() {
     const a = document.createElement("a");
     const dateStr = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `ITT_Verlauf_${dateStr}.csv`;
+    a.download = `TestCenter_History_${dateStr}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -7581,9 +7581,9 @@ window._exportRunsCsv = function() {
 
 async function renderTestHistory(testId) {
     render(`<div style="margin-bottom:16px"><a href="#cases" style="color:var(--accent-blue);text-decoration:none">&larr; Back</a></div>
-    <h2 style="margin-bottom:16px">Verlauf: ${escapeHtml(testId)}</h2>
+    <h2 style="margin-bottom:16px">History: ${escapeHtml(testId)}</h2>
     <div class="grid-2">
-        <div class="card"><div class="card-title">Ergebnisverlauf</div><div id="history-chart" class="chart-container"></div></div>
+        <div class="card"><div class="card-title">Result History</div><div id="history-chart" class="chart-container"></div></div>
         <div class="card"><div class="card-title">Details</div><div id="history-table"></div></div>
     </div>`);
 
@@ -7606,7 +7606,7 @@ async function renderTestHistory(testId) {
         $("#history-chart").innerHTML = Charts.bar(chartData, 500, 150);
 
         // Table
-        let html = `<table class="data-table"><thead><tr><th>Datum</th><th>Ergebnis</th><th>Dauer</th><th>Fehler</th></tr></thead><tbody>`;
+        let html = `<table class="data-table"><thead><tr><th>Date</th><th>Result</th><th>Duration</th><th>Error</th></tr></thead><tbody>`;
         for (const r of results) {
             const outcomeMap = {};
             outcomeMap[CONFIG.optionSets.outcomePassed] = "Passed";
@@ -7717,7 +7717,7 @@ async function renderStoryDetail(storyKey) {
     <h2 style="margin-bottom:16px">User Story: <span style="color:var(--accent-purple)">${escapeHtml(storyKey)}</span></h2>
     <div class="grid-2">
         <div class="card"><div class="card-title">Zugeordnete ${LANG.cases_count}</div><div id="story-cases">${LANG.common_loading}</div></div>
-        <div class="card"><div class="card-title">Testergebnisse</div><div id="story-results">${LANG.common_loading}</div></div>
+        <div class="card"><div class="card-title">Test Resultse</div><div id="story-results">${LANG.common_loading}</div></div>
     </div>
     <div style="margin-top:16px">
         <button class="btn btn-primary" onclick="prefillStoryRun('${escapeHtml(storyKey)}'); location.hash='#run/new';">Alle Tests dieser Story starten</button>
@@ -7757,10 +7757,10 @@ async function renderStoryDetail(storyKey) {
             $("#story-cases").innerHTML = `<div class="empty-state">No test cases for ${escapeHtml(storyKey)} found.</div>`;
         }
 
-        // Testergebnisse: die TestIDs dieser Story in den Results suchen
+        // Test Resultse: die TestIDs dieser Story in den Results suchen
         const testIds = cases.map(c => c.jbe_testid).filter(Boolean);
         if (testIds.length > 0) {
-            // Letzte Ergebnisse pro TestID laden
+            // Letzte Results pro TestID laden
             const results = await API.getMany("jbe_testrunresults",
                 "$select=jbe_testid,jbe_outcome,jbe_durationms,jbe_errormessage,createdon" +
                 "&$orderby=createdon desc&$top=100");
@@ -7780,7 +7780,7 @@ async function renderStoryDetail(storyKey) {
             outcomeNames[CONFIG.optionSets.outcomeSkipped] = "Skipped";
             let passed = 0, failed = 0, other = 0;
 
-            let rhtml = `<table class="data-table"><thead><tr><th>Test</th><th>Letztes Ergebnis</th><th>Dauer</th><th>Datum</th></tr></thead><tbody>`;
+            let rhtml = `<table class="data-table"><thead><tr><th>Test</th><th>Last Result</th><th>Duration</th><th>Date</th></tr></thead><tbody>`;
             for (const tid of testIds) {
                 const r = latestPerTest[tid];
                 if (r) {
@@ -7885,7 +7885,7 @@ async function loadEntities() {
         </div>`;
 
         const renderTable = (list) => {
-            let t = `<table class="data-table"><thead><tr><th>Schema-Name</th><th>Anzeigename</th><th>Custom</th><th>EntitySet</th><th></th></tr></thead><tbody>`;
+            let t = `<table class="data-table"><thead><tr><th>Schema Name</th><th>Display Name</th><th>Custom</th><th>EntitySet</th><th></th></tr></thead><tbody>`;
             for (const e of list.slice(0, 200)) {
                 const displayName = e.DisplayName?.UserLocalizedLabel?.Label || e.DisplayName?.LocalizedLabels?.[0]?.Label || "-";
                 const isCustom = e.IsCustomEntity ? `<span class="badge badge-active">${LANG.common_yes}</span>` : `<span class="badge badge-disabled">${LANG.common_no}</span>`;
@@ -7952,7 +7952,7 @@ async function loadEntityAttributes(entityName) {
         </div>`;
 
         const renderAttrs = (list) => {
-            let t = `<table class="data-table"><thead><tr><th>Schema-Name</th><th>Anzeigename</th><th>Typ</th><th>Pflicht</th><th></th></tr></thead><tbody>`;
+            let t = `<table class="data-table"><thead><tr><th>Schema Name</th><th>Display Name</th><th>Type</th><th>Required</th><th></th></tr></thead><tbody>`;
             for (const a of list.slice(0, 300)) {
                 const displayName = a.DisplayName?.UserLocalizedLabel?.Label || "-";
                 const required = a.RequiredLevel?.Value === "ApplicationRequired" ? `<span class="badge badge-failed">Pflicht</span>` : a.RequiredLevel?.Value === "Recommended" ? `<span class="badge badge-running">Empfohlen</span>` : "";
@@ -8025,7 +8025,7 @@ async function loadOptionSets() {
         </div>`;
 
         const renderOS = (list) => {
-            let t = `<table class="data-table"><thead><tr><th>Name</th><th>Anzeigename</th><th>Typ</th><th></th></tr></thead><tbody>`;
+            let t = `<table class="data-table"><thead><tr><th>Name</th><th>Display Name</th><th>Typ</th><th></th></tr></thead><tbody>`;
             for (const o of list.slice(0, 200)) {
                 const displayName = o.DisplayName?.UserLocalizedLabel?.Label || "-";
                 t += `<tr>
@@ -8092,7 +8092,7 @@ async function loadCustomApis() {
         </div>`;
 
         const renderApis = (list) => {
-            let t = `<table class="data-table"><thead><tr><th>Name</th><th>Anzeigename</th><th>Typ</th><th>Beschreibung</th><th></th></tr></thead><tbody>`;
+            let t = `<table class="data-table"><thead><tr><th>Name</th><th>Display Name</th><th>Typ</th><th>Description</th><th></th></tr></thead><tbody>`;
             for (const a of list) {
                 const type = a.isfunction ? `<span class="badge badge-active">Function</span>` : `<span class="badge badge-running">Action</span>`;
                 t += `<tr>
@@ -8132,7 +8132,7 @@ window.showApiSnippet = function(apiName) {
     window._metaApiSnippet = snippet;
     var html = '<div class="meta-detail">';
     html += '<div style="font-weight:600;margin-bottom:8px">' + apiName + '</div>';
-    html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Testfall-Step-Snippet:</div>';
+    html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Test Case-Step-Snippet:</div>';
     html += '<div class="meta-snippet">' + escapeHtml(snippet) + '<button class="copy-btn" onclick="copyToClipboard(window._metaApiSnippet, this)">Kopieren</button></div>';
     html += '</div>';
     $("#meta-api-snippet").innerHTML = html;
@@ -8150,8 +8150,8 @@ const HelpContent = {
 <ul>
 <li><strong>Testf\u00e4lle verwalten:</strong> Createn, bearbeiten, kategorisieren, taggen und User Stories zuordnen</li>
 <li><strong>Testl\u00e4ufe starten:</strong> Einzeln, nach Kategorie, Tag, User Story oder als Gesamtlauf</li>
-<li><strong>Live-Ergebnisse:</strong> Echtzeit-Fortschritt w\u00e4hrend der Ausf\u00fchrung</li>
-<li><strong>Auswertung:</strong> Charts, Verlauf, Fehleranalyse, Flow-Visualisierung</li>
+<li><strong>Live Results:</strong> Echtzeit-Fortschritt w\u00e4hrend der Ausf\u00fchrung</li>
+<li><strong>Analysis:</strong> Charts, history, error analysis, flow visualization</li>
 <li><strong>User Stories:</strong> Testabdeckung pro User Story mit Fortschrittsanzeige</li>
 </ul>
 <h3>Aufbau der Oberfl\u00e4che</h3>
@@ -8159,7 +8159,7 @@ const HelpContent = {
 <tr><th>Bereich</th><th>Funktion</th></tr>
 <tr><td><strong>Dashboard</strong></td><td>KPIs, letzte Testl\u00e4ufe, Ergebnisverteilung</td></tr>
 <tr><td><strong>Testf\u00e4lle</strong></td><td>Durchsuchen, filtern, erstellen, bearbeiten</td></tr>
-<tr><td><strong>Testlauf</strong></td><td>Neuen Testlauf konfigurieren und starten</td></tr>
+<tr><td><strong>Test Run</strong></td><td>Neuen Test Run konfigurieren und starten</td></tr>
 <tr><td><strong>Verlauf</strong></td><td>Vergangene Testl\u00e4ufe mit Filtern</td></tr>
 <tr><td><strong>User Stories</strong></td><td>Testabdeckung pro Jira User Story</td></tr>
 </table>
@@ -8167,23 +8167,23 @@ const HelpContent = {
 ` },
         { group: "Erste Steps", id: "quickstart", title: "Schnelleinstieg", roles: ["tester"], content: `
 <h2>Schnelleinstieg</h2>
-<h3>1. Testfall ansehen</h3>
+<h3>1. Test Case ansehen</h3>
 <p>Click auf <strong>Testf\u00e4lle</strong>. Nutze Suchleiste und Filter um Testf\u00e4lle zu finden.</p>
-<h3>2. Testfall verstehen</h3>
+<h3>2. Test Case verstehen</h3>
 <p>Click <strong>Bearbeiten</strong>. Zwei Tabs: <strong>JSON-Editor</strong> und <strong>Flow-Visualisierung</strong> (drei Spalten: Preconditions, Test Steps, Assertions). Click auf Knoten f\u00fcr Details.</p>
 <h3>3. Start test run</h3>
 <ol>
-<li>Gehe zu <strong>Testlauf</strong></li>
+<li>Gehe zu <strong>Test Run</strong></li>
 <li>W\u00e4hle Filter: Alle, Kategorie, Tag, User Story oder einzelne IDs</li>
 <li>Click <strong>Start test run</strong></li>
 </ol>
-<h3>4. Ergebnisse auswerten</h3>
+<h3>4. Evaluate Results</h3>
 <p>Live-Fortschritt, Passed/Failed-Z\u00e4hler, Log. Nach Abschluss: Pie-Chart, Einzelergebnisse mit "Flow anzeigen".</p>
 ` },
-        { group: "Testf\u00e4lle", id: "tc-create", title: "Testfall erstellen", roles: ["tester","dev"], content: `
-<h2>Testfall erstellen</h2>
+        { group: "Testf\u00e4lle", id: "tc-create", title: "Test Case erstellen", roles: ["tester","dev"], content: `
+<h2>Test Case erstellen</h2>
 <table class="help-table">
-<tr><th>Feld</th><th>Pflicht</th><th>Beschreibung</th></tr>
+<tr><th>Feld</th><th>Pflicht</th><th>Description</th></tr>
 <tr><td><strong>Test ID</strong></td><td>${LANG.common_yes}</td><td>Eindeutige ID (z.B. TC01, BTC12, ERR03)</td></tr>
 <tr><td><strong>Titel</strong></td><td>${LANG.common_yes}</td><td>Beschreibender Titel</td></tr>
 <tr><td><strong>Kategorie</strong></td><td>Empfohlen</td><td>Update Source, Create Source, Bridge, etc.</td></tr>
@@ -8215,7 +8215,7 @@ const HelpContent = {
 }</pre>
 <h3>Actions</h3>
 <table class="help-table">
-<tr><th>Action</th><th>Beschreibung</th></tr>
+<tr><th>Action</th><th>Description</th></tr>
 <tr><td><code>CreateContactSource</code></td><td>Neue ContactSource</td></tr>
 <tr><td><code>UpdateContactSource</code></td><td>ContactSource aktualisieren</td></tr>
 <tr><td><code>CreateRecord</code></td><td>Beliebigen Datensatz erstellen (generisch)</td></tr>
@@ -8247,10 +8247,10 @@ const HelpContent = {
 <h3>Tests f\u00fcr eine Story starten</h3>
 <ul>
 <li><strong>Aus User Stories Ansicht:</strong> "Testen" klicken, Filter vorausgef\u00fcllt</li>
-<li><strong>Manuell:</strong> Testlauf, "Nach User Story", Key eingeben</li>
+<li><strong>Manuell:</strong> Test Run, "Nach User Story", Key eingeben</li>
 </ul>
 <h3>Story-Detail</h3>
-<p>Klick auf Story-Key zeigt: zugeordnete Tests, letztes Ergebnis, Abdeckung in Prozent.</p>
+<p>Klick auf Story-Key zeigt: assigned tests, last result, coverage percentage.</p>
 ` },
         { group: "Testl\u00e4ufe", id: "run-start", title: "Start test run", roles: ["tester"], content: `
 <h2>Start test run</h2>
@@ -8268,20 +8268,20 @@ const HelpContent = {
 <li><strong>Timeout:</strong> Max. Wartezeit pro Test (Standard: 120s)</li>
 </ul>
 ` },
-        { group: "Testl\u00e4ufe", id: "run-results", title: "Ergebnisse", roles: ["tester","dev"], content: `
-<h2>Ergebnisse auswerten</h2>
+        { group: "Testl\u00e4ufe", id: "run-results", title: "Results", roles: ["tester","dev"], content: `
+<h2>Evaluate Results</h2>
 <ul>
 <li><strong>Pie-Chart:</strong> Passed/Failed/Andere</li>
 <li><strong>Einzelergebnisse:</strong> Pro Test mit "Flow anzeigen"</li>
 <li><strong>Log:</strong> Vollst\u00e4ndiges Log mit Zeitstempeln</li>
 </ul>
-<h3>Verlauf filtern</h3>
+<h3>Filter History</h3>
 <ul>
 <li>Freitext (z.B. PROJ-1234)</li>
 <li>Status (Geplant, L\u00e4uft, Abgeschlossen, Fehler)</li>
-<li>Ergebnis (fehlerfrei / mit Fehlern)</li>
+<li>Result (pass / with errors)</li>
 </ul>
-<div class="help-tip">Pl\u00f6tzlich l\u00e4ngere Dauer deutet auf Async-Timeout hin.</div>
+<div class="help-tip">Pl\u00f6tzlich l\u00e4ngere Duration deutet auf Async-Timeout hin.</div>
 ` },
         { group: "Testl\u00e4ufe", id: "flow-viz", title: "Flow-Visualisierung", roles: ["tester","dev"], content: `
 <h2>Flow-Visualisierung</h2>
@@ -8311,7 +8311,7 @@ const HelpContent = {
 <h2>FAQ: Testf\u00e4lle</h2>
 <h3>Import aus JSON-Dateien?</h3>
 <p>Ja, per PowerShell-Skript. Upsert auf jbe_testid.</p>
-<h3>Testfall deaktivieren?</h3>
+<h3>Test Case deaktivieren?</h3>
 <p>Wird bei Gesamtl\u00e4ufen \u00fcbersprungen. Gezielt \u00fcber ID weiterhin startbar.</p>
 <h3>Mehrere User Stories?</h3>
 <p>Kommagetrennt: PROJ-1234,PROJ-5678</p>
@@ -8320,10 +8320,10 @@ const HelpContent = {
 ` },
         { group: "FAQ", id: "faq-errors", title: "Fehleranalyse", roles: ["tester","dev"], content: `
 <h2>FAQ: Fehleranalyse</h2>
-<h3>Sporadische Fehler?</h3>
+<h3>Sporadic Errors?</h3>
 <ul>
-<li>Testfall-Verlauf pr\u00fcfen</li>
-<li>Dauer bei Fehlschlag h\u00f6her? Timeout-Problem</li>
+<li>Test Case-Verlauf pr\u00fcfen</li>
+<li>Duration bei Fehlschlag h\u00f6her? Timeout-Problem</li>
 <li>Nur bei Gesamtl\u00e4ufen? Datenkonflikt</li>
 </ul>
 <h3>Expected X but got Y?</h3>
@@ -8336,9 +8336,9 @@ const HelpContent = {
 <h3>Entities</h3>
 <table class="help-table">
 <tr><th>Entity</th><th>Schema</th></tr>
-<tr><td>Testfall</td><td><code>jbe_testcase</code></td></tr>
-<tr><td>Testlauf</td><td><code>jbe_testrun</code></td></tr>
-<tr><td>Testergebnis</td><td><code>jbe_testrunresult</code></td></tr>
+<tr><td>Test Case</td><td><code>jbe_testcase</code></td></tr>
+<tr><td>Test Run</td><td><code>jbe_testrun</code></td></tr>
+<tr><td>Test Result</td><td><code>jbe_testrunresult</code></td></tr>
 </table>
 <h3>OptionSets (100000xxx)</h3>
 <table class="help-table">
@@ -8491,7 +8491,7 @@ const FlowViz = {
     // Render SVG flow diagram
     renderSvg(nodes, containerId) {
         if (!nodes.length) {
-            $(containerId).innerHTML = `<div class="empty-state">Keine Steps im Testfall found.</div>`;
+            $(containerId).innerHTML = `<div class="empty-state">Keine Steps im Test Case found.</div>`;
             return;
         }
 
@@ -8803,7 +8803,7 @@ async function activateDemoMode() {
     const versionEl = document.getElementById("app-version");
     if (versionEl) versionEl.textContent = "v" + CONFIG.version;
 
-    // Live-Modus: Pack-Selector durch Testfall-Info ersetzen
+    // Live-Modus: Pack-Selector durch Test Case-Info ersetzen
     if (!_demoModeActive) {
         const packSel = document.getElementById("pack-selector");
         if (packSel) {
@@ -8818,7 +8818,7 @@ async function activateDemoMode() {
 
     JBELog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
 
-    // CH-02: Warnung bei Tab-Closen während Testlauf
+    // CH-02: Warning bei Tab-Closen während Test Run
     window.addEventListener("beforeunload", e => {
         if (TestRunner._running) { e.preventDefault(); e.returnValue = ""; }
     });
