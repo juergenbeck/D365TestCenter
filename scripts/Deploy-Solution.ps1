@@ -5,7 +5,7 @@
 .DESCRIPTION
     Creates:
     - Publisher "JBE" (prefix: itt, OptionValuePrefix: 100571)
-    - Solution "IntegrationTestCenter"
+    - Solution "D365TestCenter"
     - 5 global OptionSets (jbe_teststatus, jbe_testoutcome, jbe_testcategory, jbe_stepphase, jbe_stepstatus)
     - 4 custom tables (jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep)
     - All attributes on the 4 tables
@@ -212,7 +212,7 @@ if ($existingPub.value.Count -gt 0) {
 
     $pubBody = @{
         uniquename             = $pubUnique
-        friendlyname           = "Integration Test Center"
+        friendlyname           = "Juergen Beck"
         description            = "Publisher for the Integration Test Center product"
         customizationprefix    = $pubPrefix
         customizationoptionvalueprefix = $optPrefix
@@ -372,7 +372,8 @@ foreach ($os in $optionSets) {
     $osId = $null
     $oDataEntityId = $webResp.Headers["OData-EntityId"]
     if ($oDataEntityId) {
-        if ($oDataEntityId -match '\(([a-f0-9-]+)\)') { $osId = $Matches[1] }
+        $m = [regex]::Match("$oDataEntityId", '\(([a-f0-9-]+)\)')
+        if ($m.Success) { $osId = $m.Groups[1].Value }
     }
     # Fallback: aus Response-Body
     if (-not $osId) {
@@ -433,6 +434,7 @@ if (Test-EntityExists "jbe_testcase") {
         -Body $tableBody | Out-Null
 
     Write-Host "    Erstellt: jbe_testcase" -ForegroundColor Green
+    Start-Sleep -Seconds 10  # Dataverse braucht Zeit nach Entity-Create
 }
 
 # Attributes on jbe_testcase
@@ -557,6 +559,7 @@ if (Test-EntityExists "jbe_testrun") {
         -Body $tableBody | Out-Null
 
     Write-Host "    Erstellt: jbe_testrun" -ForegroundColor Green
+    Start-Sleep -Seconds 10
 }
 
 # Attributes on jbe_testrun
@@ -707,6 +710,7 @@ if (Test-EntityExists "jbe_testrunresult") {
         -Body $tableBody | Out-Null
 
     Write-Host "    Erstellt: jbe_testrunresult" -ForegroundColor Green
+    Start-Sleep -Seconds 10
 }
 
 # Attributes on jbe_testrunresult
@@ -815,6 +819,7 @@ if (Test-EntityExists "jbe_teststep") {
         -Body $tableBody | Out-Null
 
     Write-Host "    Erstellt: jbe_teststep" -ForegroundColor Green
+    Start-Sleep -Seconds 10
 }
 
 # Attributes on jbe_teststep
