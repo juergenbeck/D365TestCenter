@@ -54,10 +54,10 @@ The script creates everything idempotently (safe to run multiple times):
 
 | Component | What gets created |
 |-----------|------------------|
-| Publisher | "ITT" with prefix `itt` |
+| Publisher | "JBE" with prefix `jbe` |
 | Solution | "IntegrationTestCenter" |
 | 5 OptionSets | Test status, outcome, category, step phase, step status |
-| 4 Entities | itt_testcase, itt_testrun, itt_testrunresult, itt_teststep |
+| 4 Entities | jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep |
 | All attributes | On all 4 entities |
 | 2 Relationships | testrunresult to testrun, teststep to testrunresult |
 | Web Resources | HTML app + JSON packs |
@@ -68,7 +68,7 @@ The script creates everything idempotently (safe to run multiple times):
 Navigate to:
 
 ```
-https://YOUR-ORG.crm4.dynamics.com/WebResources/itt_/testcenter.html
+https://YOUR-ORG.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
 You should see the dashboard with sample test cases from the "Standard CRM (Sales & Service)" pack.
@@ -126,7 +126,7 @@ Create a JSON file with three phases:
 
 | Placeholder | Result |
 |-------------|--------|
-| `{GENERATED:firstname}` | Random first name ("ITT Test ...") |
+| `{GENERATED:firstname}` | Random first name ("JBE Test ...") |
 | `{GENERATED:email}` | Random email @example.com |
 | `{TIMESTAMP}` | Current ISO timestamp |
 | `{alias.id}` | ID of a previously created record |

@@ -16,7 +16,7 @@ Das Integration Test Center (ITT) ist eine **Single-File Web Application** (HTML
 |                    Dynamics 365 / Browser                      |
 |                                                                |
 |  +----------------------------------------------------------+ |
-|  |              itt_testcenter.html                          | |
+|  |              jbe_testcenter.html                          | |
 |  |                                                           | |
 |  |  +--------+  +--------+  +---------+  +---------------+  | |
 |  |  |  UI    |  | State  |  |   API   |  |   PackLoader  |  | |
@@ -40,10 +40,10 @@ Das Integration Test Center (ITT) ist eine **Single-File Web Application** (HTML
 |                 |                                              |
 |        +--------+--------+                                    |
 |        | Dataverse        |                                   |
-|        | itt_testcase     |                                   |
-|        | itt_testrun      |                                   |
-|        | itt_testrunresult|                                   |
-|        | itt_teststep     |                                   |
+|        | jbe_testcase     |                                   |
+|        | jbe_testrun      |                                   |
+|        | jbe_testrunresult|                                   |
+|        | jbe_teststep     |                                   |
 |        +-----------------+                                    |
 +---------------------------------------------------------------+
 
@@ -52,7 +52,7 @@ Execution Engine:
   StepExecutor       -- 4 Phasen (Preconditions, Steps, Assertions, Cleanup)
   PlaceholderResolver-- 16 Patterns (GENERATED, TIMESTAMP, Alias, ENV)
   RecordTracker      -- track/cleanup/getTrackedRecords
-  StepLogger         -- Schreibt itt_teststep Records
+  StepLogger         -- Schreibt jbe_teststep Records
 ```
 
 ---
@@ -250,7 +250,7 @@ StepExecutor.runTestCase(definition, context, keepRecords)
 
 #### StepLogger
 
-Schreibt für jeden ausgeführten Schritt einen `itt_teststep`-Record nach Dataverse:
+Schreibt für jeden ausgeführten Schritt einen `jbe_teststep`-Record nach Dataverse:
 
 | Feld | Inhalt |
 |------|--------|
@@ -275,8 +275,8 @@ TestRunner.execute(runId)
   +-> Status auf "Läuft" setzen
   +-> Für jeden Testfall (sequenziell):
   |     StepExecutor.runTestCase(definition, context, keepRecords)
-  |     Ergebnis als itt_testrunresult speichern
-  |     Step-Protokoll als itt_teststep Records speichern (StepLogger)
+  |     Ergebnis als jbe_testrunresult speichern
+  |     Step-Protokoll als jbe_teststep Records speichern (StepLogger)
   |     Run-Zähler aktualisieren (progressive Updates für Polling)
   +-> Run auf "Abgeschlossen" setzen
 ```
@@ -340,42 +340,42 @@ Einheitliche Fehlerbehandlung im gesamten ITT:
 ### 3.1 Entities
 
 ```
-itt_testcase                    itt_testrun                     itt_testrunresult
+jbe_testcase                    jbe_testrun                     jbe_testrunresult
 +-----------------------+       +-----------------------+       +---------------------------+
-| itt_testcaseid (PK)   |       | itt_testrunid (PK)    |       | itt_testrunresultid (PK)   |
-| itt_name (AutoNumber) |       | itt_name (AutoNumber) |       | itt_name (AutoNumber)      |
-| itt_testid            |       | itt_teststatus (OS)   |       | itt_testid                 |
-| itt_title             |       | itt_passed            |       | itt_outcome (OS)           |
-| itt_category (OS)     |       | itt_failed            |       | itt_duration_ms            |
-| itt_tags              |       | itt_total             |       | itt_error_message          |
-| itt_userstories       |       | itt_started_on        |       | itt_assertion_results      |
-| itt_enabled           |       | itt_completed_on      |       | itt_testrunid (FK) --------+
-| itt_definition_json   |       | itt_testcasefilter    |       +---------------------------+
-+-----------------------+       | itt_testsummary       |
-                                | itt_fulllog           |                    ^
-                                | itt_keeprecords (Bool)|                    |
-                                +-----------------------+       itt_teststep |
+| jbe_testcaseid (PK)   |       | jbe_testrunid (PK)    |       | jbe_testrunresultid (PK)   |
+| jbe_name (AutoNumber) |       | jbe_name (AutoNumber) |       | jbe_name (AutoNumber)      |
+| jbe_testid            |       | jbe_teststatus (OS)   |       | jbe_testid                 |
+| jbe_title             |       | jbe_passed            |       | jbe_outcome (OS)           |
+| jbe_category (OS)     |       | jbe_failed            |       | jbe_duration_ms            |
+| jbe_tags              |       | jbe_total             |       | jbe_error_message          |
+| jbe_userstories       |       | jbe_started_on        |       | jbe_assertion_results      |
+| jbe_enabled           |       | jbe_completed_on      |       | jbe_testrunid (FK) --------+
+| jbe_definition_json   |       | jbe_testcasefilter    |       +---------------------------+
++-----------------------+       | jbe_testsummary       |
+                                | jbe_fulllog           |                    ^
+                                | jbe_keeprecords (Bool)|                    |
+                                +-----------------------+       jbe_teststep |
                                                                 +--------------------------+
-                                                                | itt_teststepid (PK)      |
-                                                                | itt_name (AutoNumber     |
+                                                                | jbe_teststepid (PK)      |
+                                                                | jbe_name (AutoNumber     |
                                                                 |   TS-{SEQNUM:8})         |
-                                                                | itt_testrunresultid (FK)-+
-                                                                | itt_stepnumber (Int)     |
-                                                                | itt_phase (OS)           |
-                                                                | itt_action (String)      |
-                                                                | itt_entity (String)      |
-                                                                | itt_alias (String)       |
-                                                                | itt_recordid (String)    |
-                                                                | itt_recordurl (String)   |
-                                                                | itt_inputdata (Memo)     |
-                                                                | itt_outputdata (Memo)    |
-                                                                | itt_errormessage (Memo)  |
-                                                                | itt_durationms (Int)     |
-                                                                | itt_stepstatus (OS)      |
-                                                                | itt_assertionfield (Str) |
-                                                                | itt_assertionoperator(Str)|
-                                                                | itt_expectedvalue (Str)  |
-                                                                | itt_actualvalue (Str)    |
+                                                                | jbe_testrunresultid (FK)-+
+                                                                | jbe_stepnumber (Int)     |
+                                                                | jbe_phase (OS)           |
+                                                                | jbe_action (String)      |
+                                                                | jbe_entity (String)      |
+                                                                | jbe_alias (String)       |
+                                                                | jbe_recordid (String)    |
+                                                                | jbe_recordurl (String)   |
+                                                                | jbe_inputdata (Memo)     |
+                                                                | jbe_outputdata (Memo)    |
+                                                                | jbe_errormessage (Memo)  |
+                                                                | jbe_durationms (Int)     |
+                                                                | jbe_stepstatus (OS)      |
+                                                                | jbe_assertionfield (Str) |
+                                                                | jbe_assertionoperator(Str)|
+                                                                | jbe_expectedvalue (Str)  |
+                                                                | jbe_actualvalue (Str)    |
                                                                 +--------------------------+
 ```
 
@@ -383,18 +383,18 @@ itt_testcase                    itt_testrun                     itt_testrunresul
 
 | OptionSet | Werte |
 |-----------|-------|
-| `itt_teststatus` | 0: Geplant, 1: Läuft, 2: Abgeschlossen, 3: Fehler |
-| `itt_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen |
-| `itt_testcategory` | 0: Update Source, 1: Create Source, 2: Delete Source, 3: Multi-Source, 4: Merge, 5: Custom API, 6: Config, 7: End-to-End, 8: Error Handling |
-| `itt_stepphase` | 0: Precondition, 1: Step, 2: Assertion, 3: Cleanup |
-| `itt_stepstatus` | 0: Success, 1: Failed, 2: Skipped |
+| `jbe_teststatus` | 0: Geplant, 1: Läuft, 2: Abgeschlossen, 3: Fehler |
+| `jbe_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen |
+| `jbe_testcategory` | 0: Update Source, 1: Create Source, 2: Delete Source, 3: Multi-Source, 4: Merge, 5: Custom API, 6: Config, 7: End-to-End, 8: Error Handling |
+| `jbe_stepphase` | 0: Precondition, 1: Step, 2: Assertion, 3: Cleanup |
+| `jbe_stepstatus` | 0: Success, 1: Failed, 2: Skipped |
 
 ### 3.3 Relationships
 
 | Relationship | Typ | Von | Zu | Verhalten |
 |---|---|---|---|---|
-| `itt_testrunresult_testrun` | N:1 | itt_testrunresult | itt_testrun | |
-| `itt_teststep_testrunresult` | N:1 | itt_teststep | itt_testrunresult | Cascade Delete |
+| `jbe_testrunresult_testrun` | N:1 | jbe_testrunresult | jbe_testrun | |
+| `jbe_teststep_testrunresult` | N:1 | jbe_teststep | jbe_testrunresult | Cascade Delete |
 
 ---
 
@@ -403,7 +403,7 @@ itt_testcase                    itt_testrun                     itt_testrunresul
 ### 4.1 Modus-Erkennung (Startup)
 
 ```
-Browser öffnet itt_testcenter.html
+Browser öffnet jbe_testcenter.html
         |
         v
   initApp() aufgerufen
@@ -442,7 +442,7 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
   _startRunWithFilter(filter, keepRecords)
         |
         v
-  API.create("itt_testruns", { status: Geplant, filter, keeprecords })
+  API.create("jbe_testruns", { status: Geplant, filter, keeprecords })
         |
         v
   TestRunner.execute(runId)    [fire-and-forget]
@@ -466,12 +466,12 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
   |       |     PlaceholderResolver: Platzhalter auflösen
   |       |     API.create(): Records anlegen
   |       |     RecordTracker.track(): Records registrieren
-  |       |     StepLogger: itt_teststep Records schreiben
+  |       |     StepLogger: jbe_teststep Records schreiben
   |       |
   |       +-> Phase 2: Steps
   |       |     CreateRecord / UpdateRecord / DeleteRecord / Wait / ExecuteAction
   |       |     PlaceholderResolver: Platzhalter auflösen
-  |       |     StepLogger: itt_teststep Records schreiben
+  |       |     StepLogger: jbe_teststep Records schreiben
   |       |
   |       +-> Phase 3: Assertions
   |       |     Target auflösen (Alias oder Entity+ID)
@@ -484,7 +484,7 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
   |             StepLogger: Cleanup-Schritte schreiben
   |       |
   |       v
-  |     Ergebnis als itt_testrunresult speichern (API.create)
+  |     Ergebnis als jbe_testrunresult speichern (API.create)
   |     Run-Zähler aktualisieren (progressive Updates, API.update)
   |       |
   +------+
@@ -502,9 +502,9 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
         v
   Polling starten (alle 3 Sekunden):
         |
-  +---> API.getOne("itt_testruns", runId)
-  |     API.getMany("itt_testrunresults", filter=runId)
-  |     API.getMany("itt_teststeps", filter=resultIds)
+  +---> API.getOne("jbe_testruns", runId)
+  |     API.getMany("jbe_testrunresults", filter=runId)
+  |     API.getMany("jbe_teststeps", filter=resultIds)
   |           |
   |     UI aktualisieren:
   |       Progress-Bar, Zähler, Log, Ergebnis-Tabelle, Schritte-Tab
@@ -539,7 +539,7 @@ activateDemoMode()
         |
         v
   _hydrate(rawPack):
-    - itt_definition_json: Object -> JSON.stringify()
+    - jbe_definition_json: Object -> JSON.stringify()
     - $date:daysAgo,hour,minute -> ISO-Timestamp
         |
         v
@@ -605,27 +605,27 @@ User: #metadata -> Tabellen-Tab
 |---|---|---|
 | Publisher | Publisher | `itt` (Prefix: `itt`, OptionValue: 10571) |
 | Solution | Solution | `IntegrationTestCenter` |
-| Entity | Entity | `itt_testcase` |
-| Entity | Entity | `itt_testrun` |
-| Entity | Entity | `itt_testrunresult` |
-| Entity | Entity | `itt_teststep` |
-| OptionSet | Global OptionSet | `itt_teststatus` |
-| OptionSet | Global OptionSet | `itt_testoutcome` |
-| OptionSet | Global OptionSet | `itt_testcategory` |
-| OptionSet | Global OptionSet | `itt_stepphase` |
-| OptionSet | Global OptionSet | `itt_stepstatus` |
-| Relationship | N:1 | `itt_testrunresult_testrun` |
-| Relationship | N:1 (Cascade Delete) | `itt_teststep_testrunresult` |
-| Web Resource | HTML | `itt_/testcenter.html` |
-| Web Resource | JSON | `itt_/packs/manifest.json` |
-| Web Resource | JSON | `itt_/packs/standard.json` |
-| Web Resource | JSON | `itt_/packs/field-governance.json` |
-| Web Resource | JSON | `itt_/packs/membership.json` |
-| Web Resource | JSON | `itt_/packs/markant-base.json` |
-| Web Resource | JSON | `itt_/packs/fg-testtool.json` |
-| Web Resource | JSON | `itt_/packs/fg-testtool-v2.json` |
-| Web Resource | JSON | `itt_/packs/fg-testtool-legacy.json` |
-| Web Resource | JSON | `itt_/packs/empty.json` |
+| Entity | Entity | `jbe_testcase` |
+| Entity | Entity | `jbe_testrun` |
+| Entity | Entity | `jbe_testrunresult` |
+| Entity | Entity | `jbe_teststep` |
+| OptionSet | Global OptionSet | `jbe_teststatus` |
+| OptionSet | Global OptionSet | `jbe_testoutcome` |
+| OptionSet | Global OptionSet | `jbe_testcategory` |
+| OptionSet | Global OptionSet | `jbe_stepphase` |
+| OptionSet | Global OptionSet | `jbe_stepstatus` |
+| Relationship | N:1 | `jbe_testrunresult_testrun` |
+| Relationship | N:1 (Cascade Delete) | `jbe_teststep_testrunresult` |
+| Web Resource | HTML | `jbe_/testcenter.html` |
+| Web Resource | JSON | `jbe_/packs/manifest.json` |
+| Web Resource | JSON | `jbe_/packs/standard.json` |
+| Web Resource | JSON | `jbe_/packs/field-governance.json` |
+| Web Resource | JSON | `jbe_/packs/membership.json` |
+| Web Resource | JSON | `jbe_/packs/markant-base.json` |
+| Web Resource | JSON | `jbe_/packs/fg-testtool.json` |
+| Web Resource | JSON | `jbe_/packs/fg-testtool-v2.json` |
+| Web Resource | JSON | `jbe_/packs/fg-testtool-legacy.json` |
+| Web Resource | JSON | `jbe_/packs/empty.json` |
 
 ### 5.2 Deployment-Ablauf
 
@@ -639,18 +639,18 @@ deploy-itt-solution.ps1
   1. Publisher "itt" anlegen (oder skip)
   2. Solution "IntegrationTestCenter" anlegen (oder skip)
   3. Globale OptionSets (5x) anlegen (oder skip)
-  4. Entity itt_testcase + 7 Attribute
-  5. Entity itt_testrun + 10 Attribute (inkl. itt_keeprecords)
-  6. Entity itt_testrunresult + 5 Attribute
-  7. Entity itt_teststep + 14 Attribute
-  8. Relationship itt_testrunresult_testrun
-  9. Relationship itt_teststep_testrunresult (Cascade Delete)
+  4. Entity jbe_testcase + 7 Attribute
+  5. Entity jbe_testrun + 10 Attribute (inkl. jbe_keeprecords)
+  6. Entity jbe_testrunresult + 5 Attribute
+  7. Entity jbe_teststep + 14 Attribute
+  8. Relationship jbe_testrunresult_testrun
+  9. Relationship jbe_teststep_testrunresult (Cascade Delete)
   10. Web Resources (10 Dateien) hochladen
   11. Import-Skript für Testfälle (optional)
   12. PublishAllXml
         |
         v
-  URL: https://{env}.crm4.dynamics.com/WebResources/itt_/testcenter.html
+  URL: https://{env}.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
 Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already exists"-Fehler werden als Skip behandelt.
@@ -674,7 +674,7 @@ Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already e
 | Neue Entity-Typen | Attribute in `_sharedIttMeta.attributes` ergänzen |
 | Neue OptionSets | In `_sharedIttMeta.optionsets` ergänzen |
 | Neue Custom APIs | In `CONFIG.customapis` registrieren |
-| Neuer Test-Kategorie-Typ | OptionSet `itt_testcategory` erweitern |
+| Neuer Test-Kategorie-Typ | OptionSet `jbe_testcategory` erweitern |
 | Neuer Assertion-Operator | In StepExecutor Operator-Liste erweitern |
 | Neuer View | `render*()` Funktion + Route in `handleRoute()` |
 | Neue Step-Aktion | In StepExecutor Phase-2-Handler ergänzen |

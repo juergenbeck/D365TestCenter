@@ -338,9 +338,9 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderDashboard()`
 
 **API-Aufrufe:**
-- `API.count("itt_testcases", "itt_enabled eq true")`: Anzahl aktiver Testfälle
-- `API.getMany("itt_testruns", ...)`: Letzte 20 Testläufe
-- `API.getMany("itt_testrunresults", ...)`: Fehlgeschlagene Tests (outcome eq 100000001), letzte 10
+- `API.count("jbe_testcases", "jbe_enabled eq true")`: Anzahl aktiver Testfälle
+- `API.getMany("jbe_testruns", ...)`: Letzte 20 Testläufe
+- `API.getMany("jbe_testrunresults", ...)`: Fehlgeschlagene Tests (outcome eq 100000001), letzte 10
 
 **DOM-Elemente:**
 - KPI-Grid: 4 Tiles (Testfälle, Pass Rate, Letzte Läufe, Offene Fehler)
@@ -359,7 +359,7 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderTestCases()`
 
 **API-Aufrufe:**
-- `API.getMany("itt_testcases", ...)`: Alle Testfälle (max 500), sortiert nach TestId
+- `API.getMany("jbe_testcases", ...)`: Alle Testfälle (max 500), sortiert nach TestId
 
 **DOM-Elemente:**
 - Toolbar: Suchfeld, Kategorie-Dropdown, User-Story-Filter, "Nur aktive"-Checkbox, "Neuer Testfall"-Button
@@ -381,8 +381,8 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderTestCaseEditor(id)`
 
 **API-Aufrufe:**
-- `API.getOne("itt_testcases", id)`: Bestehenden Testfall laden (bei id != "new")
-- `API.create("itt_testcases", data)` oder `API.update("itt_testcases", id, data)`: Speichern
+- `API.getOne("jbe_testcases", id)`: Bestehenden Testfall laden (bei id != "new")
+- `API.create("jbe_testcases", data)` oder `API.update("jbe_testcases", id, data)`: Speichern
 
 **DOM-Elemente:**
 - Split-View (Links/Rechts):
@@ -404,8 +404,8 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderNewRun()`
 
 **API-Aufrufe:**
-- `API.create("itt_testruns", {...})`: Testlauf erstellen
-- `API.executeAction("itt_RunIntegrationTests", {...})`: Custom Action starten
+- `API.create("jbe_testruns", {...})`: Testlauf erstellen
+- `API.executeAction("jbe_RunIntegrationTests", {...})`: Custom Action starten
 
 **DOM-Elemente:**
 - Testauswahl-Dropdown (Alle, Kategorie, Tag, User Story, einzelne IDs)
@@ -427,9 +427,9 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderRunDetail(runId)`
 
 **API-Aufrufe:**
-- `API.getOne("itt_testruns", runId, ...)`: Testlauf-Daten laden
-- `API.getMany("itt_testrunresults", ...)`: Einzelergebnisse für diesen Lauf
-- `API.getMany("itt_testcases", ...)` und `API.getMany("itt_testrunresults", ...)`: Für Flow-Anzeige pro Test
+- `API.getOne("jbe_testruns", runId, ...)`: Testlauf-Daten laden
+- `API.getMany("jbe_testrunresults", ...)`: Einzelergebnisse für diesen Lauf
+- `API.getMany("jbe_testcases", ...)` und `API.getMany("jbe_testrunresults", ...)`: Für Flow-Anzeige pro Test
 
 **DOM-Elemente:**
 - Header: Status-Badge, Filter, Zeitraum
@@ -452,7 +452,7 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderRunHistory()`
 
 **API-Aufrufe:**
-- `API.getMany("itt_testruns", ...)`: Letzte 100 Testläufe
+- `API.getMany("jbe_testruns", ...)`: Letzte 100 Testläufe
 
 **DOM-Elemente:**
 - Toolbar: Freitextsuche, Status-Dropdown, Ergebnis-Dropdown (fehlerfrei/mit Fehlern)
@@ -471,7 +471,7 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderTestHistory(testId)`
 
 **API-Aufrufe:**
-- `API.getMany("itt_testrunresults", ...)`: Letzte 20 Ergebnisse für eine Test-ID
+- `API.getMany("jbe_testrunresults", ...)`: Letzte 20 Ergebnisse für eine Test-ID
 
 **DOM-Elemente:**
 - Grid-2: Balkendiagramm (Dauer über Zeit, farbcodiert) und Detail-Tabelle
@@ -486,7 +486,7 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderUserStories()`
 
 **API-Aufrufe:**
-- `API.getMany("itt_testcases", ...)`: Alle Testfälle laden, dann User Stories daraus extrahieren
+- `API.getMany("jbe_testcases", ...)`: Alle Testfälle laden, dann User Stories daraus extrahieren
 
 **DOM-Elemente:**
 - Toolbar: Suchfeld für Story-ID
@@ -504,8 +504,8 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderStoryDetail(storyKey)`
 
 **API-Aufrufe:**
-- `API.getMany("itt_testcases", ...)`: Testfälle mit `contains(itt_userstories, '{storyKey}')`
-- `API.getMany("itt_testrunresults", ...)`: Letzte 100 Ergebnisse, gefiltert auf relevante TestIDs
+- `API.getMany("jbe_testcases", ...)`: Testfälle mit `contains(jbe_userstories, '{storyKey}')`
+- `API.getMany("jbe_testrunresults", ...)`: Letzte 100 Ergebnisse, gefiltert auf relevante TestIDs
 
 **DOM-Elemente:**
 - Grid-2: Zugeordnete Testfälle (Tabelle) und Testergebnisse (KPI-Zeile + Tabelle)
@@ -523,10 +523,10 @@ Die Navigation erfolgt über URL-Hashes. Der Router lauscht auf `hashchange`-Eve
 **Render-Funktion:** `renderMetadata(tab, entityId)`
 
 **Tabs:**
-- **Tabellen:** Entity-Liste mit Suche, "Nur Custom"- und "Nur itt_"-Filter. Pro Entity: Schema-Name (kopierfähig), Anzeigename, Custom-Badge, EntitySet, Attribute-Link.
+- **Tabellen:** Entity-Liste mit Suche, "Nur Custom"- und "Nur jbe_"-Filter. Pro Entity: Schema-Name (kopierfähig), Anzeigename, Custom-Badge, EntitySet, Attribute-Link.
 - **Attribute:** (nach Klick auf Entity) Attribut-Liste mit Suche und "Nur Custom"-Filter. Pro Attribut: Schema-Name (kopierfähig), Anzeigename, Typ-Badge, Pflicht-Badge, Snippet-Button. Bei PicklistType: OptionSet-Werte inline.
-- **OptionSets:** GlobalOptionSetDefinitions mit Suche und "Nur itt_"-Filter. Pro OptionSet: "Werte"-Button zeigt Werte-Tabelle.
-- **Custom APIs:** Custom API-Liste mit Suche und "Nur itt_"-Filter. Pro API: Name (kopierfähig), Anzeigename, Function/Action-Badge, Beschreibung, Snippet-Button.
+- **OptionSets:** GlobalOptionSetDefinitions mit Suche und "Nur jbe_"-Filter. Pro OptionSet: "Werte"-Button zeigt Werte-Tabelle.
+- **Custom APIs:** Custom API-Liste mit Suche und "Nur jbe_"-Filter. Pro API: Name (kopierfähig), Anzeigename, Function/Action-Badge, Beschreibung, Snippet-Button.
 
 **API-Aufrufe:**
 - `API.fetch("/EntityDefinitions?...")`: Entity-Liste
@@ -745,7 +745,7 @@ window.fetch("/api/data/v9.2/WhoAmI")
 User klickt "Testlauf starten"
     |
     v
-API.create("itt_testruns", ...) --> MockAPI._create()
+API.create("jbe_testruns", ...) --> MockAPI._create()
     |
     v
 MockAPI._simulateTestRun(run, collection)
@@ -787,30 +787,30 @@ Der CONFIG-Block (ab Zeile 798) definiert alle anpassbaren Schema-Namen:
 |------------------------------|-----------------------------|--------------------------------------------|
 | `prefix`                     | `"itt"`                     | Publisher-Prefix (ohne Unterstrich)        |
 | `optionSetBase`              | `100000000`                 | Basiswert für alle Custom OptionSets       |
-| `entities.testcase`          | `"itt_testcase"`            | Entity für Testfälle                       |
-| `entities.testrun`           | `"itt_testrun"`             | Entity für Testläufe                       |
-| `entities.testrunresult`     | `"itt_testrunresult"`       | Entity für Einzelergebnisse                |
-| `fields.testid`              | `"itt_testid"`              | Test-ID (String, eindeutig)                |
-| `fields.title`               | `"itt_title"`               | Titel des Testfalls                        |
-| `fields.category`            | `"itt_category"`            | Kategorie (OptionSet)                      |
-| `fields.tags`                | `"itt_tags"`                | Tags (kommagetrennt)                       |
-| `fields.enabled`             | `"itt_enabled"`             | Aktiv-Flag (Boolean)                       |
-| `fields.definition_json`     | `"itt_definition_json"`     | JSON-Definition (Memo)                     |
-| `fields.userstories`         | `"itt_userstories"`         | User Stories (kommagetrennt)               |
-| `fields.teststatus`          | `"itt_teststatus"`          | Lauf-Status (OptionSet)                    |
-| `fields.passed`              | `"itt_passed"`              | Anzahl bestanden (Integer)                 |
-| `fields.failed`              | `"itt_failed"`              | Anzahl fehlgeschlagen (Integer)            |
-| `fields.total`               | `"itt_total"`               | Gesamtanzahl (Integer)                     |
-| `fields.started_on`          | `"itt_started_on"`          | Startzeit (DateTime)                       |
-| `fields.completed_on`        | `"itt_completed_on"`        | Endzeit (DateTime)                         |
-| `fields.testsummary`         | `"itt_testsummary"`         | Zusammenfassung (Memo)                     |
-| `fields.fulllog`             | `"itt_fulllog"`             | Vollständiges Log (Memo)                   |
-| `fields.testcasefilter`      | `"itt_testcasefilter"`      | Verwendeter Filter (String)                |
-| `fields.outcome`             | `"itt_outcome"`             | Ergebnis (OptionSet)                       |
-| `fields.duration_ms`         | `"itt_duration_ms"`         | Dauer in ms (Integer)                      |
-| `fields.error_message`       | `"itt_error_message"`       | Fehlermeldung (Memo)                       |
-| `fields.assertion_results`   | `"itt_assertion_results"`   | Assertion-Ergebnisse (Memo, JSON)          |
-| `actions.runTests`           | `"itt_RunIntegrationTests"` | Custom Action zum Starten                  |
+| `entities.testcase`          | `"jbe_testcase"`            | Entity für Testfälle                       |
+| `entities.testrun`           | `"jbe_testrun"`             | Entity für Testläufe                       |
+| `entities.testrunresult`     | `"jbe_testrunresult"`       | Entity für Einzelergebnisse                |
+| `fields.testid`              | `"jbe_testid"`              | Test-ID (String, eindeutig)                |
+| `fields.title`               | `"jbe_title"`               | Titel des Testfalls                        |
+| `fields.category`            | `"jbe_category"`            | Kategorie (OptionSet)                      |
+| `fields.tags`                | `"jbe_tags"`                | Tags (kommagetrennt)                       |
+| `fields.enabled`             | `"jbe_enabled"`             | Aktiv-Flag (Boolean)                       |
+| `fields.definition_json`     | `"jbe_definition_json"`     | JSON-Definition (Memo)                     |
+| `fields.userstories`         | `"jbe_userstories"`         | User Stories (kommagetrennt)               |
+| `fields.teststatus`          | `"jbe_teststatus"`          | Lauf-Status (OptionSet)                    |
+| `fields.passed`              | `"jbe_passed"`              | Anzahl bestanden (Integer)                 |
+| `fields.failed`              | `"jbe_failed"`              | Anzahl fehlgeschlagen (Integer)            |
+| `fields.total`               | `"jbe_total"`               | Gesamtanzahl (Integer)                     |
+| `fields.started_on`          | `"jbe_started_on"`          | Startzeit (DateTime)                       |
+| `fields.completed_on`        | `"jbe_completed_on"`        | Endzeit (DateTime)                         |
+| `fields.testsummary`         | `"jbe_testsummary"`         | Zusammenfassung (Memo)                     |
+| `fields.fulllog`             | `"jbe_fulllog"`             | Vollständiges Log (Memo)                   |
+| `fields.testcasefilter`      | `"jbe_testcasefilter"`      | Verwendeter Filter (String)                |
+| `fields.outcome`             | `"jbe_outcome"`             | Ergebnis (OptionSet)                       |
+| `fields.duration_ms`         | `"jbe_duration_ms"`         | Dauer in ms (Integer)                      |
+| `fields.error_message`       | `"jbe_error_message"`       | Fehlermeldung (Memo)                       |
+| `fields.assertion_results`   | `"jbe_assertion_results"`   | Assertion-Ergebnisse (Memo, JSON)          |
+| `actions.runTests`           | `"jbe_RunIntegrationTests"` | Custom Action zum Starten                  |
 | `optionSets.statusPlanned`   | `100000000`                 | Status: Geplant                            |
 | `optionSets.statusRunning`   | `100000001`                 | Status: Läuft                              |
 | `optionSets.statusCompleted` | `100000002`                 | Status: Abgeschlossen                      |
@@ -835,7 +835,7 @@ Der CONFIG-Block (ab Zeile 798) definiert alle anpassbaren Schema-Namen:
 Um den Publisher-Prefix zu ändern (z.B. von `itt` auf `markant`):
 
 1. `CONFIG.prefix` anpassen
-2. Alle Werte in `CONFIG.entities` und `CONFIG.fields` anpassen (z.B. `itt_testcase` zu `markant_testcase`)
+2. Alle Werte in `CONFIG.entities` und `CONFIG.fields` anpassen (z.B. `jbe_testcase` zu `markant_testcase`)
 3. `CONFIG.actions.runTests` anpassen
 4. Die tatsächlichen Entities in Dataverse müssen mit dem neuen Prefix existieren
 
@@ -864,7 +864,7 @@ Diese Werte müssen exakt mit den in Dataverse definierten OptionSet-Werten übe
    ```javascript
    async function renderMeinView(param) {
        render(`<h2>Meine View</h2><div id="mein-content">Lade...</div>`);
-       const data = await API.getMany("itt_testcases", "...");
+       const data = await API.getMany("jbe_testcases", "...");
        $("#mein-content").innerHTML = "...";
    }
    ```
@@ -939,4 +939,4 @@ $("#container").innerHTML = Charts.meinChart(data, 400, 200);
 
 ### Neue Assertion-Operatoren
 
-Die Operatoren (`Equals`, `NotEquals`, `Contains`, `IsNull`, `IsNotNull`, `GreaterThan`) werden im FlowVisualizer nur zur Anzeige verwendet. Die tatsächliche Auswertung erfolgt serverseitig in der Custom Action `itt_RunIntegrationTests`. Für neue Operatoren muss daher sowohl die Custom Action als auch die Anzeige in `FlowViz.showDetail()` und in den HelpContent-Sektionen erweitert werden.
+Die Operatoren (`Equals`, `NotEquals`, `Contains`, `IsNull`, `IsNotNull`, `GreaterThan`) werden im FlowVisualizer nur zur Anzeige verwendet. Die tatsächliche Auswertung erfolgt serverseitig in der Custom Action `jbe_RunIntegrationTests`. Für neue Operatoren muss daher sowohl die Custom Action als auch die Anzeige in `FlowViz.showDetail()` und in den HelpContent-Sektionen erweitert werden.

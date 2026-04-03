@@ -8,7 +8,7 @@
     <RootNamespace>D365TestCenter.CrmPlugin</RootNamespace>
     <AssemblyName>D365TestCenter.CrmPlugin</AssemblyName>
     <Authors>Integration Test Center Team</Authors>
-    <Description>Integration Test Center — CRM Plugin (Custom API itt_RunIntegrationTests)</Description>
+    <Description>Integration Test Center — CRM Plugin (Custom API jbe_RunIntegrationTests)</Description>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 

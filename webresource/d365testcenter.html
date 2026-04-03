@@ -1558,58 +1558,58 @@ body {
 
 // ── Konfiguration ───────────────────────────────────────────────
 // Passen Sie diese Werte an Ihren Dataverse-Publisher an.
-// Standard-Prefix: "itt" (Integration Test Tool)
+// Standard-Prefix: "jbe" (Integration Test Tool)
 const CONFIG = {
     version: "3.1.1",                  // Bei jedem Deployment hochzählen
     buildDate: "2026-03-31",          // Build-Datum
-    prefix: "itt",                    // Publisher-Prefix (ohne Unterstrich)
+    prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
     optionSetBase: 100570000,         // Basis fuer OptionSet-Werte (Publisher 10571 * 10000)
     entities: {
-        testcase: "itt_testcase",
-        testrun: "itt_testrun",
-        testrunresult: "itt_testrunresult"
+        testcase: "jbe_testcase",
+        testrun: "jbe_testrun",
+        testrunresult: "jbe_testrunresult"
     },
     fields: {
         // TestCase
-        testid: "itt_testid",
-        title: "itt_title",
-        category: "itt_category",
-        tags: "itt_tags",
-        enabled: "itt_enabled",
-        definition_json: "itt_definitionjson",
-        userstories: "itt_userstories",
+        testid: "jbe_testid",
+        title: "jbe_title",
+        category: "jbe_category",
+        tags: "jbe_tags",
+        enabled: "jbe_enabled",
+        definition_json: "jbe_definitionjson",
+        userstories: "jbe_userstories",
         // TestRun
-        teststatus: "itt_teststatus",
-        passed: "itt_passed",
-        failed: "itt_failed",
-        total: "itt_total",
-        started_on: "itt_startedon",
-        completed_on: "itt_completedon",
-        testsummary: "itt_testsummary",
-        fulllog: "itt_fulllog",
-        testcasefilter: "itt_testcasefilter",
-        testresult_json: "itt_testresult_json",
+        teststatus: "jbe_teststatus",
+        passed: "jbe_passed",
+        failed: "jbe_failed",
+        total: "jbe_total",
+        started_on: "jbe_startedon",
+        completed_on: "jbe_completedon",
+        testsummary: "jbe_testsummary",
+        fulllog: "jbe_fulllog",
+        testcasefilter: "jbe_testcasefilter",
+        testresult_json: "jbe_testresult_json",
         // TestRunResult
-        testrunid: "itt_testrunid",
-        testcaseid: "itt_testcaseid",
-        outcome: "itt_outcome",
-        duration_ms: "itt_durationms",
-        error_message: "itt_errormessage",
-        assertion_results: "itt_assertionresults"
+        testrunid: "jbe_testrunid",
+        testcaseid: "jbe_testcaseid",
+        outcome: "jbe_outcome",
+        duration_ms: "jbe_durationms",
+        error_message: "jbe_errormessage",
+        assertion_results: "jbe_assertionresults"
     },
     optionSets: {
-        // TestStatus (itt_teststatus) - Prefix 10571 (bereinigt per InsertOptionValue/DeleteOptionValue)
+        // TestStatus (jbe_teststatus) - Prefix 10571 (bereinigt per InsertOptionValue/DeleteOptionValue)
         statusPlanned: 105710000,
         statusRunning: 105710001,
         statusCompleted: 105710002,
         statusError: 105710003,
-        // Outcome (itt_testoutcome) - Prefix 10571
+        // Outcome (jbe_testoutcome) - Prefix 10571
         outcomePassed: 105710000,
         outcomeFailed: 105710001,
         outcomeError: 105710002,
         outcomeSkipped: 105710003,
         outcomeNotImpl: 105710004,
-        // Category (itt_testcategory) - Prefix 10571
+        // Category (jbe_testcategory) - Prefix 10571
         catUpdateSource: 105710000,
         catCreateSource: 105710001,
         catPISA: 105710002,
@@ -1621,7 +1621,7 @@ const CONFIG = {
         catErrorInjection: 105710008
     },
     actions: {
-        runTests: "itt_RunIntegrationTests"
+        runTests: "jbe_RunIntegrationTests"
     },
     // User story link pattern. {key} is replaced with the story ID.
     // Set to "" to disable links. Examples:
@@ -1759,9 +1759,9 @@ const LANG = {
     meta_tables: "Tables",                   // DE: Tabellen
     meta_optionsets: "OptionSets",
     meta_customapis: "Custom APIs",
-    meta_search: "Search table (e.g. contact, itt_)...", // DE: ${LANG.meta_search}
+    meta_search: "Search table (e.g. contact, jbe_)...", // DE: ${LANG.meta_search}
     meta_custom_only: "Custom only",          // DE: Nur Custom
-    meta_itt_only: "itt_ only",              // DE: Nur itt_
+    meta_jbe_only: "jbe_ only",              // DE: Nur jbe_
     meta_schema: "SCHEMA NAME",              // DE: SCHEMA-NAME
     meta_display: "DISPLAY NAME",            // DE: ANZEIGENAME
     meta_custom: "CUSTOM",
@@ -1811,9 +1811,9 @@ const _sharedIttMeta = {
         { LogicalName: "phonecall", SchemaName: "PhoneCall", DisplayName: { UserLocalizedLabel: { Label: "Telefonanruf" } }, IsCustomEntity: false, EntitySetName: "phonecalls" },
         { LogicalName: "appointment", SchemaName: "Appointment", DisplayName: { UserLocalizedLabel: { Label: "Termin" } }, IsCustomEntity: false, EntitySetName: "appointments" },
         // ITT Framework Entities
-        { LogicalName: "itt_testcase", SchemaName: "itt_testcase", DisplayName: { UserLocalizedLabel: { Label: "Testfall" } }, IsCustomEntity: true, EntitySetName: "itt_testcases" },
-        { LogicalName: "itt_testrun", SchemaName: "itt_testrun", DisplayName: { UserLocalizedLabel: { Label: "Testlauf" } }, IsCustomEntity: true, EntitySetName: "itt_testruns" },
-        { LogicalName: "itt_testrunresult", SchemaName: "itt_testrunresult", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, IsCustomEntity: true, EntitySetName: "itt_testrunresults" }
+        { LogicalName: "jbe_testcase", SchemaName: "jbe_testcase", DisplayName: { UserLocalizedLabel: { Label: "Testfall" } }, IsCustomEntity: true, EntitySetName: "jbe_testcases" },
+        { LogicalName: "jbe_testrun", SchemaName: "jbe_testrun", DisplayName: { UserLocalizedLabel: { Label: "Testlauf" } }, IsCustomEntity: true, EntitySetName: "jbe_testruns" },
+        { LogicalName: "jbe_testrunresult", SchemaName: "jbe_testrunresult", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, IsCustomEntity: true, EntitySetName: "jbe_testrunresults" }
     ],
     attributes: {
         account: [
@@ -1963,51 +1963,51 @@ const _sharedIttMeta = {
             { LogicalName: "regardingobjectid", DisplayName: { UserLocalizedLabel: { Label: "Regarding" } }, AttributeType: "LookupType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false },
             { LogicalName: "statuscode", DisplayName: { UserLocalizedLabel: { Label: "Status Reason" } }, AttributeType: "StatusType", RequiredLevel: { Value: "None" }, IsCustomAttribute: false }
         ],
-        itt_testcase: [
-            { LogicalName: "itt_testcaseid", DisplayName: { UserLocalizedLabel: { Label: "Testfall ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "itt_testcaseId" },
-            { LogicalName: "itt_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "itt_TestId" },
-            { LogicalName: "itt_title", DisplayName: { UserLocalizedLabel: { Label: "Titel" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "itt_Title" },
-            { LogicalName: "itt_category", DisplayName: { UserLocalizedLabel: { Label: "Kategorie" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true, SchemaName: "itt_Category" },
-            { LogicalName: "itt_tags", DisplayName: { UserLocalizedLabel: { Label: "Tags" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Tags" },
-            { LogicalName: "itt_userstories", DisplayName: { UserLocalizedLabel: { Label: "User Stories" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_UserStories" },
-            { LogicalName: "itt_definitionjson", DisplayName: { UserLocalizedLabel: { Label: "Definition (JSON)" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_DefinitionJson" },
-            { LogicalName: "itt_enabled", DisplayName: { UserLocalizedLabel: { Label: "Aktiv" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Enabled" }
+        jbe_testcase: [
+            { LogicalName: "jbe_testcaseid", DisplayName: { UserLocalizedLabel: { Label: "Testfall ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testcaseId" },
+            { LogicalName: "jbe_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "jbe_TestId" },
+            { LogicalName: "jbe_title", DisplayName: { UserLocalizedLabel: { Label: "Titel" } }, AttributeType: "StringType", RequiredLevel: { Value: "ApplicationRequired" }, IsCustomAttribute: true, SchemaName: "jbe_Title" },
+            { LogicalName: "jbe_category", DisplayName: { UserLocalizedLabel: { Label: "Kategorie" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "Recommended" }, IsCustomAttribute: true, SchemaName: "jbe_Category" },
+            { LogicalName: "jbe_tags", DisplayName: { UserLocalizedLabel: { Label: "Tags" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Tags" },
+            { LogicalName: "jbe_userstories", DisplayName: { UserLocalizedLabel: { Label: "User Stories" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_UserStories" },
+            { LogicalName: "jbe_definitionjson", DisplayName: { UserLocalizedLabel: { Label: "Definition (JSON)" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_DefinitionJson" },
+            { LogicalName: "jbe_enabled", DisplayName: { UserLocalizedLabel: { Label: "Aktiv" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Enabled" }
         ],
-        itt_testrun: [
-            { LogicalName: "itt_testrunid", DisplayName: { UserLocalizedLabel: { Label: "Testlauf ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "itt_testrunId" },
-            { LogicalName: "itt_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestStatus" },
-            { LogicalName: "itt_passed", DisplayName: { UserLocalizedLabel: { Label: "Bestanden" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Passed" },
-            { LogicalName: "itt_failed", DisplayName: { UserLocalizedLabel: { Label: "Failed" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Failed" },
-            { LogicalName: "itt_total", DisplayName: { UserLocalizedLabel: { Label: "Gesamt" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Total" },
-            { LogicalName: "itt_startedon", DisplayName: { UserLocalizedLabel: { Label: "Gestartet" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_StartedOn" },
-            { LogicalName: "itt_completedon", DisplayName: { UserLocalizedLabel: { Label: "Abgeschlossen" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_CompletedOn" },
-            { LogicalName: "itt_testcasefilter", DisplayName: { UserLocalizedLabel: { Label: "Testfall-Filter" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestCaseFilter" },
-            { LogicalName: "itt_testsummary", DisplayName: { UserLocalizedLabel: { Label: "Summary" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestSummary" },
-            { LogicalName: "itt_fulllog", DisplayName: { UserLocalizedLabel: { Label: "Vollständiges Log" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_FullLog" }
+        jbe_testrun: [
+            { LogicalName: "jbe_testrunid", DisplayName: { UserLocalizedLabel: { Label: "Testlauf ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testrunId" },
+            { LogicalName: "jbe_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Status" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestStatus" },
+            { LogicalName: "jbe_passed", DisplayName: { UserLocalizedLabel: { Label: "Bestanden" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Passed" },
+            { LogicalName: "jbe_failed", DisplayName: { UserLocalizedLabel: { Label: "Failed" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Failed" },
+            { LogicalName: "jbe_total", DisplayName: { UserLocalizedLabel: { Label: "Gesamt" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Total" },
+            { LogicalName: "jbe_startedon", DisplayName: { UserLocalizedLabel: { Label: "Gestartet" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_StartedOn" },
+            { LogicalName: "jbe_completedon", DisplayName: { UserLocalizedLabel: { Label: "Abgeschlossen" } }, AttributeType: "DateTimeType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_CompletedOn" },
+            { LogicalName: "jbe_testcasefilter", DisplayName: { UserLocalizedLabel: { Label: "Testfall-Filter" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestCaseFilter" },
+            { LogicalName: "jbe_testsummary", DisplayName: { UserLocalizedLabel: { Label: "Summary" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestSummary" },
+            { LogicalName: "jbe_fulllog", DisplayName: { UserLocalizedLabel: { Label: "Vollständiges Log" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_FullLog" }
         ],
-        itt_testrunresult: [
-            { LogicalName: "itt_testrunresultid", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "itt_testrunresultId" },
-            { LogicalName: "itt_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_TestId" },
-            { LogicalName: "itt_outcome", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_Outcome" },
-            { LogicalName: "itt_durationms", DisplayName: { UserLocalizedLabel: { Label: "Dauer (ms)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_DurationMs" },
-            { LogicalName: "itt_errormessage", DisplayName: { UserLocalizedLabel: { Label: "Error message" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_ErrorMessage" },
-            { LogicalName: "itt_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Ergebnisse" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "itt_AssertionResults" }
+        jbe_testrunresult: [
+            { LogicalName: "jbe_testrunresultid", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis ID" } }, AttributeType: "UniqueidentifierType", RequiredLevel: { Value: "SystemRequired" }, IsCustomAttribute: false, SchemaName: "jbe_testrunresultId" },
+            { LogicalName: "jbe_testid", DisplayName: { UserLocalizedLabel: { Label: "Test ID" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_TestId" },
+            { LogicalName: "jbe_outcome", DisplayName: { UserLocalizedLabel: { Label: "Ergebnis" } }, AttributeType: "PicklistType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Outcome" },
+            { LogicalName: "jbe_durationms", DisplayName: { UserLocalizedLabel: { Label: "Dauer (ms)" } }, AttributeType: "IntegerType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_DurationMs" },
+            { LogicalName: "jbe_errormessage", DisplayName: { UserLocalizedLabel: { Label: "Error message" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_ErrorMessage" },
+            { LogicalName: "jbe_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Ergebnisse" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_AssertionResults" }
         ]
     },
     optionsets: [
-        { Name: "itt_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Teststatus" } }, OptionSetType: "Picklist", Options: [
+        { Name: "jbe_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Teststatus" } }, OptionSetType: "Picklist", Options: [
             { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Geplant" } } },
             { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Running" } } },
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Abgeschlossen" } } },
             { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Fehler" } } }
         ]},
-        { Name: "itt_testoutcome", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, OptionSetType: "Picklist", Options: [
+        { Name: "jbe_testoutcome", DisplayName: { UserLocalizedLabel: { Label: "Testergebnis" } }, OptionSetType: "Picklist", Options: [
             { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Passed" } } },
             { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Failed" } } },
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Error" } } },
             { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Skipped" } } }
         ]},
-        { Name: "itt_testcategory", DisplayName: { UserLocalizedLabel: { Label: "Testkategorie" } }, OptionSetType: "Picklist", Options: [
+        { Name: "jbe_testcategory", DisplayName: { UserLocalizedLabel: { Label: "Testkategorie" } }, OptionSetType: "Picklist", Options: [
             { Value: 100000000, Label: { UserLocalizedLabel: { Label: "UpdateSource" } } },
             { Value: 100000001, Label: { UserLocalizedLabel: { Label: "CreateSource" } } },
             { Value: 100000002, Label: { UserLocalizedLabel: { Label: "PISA" } } },
@@ -2020,10 +2020,10 @@ const _sharedIttMeta = {
         ]}
     ],
     customapis: [
-        { uniquename: "itt_RunIntegrationTests", displayname: "Run Integration Tests", description: "Startet einen Integrationstestlauf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
-        { uniquename: "itt_GovernanceApiContact", displayname: "Governance API Contact", description: "Ruft die Governance-API für einen Kontakt auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
-        { uniquename: "itt_GovernanceApiContactSource", displayname: "Governance API ContactSource", description: "Ruft die Governance-API für eine Quell-Entität auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
-        { uniquename: "itt_AssertEnvironment", displayname: "Assert Environment", description: "Prüft die Umgebungsvoraussetzungen für Integrationstests", isfunction: true, bindingtype: 0, allowedcustomprocessingsteptype: 0 }
+        { uniquename: "jbe_RunIntegrationTests", displayname: "Run Integration Tests", description: "Startet einen Integrationstestlauf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
+        { uniquename: "jbe_GovernanceApiContact", displayname: "Governance API Contact", description: "Ruft die Governance-API für einen Kontakt auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
+        { uniquename: "jbe_GovernanceApiContactSource", displayname: "Governance API ContactSource", description: "Ruft die Governance-API für eine Quell-Entität auf", isfunction: false, bindingtype: 0, allowedcustomprocessingsteptype: 0 },
+        { uniquename: "jbe_AssertEnvironment", displayname: "Assert Environment", description: "Prüft die Umgebungsvoraussetzungen für Integrationstests", isfunction: true, bindingtype: 0, allowedcustomprocessingsteptype: 0 }
     ]
 };
 
@@ -2064,7 +2064,7 @@ async function _loadDemoMetadata() {
                     }
                 }
             }
-            ITTLog.info("DemoMeta", "Loaded: " + file + " (" + (data.additionalEntities?.length || 0) + " entities, " + Object.keys(data.additionalAttributes || {}).length + " entity attributes)");
+            JBELog.info("DemoMeta", "Loaded: " + file + " (" + (data.additionalEntities?.length || 0) + " entities, " + Object.keys(data.additionalAttributes || {}).length + " entity attributes)");
         } catch (e) {
             // Silently skip if file not found (e.g. in live mode)
         }
@@ -2137,11 +2137,11 @@ const PackLoader = {
 
     // Hydrate a loaded JSON pack into the runtime format
     _hydrate(pack) {
-        // Stringify itt_definitionjson objects
+        // Stringify jbe_definitionjson objects
         if (pack.testCases) {
             for (const tc of pack.testCases) {
-                if (tc.itt_definitionjson && typeof tc.itt_definitionjson === "object") {
-                    tc.itt_definitionjson = JSON.stringify(tc.itt_definitionjson);
+                if (tc.jbe_definitionjson && typeof tc.jbe_definitionjson === "object") {
+                    tc.jbe_definitionjson = JSON.stringify(tc.jbe_definitionjson);
                 }
             }
         }
@@ -2149,9 +2149,9 @@ const PackLoader = {
         if (pack.testRuns) pack.testRuns = this._resolveDates(pack.testRuns);
         if (pack.testRunResults) pack.testRunResults = this._resolveDates(pack.testRunResults);
         // Remap OptionSet values from generic (100000000-based) to CONFIG values
-        if (pack.testCases) this._remapOptionSets(pack.testCases, ["itt_category"]);
-        if (pack.testRuns) this._remapOptionSets(pack.testRuns, ["itt_teststatus"]);
-        if (pack.testRunResults) this._remapOptionSets(pack.testRunResults, ["itt_outcome"]);
+        if (pack.testCases) this._remapOptionSets(pack.testCases, ["jbe_category"]);
+        if (pack.testRuns) this._remapOptionSets(pack.testRuns, ["jbe_teststatus"]);
+        if (pack.testRunResults) this._remapOptionSets(pack.testRunResults, ["jbe_outcome"]);
         return pack;
     },
 
@@ -2219,7 +2219,7 @@ const PackLoader = {
 
 // ── ITT Logger ──────────────────────────────────────────────────
 
-const ITTLog = {
+const JBELog = {
     _enabled: true,
     _prefix: "[ITT]",
     _startTime: performance.now(),
@@ -2315,7 +2315,7 @@ const MockAPI = {
             const val = lookupMatch[2];
             return collection.filter(r => r[field] === val);
         }
-        // Handle "field eq number" (e.g., itt_outcome eq 100000001)
+        // Handle "field eq number" (e.g., jbe_outcome eq 100000001)
         const numMatch = filterStr.match(/(\w+)\s+eq\s+(\d+)/);
         if (numMatch) {
             const field = numMatch[1];
@@ -2383,7 +2383,7 @@ const MockAPI = {
         }
 
         // Custom Actions
-        if (url.startsWith("/itt_RunIntegrationTests") || url.startsWith("/itt_GovernanceApi") || url.startsWith("/itt_AssertEnvironment")) {
+        if (url.startsWith("/jbe_RunIntegrationTests") || url.startsWith("/jbe_GovernanceApi") || url.startsWith("/jbe_AssertEnvironment")) {
             return {};
         }
 
@@ -2418,10 +2418,10 @@ const MockAPI = {
     },
 
     _getCollection(entitySet) {
-        if (entitySet === "itt_testcases") return this._store.testcases;
-        if (entitySet === "itt_testruns") return this._store.testruns;
-        if (entitySet === "itt_testrunresults") return this._store.testrunresults;
-        if (entitySet === "itt_teststeps") {
+        if (entitySet === "jbe_testcases") return this._store.testcases;
+        if (entitySet === "jbe_testruns") return this._store.testruns;
+        if (entitySet === "jbe_testrunresults") return this._store.testrunresults;
+        if (entitySet === "jbe_teststeps") {
             if (!this._store.teststeps) this._store.teststeps = [];
             return this._store.teststeps;
         }
@@ -2432,9 +2432,9 @@ const MockAPI = {
     },
 
     _getIdField(entitySet) {
-        if (entitySet === "itt_testcases") return "itt_testcaseid";
-        if (entitySet === "itt_testruns") return "itt_testrunid";
-        if (entitySet === "itt_testrunresults") return "itt_testrunresultid";
+        if (entitySet === "jbe_testcases") return "jbe_testcaseid";
+        if (entitySet === "jbe_testruns") return "jbe_testrunid";
+        if (entitySet === "jbe_testrunresults") return "jbe_testrunresultid";
         return entitySet.replace(/s$/, "") + "id";
     },
 
@@ -2618,7 +2618,7 @@ const API = {
         while ((resp.status === 429 || resp.status === 503) && retries < this._MAX_RETRIES) {
             retries++;
             const retryAfter = parseInt(resp.headers.get("Retry-After") || String(2 * retries), 10);
-            ITTLog.warn("API", `${label} -> ${resp.status}, Retry ${retries}/${this._MAX_RETRIES} nach ${retryAfter}s`);
+            JBELog.warn("API", `${label} -> ${resp.status}, Retry ${retries}/${this._MAX_RETRIES} nach ${retryAfter}s`);
             await new Promise(r => setTimeout(r, retryAfter * 1000));
             resp = await ApiThrottle.throttled(doFetch);
         }
@@ -2657,7 +2657,7 @@ const API = {
     },
 
     async create(entity, data) {
-        ITTLog.info("API", `POST /${entity}`, data);
+        JBELog.info("API", `POST /${entity}`, data);
         const doFetch = () => window.fetch(this.base + `/${entity}`, {
             method: "POST",
             headers: {
@@ -2672,16 +2672,16 @@ const API = {
         const resp = await this._withRetry(`POST /${entity}`, doFetch);
         if (!resp.ok) {
             const errBody = await resp.text();
-            ITTLog.error("API", `POST /${entity} -> ${resp.status}`, errBody.substring(0, 500));
+            JBELog.error("API", `POST /${entity} -> ${resp.status}`, errBody.substring(0, 500));
             throw new Error(`Create ${entity} fehlgeschlagen (${resp.status}): ${errBody.substring(0, 200)}`);
         }
         const result = await resp.json();
-        ITTLog.info("API", `POST /${entity} -> 201 OK`);
+        JBELog.info("API", `POST /${entity} -> 201 OK`);
         return result;
     },
 
     async update(entity, id, data) {
-        ITTLog.info("API", `PATCH /${entity}(${id})`, data);
+        JBELog.info("API", `PATCH /${entity}(${id})`, data);
         const doFetch = () => window.fetch(this.base + `/${entity}(${id})`, {
             method: "PATCH",
             headers: {
@@ -2695,7 +2695,7 @@ const API = {
         const resp = await this._withRetry(`PATCH /${entity}(${id})`, doFetch);
         if (!resp.ok) {
             const errBody = await resp.text();
-            ITTLog.error("API", `PATCH /${entity}(${id}) -> ${resp.status}`, errBody.substring(0, 500));
+            JBELog.error("API", `PATCH /${entity}(${id}) -> ${resp.status}`, errBody.substring(0, 500));
             throw new Error(`Update ${entity} fehlgeschlagen (${resp.status}): ${errBody.substring(0, 200)}`);
         }
     },
@@ -2705,7 +2705,7 @@ const API = {
         const resp = await this._withRetry(`DELETE /${entity}(${id})`, doFetch);
         if (!resp.ok) {
             const errBody = await resp.text();
-            ITTLog.error("API", `DELETE /${entity}(${id}) -> ${resp.status}`, errBody.substring(0, 500));
+            JBELog.error("API", `DELETE /${entity}(${id}) -> ${resp.status}`, errBody.substring(0, 500));
             throw new Error(`Delete ${entity} fehlgeschlagen (${resp.status}): ${errBody.substring(0, 200)}`);
         }
     },
@@ -2770,8 +2770,8 @@ const PlaceholderResolver = {
                         const prefixes = ["+44 20 7946","+1 555 012","+43 1 555","+41 44 555"];
                         return `${this._pick(prefixes)} ${this._phone555()}`;
                     }
-                    case "company":             return `ITT Test GmbH ${sfx}`;
-                    case "text":                return `ITT Test ${sfx}`;
+                    case "company":             return `JBE Test GmbH ${sfx}`;
+                    case "text":                return `JBE Test ${sfx}`;
                     case "guid":                return crypto.randomUUID ? crypto.randomUUID() : this._uuid();
                     case "number":              return String(this._randInt(1000, 9999));
                     case "city":                return this._pick(this._cities);
@@ -3873,11 +3873,11 @@ const TemplateLibrary = {
                 { entity: "contacts", alias: "contact1", fields: { firstname: "{GENERATED:firstname}", lastname: "{GENERATED:lastname}", "parentcustomerid_account@odata.bind": "/accounts({account1.id})" } }
             ],
             steps: [
-                { action: "CreateRecord", entity: "opportunities", alias: "opp1", fields: { name: "ITT Test Opportunity {TIMESTAMP}", "parentaccountid@odata.bind": "/accounts({account1.id})", "parentcontactid@odata.bind": "/contacts({contact1.id})" } },
+                { action: "CreateRecord", entity: "opportunities", alias: "opp1", fields: { name: "JBE Test Opportunity {TIMESTAMP}", "parentaccountid@odata.bind": "/accounts({account1.id})", "parentcontactid@odata.bind": "/contacts({contact1.id})" } },
                 { action: "UpdateRecord", entity: "opportunities", alias: "opp1", fields: { estimatedvalue: 50000 } }
             ],
             assertions: [
-                { type: "FieldEquals", target: "Query", entity: "opportunities", field: "name", operator: "Contains", expected: "ITT Test", filter: { opportunityid: "{opp1.id}" } },
+                { type: "FieldEquals", target: "Query", entity: "opportunities", field: "name", operator: "Contains", expected: "JBE Test", filter: { opportunityid: "{opp1.id}" } },
                 { type: "FieldEquals", target: "Query", entity: "opportunities", field: "estimatedvalue", operator: "Equals", expected: "50000", filter: { opportunityid: "{opp1.id}" } }
             ]
         },
@@ -4562,10 +4562,10 @@ const ProgressTracker = {
         if (!this._dirty || !this._runId) return;
         this._dirty = false;
         try {
-            await API.update("itt_testruns", this._runId, {
-                itt_passed: this._passed,
-                itt_failed: this._failed,
-                itt_fulllog: this._logLines.join("\n")
+            await API.update("jbe_testruns", this._runId, {
+                jbe_passed: this._passed,
+                jbe_failed: this._failed,
+                jbe_fulllog: this._logLines.join("\n")
             });
         } catch { /* best effort */ }
     },
@@ -4682,7 +4682,7 @@ const StepExecutor = {
 
             // AliasMap nach Preconditions loggen
             if (Object.keys(aliasMap).length > 0) {
-                ITTLog.info("StepExecutor", `  AliasMap:`, Object.fromEntries(
+                JBELog.info("StepExecutor", `  AliasMap:`, Object.fromEntries(
                     Object.entries(aliasMap).map(([k, v]) => [k, `${v.entity} ${v.id?.substring(0,8)}...`])
                 ));
             }
@@ -4729,14 +4729,14 @@ const StepExecutor = {
         if (!keepRecords) {
             const tracked = tracker.getTrackedRecords();
             if (tracked.length > 0) {
-                ITTLog.info("StepExecutor", `  [Cleanup] ${tracked.length} Records cleanup...`);
+                JBELog.info("StepExecutor", `  [Cleanup] ${tracked.length} Records cleanup...`);
             }
             await tracker.cleanup(stepLog);
         } else {
             const tracked = tracker.getTrackedRecords();
             if (tracked.length > 0) {
-                ITTLog.info("StepExecutor", `  [KeepRecords] ${tracked.length} Records beibehalten`);
-                tracked.forEach(r => ITTLog.info("StepExecutor", `    ${r.entity} ${r.id} (${r.alias || "-"})`));
+                JBELog.info("StepExecutor", `  [KeepRecords] ${tracked.length} Records beibehalten`);
+                tracked.forEach(r => JBELog.info("StepExecutor", `    ${r.entity} ${r.id} (${r.alias || "-"})`));
             }
         }
 
@@ -4792,14 +4792,14 @@ const StepExecutor = {
         if (!tracker) tracker = RecordTracker;
         const action = step.action || step.type || "Unknown";
         const t0 = performance.now();
-        ITTLog.info("StepExecutor", `  [${phase}] ${action} ${step.entity || ""} ${step.alias ? "("+step.alias+")" : ""}`);
+        JBELog.info("StepExecutor", `  [${phase}] ${action} ${step.entity || ""} ${step.alias ? "("+step.alias+")" : ""}`);
         const resolvedFields = PlaceholderResolver.resolve(step.fields || {}, aliasMap, context);
         const resolvedParams = PlaceholderResolver.resolve(step.parameters || {}, aliasMap, context);
         if (Object.keys(resolvedFields).length > 0) {
-            ITTLog.info("StepExecutor", `    Fields (resolved):`, resolvedFields);
+            JBELog.info("StepExecutor", `    Fields (resolved):`, resolvedFields);
         }
         if (Object.keys(resolvedParams).length > 0) {
-            ITTLog.info("StepExecutor", `    Parameters (resolved):`, resolvedParams);
+            JBELog.info("StepExecutor", `    Parameters (resolved):`, resolvedParams);
         }
         const logEntry = {
             phase, action, entity: step.entity || "", alias: step.alias || "",
@@ -4902,34 +4902,34 @@ const StepExecutor = {
 
                 if (contactId && this._isContactSourceEntity(step.entity || aliasMap[step.alias]?.entity)) {
                     // Smart Governance Polling on logging entity
-                    ITTLog.info("StepExecutor", `    Governance polling: waiting for governance log for contact ${contactId.substring(0,8)}... (timeout ${timeoutMs/1000}s, alle ${pollingMs/1000}s)`);
+                    JBELog.info("StepExecutor", `    Governance polling: waiting for governance log for contact ${contactId.substring(0,8)}... (timeout ${timeoutMs/1000}s, alle ${pollingMs/1000}s)`);
                     const result = await this._waitForGovernance(contactId, contactSourceId, actionTimestamp, timeoutMs, pollingMs);
                     if (result.found) {
-                        ITTLog.info("StepExecutor", `    Governance abgeschlossen nach ${result.polls} Polls, ${(result.duration/1000).toFixed(1)}s`);
-                        ITTLog.info("StepExecutor", `    CDH-Log: ${result.logName}`);
+                        JBELog.info("StepExecutor", `    Governance abgeschlossen nach ${result.polls} Polls, ${(result.duration/1000).toFixed(1)}s`);
+                        JBELog.info("StepExecutor", `    CDH-Log: ${result.logName}`);
                         if (result.contactUpdated !== undefined) {
-                            ITTLog.info("StepExecutor", `    ContactUpdated=${result.contactUpdated}`);
+                            JBELog.info("StepExecutor", `    ContactUpdated=${result.contactUpdated}`);
                         }
                         logEntry.outputData = { ...logEntry.outputData, governanceLog: result };
                     } else {
-                        ITTLog.warn("StepExecutor", `    Governance-Timeout nach ${timeoutMs/1000}s (${result.polls} Polls)`);
+                        JBELog.warn("StepExecutor", `    Governance-Timeout nach ${timeoutMs/1000}s (${result.polls} Polls)`);
                         logEntry.outputData = { ...logEntry.outputData, governanceTimeout: true, polls: result.polls };
                     }
                 } else {
                     // Fallback: fixer Timer für nicht-ContactSource-Entities
-                    ITTLog.info("StepExecutor", `    waitForAsync: warte ${timeoutMs/1000}s...`);
+                    JBELog.info("StepExecutor", `    waitForAsync: warte ${timeoutMs/1000}s...`);
                     await new Promise(r => setTimeout(r, timeoutMs));
                 }
             }
         } catch (err) {
             logEntry.status = "Failed";
             logEntry.error = err.message;
-            ITTLog.warn("StepExecutor", `    FEHLER: ${action} ${step.entity || ""} - ${err.message}`);
+            JBELog.warn("StepExecutor", `    FEHLER: ${action} ${step.entity || ""} - ${err.message}`);
         }
 
         logEntry.duration = Math.round(performance.now() - t0);
         if (logEntry.status === "Success" && logEntry.recordId) {
-            ITTLog.info("StepExecutor", `    OK (${logEntry.duration}ms) -> ${logEntry.recordId}`);
+            JBELog.info("StepExecutor", `    OK (${logEntry.duration}ms) -> ${logEntry.recordId}`);
         }
         return logEntry;
     },
@@ -4959,7 +4959,7 @@ const StepExecutor = {
             }
         }
         if (added > 0) {
-            ITTLog.info("StepExecutor", `    AutoSetDateFields: ${added} _modifiedondate Feld(er) automatisch gesetzt`);
+            JBELog.info("StepExecutor", `    AutoSetDateFields: ${added} _modifiedondate Feld(er) automatisch gesetzt`);
         }
         return fields;
     },
@@ -5013,7 +5013,7 @@ const StepExecutor = {
                     };
                 }
             } catch (err) {
-                ITTLog.warn("StepExecutor", `    Governance poll ${polls} Error: ${err.message}`);
+                JBELog.warn("StepExecutor", `    Governance poll ${polls} Error: ${err.message}`);
             }
             await new Promise(r => setTimeout(r, pollingMs));
         }
@@ -5028,7 +5028,7 @@ const StepExecutor = {
         const expected = PlaceholderResolver.resolve(
             assertion.value ?? assertion.expectedValue ?? "", aliasMap, context);
         let actual = null;
-        ITTLog.info("StepExecutor", `  [Assertion] ${target}.${field} ${operator} "${expected}"`);
+        JBELog.info("StepExecutor", `  [Assertion] ${target}.${field} ${operator} "${expected}"`);
 
         const logEntry = {
             phase: "Assertion", action: "Assert", entity: "", alias: "",
@@ -5132,8 +5132,8 @@ const StepExecutor = {
             }
             logEntry.outputData = record;
             const displayField = field || operator; // Virtuelle Felder wie ContactUpdated haben kein field
-            ITTLog.info("StepExecutor", `    Quelle: ${logEntry.entity} ${logEntry.recordId ? "("+logEntry.recordId.substring(0,8)+"...)" : ""}`);
-            ITTLog.info("StepExecutor", `    ${operator === "Exists" || operator === "NotExists" ? "Record: " + (record ? "gefunden" : "not found") : 'Feld "' + displayField + '" = "' + (actual ?? "null") + '"'}`);
+            JBELog.info("StepExecutor", `    Quelle: ${logEntry.entity} ${logEntry.recordId ? "("+logEntry.recordId.substring(0,8)+"...)" : ""}`);
+            JBELog.info("StepExecutor", `    ${operator === "Exists" || operator === "NotExists" ? "Record: " + (record ? "gefunden" : "not found") : 'Feld "' + displayField + '" = "' + (actual ?? "null") + '"'}`);
 
             const passed = this._evaluate(actual, operator, expected);
             logEntry.status = passed ? "Success" : "Failed";
@@ -5148,7 +5148,7 @@ const StepExecutor = {
 
         logEntry.duration = Math.round(performance.now() - t0);
         const assertSymbol = logEntry.status === "Success" ? "OK" : "FAIL";
-        ITTLog.info("StepExecutor", `    [${assertSymbol}] ${logEntry.assertionField} ${operator} "${expected}" (actual: "${logEntry.actualValue}")`);
+        JBELog.info("StepExecutor", `    [${assertSymbol}] ${logEntry.assertionField} ${operator} "${expected}" (actual: "${logEntry.actualValue}")`);
         return logEntry;
     },
 
@@ -5204,30 +5204,30 @@ const StepLogger = {
         for (let i = 0; i < steps.length; i++) {
             const s = steps[i];
             const body = {
-                "itt_TestRunResultId@odata.bind": `/itt_testrunresults(${testrunresultId})`,
-                itt_stepnumber: i + 1,
-                itt_phase: this._phaseMap[s.phase] || 105710001,
-                itt_action: s.action || "",
-                itt_entity: s.entity || "",
-                itt_alias: s.alias || "",
-                itt_recordid: s.recordId || "",
-                itt_durationms: s.duration || 0,
-                itt_stepstatus: this._statusMap[s.status] || 105710001
+                "jbe_TestRunResultId@odata.bind": `/jbe_testrunresults(${testrunresultId})`,
+                jbe_stepnumber: i + 1,
+                jbe_phase: this._phaseMap[s.phase] || 105710001,
+                jbe_action: s.action || "",
+                jbe_entity: s.entity || "",
+                jbe_alias: s.alias || "",
+                jbe_recordid: s.recordId || "",
+                jbe_durationms: s.duration || 0,
+                jbe_stepstatus: this._statusMap[s.status] || 105710001
             };
             if (s.recordId && s.entity && envUrl) {
                 const singular = s.entity.replace(/ies$/, "y").replace(/ses$/, "s").replace(/s$/, "");
-                body.itt_recordurl = `${envUrl}/main.aspx?etn=${singular}&id=${s.recordId}&pagetype=entityrecord`;
+                body.jbe_recordurl = `${envUrl}/main.aspx?etn=${singular}&id=${s.recordId}&pagetype=entityrecord`;
             }
-            if (s.inputData) body.itt_inputdata = typeof s.inputData === "string" ? s.inputData : JSON.stringify(s.inputData, null, 2);
-            if (s.outputData) body.itt_outputdata = typeof s.outputData === "string" ? s.outputData : JSON.stringify(s.outputData, null, 2);
-            if (s.error) body.itt_errormessage = s.error;
-            if (s.assertionField) body.itt_assertionfield = s.assertionField;
-            if (s.assertionOperator) body.itt_assertionoperator = s.assertionOperator;
-            if (s.expectedValue !== undefined) body.itt_expectedvalue = String(s.expectedValue);
-            if (s.actualValue !== undefined) body.itt_actualvalue = String(s.actualValue);
+            if (s.inputData) body.jbe_inputdata = typeof s.inputData === "string" ? s.inputData : JSON.stringify(s.inputData, null, 2);
+            if (s.outputData) body.jbe_outputdata = typeof s.outputData === "string" ? s.outputData : JSON.stringify(s.outputData, null, 2);
+            if (s.error) body.jbe_errormessage = s.error;
+            if (s.assertionField) body.jbe_assertionfield = s.assertionField;
+            if (s.assertionOperator) body.jbe_assertionoperator = s.assertionOperator;
+            if (s.expectedValue !== undefined) body.jbe_expectedvalue = String(s.expectedValue);
+            if (s.actualValue !== undefined) body.jbe_actualvalue = String(s.actualValue);
 
             try {
-                await API.create("itt_teststeps", body);
+                await API.create("jbe_teststeps", body);
             } catch (err) {
                 console.warn("StepLogger: Error saving step " + (i + 1) + ": " + err.message);
             }
@@ -5241,36 +5241,36 @@ const TestRunner = {
     _running: false,
 
     async execute(runId, concurrency) {
-        if (this._running) { ITTLog.warn("TestRunner", "Already running, call ignored"); return; }
+        if (this._running) { JBELog.warn("TestRunner", "Already running, call ignored"); return; }
         this._running = true;
         const conc = concurrency || 1;
         // CH-03: Prevent pack switch during test run
         const packSel = document.querySelector("select");
         if (packSel) packSel.disabled = true;
-        ITTLog.info("TestRunner", `=== Test run started (Concurrency: ${conc}) ===`, { runId });
+        JBELog.info("TestRunner", `=== Test run started (Concurrency: ${conc}) ===`, { runId });
 
         try {
             // 1. Run-Record laden
-            const run = await API.getOne("itt_testruns", runId,
-                "itt_testcasefilter,itt_keeprecords");
-            const filter = run.itt_testcasefilter || "*";
+            const run = await API.getOne("jbe_testruns", runId,
+                "jbe_testcasefilter,jbe_keeprecords");
+            const filter = run.jbe_testcasefilter || "*";
             // keepRecords ist jetzt Default true (Retain by Default)
-            const keepRecords = run.itt_keeprecords !== false;
-            ITTLog.info("TestRunner", `Filter: "${filter}", keepRecords: ${keepRecords}, concurrency: ${conc}`);
+            const keepRecords = run.jbe_keeprecords !== false;
+            JBELog.info("TestRunner", `Filter: "${filter}", keepRecords: ${keepRecords}, concurrency: ${conc}`);
 
             // 2. Testfälle laden und filtern
-            const allCases = await API.getMany("itt_testcases",
-                "$select=itt_testcaseid,itt_testid,itt_title,itt_category,itt_tags,itt_userstories,itt_enabled,itt_definitionjson&$orderby=itt_testid asc&$top=500");
+            const allCases = await API.getMany("jbe_testcases",
+                "$select=jbe_testcaseid,jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_userstories,jbe_enabled,jbe_definitionjson&$orderby=jbe_testid asc&$top=500");
             const matchingCases = this._filterCases(allCases, filter);
-            ITTLog.info("TestRunner", `${allCases.length} test cases loaded, ${matchingCases.length} after filter`);
+            JBELog.info("TestRunner", `${allCases.length} test cases loaded, ${matchingCases.length} after filter`);
 
             // 3. Run auf "Running" setzen
-            await API.update("itt_testruns", runId, {
-                itt_teststatus: CONFIG.optionSets.statusRunning,
-                itt_total: matchingCases.length,
-                itt_passed: 0,
-                itt_failed: 0,
-                itt_startedon: new Date().toISOString()
+            await API.update("jbe_testruns", runId, {
+                jbe_teststatus: CONFIG.optionSets.statusRunning,
+                jbe_total: matchingCases.length,
+                jbe_passed: 0,
+                jbe_failed: 0,
+                jbe_startedon: new Date().toISOString()
             });
 
             // 4. Base Context (jeder Test bekommt eine Kopie)
@@ -5294,26 +5294,26 @@ const TestRunner = {
             const summary = matchingCases.length + " tests executed. " +
                 ProgressTracker.passed + " bestanden, " + ProgressTracker.failed + " fehlgeschlagen.";
             ProgressTracker.addLogLine("Test run completed: " + ProgressTracker.passed + " Passed, " + ProgressTracker.failed + " Failed");
-            ITTLog.info("TestRunner", `=== Test run completed: ${ProgressTracker.passed} Passed, ${ProgressTracker.failed} Failed (${matchingCases.length} Tests) ===`);
+            JBELog.info("TestRunner", `=== Test run completed: ${ProgressTracker.passed} Passed, ${ProgressTracker.failed} Failed (${matchingCases.length} Tests) ===`);
 
-            await API.update("itt_testruns", runId, {
-                itt_teststatus: CONFIG.optionSets.statusCompleted,
-                itt_passed: ProgressTracker.passed,
-                itt_failed: ProgressTracker.failed,
-                itt_completedon: new Date().toISOString(),
-                itt_testsummary: summary,
-                itt_fulllog: ProgressTracker.logText
+            await API.update("jbe_testruns", runId, {
+                jbe_teststatus: CONFIG.optionSets.statusCompleted,
+                jbe_passed: ProgressTracker.passed,
+                jbe_failed: ProgressTracker.failed,
+                jbe_completedon: new Date().toISOString(),
+                jbe_testsummary: summary,
+                jbe_fulllog: ProgressTracker.logText
             });
 
         } catch (err) {
             // Engine-Level error
-            ITTLog.error("TestRunner", "Engine-Error: " + err.message, err);
+            JBELog.error("TestRunner", "Engine-Error: " + err.message, err);
             try { await ProgressTracker.finalize(); } catch { /* best effort */ }
             try {
-                await API.update("itt_testruns", runId, {
-                    itt_teststatus: CONFIG.optionSets.statusError,
-                    itt_completedon: new Date().toISOString(),
-                    itt_fulllog: "FEHLER: " + err.message
+                await API.update("jbe_testruns", runId, {
+                    jbe_teststatus: CONFIG.optionSets.statusError,
+                    jbe_completedon: new Date().toISOString(),
+                    jbe_fulllog: "FEHLER: " + err.message
                 });
             } catch { /* best effort */ }
         } finally {
@@ -5331,56 +5331,56 @@ const TestRunner = {
 
         let definition = null;
         try {
-            const defJson = tc.itt_definitionjson;
+            const defJson = tc.jbe_definitionjson;
             definition = typeof defJson === "string" ? JSON.parse(defJson) : defJson;
         } catch (err) {
-            const resultBody = { itt_testid: tc.itt_testid, itt_outcome: CONFIG.optionSets.outcomeFailed, itt_durationms: 0,
-                itt_errormessage: "Invalid JSON definition: " + err.message };
-            if (_demoModeActive) resultBody["_itt_testrunid_value"] = runId;
-            else resultBody["itt_TestRunId@odata.bind"] = `/itt_testruns(${runId})`;
-            await API.create("itt_testrunresults", resultBody);
-            ProgressTracker.recordResult(tc.itt_testid, tc.itt_title, false, 0, "JSON-Error: " + err.message);
+            const resultBody = { jbe_testid: tc.jbe_testid, jbe_outcome: CONFIG.optionSets.outcomeFailed, jbe_durationms: 0,
+                jbe_errormessage: "Invalid JSON definition: " + err.message };
+            if (_demoModeActive) resultBody["_jbe_testrunid_value"] = runId;
+            else resultBody["jbe_TestRunId@odata.bind"] = `/jbe_testruns(${runId})`;
+            await API.create("jbe_testrunresults", resultBody);
+            ProgressTracker.recordResult(tc.jbe_testid, tc.jbe_title, false, 0, "JSON-Error: " + err.message);
             return;
         }
 
         if (!definition) {
-            const resultBody = { itt_testid: tc.itt_testid, itt_outcome: CONFIG.optionSets.outcomePassed, itt_durationms: 0 };
-            if (_demoModeActive) resultBody["_itt_testrunid_value"] = runId;
-            else resultBody["itt_TestRunId@odata.bind"] = `/itt_testruns(${runId})`;
-            await API.create("itt_testrunresults", resultBody);
-            ProgressTracker.recordResult(tc.itt_testid, tc.itt_title, true, 0);
+            const resultBody = { jbe_testid: tc.jbe_testid, jbe_outcome: CONFIG.optionSets.outcomePassed, jbe_durationms: 0 };
+            if (_demoModeActive) resultBody["_jbe_testrunid_value"] = runId;
+            else resultBody["jbe_TestRunId@odata.bind"] = `/jbe_testruns(${runId})`;
+            await API.create("jbe_testrunresults", resultBody);
+            ProgressTracker.recordResult(tc.jbe_testid, tc.jbe_title, true, 0);
             return;
         }
 
         // Test ausfuehren
-        ITTLog.info("TestRunner", `Starte ${tc.itt_testid}...`);
+        JBELog.info("TestRunner", `Starte ${tc.jbe_testid}...`);
         const result = await StepExecutor.runTestCase(definition, execCtx.context, keepRecords, execCtx);
         const dur = result.duration_ms;
         const isPassed = result.outcome === CONFIG.optionSets.outcomePassed;
 
-        ITTLog.info("TestRunner", `${tc.itt_testid}: ${isPassed ? "BESTANDEN" : "FEHLGESCHLAGEN"} (${(dur/1000).toFixed(1)}s)${result.error_message ? " - " + result.error_message : ""}`);
+        JBELog.info("TestRunner", `${tc.jbe_testid}: ${isPassed ? "BESTANDEN" : "FEHLGESCHLAGEN"} (${(dur/1000).toFixed(1)}s)${result.error_message ? " - " + result.error_message : ""}`);
 
         // Ergebnis in ProgressTracker
-        ProgressTracker.recordResult(tc.itt_testid, tc.itt_title, isPassed, dur, result.error_message);
+        ProgressTracker.recordResult(tc.jbe_testid, tc.jbe_title, isPassed, dur, result.error_message);
 
         // Ergebnis in Dataverse speichern (mit tracked Records fuer spaeteres Cleanup)
         const trackedJson = JSON.stringify(result.trackedRecords || []);
         const resultBody = {
-            itt_testid: tc.itt_testid,
-            itt_outcome: result.outcome,
-            itt_durationms: dur,
-            itt_errormessage: result.error_message || "",
-            itt_assertionresults: JSON.stringify(result.assertion_results),
-            itt_trackedrecords: trackedJson
+            jbe_testid: tc.jbe_testid,
+            jbe_outcome: result.outcome,
+            jbe_durationms: dur,
+            jbe_errormessage: result.error_message || "",
+            jbe_assertionresults: JSON.stringify(result.assertion_results),
+            jbe_trackedrecords: trackedJson
         };
-        if (_demoModeActive) resultBody["_itt_testrunid_value"] = runId;
-        else resultBody["itt_TestRunId@odata.bind"] = `/itt_testruns(${runId})`;
+        if (_demoModeActive) resultBody["_jbe_testrunid_value"] = runId;
+        else resultBody["jbe_TestRunId@odata.bind"] = `/jbe_testruns(${runId})`;
 
-        const savedResult = await API.create("itt_testrunresults", resultBody);
+        const savedResult = await API.create("jbe_testrunresults", resultBody);
 
         // Step-Log speichern
         if (result.steps && result.steps.length > 0) {
-            const resultId = savedResult?.itt_testrunresultid || this._findId(savedResult, "itt_testrunresult");
+            const resultId = savedResult?.jbe_testrunresultid || this._findId(savedResult, "jbe_testrunresult");
             if (resultId) {
                 await StepLogger.save(resultId, result.steps, execCtx.context.envUrl);
             }
@@ -5389,32 +5389,32 @@ const TestRunner = {
 
     async _updateRunProgress(runId, passed, failed, logLines) {
         try {
-            await API.update("itt_testruns", runId, {
-                itt_passed: passed,
-                itt_failed: failed,
-                itt_fulllog: logLines.join("\n")
+            await API.update("jbe_testruns", runId, {
+                jbe_passed: passed,
+                jbe_failed: failed,
+                jbe_fulllog: logLines.join("\n")
             });
         } catch { /* best effort, polling will catch up */ }
     },
 
     _filterCases(cases, filter) {
-        let result = cases.filter(tc => tc.itt_enabled !== false);
+        let result = cases.filter(tc => tc.jbe_enabled !== false);
         if (filter === "*") return result;
 
         if (filter.startsWith("category:")) {
             const catName = filter.substring(9).toLowerCase().replace(/\s/g, "");
             const catMap = { updatesource: CONFIG.optionSets.catUpdateSource, createsource: CONFIG.optionSets.catCreateSource, pisa: CONFIG.optionSets.catPISA, multisource: CONFIG.optionSets.catMultiSource, additionalfields: CONFIG.optionSets.catAdditionalFields, bridge: CONFIG.optionSets.catBridge, merge: CONFIG.optionSets.catMerge, recompute: CONFIG.optionSets.catRecompute, config: CONFIG.optionSets.catRecompute, errorhandling: CONFIG.optionSets.catErrorInjection, error: CONFIG.optionSets.catErrorInjection, errorinjection: CONFIG.optionSets.catErrorInjection };
             const catVal = catMap[catName];
-            if (catVal != null) result = result.filter(tc => tc.itt_category === catVal);
+            if (catVal != null) result = result.filter(tc => tc.jbe_category === catVal);
         } else if (filter.startsWith("tag:")) {
             const tag = filter.substring(4).toLowerCase();
-            result = result.filter(tc => (tc.itt_tags || "").toLowerCase().includes(tag));
+            result = result.filter(tc => (tc.jbe_tags || "").toLowerCase().includes(tag));
         } else if (filter.startsWith("story:")) {
             const story = filter.substring(6).toUpperCase();
-            result = result.filter(tc => (tc.itt_userstories || "").toUpperCase().includes(story));
+            result = result.filter(tc => (tc.jbe_userstories || "").toUpperCase().includes(story));
         } else {
             const ids = filter.split(",").map(s => s.trim().toUpperCase());
-            result = result.filter(tc => ids.includes((tc.itt_testid || "").toUpperCase()));
+            result = result.filter(tc => ids.includes((tc.jbe_testid || "").toUpperCase()));
         }
         return result;
     },
@@ -5638,17 +5638,17 @@ async function renderDashboard() {
 
     try {
         // KPIs
-        const totalCases = await API.count("itt_testcases", "itt_enabled eq true");
-        const runs = await API.getMany("itt_testruns",
-            "$select=itt_teststatus,itt_passed,itt_failed,itt_total,itt_startedon,itt_testsummary" +
-            "&$orderby=itt_startedon desc&$top=20");
+        const totalCases = await API.count("jbe_testcases", "jbe_enabled eq true");
+        const runs = await API.getMany("jbe_testruns",
+            "$select=jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_testsummary" +
+            "&$orderby=jbe_startedon desc&$top=20");
 
         const totalRuns = runs.length;
         let totalPassed = 0, totalTotal = 0, openFailures = 0;
         for (const r of runs.slice(0, 7)) {
-            totalPassed += r.itt_passed || 0;
-            totalTotal += r.itt_total || 0;
-            openFailures += r.itt_failed || 0;
+            totalPassed += r.jbe_passed || 0;
+            totalTotal += r.jbe_total || 0;
+            openFailures += r.jbe_failed || 0;
         }
         const passRate = totalTotal > 0 ? Math.round(totalPassed / totalTotal * 100) : 0;
 
@@ -5662,13 +5662,13 @@ async function renderDashboard() {
         if (runs.length > 0) {
             let html = `<table class="data-table"><thead><tr><th>${LANG.dash_date}</th><th>${LANG.dash_status}</th><th>${LANG.dash_passed}</th><th>${LANG.dash_failed}</th><th>${LANG.dash_total}</th><th></th></tr></thead><tbody>`;
             for (const r of runs.slice(0, 8)) {
-                const id = r.itt_testrunid;
+                const id = r.jbe_testrunid;
                 html += `<tr>
-                    <td>${formatDate(r.itt_startedon)}</td>
-                    <td>${statusBadge(r.itt_teststatus)}</td>
-                    <td style="color:var(--accent-green)">${r.itt_passed || 0}</td>
-                    <td style="color:${(r.itt_failed||0) > 0 ? 'var(--accent-red)' : 'var(--text-muted)'}">${r.itt_failed || 0}</td>
-                    <td>${r.itt_total || 0}</td>
+                    <td>${formatDate(r.jbe_startedon)}</td>
+                    <td>${statusBadge(r.jbe_teststatus)}</td>
+                    <td style="color:var(--accent-green)">${r.jbe_passed || 0}</td>
+                    <td style="color:${(r.jbe_failed||0) > 0 ? 'var(--accent-red)' : 'var(--text-muted)'}">${r.jbe_failed || 0}</td>
+                    <td>${r.jbe_total || 0}</td>
                     <td><a href="#run/${id}" class="btn btn-sm">Details</a></td>
                 </tr>`;
             }
@@ -5682,25 +5682,25 @@ async function renderDashboard() {
         const lastRun = runs[0];
         if (lastRun) {
             $("#result-chart").innerHTML = Charts.pie([
-                { label: "Passed", value: lastRun.itt_passed || 0, color: "var(--accent-green)" },
-                { label: "Failed", value: lastRun.itt_failed || 0, color: "var(--accent-red)" },
-                { label: "Skipped", value: Math.max(0, (lastRun.itt_total||0) - (lastRun.itt_passed||0) - (lastRun.itt_failed||0)), color: "var(--text-muted)" }
+                { label: "Passed", value: lastRun.jbe_passed || 0, color: "var(--accent-green)" },
+                { label: "Failed", value: lastRun.jbe_failed || 0, color: "var(--accent-red)" },
+                { label: "Skipped", value: Math.max(0, (lastRun.jbe_total||0) - (lastRun.jbe_passed||0) - (lastRun.jbe_failed||0)), color: "var(--text-muted)" }
             ]);
         }
 
         // Failed tests
-        const results = await API.getMany("itt_testrunresults",
-            "$select=itt_testid,itt_outcome,itt_errormessage,createdon" +
-            "&$filter=itt_outcome eq " + CONFIG.optionSets.outcomeFailed + "&$orderby=createdon desc&$top=10");
+        const results = await API.getMany("jbe_testrunresults",
+            "$select=jbe_testid,jbe_outcome,jbe_errormessage,createdon" +
+            "&$filter=jbe_outcome eq " + CONFIG.optionSets.outcomeFailed + "&$orderby=createdon desc&$top=10");
 
         if (results.length > 0) {
             let fhtml = `<table class="data-table"><thead><tr><th>Test</th><th>${LANG.dash_date}</th><th>${LANG.common_error}</th><th></th></tr></thead><tbody>`;
             for (const r of results) {
                 fhtml += `<tr>
-                    <td><strong>${escapeHtml(r.itt_testid) || "?"}</strong></td>
+                    <td><strong>${escapeHtml(r.jbe_testid) || "?"}</strong></td>
                     <td>${formatDate(r.createdon)}</td>
-                    <td style="color:var(--accent-red);font-size:12px">${escapeHtml((r.itt_errormessage || "").substring(0, 80))}</td>
-                    <td><a href="#history/${escapeHtml(r.itt_testid)}" class="btn btn-sm">Verlauf</a></td>
+                    <td style="color:var(--accent-red);font-size:12px">${escapeHtml((r.jbe_errormessage || "").substring(0, 80))}</td>
+                    <td><a href="#history/${escapeHtml(r.jbe_testid)}" class="btn btn-sm">Verlauf</a></td>
                 </tr>`;
             }
             fhtml += `</tbody></table>`;
@@ -5712,7 +5712,7 @@ async function renderDashboard() {
         // ── Insight: Trend-Sparkline ──────────────────────────
         if (runs.length >= 2) {
             const sparkRuns = runs.slice(0, 10).reverse();
-            const rates = sparkRuns.map(r => r.itt_total > 0 ? Math.round((r.itt_passed || 0) / r.itt_total * 100) : 0);
+            const rates = sparkRuns.map(r => r.jbe_total > 0 ? Math.round((r.jbe_passed || 0) / r.jbe_total * 100) : 0);
             const maxR = 100, minR = 0;
             const svgW = 120, svgH = 40, padY = 4;
             const points = rates.map((v, i) => {
@@ -5730,19 +5730,19 @@ async function renderDashboard() {
 
         // ── Insight: Regressionen ─────────────────────────────
         try {
-            const completedRuns = runs.filter(r => r.itt_teststatus === CONFIG.optionSets.statusCompleted);
+            const completedRuns = runs.filter(r => r.jbe_teststatus === CONFIG.optionSets.statusCompleted);
             if (completedRuns.length >= 2) {
-                const lastRunId = completedRuns[0].itt_testrunid;
-                const prevRunId = completedRuns[1].itt_testrunid;
+                const lastRunId = completedRuns[0].jbe_testrunid;
+                const prevRunId = completedRuns[1].jbe_testrunid;
                 const [lastResults, prevResults] = await Promise.all([
-                    API.getMany("itt_testrunresults", `$select=itt_testid,itt_outcome&$filter=_itt_testrunid_value eq '${lastRunId}'`),
-                    API.getMany("itt_testrunresults", `$select=itt_testid,itt_outcome&$filter=_itt_testrunid_value eq '${prevRunId}'`)
+                    API.getMany("jbe_testrunresults", `$select=jbe_testid,jbe_outcome&$filter=_jbe_testrunid_value eq '${lastRunId}'`),
+                    API.getMany("jbe_testrunresults", `$select=jbe_testid,jbe_outcome&$filter=_jbe_testrunid_value eq '${prevRunId}'`)
                 ]);
-                const prevPassed = new Set(prevResults.filter(r => r.itt_outcome === CONFIG.optionSets.outcomePassed).map(r => r.itt_testid));
-                const regressions = lastResults.filter(r => r.itt_outcome === CONFIG.optionSets.outcomeFailed && prevPassed.has(r.itt_testid));
+                const prevPassed = new Set(prevResults.filter(r => r.jbe_outcome === CONFIG.optionSets.outcomePassed).map(r => r.jbe_testid));
+                const regressions = lastResults.filter(r => r.jbe_outcome === CONFIG.optionSets.outcomeFailed && prevPassed.has(r.jbe_testid));
                 if (regressions.length > 0) {
                     $("#insight-regressions").innerHTML = regressions.map(r =>
-                        `<a href="#history/${escapeHtml(r.itt_testid)}" class="insight-link">${escapeHtml(r.itt_testid)}</a>`
+                        `<a href="#history/${escapeHtml(r.jbe_testid)}" class="insight-link">${escapeHtml(r.jbe_testid)}</a>`
                     ).join("");
                 } else {
                     $("#insight-regressions").innerHTML = `<div style="color:var(--accent-green);font-size:13px">Keine Regressionen</div>`;
@@ -5752,13 +5752,13 @@ async function renderDashboard() {
                 const last5Runs = completedRuns.slice(0, 5);
                 if (last5Runs.length >= 3) {
                     const allResults = await Promise.all(last5Runs.map(r =>
-                        API.getMany("itt_testrunresults", `$select=itt_testid,itt_outcome&$filter=_itt_testrunid_value eq '${r.itt_testrunid}'`)
+                        API.getMany("jbe_testrunresults", `$select=jbe_testid,jbe_outcome&$filter=_jbe_testrunid_value eq '${r.jbe_testrunid}'`)
                     ));
                     const testOutcomes = {};
                     for (const runResults of allResults) {
                         for (const r of runResults) {
-                            if (!testOutcomes[r.itt_testid]) testOutcomes[r.itt_testid] = [];
-                            testOutcomes[r.itt_testid].push(r.itt_outcome);
+                            if (!testOutcomes[r.jbe_testid]) testOutcomes[r.jbe_testid] = [];
+                            testOutcomes[r.jbe_testid].push(r.jbe_outcome);
                         }
                     }
                     const flaky = [];
@@ -5794,7 +5794,7 @@ async function renderDashboard() {
     } catch (err) {
         render(`<div class="card"><div class="card-title">Verbindungsfehler</div>
             <p style="color:var(--accent-red)">${escapeHtml(err.message)}</p>
-            <p style="color:var(--text-secondary);margin-top:8px">The Integration Test Center requires the entities itt_testcase, itt_testrun und itt_testrunresult. If not yet created, the dashboard shows dummy data.</p>
+            <p style="color:var(--text-secondary);margin-top:8px">The Integration Test Center requires the entities jbe_testcase, jbe_testrun und jbe_testrunresult. If not yet created, the dashboard shows dummy data.</p>
             <button class="btn btn-primary" style="margin-top:12px" onclick="renderDashboardDemo()">Demo-Ansicht laden</button></div>`);
     }
 }
@@ -5831,7 +5831,7 @@ window.renderDashboardDemo = function() {
         </div>
     </div>
     <div class="card" style="text-align:center;padding:40px;color:var(--text-secondary)">
-        <p>This is a demo view. The entities (itt_testcase, itt_testrun, itt_testrunresult) must be created in Dataverse first.</p>
+        <p>This is a demo view. The entities (jbe_testcase, jbe_testrun, jbe_testrunresult) must be created in Dataverse first.</p>
         <p style="margin-top:8px">Skript: <code>scripts/Create-TestingEntities.ps1</code></p>
     </div>`);
 };
@@ -5860,9 +5860,9 @@ async function renderTestCases() {
     <div class="card"><div id="cases-table">${LANG.common_loading}</div></div>`);
 
     try {
-        const cases = await API.getMany("itt_testcases",
-            "$select=itt_testid,itt_title,itt_category,itt_tags,itt_enabled,itt_userstories" +
-            "&$orderby=itt_testid asc&$top=500");
+        const cases = await API.getMany("jbe_testcases",
+            "$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_enabled,jbe_userstories" +
+            "&$orderby=jbe_testid asc&$top=500");
         State.testCases = cases;
         renderCasesTable(cases);
 
@@ -5887,19 +5887,19 @@ function filterCases() {
     let filtered = State.testCases;
     if (search) {
         filtered = filtered.filter(c =>
-            (c.itt_testid || "").toLowerCase().includes(search) ||
-            (c.itt_title || "").toLowerCase().includes(search) ||
-            (c.itt_tags || "").toLowerCase().includes(search) ||
-            (c.itt_userstories || "").toLowerCase().includes(search));
+            (c.jbe_testid || "").toLowerCase().includes(search) ||
+            (c.jbe_title || "").toLowerCase().includes(search) ||
+            (c.jbe_tags || "").toLowerCase().includes(search) ||
+            (c.jbe_userstories || "").toLowerCase().includes(search));
     }
-    if (cat) filtered = filtered.filter(c => String(c.itt_category) === cat);
+    if (cat) filtered = filtered.filter(c => String(c.jbe_category) === cat);
     if (story) {
         filtered = filtered.filter(c => {
-            const stories = (c.itt_userstories || "").toUpperCase().split(",").map(s => s.trim());
+            const stories = (c.jbe_userstories || "").toUpperCase().split(",").map(s => s.trim());
             return stories.some(s => s.includes(story));
         });
     }
-    if (activeOnly) filtered = filtered.filter(c => c.itt_enabled !== false);
+    if (activeOnly) filtered = filtered.filter(c => c.jbe_enabled !== false);
 
     renderCasesTable(filtered);
 }
@@ -5934,24 +5934,24 @@ function renderCasesTable(cases) {
     </div>`;
     html += `<table class="data-table"><thead><tr><th style="width:32px"><input type="checkbox" id="cases-select-all" onchange="toggleAllCases(this.checked)"></th><th>${LANG.cases_id}</th><th>${LANG.cases_title}</th><th>${LANG.cases_category}</th><th>${LANG.cases_tags}</th><th>${LANG.cases_stories}</th><th>${LANG.cases_status}</th><th></th></tr></thead><tbody>`;
     for (const c of cases) {
-        const tags = (c.itt_tags || "").split(",").filter(Boolean).map(t => `<span class="tag">${escapeHtml(t.trim())}</span>`).join("");
-        const stories = (c.itt_userstories || "").split(",").filter(Boolean).map(s => {
+        const tags = (c.jbe_tags || "").split(",").filter(Boolean).map(t => `<span class="tag">${escapeHtml(t.trim())}</span>`).join("");
+        const stories = (c.jbe_userstories || "").split(",").filter(Boolean).map(s => {
             const key = escapeHtml(s.trim());
             return `<a href="#stories/${key}" class="tag" style="color:var(--accent-purple);cursor:pointer;text-decoration:none">${key}</a>`;
         }).join("");
-        const status = c.itt_enabled !== false ? `<span class="badge badge-active">Aktiv</span>` : `<span class="badge badge-disabled">Deaktiviert</span>`;
+        const status = c.jbe_enabled !== false ? `<span class="badge badge-active">Aktiv</span>` : `<span class="badge badge-disabled">Deaktiviert</span>`;
         html += `<tr>
-            <td><input type="checkbox" class="case-checkbox" data-testid="${escapeHtml(c.itt_testid)}" onchange="updateCaseSelection()"></td>
-            <td><strong>${escapeHtml(c.itt_testid) || "-"}</strong></td>
-            <td>${escapeHtml(c.itt_title) || "-"}</td>
-            <td>${categoryNames[c.itt_category] || "-"}</td>
+            <td><input type="checkbox" class="case-checkbox" data-testid="${escapeHtml(c.jbe_testid)}" onchange="updateCaseSelection()"></td>
+            <td><strong>${escapeHtml(c.jbe_testid) || "-"}</strong></td>
+            <td>${escapeHtml(c.jbe_title) || "-"}</td>
+            <td>${categoryNames[c.jbe_category] || "-"}</td>
             <td>${tags}</td>
             <td>${stories || "-"}</td>
             <td>${status}</td>
             <td style="white-space:nowrap">
-                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.itt_testid)}',false)" title="Start test run" style="padding:2px 8px">&#9654;</button>
-                <a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a>
-                <a href="/main.aspx?etn=itt_testcase&id=${c.itt_testcaseid}&pagetype=entityrecord" target="_blank" class="btn btn-sm" title="Open in CRM" style="padding:2px 6px;color:var(--accent-blue)">CRM</a>
+                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.jbe_testid)}',false)" title="Start test run" style="padding:2px 8px">&#9654;</button>
+                <a href="#cases/${c.jbe_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a>
+                <a href="/main.aspx?etn=jbe_testcase&id=${c.jbe_testcaseid}&pagetype=entityrecord" target="_blank" class="btn btn-sm" title="Open in CRM" style="padding:2px 6px;color:var(--accent-blue)">CRM</a>
             </td>
         </tr>`;
     }
@@ -5997,19 +5997,19 @@ window.runSingleCase = async function(testId) {
 async function _startRunWithFilter(filter, keepRecords, concurrency) {
     const conc = concurrency || LiveRunState.concurrency || 3;
     const keep = keepRecords !== false; // Default: true (Retain by Default)
-    ITTLog.info("TestRunner", `Testlauf wird erstellt: Filter="${filter}", keepRecords=${keep}, concurrency=${conc}`);
+    JBELog.info("TestRunner", `Testlauf wird erstellt: Filter="${filter}", keepRecords=${keep}, concurrency=${conc}`);
     try {
-        const run = await API.create("itt_testruns", {
-            itt_teststatus: CONFIG.optionSets.statusPlanned,
-            itt_testcasefilter: filter,
-            itt_keeprecords: keep
+        const run = await API.create("jbe_testruns", {
+            jbe_teststatus: CONFIG.optionSets.statusPlanned,
+            jbe_testcasefilter: filter,
+            jbe_keeprecords: keep
         });
-        const runId = run.itt_testrunid;
+        const runId = run.jbe_testrunid;
         LiveRunState.concurrency = conc;
         TestRunner.execute(runId, conc);
         location.hash = `#run/${runId}`;
     } catch (err) {
-        ITTLog.error("TestRunner", "Testlauf konnte nicht erstellt werden: " + err.message);
+        JBELog.error("TestRunner", "Testlauf konnte nicht erstellt werden: " + err.message);
         showError("Testlauf konnte nicht erstellt werden", err.message);
     }
 }
@@ -6068,10 +6068,10 @@ async function renderTestCaseEditor(id) {
     _editorTestId = isNew ? null : id;
 
     if (!isNew) {
-        try { tc = await API.getOne("itt_testcases", id); } catch {}
+        try { tc = await API.getOne("jbe_testcases", id); } catch {}
     }
 
-    const json = tc?.itt_definitionjson || '{\n  "preconditions": [],\n  "steps": [],\n  "assertions": []\n}';
+    const json = tc?.jbe_definitionjson || '{\n  "preconditions": [],\n  "steps": [],\n  "assertions": []\n}';
 
     // For new test cases: show template selection
     if (isNew && !window._veTemplateChosen) {
@@ -6109,42 +6109,42 @@ async function renderTestCaseEditor(id) {
 
     // Render the editor layout: compact metadata row + mode tabs + editor area
     render(`<div style="margin-bottom:16px"><a href="#cases" style="color:var(--accent-blue);text-decoration:none">&larr; Zur\u00fcck zu Testf\u00e4lle</a></div>
-    <h2 style="margin-bottom:16px">${isNew ? "New Test Case" : `${escapeHtml(tc?.itt_testid)}: ${escapeHtml(tc?.itt_title)}`}</h2>
+    <h2 style="margin-bottom:16px">${isNew ? "New Test Case" : `${escapeHtml(tc?.jbe_testid)}: ${escapeHtml(tc?.jbe_title)}`}</h2>
 
     <div class="ve-meta-row">
         <div class="form-group" style="flex:0 0 100px">
             <label class="form-label">Test ID</label>
-            <input class="form-input" id="tc-id" value="${escapeHtml(tc?.itt_testid)}" ${isNew ? '' : 'readonly'} style="width:100px">
+            <input class="form-input" id="tc-id" value="${escapeHtml(tc?.jbe_testid)}" ${isNew ? '' : 'readonly'} style="width:100px">
         </div>
         <div class="form-group" style="flex:1;min-width:150px">
             <label class="form-label">Titel</label>
-            <input class="form-input" id="tc-title" value="${escapeHtml(tc?.itt_title)}">
+            <input class="form-input" id="tc-title" value="${escapeHtml(tc?.jbe_title)}">
         </div>
         <div class="form-group" style="flex:0 0 150px">
             <label class="form-label">Kategorie</label>
             <select class="form-select" id="tc-category" style="width:150px">
                 <option value="">-</option>
-                <option value="${CONFIG.optionSets.catUpdateSource}" ${tc?.itt_category==CONFIG.optionSets.catUpdateSource?'selected':''}>Update Source</option>
-                <option value="${CONFIG.optionSets.catCreateSource}" ${tc?.itt_category==CONFIG.optionSets.catCreateSource?'selected':''}>Create Source</option>
-                <option value="${CONFIG.optionSets.catPISA}" ${tc?.itt_category==CONFIG.optionSets.catPISA?'selected':''}>PISA</option>
-                <option value="${CONFIG.optionSets.catMultiSource}" ${tc?.itt_category==CONFIG.optionSets.catMultiSource?'selected':''}>Multi-Source</option>
-                <option value="${CONFIG.optionSets.catAdditionalFields}" ${tc?.itt_category==CONFIG.optionSets.catAdditionalFields?'selected':''}>Additional Fields</option>
-                <option value="${CONFIG.optionSets.catBridge}" ${tc?.itt_category==CONFIG.optionSets.catBridge?'selected':''}>Bridge</option>
-                <option value="${CONFIG.optionSets.catMerge}" ${tc?.itt_category==CONFIG.optionSets.catMerge?'selected':''}>Merge</option>
-                <option value="${CONFIG.optionSets.catRecompute}" ${tc?.itt_category==CONFIG.optionSets.catRecompute?'selected':''}>Recompute</option>
-                <option value="${CONFIG.optionSets.catErrorInjection}" ${tc?.itt_category==CONFIG.optionSets.catErrorInjection?'selected':''}>Error Injection</option>
+                <option value="${CONFIG.optionSets.catUpdateSource}" ${tc?.jbe_category==CONFIG.optionSets.catUpdateSource?'selected':''}>Update Source</option>
+                <option value="${CONFIG.optionSets.catCreateSource}" ${tc?.jbe_category==CONFIG.optionSets.catCreateSource?'selected':''}>Create Source</option>
+                <option value="${CONFIG.optionSets.catPISA}" ${tc?.jbe_category==CONFIG.optionSets.catPISA?'selected':''}>PISA</option>
+                <option value="${CONFIG.optionSets.catMultiSource}" ${tc?.jbe_category==CONFIG.optionSets.catMultiSource?'selected':''}>Multi-Source</option>
+                <option value="${CONFIG.optionSets.catAdditionalFields}" ${tc?.jbe_category==CONFIG.optionSets.catAdditionalFields?'selected':''}>Additional Fields</option>
+                <option value="${CONFIG.optionSets.catBridge}" ${tc?.jbe_category==CONFIG.optionSets.catBridge?'selected':''}>Bridge</option>
+                <option value="${CONFIG.optionSets.catMerge}" ${tc?.jbe_category==CONFIG.optionSets.catMerge?'selected':''}>Merge</option>
+                <option value="${CONFIG.optionSets.catRecompute}" ${tc?.jbe_category==CONFIG.optionSets.catRecompute?'selected':''}>Recompute</option>
+                <option value="${CONFIG.optionSets.catErrorInjection}" ${tc?.jbe_category==CONFIG.optionSets.catErrorInjection?'selected':''}>Error Injection</option>
             </select>
         </div>
         <div class="form-group" style="flex:0 0 140px">
             <label class="form-label">Tags</label>
-            <input class="form-input" id="tc-tags" value="${escapeHtml(tc?.itt_tags)}" placeholder="kommagetrennt">
+            <input class="form-input" id="tc-tags" value="${escapeHtml(tc?.jbe_tags)}" placeholder="kommagetrennt">
         </div>
         <div class="form-group" style="flex:0 0 140px">
             <label class="form-label">User Stories</label>
-            <input class="form-input" id="tc-userstories" value="${escapeHtml(tc?.itt_userstories)}" placeholder="PROJ-1234">
+            <input class="form-input" id="tc-userstories" value="${escapeHtml(tc?.jbe_userstories)}" placeholder="PROJ-1234">
         </div>
         <div class="form-group" style="flex:0 0 auto;align-self:flex-end">
-            <label class="checkbox-label" style="font-size:12px"><input type="checkbox" id="tc-enabled" ${tc?.itt_enabled !== false ? 'checked' : ''}> Aktiv</label>
+            <label class="checkbox-label" style="font-size:12px"><input type="checkbox" id="tc-enabled" ${tc?.jbe_enabled !== false ? 'checked' : ''}> Aktiv</label>
         </div>
         <div class="form-group" style="flex:0 0 auto;align-self:flex-end">
             <button class="btn btn-primary btn-sm" onclick="saveTestCase('${isNew ? '' : id}')">${LANG.editor_save}</button>
@@ -6290,20 +6290,20 @@ window.saveTestCase = async function(id) {
     }
 
     const data = {
-        itt_testid: $("#tc-id").value,
-        itt_title: $("#tc-title").value,
-        itt_category: parseInt($("#tc-category").value) || null,
-        itt_tags: $("#tc-tags").value,
-        itt_userstories: $("#tc-userstories").value,
-        itt_enabled: $("#tc-enabled").checked,
-        itt_definitionjson: definitionJson
+        jbe_testid: $("#tc-id").value,
+        jbe_title: $("#tc-title").value,
+        jbe_category: parseInt($("#tc-category").value) || null,
+        jbe_tags: $("#tc-tags").value,
+        jbe_userstories: $("#tc-userstories").value,
+        jbe_enabled: $("#tc-enabled").checked,
+        jbe_definitionjson: definitionJson
     };
 
     try {
         if (id) {
-            await API.update("itt_testcases", id, data);
+            await API.update("jbe_testcases", id, data);
         } else {
-            await API.create("itt_testcases", data);
+            await API.create("jbe_testcases", data);
         }
         location.hash = "#cases";
     } catch (err) {
@@ -6330,17 +6330,17 @@ window.saveTestCaseAsCopy = async function(originalId) {
     }
 
     const data = {
-        itt_testid: newId,
-        itt_title: $("#tc-title").value + " (Kopie)",
-        itt_category: parseInt($("#tc-category").value) || null,
-        itt_tags: $("#tc-tags").value,
-        itt_userstories: $("#tc-userstories").value,
-        itt_enabled: $("#tc-enabled").checked,
-        itt_definitionjson: definitionJson
+        jbe_testid: newId,
+        jbe_title: $("#tc-title").value + " (Kopie)",
+        jbe_category: parseInt($("#tc-category").value) || null,
+        jbe_tags: $("#tc-tags").value,
+        jbe_userstories: $("#tc-userstories").value,
+        jbe_enabled: $("#tc-enabled").checked,
+        jbe_definitionjson: definitionJson
     };
 
     try {
-        await API.create("itt_testcases", data);
+        await API.create("jbe_testcases", data);
         alert(`Kopie "${newId}" erfolgreich erstellt.`);
         location.hash = "#cases";
     } catch (err) {
@@ -6420,13 +6420,13 @@ window.startTestRun = async function() {
     $("#btn-start").textContent = "Wird erstellt...";
 
     try {
-        const run = await API.create("itt_testruns", {
-            itt_teststatus: CONFIG.optionSets.statusPlanned,
-            itt_testcasefilter: filter,
-            itt_keeprecords: keepRecords
+        const run = await API.create("jbe_testruns", {
+            jbe_teststatus: CONFIG.optionSets.statusPlanned,
+            jbe_testcasefilter: filter,
+            jbe_keeprecords: keepRecords
         });
 
-        const runId = run.itt_testrunid;
+        const runId = run.jbe_testrunid;
 
         // Execution Engine starten (fire-and-forget, Polling zeigt Fortschritt)
         TestRunner.execute(runId);
@@ -6478,16 +6478,16 @@ async function renderRunDetail(runId) {
 
     // Testfall-Liste initial laden (alle Tests des Testlaufs aus dem Filter)
     try {
-        const run = await API.getOne("itt_testruns", runId, "itt_testcasefilter,itt_teststatus,itt_startedon,itt_total");
-        const filter = run.itt_testcasefilter || "*";
-        LiveRunState.startTime = run.itt_startedon ? new Date(run.itt_startedon).getTime() : Date.now();
+        const run = await API.getOne("jbe_testruns", runId, "jbe_testcasefilter,jbe_teststatus,jbe_startedon,jbe_total");
+        const filter = run.jbe_testcasefilter || "*";
+        LiveRunState.startTime = run.jbe_startedon ? new Date(run.jbe_startedon).getTime() : Date.now();
 
         // Alle Testfälle laden die im Filter enthalten sind
-        const allCases = await API.getMany("itt_testcases",
-            "$select=itt_testid,itt_title,itt_testcaseid&$filter=itt_enabled eq true&$orderby=itt_testid");
+        const allCases = await API.getMany("jbe_testcases",
+            "$select=jbe_testid,jbe_title,jbe_testcaseid&$filter=jbe_enabled eq true&$orderby=jbe_testid");
         const filterIds = filter !== "*" ? filter.split(",").map(s => s.trim()) : null;
         LiveRunState.testCaseList = filterIds
-            ? allCases.filter(tc => filterIds.includes(tc.itt_testid))
+            ? allCases.filter(tc => filterIds.includes(tc.jbe_testid))
             : allCases;
     } catch { /* Filter-Parsing fehlgeschlagen, Polling holt die Daten */ }
 
@@ -6501,15 +6501,15 @@ async function renderRunDetail(runId) {
     window._liveFilterChip = (f) => { LiveRunState.filter = f; _renderFilterChips(); _renderLiveList(runId); };
     window._liveSelectTest = (testId, runId) => { LiveRunState.selectedTestId = testId; LiveRunState._detailHash = ""; _renderLiveList(runId); _renderLiveDetail(runId, testId); };
     window._rerunFailed = async (runId) => {
-        const results = await API.getMany("itt_testrunresults",
-            `$select=itt_testid,itt_outcome&$filter=_itt_testrunid_value eq '${runId}' and itt_outcome eq ${CONFIG.optionSets.outcomeFailed}`);
+        const results = await API.getMany("jbe_testrunresults",
+            `$select=jbe_testid,jbe_outcome&$filter=_jbe_testrunid_value eq '${runId}' and jbe_outcome eq ${CONFIG.optionSets.outcomeFailed}`);
         if (results.length === 0) return;
-        const failedIds = results.map(r => r.itt_testid).join(",");
-        const newRun = await API.create("itt_testruns", {
-            itt_teststatus: CONFIG.optionSets.statusPlanned,
-            itt_testcasefilter: failedIds, itt_keeprecords: false });
-        TestRunner.execute(newRun.itt_testrunid);
-        location.hash = `#run/${newRun.itt_testrunid}`;
+        const failedIds = results.map(r => r.jbe_testid).join(",");
+        const newRun = await API.create("jbe_testruns", {
+            jbe_teststatus: CONFIG.optionSets.statusPlanned,
+            jbe_testcasefilter: failedIds, jbe_keeprecords: false });
+        TestRunner.execute(newRun.jbe_testrunid);
+        location.hash = `#run/${newRun.jbe_testrunid}`;
     };
 }
 
@@ -6530,18 +6530,18 @@ let _liveResultsCache = [];
 
 async function _updateLiveView(runId) {
     try {
-        const run = await API.getOne("itt_testruns", runId,
-            "itt_teststatus,itt_passed,itt_failed,itt_total,itt_startedon,itt_completedon,itt_testsummary,itt_fulllog,itt_testcasefilter,itt_keeprecords");
-        const isActive = run.itt_teststatus === CONFIG.optionSets.statusRunning || run.itt_teststatus === CONFIG.optionSets.statusPlanned;
-        const passed = run.itt_passed || 0;
-        const failed = run.itt_failed || 0;
-        const total = run.itt_total || LiveRunState.testCaseList.length || 0;
+        const run = await API.getOne("jbe_testruns", runId,
+            "jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_completedon,jbe_testsummary,jbe_fulllog,jbe_testcasefilter,jbe_keeprecords");
+        const isActive = run.jbe_teststatus === CONFIG.optionSets.statusRunning || run.jbe_teststatus === CONFIG.optionSets.statusPlanned;
+        const passed = run.jbe_passed || 0;
+        const failed = run.jbe_failed || 0;
+        const total = run.jbe_total || LiveRunState.testCaseList.length || 0;
         const done = passed + failed;
         const pct = total > 0 ? Math.round(done / total * 100) : 0;
 
         // Header
         const statusEl = document.getElementById("live-status-badge");
-        if (statusEl) statusEl.innerHTML = statusBadge(run.itt_teststatus);
+        if (statusEl) statusEl.innerHTML = statusBadge(run.jbe_teststatus);
 
         // Counters
         const cEl = document.getElementById("live-counters");
@@ -6556,8 +6556,8 @@ async function _updateLiveView(runId) {
             const mins = Math.ceil(remaining / 60000);
             etaEl.textContent = mins > 0 ? `~${mins}m verbleibend` : "Gleich fertig...";
         } else if (etaEl && !isActive) {
-            const dur = run.itt_completedon && run.itt_startedon
-                ? Math.round((new Date(run.itt_completedon) - new Date(run.itt_startedon)) / 1000)
+            const dur = run.jbe_completedon && run.jbe_startedon
+                ? Math.round((new Date(run.jbe_completedon) - new Date(run.jbe_startedon)) / 1000)
                 : 0;
             etaEl.textContent = dur > 0 ? `Duration: ${Math.floor(dur/60)}m ${dur%60}s` : "";
         }
@@ -6589,9 +6589,9 @@ async function _updateLiveView(runId) {
 
         // Load results
         try {
-            _liveResultsCache = await API.getMany("itt_testrunresults",
-                `$select=itt_testid,itt_outcome,itt_durationms,itt_errormessage,itt_assertionresults` +
-                `&$filter=_itt_testrunid_value eq '${runId}'&$orderby=itt_testid asc`);
+            _liveResultsCache = await API.getMany("jbe_testrunresults",
+                `$select=jbe_testid,jbe_outcome,jbe_durationms,jbe_errormessage,jbe_assertionresults` +
+                `&$filter=_jbe_testrunid_value eq '${runId}'&$orderby=jbe_testid asc`);
         } catch { /* Results entity might not exist yet */ }
 
         _renderLiveList(runId);
@@ -6599,21 +6599,21 @@ async function _updateLiveView(runId) {
         // Update selected detail nur wenn sich das Ergebnis geaendert hat
         // (verhindert dass Toggle-States beim Polling zurueckgesetzt werden)
         if (LiveRunState.selectedTestId) {
-            const selResult = _liveResultsCache.find(r => r.itt_testid === LiveRunState.selectedTestId);
+            const selResult = _liveResultsCache.find(r => r.jbe_testid === LiveRunState.selectedTestId);
             const prevHash = LiveRunState._detailHash || "";
-            const currHash = selResult ? `${selResult.itt_outcome}_${selResult.itt_durationms}` : "pending";
+            const currHash = selResult ? `${selResult.jbe_outcome}_${selResult.jbe_durationms}` : "pending";
             if (currHash !== prevHash) {
                 LiveRunState._detailHash = currHash;
                 // Steps-Cache invalidieren bei Ergebnis-Aenderung
-                if (selResult?.itt_testrunresultid) delete _detailStepsCache[selResult.itt_testrunresultid];
+                if (selResult?.jbe_testrunresultid) delete _detailStepsCache[selResult.jbe_testrunresultid];
                 _renderLiveDetail(runId, LiveRunState.selectedTestId);
             }
         }
 
         // Log
         const logEl = document.getElementById("run-log");
-        if (logEl && run.itt_fulllog) {
-            logEl.innerHTML = run.itt_fulllog
+        if (logEl && run.jbe_fulllog) {
+            logEl.innerHTML = run.jbe_fulllog
                 .replace(/&/g, "&amp;").replace(/</g, "&lt;")
                 .replace(/\[([\d:\.]+)\]/g, '<span class="log-time">[$1]</span>')
                 .replace(/(BESTANDEN|Passed|OK:)/g, '<span class="log-ok">$1</span>')
@@ -6639,16 +6639,16 @@ function _renderLiveList(runId) {
     if (!container) return;
 
     const resultMap = {};
-    for (const r of _liveResultsCache) resultMap[r.itt_testid] = r;
+    for (const r of _liveResultsCache) resultMap[r.jbe_testid] = r;
 
     // Alle Tests: aus testCaseList (vollständig) oder aus results (falls Liste leer)
     let allTests = LiveRunState.testCaseList.length > 0
-        ? LiveRunState.testCaseList.map(tc => ({ id: tc.itt_testid, result: resultMap[tc.itt_testid] || null }))
-        : _liveResultsCache.map(r => ({ id: r.itt_testid, result: r }));
+        ? LiveRunState.testCaseList.map(tc => ({ id: tc.jbe_testid, result: resultMap[tc.jbe_testid] || null }))
+        : _liveResultsCache.map(r => ({ id: r.jbe_testid, result: r }));
 
     // Filter anwenden
-    if (LiveRunState.filter === "passed") allTests = allTests.filter(t => t.result?.itt_outcome === CONFIG.optionSets.outcomePassed);
-    else if (LiveRunState.filter === "failed") allTests = allTests.filter(t => t.result?.itt_outcome === CONFIG.optionSets.outcomeFailed);
+    if (LiveRunState.filter === "passed") allTests = allTests.filter(t => t.result?.jbe_outcome === CONFIG.optionSets.outcomePassed);
+    else if (LiveRunState.filter === "failed") allTests = allTests.filter(t => t.result?.jbe_outcome === CONFIG.optionSets.outcomeFailed);
     else if (LiveRunState.filter === "running") allTests = allTests.filter(t => !t.result);
 
     // Suche
@@ -6672,20 +6672,20 @@ function _renderLiveList(runId) {
             subText = dotClass === "running" ? "Governance polling..." : "";
             subClass = dotClass === "running" ? "running-hint" : "";
             durText = "";
-        } else if (r.itt_outcome === CONFIG.optionSets.outcomePassed) {
+        } else if (r.jbe_outcome === CONFIG.optionSets.outcomePassed) {
             dotClass = "passed";
             statusText = "";
             subText = "";
             subClass = "";
-            durText = formatDuration(r.itt_durationms);
+            durText = formatDuration(r.jbe_durationms);
         } else {
             dotClass = "failed";
             statusText = "";
             // Erste Fehlerzeile als Subtext
-            const errMsg = _parseDataverseError(r.itt_errormessage || "").message;
+            const errMsg = _parseDataverseError(r.jbe_errormessage || "").message;
             subText = errMsg.length > 60 ? errMsg.substring(0, 57) + "..." : errMsg;
             subClass = "error-hint";
-            durText = formatDuration(r.itt_durationms);
+            durText = formatDuration(r.jbe_durationms);
         }
 
         const selected = LiveRunState.selectedTestId === t.id ? " selected" : "";
@@ -6804,7 +6804,7 @@ async function _renderLiveDetail(runId, testId) {
     const container = document.getElementById("live-detail");
     if (!container) return;
 
-    const result = _liveResultsCache.find(r => r.itt_testid === testId);
+    const result = _liveResultsCache.find(r => r.jbe_testid === testId);
 
     if (!result) {
         container.innerHTML = `<div class="live-detail-header"><h3>${escapeHtml(testId)}</h3><span class="badge badge-running">Ausstehend</span></div>
@@ -6812,25 +6812,25 @@ async function _renderLiveDetail(runId, testId) {
         return;
     }
 
-    const isPassed = result.itt_outcome === CONFIG.optionSets.outcomePassed;
+    const isPassed = result.jbe_outcome === CONFIG.optionSets.outcomePassed;
     const badge = isPassed ? '<span class="badge badge-passed">Passed</span>' : '<span class="badge badge-failed">Failed</span>';
-    const dur = formatDuration(result.itt_durationms);
+    const dur = formatDuration(result.jbe_durationms);
 
     // Assertions parsen
     let assertions = [];
-    try { assertions = JSON.parse(result.itt_assertionresults || "[]"); } catch {}
+    try { assertions = JSON.parse(result.jbe_assertionresults || "[]"); } catch {}
 
     // Steps laden (mit Cache)
     let steps = [];
-    if (result.itt_testrunresultid) {
-        if (_detailStepsCache[result.itt_testrunresultid]) {
-            steps = _detailStepsCache[result.itt_testrunresultid];
+    if (result.jbe_testrunresultid) {
+        if (_detailStepsCache[result.jbe_testrunresultid]) {
+            steps = _detailStepsCache[result.jbe_testrunresultid];
         } else {
             try {
-                steps = await API.getMany("itt_teststeps",
-                    `$filter=_itt_testrunresultid_value eq '${result.itt_testrunresultid}'&$orderby=itt_stepnumber asc` +
-                    `&$select=itt_teststepid,itt_stepnumber,itt_phase,itt_action,itt_entity,itt_alias,itt_durationms,itt_stepstatus,itt_errormessage,itt_inputdata,itt_outputdata,itt_assertionfield,itt_expectedvalue,itt_actualvalue,itt_recordid,itt_recordurl`);
-                _detailStepsCache[result.itt_testrunresultid] = steps;
+                steps = await API.getMany("jbe_teststeps",
+                    `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'&$orderby=jbe_stepnumber asc` +
+                    `&$select=jbe_teststepid,jbe_stepnumber,jbe_phase,jbe_action,jbe_entity,jbe_alias,jbe_durationms,jbe_stepstatus,jbe_errormessage,jbe_inputdata,jbe_outputdata,jbe_assertionfield,jbe_expectedvalue,jbe_actualvalue,jbe_recordid,jbe_recordurl`);
+                _detailStepsCache[result.jbe_testrunresultid] = steps;
             } catch { /* Steps might not exist yet */ }
         }
     }
@@ -6839,8 +6839,8 @@ async function _renderLiveDetail(runId, testId) {
     let testCase = _detailTestCaseCache[testId];
     if (!testCase) {
         try {
-            const cases = await API.getMany("itt_testcases",
-                `$filter=itt_testid eq '${testId}'&$select=itt_testid,itt_title,itt_category,itt_tags,itt_userstories,itt_definitionjson&$top=1`);
+            const cases = await API.getMany("jbe_testcases",
+                `$filter=jbe_testid eq '${testId}'&$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_userstories,jbe_definitionjson&$top=1`);
             if (cases.length > 0) {
                 testCase = cases[0];
                 _detailTestCaseCache[testId] = testCase;
@@ -6854,9 +6854,9 @@ async function _renderLiveDetail(runId, testId) {
     // Pruefen ob Governance-Steps vorhanden
     let hasGovernance = false;
     for (const s of steps) {
-        if (s.itt_inputdata) {
+        if (s.jbe_inputdata) {
             try {
-                const inp = JSON.parse(s.itt_inputdata);
+                const inp = JSON.parse(s.jbe_inputdata);
                 if (inp.waitForAsync) { hasGovernance = true; break; }
             } catch {}
         }
@@ -6865,22 +6865,22 @@ async function _renderLiveDetail(runId, testId) {
     // Phase-Summary berechnen
     const phaseSummary = {};
     for (const s of steps) {
-        const pName = phaseNames[s.itt_phase] || "Sonstige";
+        const pName = phaseNames[s.jbe_phase] || "Sonstige";
         if (!phaseSummary[pName]) phaseSummary[pName] = { total: 0, ok: 0, dur: 0 };
         phaseSummary[pName].total++;
-        if (s.itt_stepstatus === 105710000) phaseSummary[pName].ok++;
-        phaseSummary[pName].dur += (s.itt_durationms || 0);
+        if (s.jbe_stepstatus === 105710000) phaseSummary[pName].ok++;
+        phaseSummary[pName].dur += (s.jbe_durationms || 0);
     }
 
     // Governance-Dauer separat berechnen
     let govTotalPolls = 0;
     let govTotalDur = 0;
     for (const s of steps) {
-        if (!s.itt_inputdata) continue;
+        if (!s.jbe_inputdata) continue;
         try {
-            const inp = JSON.parse(s.itt_inputdata);
+            const inp = JSON.parse(s.jbe_inputdata);
             if (!inp.waitForAsync) continue;
-            const out = s.itt_outputdata ? JSON.parse(s.itt_outputdata) : {};
+            const out = s.jbe_outputdata ? JSON.parse(s.jbe_outputdata) : {};
             if (out.governanceLog) {
                 govTotalPolls += (out.governanceLog.polls || 0);
                 govTotalDur += (out.governanceLog.duration || 0);
@@ -6924,25 +6924,25 @@ async function _renderLiveDetail(runId, testId) {
     html += `<div class="detail-result-card">`;
     html += `<div class="result-badge ${isPassed ? 'passed' : 'failed'}">${isPassed ? 'PASSED' : 'FAILED'}</div>`;
     html += `<div class="result-duration">${dur}</div>`;
-    if (!isPassed && result.itt_errormessage) {
-        const shortErr = (result.itt_errormessage || "").substring(0, 120);
+    if (!isPassed && result.jbe_errormessage) {
+        const shortErr = (result.jbe_errormessage || "").substring(0, 120);
         html += `<div class="result-error">${escapeHtml(shortErr)}</div>`;
     }
     html += `</div>`;
 
     // Rechts: Metadaten-Card
     html += `<div class="detail-meta-card">`;
-    html += `<h4>${escapeHtml(testCase?.itt_title || testId)}</h4>`;
-    if (testCase?.itt_category != null) {
-        const catName = catNames[testCase.itt_category] || String(testCase.itt_category);
+    html += `<h4>${escapeHtml(testCase?.jbe_title || testId)}</h4>`;
+    if (testCase?.jbe_category != null) {
+        const catName = catNames[testCase.jbe_category] || String(testCase.jbe_category);
         html += `<div class="meta-row"><span class="meta-label">Kategorie</span><span class="tag-chip">${escapeHtml(catName)}</span></div>`;
     }
-    if (testCase?.itt_tags) {
-        const tags = testCase.itt_tags.split(",").filter(Boolean).map(t => `<span class="tag-chip">${escapeHtml(t.trim())}</span>`).join("");
+    if (testCase?.jbe_tags) {
+        const tags = testCase.jbe_tags.split(",").filter(Boolean).map(t => `<span class="tag-chip">${escapeHtml(t.trim())}</span>`).join("");
         html += `<div class="meta-row"><span class="meta-label">Tags</span><span>${tags}</span></div>`;
     }
-    if (testCase?.itt_userstories) {
-        const stories = testCase.itt_userstories.split(",").filter(Boolean).map(s => {
+    if (testCase?.jbe_userstories) {
+        const stories = testCase.jbe_userstories.split(",").filter(Boolean).map(s => {
             const key = s.trim();
             if (CONFIG.storyLinkPattern) {
                 const url = CONFIG.storyLinkPattern.replace("{key}", encodeURIComponent(key));
@@ -6985,8 +6985,8 @@ async function _renderLiveDetail(runId, testId) {
     html += `<div class="detail-actions">`;
     html += `<button class="btn btn-sm" onclick="_detailRerunTest('${escapeHtml(testId)}')" style="border:1px solid var(--accent-blue);color:var(--accent-blue)">Erneut starten</button>`;
     html += `<button class="btn btn-sm" onclick="_detailGoToRaw()" style="border:1px solid var(--text-muted);color:var(--text-secondary)">Definition anzeigen</button>`;
-    if (result?.itt_testrunresultid) {
-        html += `<button class="btn btn-sm" onclick="_cleanupTestRecords('${result.itt_testrunresultid}', this)" style="color:var(--text-muted);border:1px solid var(--border);font-size:11px" title="Delete test data from Dataverse">Delete test data</button>`;
+    if (result?.jbe_testrunresultid) {
+        html += `<button class="btn btn-sm" onclick="_cleanupTestRecords('${result.jbe_testrunresultid}', this)" style="color:var(--text-muted);border:1px solid var(--border);font-size:11px" title="Delete test data from Dataverse">Delete test data</button>`;
     }
     html += `</div>`;
     html += `</div>`; // /dtab-overview
@@ -6998,7 +6998,7 @@ async function _renderLiveDetail(runId, testId) {
 
     if (steps.length > 0) {
         // Timeline-Balken (SVG)
-        const totalDur = steps.reduce((sum, s) => sum + (s.itt_durationms || 1), 0);
+        const totalDur = steps.reduce((sum, s) => sum + (s.jbe_durationms || 1), 0);
         html += `<div class="timeline-bar" style="position:relative">`;
         html += `<svg width="100%" height="32" preserveAspectRatio="none" viewBox="0 0 1000 32">`;
         let xPos = 0;
@@ -7007,13 +7007,13 @@ async function _renderLiveDetail(runId, testId) {
         let currentPhase = null;
         let segDur = 0;
         for (const s of steps) {
-            const pName = phaseNames[s.itt_phase] || "Sonstige";
+            const pName = phaseNames[s.jbe_phase] || "Sonstige";
             if (pName !== currentPhase) {
                 if (currentPhase) phaseSegments.push({ phase: currentPhase, dur: segDur });
                 currentPhase = pName;
                 segDur = 0;
             }
-            segDur += (s.itt_durationms || 1);
+            segDur += (s.jbe_durationms || 1);
         }
         if (currentPhase) phaseSegments.push({ phase: currentPhase, dur: segDur });
 
@@ -7031,9 +7031,9 @@ async function _renderLiveDetail(runId, testId) {
             let govW = 0;
             let runningDur = 0;
             for (const s of steps) {
-                const sDur = s.itt_durationms || 1;
+                const sDur = s.jbe_durationms || 1;
                 let isGov = false;
-                try { const inp = JSON.parse(s.itt_inputdata || "{}"); isGov = !!inp.waitForAsync; } catch {}
+                try { const inp = JSON.parse(s.jbe_inputdata || "{}"); isGov = !!inp.waitForAsync; } catch {}
                 if (isGov && govW === 0) govX = (runningDur / totalDur) * 1000;
                 if (isGov) govW += (sDur / totalDur) * 1000;
                 runningDur += sDur;
@@ -7048,7 +7048,7 @@ async function _renderLiveDetail(runId, testId) {
         // Gruppierte Step-Liste
         const grouped = {};
         for (const s of steps) {
-            const pName = phaseNames[s.itt_phase] || "Sonstige";
+            const pName = phaseNames[s.jbe_phase] || "Sonstige";
             if (!grouped[pName]) grouped[pName] = [];
             grouped[pName].push(s);
         }
@@ -7057,8 +7057,8 @@ async function _renderLiveDetail(runId, testId) {
         for (const gName of groupOrder) {
             const gSteps = grouped[gName];
             if (!gSteps || gSteps.length === 0) continue;
-            const gOk = gSteps.filter(s => s.itt_stepstatus === 105710000).length;
-            const gDur = gSteps.reduce((sum, s) => sum + (s.itt_durationms || 0), 0);
+            const gOk = gSteps.filter(s => s.jbe_stepstatus === 105710000).length;
+            const gDur = gSteps.reduce((sum, s) => sum + (s.jbe_durationms || 0), 0);
             const allOk = gOk === gSteps.length;
 
             html += `<div class="step-group">`;
@@ -7069,38 +7069,38 @@ async function _renderLiveDetail(runId, testId) {
             html += `<div class="step-group-body">`;
 
             for (const s of gSteps) {
-                const iconCls = s.itt_stepstatus === 105710000 ? "ok" : s.itt_stepstatus === 105710001 ? "fail" : "skip";
+                const iconCls = s.jbe_stepstatus === 105710000 ? "ok" : s.jbe_stepstatus === 105710001 ? "fail" : "skip";
                 const iconChar = iconCls === "ok" ? "&#10004;" : iconCls === "fail" ? "&#10008;" : "-";
-                const durStr = s.itt_durationms ? (s.itt_durationms / 1000).toFixed(1) + "s" : "";
-                const entityDisplay = s.itt_entity ? s.itt_entity.replace(/^\w+_/, "") : "";
-                const aliasDisplay = s.itt_alias ? " (" + escapeHtml(s.itt_alias) + ")" : "";
+                const durStr = s.jbe_durationms ? (s.jbe_durationms / 1000).toFixed(1) + "s" : "";
+                const entityDisplay = s.jbe_entity ? s.jbe_entity.replace(/^\w+_/, "") : "";
+                const aliasDisplay = s.jbe_alias ? " (" + escapeHtml(s.jbe_alias) + ")" : "";
 
                 html += `<div class="step-row step-row-expandable" onclick="_toggleStepExpand(this)">`;
                 html += `<span class="step-icon ${iconCls}">${iconChar}</span>`;
-                html += `<span style="color:var(--text-muted);font-size:11px;width:24px">#${s.itt_stepnumber || ""}</span>`;
-                html += `<span class="step-action">${escapeHtml(s.itt_action) || phaseNames[s.itt_phase] || "?"}</span>`;
+                html += `<span style="color:var(--text-muted);font-size:11px;width:24px">#${s.jbe_stepnumber || ""}</span>`;
+                html += `<span class="step-action">${escapeHtml(s.jbe_action) || phaseNames[s.jbe_phase] || "?"}</span>`;
                 html += `<span class="step-entity">${escapeHtml(entityDisplay)}${aliasDisplay}</span>`;
-                if (s.itt_recordurl && s.itt_recordid) {
-                    html += `<a href="${escapeHtml(s.itt_recordurl)}" target="_blank" title="Open created/updated record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;
+                if (s.jbe_recordurl && s.jbe_recordid) {
+                    html += `<a href="${escapeHtml(s.jbe_recordurl)}" target="_blank" title="Open created/updated record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;
                 }
-                if (s.itt_teststepid) {
-                    html += `<a href="/main.aspx?etn=itt_teststep&id=${s.itt_teststepid}&pagetype=entityrecord" target="_blank" title="Open step record in CRM" style="color:var(--text-muted);font-size:10px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">step</a>`;
+                if (s.jbe_teststepid) {
+                    html += `<a href="/main.aspx?etn=jbe_teststep&id=${s.jbe_teststepid}&pagetype=entityrecord" target="_blank" title="Open step record in CRM" style="color:var(--text-muted);font-size:10px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">step</a>`;
                 }
                 html += `<span class="step-dur">${durStr}</span>`;
                 html += `</div>`;
 
                 // Expandierbarer Inhalt (initial versteckt)
                 html += `<div class="step-expand-content" style="display:none">`;
-                if (s.itt_inputdata) {
+                if (s.jbe_inputdata) {
                     try {
-                        const input = JSON.parse(s.itt_inputdata);
+                        const input = JSON.parse(s.jbe_inputdata);
                         const inputStr = JSON.stringify(input, null, 2);
                         html += `<div style="margin-bottom:4px;color:var(--text-muted)">Input:</div><pre>${escapeHtml(inputStr.substring(0, 500))}</pre>`;
                     } catch {}
                 }
-                if (s.itt_outputdata) {
+                if (s.jbe_outputdata) {
                     try {
-                        const output = JSON.parse(s.itt_outputdata);
+                        const output = JSON.parse(s.jbe_outputdata);
                         const outStr = JSON.stringify(output, null, 2);
                         html += `<div style="margin-bottom:4px;color:var(--text-muted)">Output:</div><pre>${escapeHtml(outStr.substring(0, 500))}</pre>`;
                         // Governance-Info
@@ -7110,16 +7110,16 @@ async function _renderLiveDetail(runId, testId) {
                             if (gl.logName) html += `<div style="color:var(--accent-purple)">CDH-Log: ${escapeHtml(gl.logName)}</div>`;
                         }
                         if (output.recordId) {
-                            if (s.itt_recordurl) {
-                                html += `<div style="margin-top:4px"><a href="${escapeHtml(s.itt_recordurl)}" target="_blank" style="color:var(--accent-blue);text-decoration:none">Open in CRM: ${escapeHtml(output.recordId)}</a></div>`;
+                            if (s.jbe_recordurl) {
+                                html += `<div style="margin-top:4px"><a href="${escapeHtml(s.jbe_recordurl)}" target="_blank" style="color:var(--accent-blue);text-decoration:none">Open in CRM: ${escapeHtml(output.recordId)}</a></div>`;
                             } else {
                                 html += `<div style="margin-top:4px;color:var(--text-muted)">Record-ID: ${escapeHtml(output.recordId)}</div>`;
                             }
                         }
                     } catch {}
                 }
-                if (s.itt_errormessage) {
-                    html += `<div style="margin-top:4px;color:var(--accent-red)">${escapeHtml(_parseDataverseError(s.itt_errormessage).message)}</div>`;
+                if (s.jbe_errormessage) {
+                    html += `<div style="margin-top:4px;color:var(--accent-red)">${escapeHtml(_parseDataverseError(s.jbe_errormessage).message)}</div>`;
                 }
                 html += `</div>`; // /step-expand-content
             }
@@ -7174,17 +7174,17 @@ async function _renderLiveDetail(runId, testId) {
 
         let govCycleIdx = 0;
         for (const s of steps) {
-            if (!s.itt_inputdata) continue;
+            if (!s.jbe_inputdata) continue;
             let inp;
-            try { inp = JSON.parse(s.itt_inputdata); } catch { continue; }
+            try { inp = JSON.parse(s.jbe_inputdata); } catch { continue; }
             if (!inp.waitForAsync) continue;
 
             govCycleIdx++;
-            const actionLabel = s.itt_action || "Step";
-            const aliasLabel = s.itt_alias || "";
+            const actionLabel = s.jbe_action || "Step";
+            const aliasLabel = s.jbe_alias || "";
 
             let output = {};
-            try { output = JSON.parse(s.itt_outputdata || "{}"); } catch {}
+            try { output = JSON.parse(s.jbe_outputdata || "{}"); } catch {}
 
             const gl = output.governanceLog || {};
             const polls = gl.polls || output.polls || 0;
@@ -7242,12 +7242,12 @@ async function _renderLiveDetail(runId, testId) {
     // Test-Definition JSON
     html += `<div class="raw-section">`;
     html += `<h4>Test-Definition</h4>`;
-    if (testCase?.itt_definitionjson) {
+    if (testCase?.jbe_definitionjson) {
         try {
-            const defObj = JSON.parse(testCase.itt_definitionjson);
+            const defObj = JSON.parse(testCase.jbe_definitionjson);
             html += `<div class="raw-json">${escapeHtml(JSON.stringify(defObj, null, 2))}</div>`;
         } catch {
-            html += `<div class="raw-json">${escapeHtml(testCase.itt_definitionjson)}</div>`;
+            html += `<div class="raw-json">${escapeHtml(testCase.jbe_definitionjson)}</div>`;
         }
     } else {
         html += `<div style="color:var(--text-muted);font-size:12px">No definition available.</div>`;
@@ -7261,14 +7261,14 @@ async function _renderLiveDetail(runId, testId) {
         html += `<table style="width:100%;font-size:11px;border-collapse:collapse;font-family:var(--mono)">`;
         html += `<thead><tr><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">#</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Aktion</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Entity</th><th style="text-align:left;padding:2px 6px;color:var(--text-muted)">Status</th><th style="text-align:right;padding:2px 6px;color:var(--text-muted)">Dauer</th></tr></thead><tbody>`;
         for (const s of steps) {
-            const statusLabel = s.itt_stepstatus === 105710000 ? "OK" : s.itt_stepstatus === 105710001 ? "FAIL" : "SKIP";
-            const statusColor = s.itt_stepstatus === 105710000 ? "var(--accent-green)" : s.itt_stepstatus === 105710001 ? "var(--accent-red)" : "var(--text-muted)";
+            const statusLabel = s.jbe_stepstatus === 105710000 ? "OK" : s.jbe_stepstatus === 105710001 ? "FAIL" : "SKIP";
+            const statusColor = s.jbe_stepstatus === 105710000 ? "var(--accent-green)" : s.jbe_stepstatus === 105710001 ? "var(--accent-red)" : "var(--text-muted)";
             html += `<tr>`;
-            html += `<td style="padding:2px 6px">${s.itt_stepnumber || ""}</td>`;
-            html += `<td style="padding:2px 6px">${escapeHtml(s.itt_action || "")}</td>`;
-            html += `<td style="padding:2px 6px">${escapeHtml((s.itt_entity || "").replace(/^\w+_/, ""))}</td>`;
+            html += `<td style="padding:2px 6px">${s.jbe_stepnumber || ""}</td>`;
+            html += `<td style="padding:2px 6px">${escapeHtml(s.jbe_action || "")}</td>`;
+            html += `<td style="padding:2px 6px">${escapeHtml((s.jbe_entity || "").replace(/^\w+_/, ""))}</td>`;
             html += `<td style="padding:2px 6px;color:${statusColor}">${statusLabel}</td>`;
-            html += `<td style="padding:2px 6px;text-align:right">${s.itt_durationms ? (s.itt_durationms / 1000).toFixed(1) + "s" : ""}</td>`;
+            html += `<td style="padding:2px 6px;text-align:right">${s.jbe_durationms ? (s.jbe_durationms / 1000).toFixed(1) + "s" : ""}</td>`;
             html += `</tr>`;
         }
         html += `</tbody></table>`;
@@ -7276,10 +7276,10 @@ async function _renderLiveDetail(runId, testId) {
     }
 
     // Fehler-Dump
-    if (!isPassed && result.itt_errormessage) {
+    if (!isPassed && result.jbe_errormessage) {
         html += `<div class="raw-section">`;
         html += `<h4>Fehler-Dump</h4>`;
-        html += `<div class="raw-json" style="color:var(--accent-red)">${escapeHtml(result.itt_errormessage)}</div>`;
+        html += `<div class="raw-json" style="color:var(--accent-red)">${escapeHtml(result.jbe_errormessage)}</div>`;
         html += `</div>`;
     }
 
@@ -7300,22 +7300,22 @@ async function _renderLiveDetail(runId, testId) {
 }
 
 // Cleanup test records for a run (keeprecords=true -> manual cleanup)
-// Einzeltest-Cleanup via itt_trackedrecords (oder Fallback Steps)
+// Einzeltest-Cleanup via jbe_trackedrecords (oder Fallback Steps)
 window._cleanupTestRecords = async function(resultId, btn) {
     if (!confirm("Delete test data for this test?")) return;
     if (btn) { btn.disabled = true; btn.textContent = "Delete..."; }
     try {
-        // Versuche zuerst tracked records aus itt_trackedrecords
-        const result = await API.getOne("itt_testrunresults", resultId, "itt_trackedrecords");
+        // Versuche zuerst tracked records aus jbe_trackedrecords
+        const result = await API.getOne("jbe_testrunresults", resultId, "jbe_trackedrecords");
         let records = [];
-        try { records = JSON.parse(result?.itt_trackedrecords || "[]"); } catch {}
+        try { records = JSON.parse(result?.jbe_trackedrecords || "[]"); } catch {}
 
         if (records.length === 0) {
             // Fallback: aus Steps lesen
-            const steps = await API.getMany("itt_teststeps",
-                `$filter=_itt_testrunresultid_value eq '${resultId}' and itt_recordid ne null and itt_recordid ne ''&$select=itt_entity,itt_recordid,itt_action&$orderby=itt_stepnumber desc`);
-            records = steps.filter(s => s.itt_action !== "DeleteRecord" && s.itt_recordid && s.itt_entity)
-                .map(s => ({ entity: s.itt_entity, id: s.itt_recordid }));
+            const steps = await API.getMany("jbe_teststeps",
+                `$filter=_jbe_testrunresultid_value eq '${resultId}' and jbe_recordid ne null and jbe_recordid ne ''&$select=jbe_entity,jbe_recordid,jbe_action&$orderby=jbe_stepnumber desc`);
+            records = steps.filter(s => s.jbe_action !== "DeleteRecord" && s.jbe_recordid && s.jbe_entity)
+                .map(s => ({ entity: s.jbe_entity, id: s.jbe_recordid }));
         }
 
         let deleted = 0;
@@ -7326,11 +7326,11 @@ window._cleanupTestRecords = async function(resultId, btn) {
                 deleted++;
                 if (btn) btn.textContent = `${deleted}/${records.length} deleted...`;
             } catch (e) {
-                ITTLog.warn("Cleanup", `  ${rec.entity} ${rec.id}: ${e.message}`);
+                JBELog.warn("Cleanup", `  ${rec.entity} ${rec.id}: ${e.message}`);
             }
         }
         // Tracked records leeren
-        try { await API.update("itt_testrunresults", resultId, { itt_trackedrecords: "[]" }); } catch {}
+        try { await API.update("jbe_testrunresults", resultId, { jbe_trackedrecords: "[]" }); } catch {}
         if (btn) { btn.textContent = `${deleted} records deleted`; btn.style.color = "var(--accent-green)"; }
     } catch (err) {
         if (btn) { btn.textContent = "Error: " + err.message; btn.style.color = "var(--accent-red)"; }
@@ -7339,31 +7339,31 @@ window._cleanupTestRecords = async function(resultId, btn) {
 
 window.cleanupRunRecords = async function(runId) {
     if (!confirm("Alle Testdaten dieses Laufs cleanup?")) return;
-    ITTLog.info("Cleanup", `Manual cleanup for run ${runId}`);
+    JBELog.info("Cleanup", `Manual cleanup for run ${runId}`);
     try {
         // Lade alle Steps mit RecordIds
-        const results = await API.getMany("itt_testrunresults",
-            `$filter=_itt_testrunid_value eq '${runId}'&$select=itt_testrunresultid`);
+        const results = await API.getMany("jbe_testrunresults",
+            `$filter=_jbe_testrunid_value eq '${runId}'&$select=jbe_testrunresultid`);
         let deleted = 0;
         for (const r of results) {
-            const steps = await API.getMany("itt_teststeps",
-                `$filter=_itt_testrunresultid_value eq '${r.itt_testrunresultid}' and itt_recordid ne null and itt_recordid ne ''&$select=itt_entity,itt_recordid,itt_action&$orderby=itt_stepnumber desc`);
+            const steps = await API.getMany("jbe_teststeps",
+                `$filter=_jbe_testrunresultid_value eq '${r.jbe_testrunresultid}' and jbe_recordid ne null and jbe_recordid ne ''&$select=jbe_entity,jbe_recordid,jbe_action&$orderby=jbe_stepnumber desc`);
             for (const s of steps) {
-                if (s.itt_action === "DeleteRecord" || !s.itt_recordid || !s.itt_entity) continue;
+                if (s.jbe_action === "DeleteRecord" || !s.jbe_recordid || !s.jbe_entity) continue;
                 try {
-                    await API.del(s.itt_entity, s.itt_recordid);
-                    ITTLog.info("Cleanup", `  Deleted: ${s.itt_entity} ${s.itt_recordid}`);
+                    await API.del(s.jbe_entity, s.jbe_recordid);
+                    JBELog.info("Cleanup", `  Deleted: ${s.jbe_entity} ${s.jbe_recordid}`);
                     deleted++;
                 } catch (e) {
-                    ITTLog.warn("Cleanup", `  Error: ${s.itt_entity} ${s.itt_recordid} - ${e.message}`);
+                    JBELog.warn("Cleanup", `  Error: ${s.jbe_entity} ${s.jbe_recordid} - ${e.message}`);
                 }
             }
         }
         // Update Run: keeprecords auf false setzen
-        await API.update("itt_testruns", runId, { itt_keeprecords: false });
+        await API.update("jbe_testruns", runId, { jbe_keeprecords: false });
         const bar = document.getElementById("run-cleanup-bar");
         if (bar) bar.innerHTML = `<span style="color:var(--accent-green);font-size:13px">${deleted} Testdaten-Records cleaned up.</span>`;
-        ITTLog.info("Cleanup", `Fertig: ${deleted} records deleted`);
+        JBELog.info("Cleanup", `Fertig: ${deleted} records deleted`);
     } catch (err) {
         showError("Cleanup fehlgeschlagen", err.message);
     }
@@ -7376,20 +7376,20 @@ window.showTestFlow = async function(testId, runId) {
 
     try {
         // Load the test case definition
-        const cases = await API.getMany("itt_testcases",
-            `$select=itt_testid,itt_definitionjson&$filter=itt_testid eq '${testId}'&$top=1`);
+        const cases = await API.getMany("jbe_testcases",
+            `$select=jbe_testid,jbe_definitionjson&$filter=jbe_testid eq '${testId}'&$top=1`);
 
         // Load the assertion results for this test in this run
-        const results = await API.getMany("itt_testrunresults",
-            `$select=itt_assertionresults&$filter=itt_testid eq '${testId}' and _itt_testrunid_value eq '${runId}'&$top=1`);
+        const results = await API.getMany("jbe_testrunresults",
+            `$select=jbe_assertionresults&$filter=jbe_testid eq '${testId}' and _jbe_testrunid_value eq '${runId}'&$top=1`);
 
-        if (cases.length > 0 && cases[0].itt_definitionjson) {
+        if (cases.length > 0 && cases[0].jbe_definitionjson) {
             let assertionResults = null;
-            if (results.length > 0 && results[0].itt_assertionresults) {
-                try { assertionResults = JSON.parse(results[0].itt_assertionresults); } catch {}
+            if (results.length > 0 && results[0].jbe_assertionresults) {
+                try { assertionResults = JSON.parse(results[0].jbe_assertionresults); } catch {}
             }
 
-            const nodes = FlowViz.parseDefinition(cases[0].itt_definitionjson, assertionResults);
+            const nodes = FlowViz.parseDefinition(cases[0].jbe_definitionjson, assertionResults);
             FlowViz.renderSvg(nodes, "#run-flow-viz");
         } else {
             $("#run-flow-viz").innerHTML = `<div class="empty-state">Test case definition for ${escapeHtml(testId)} not found.</div>`;
@@ -7417,9 +7417,9 @@ async function renderRunHistory() {
     <div id="runs-table">${LANG.common_loading}</div>`);
 
     try {
-        const runs = await API.getMany("itt_testruns",
-            "$select=itt_teststatus,itt_passed,itt_failed,itt_total,itt_startedon,itt_completedon,itt_testcasefilter" +
-            "&$orderby=itt_startedon desc&$top=100");
+        const runs = await API.getMany("jbe_testruns",
+            "$select=jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_completedon,jbe_testcasefilter" +
+            "&$orderby=jbe_startedon desc&$top=100");
 
         State.testRuns = runs;
         State.runDateRange = "all";
@@ -7446,8 +7446,8 @@ function filterRuns() {
     let filtered = State.testRuns;
     if (search) {
         filtered = filtered.filter(r =>
-            (r.itt_testcasefilter || "").toLowerCase().includes(search) ||
-            (r.itt_testid || "").toLowerCase().includes(search));
+            (r.jbe_testcasefilter || "").toLowerCase().includes(search) ||
+            (r.jbe_testid || "").toLowerCase().includes(search));
     }
 
     if (range !== "all") {
@@ -7461,7 +7461,7 @@ function filterRuns() {
             cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         }
         if (cutoff) {
-            filtered = filtered.filter(r => r.itt_startedon && new Date(r.itt_startedon) >= cutoff);
+            filtered = filtered.filter(r => r.jbe_startedon && new Date(r.jbe_startedon) >= cutoff);
         }
     }
 
@@ -7472,16 +7472,16 @@ function filterRuns() {
 function renderRunsTimeline(runs) {
     const container = $("#runs-timeline-chart");
     if (!container) return;
-    const completed = runs.filter(r => r.itt_teststatus === CONFIG.optionSets.statusCompleted && r.itt_total > 0);
+    const completed = runs.filter(r => r.jbe_teststatus === CONFIG.optionSets.statusCompleted && r.jbe_total > 0);
     if (completed.length < 2) {
         container.innerHTML = "";
         return;
     }
     const chartRuns = completed.slice(0, 20).reverse();
     const barData = chartRuns.map(r => ({
-        label: formatDate(r.itt_startedon).split(" ")[0],
-        value: r.itt_total > 0 ? Math.round((r.itt_passed || 0) / r.itt_total * 100) : 0,
-        color: r.itt_total > 0 && Math.round((r.itt_passed || 0) / r.itt_total * 100) >= 80 ? "var(--accent-green)" : "var(--accent-red)"
+        label: formatDate(r.jbe_startedon).split(" ")[0],
+        value: r.jbe_total > 0 ? Math.round((r.jbe_passed || 0) / r.jbe_total * 100) : 0,
+        color: r.jbe_total > 0 && Math.round((r.jbe_passed || 0) / r.jbe_total * 100) >= 80 ? "var(--accent-green)" : "var(--accent-red)"
     }));
     container.innerHTML = `<div class="timeline-chart-container"><div class="card-title">Pass-Rate pro Testlauf</div>${Charts.bar(barData, Math.max(400, barData.length * 40), 120)}</div>`;
 }
@@ -7496,21 +7496,21 @@ function renderRunsCards(runs) {
 
     let html = "";
     for (const r of runs) {
-        const dur = r.itt_completedon && r.itt_startedon
-            ? formatDuration(new Date(r.itt_completedon) - new Date(r.itt_startedon))
+        const dur = r.jbe_completedon && r.jbe_startedon
+            ? formatDuration(new Date(r.jbe_completedon) - new Date(r.jbe_startedon))
             : "-";
-        const passed = r.itt_passed || 0;
-        const failed = r.itt_failed || 0;
-        const total = r.itt_total || 0;
+        const passed = r.jbe_passed || 0;
+        const failed = r.jbe_failed || 0;
+        const total = r.jbe_total || 0;
         const rate = total > 0 ? Math.round(passed / total * 100) : 0;
         const passPercent = total > 0 ? (passed / total * 100).toFixed(1) : "0";
         const failPercent = total > 0 ? (failed / total * 100).toFixed(1) : "0";
-        const filterText = escapeHtml(r.itt_testcasefilter || "*");
+        const filterText = escapeHtml(r.jbe_testcasefilter || "*");
 
-        html += `<div class="run-card" onclick="location.hash='#run/${r.itt_testrunid}'">
+        html += `<div class="run-card" onclick="location.hash='#run/${r.jbe_testrunid}'">
             <div class="run-card-header">
-                <span class="run-card-date">${formatDate(r.itt_startedon)}</span>
-                ${statusBadge(r.itt_teststatus)}
+                <span class="run-card-date">${formatDate(r.jbe_startedon)}</span>
+                ${statusBadge(r.jbe_teststatus)}
                 <span class="run-card-filter" title="${filterText}">${filterText}</span>
                 <span class="run-card-duration">${dur}</span>
             </div>
@@ -7541,24 +7541,24 @@ window._exportRunsCsv = function() {
     const sep = ";";
     const header = ["Datum", "Status", "Filter", "Passed", "Failed", "Gesamt", "Dauer (s)", "Pass-Rate (%)"].join(sep);
     const rows = runs.map(r => {
-        const durMs = r.itt_completedon && r.itt_startedon
-            ? new Date(r.itt_completedon) - new Date(r.itt_startedon) : 0;
+        const durMs = r.jbe_completedon && r.jbe_startedon
+            ? new Date(r.jbe_completedon) - new Date(r.jbe_startedon) : 0;
         const durSec = durMs > 0 ? (durMs / 1000).toFixed(1) : "";
-        const total = r.itt_total || 0;
-        const passed = r.itt_passed || 0;
+        const total = r.jbe_total || 0;
+        const passed = r.jbe_passed || 0;
         const rate = total > 0 ? Math.round(passed / total * 100) : 0;
         const statusMap = {};
         statusMap[CONFIG.optionSets.statusPlanned] = "Geplant";
         statusMap[CONFIG.optionSets.statusRunning] = "Running";
         statusMap[CONFIG.optionSets.statusCompleted] = "Abgeschlossen";
         statusMap[CONFIG.optionSets.statusError] = "Fehler";
-        const statusText = statusMap[r.itt_teststatus] || "?";
+        const statusText = statusMap[r.jbe_teststatus] || "?";
         return [
-            r.itt_startedon ? new Date(r.itt_startedon).toLocaleString("de-DE") : "",
+            r.jbe_startedon ? new Date(r.jbe_startedon).toLocaleString("de-DE") : "",
             statusText,
-            '"' + (r.itt_testcasefilter || "*").replace(/"/g, '""') + '"',
+            '"' + (r.jbe_testcasefilter || "*").replace(/"/g, '""') + '"',
             passed,
-            r.itt_failed || 0,
+            r.jbe_failed || 0,
             total,
             durSec,
             rate
@@ -7588,9 +7588,9 @@ async function renderTestHistory(testId) {
     </div>`);
 
     try {
-        const results = await API.getMany("itt_testrunresults",
-            `$select=itt_outcome,itt_durationms,itt_errormessage,createdon` +
-            `&$filter=itt_testid eq '${testId}'&$orderby=createdon desc&$top=20`);
+        const results = await API.getMany("jbe_testrunresults",
+            `$select=jbe_outcome,jbe_durationms,jbe_errormessage,createdon` +
+            `&$filter=jbe_testid eq '${testId}'&$orderby=createdon desc&$top=20`);
 
         if (results.length === 0) {
             $("#history-chart").innerHTML = `<div class="empty-state">No results for ${escapeHtml(testId)}</div>`;
@@ -7600,8 +7600,8 @@ async function renderTestHistory(testId) {
         // Bar chart
         const chartData = results.slice().reverse().map((r, i) => ({
             label: formatDate(r.createdon).split(" ")[0],
-            value: r.itt_durationms || 0,
-            color: r.itt_outcome === CONFIG.optionSets.outcomePassed ? "var(--accent-green)" : "var(--accent-red)"
+            value: r.jbe_durationms || 0,
+            color: r.jbe_outcome === CONFIG.optionSets.outcomePassed ? "var(--accent-green)" : "var(--accent-red)"
         }));
         $("#history-chart").innerHTML = Charts.bar(chartData, 500, 150);
 
@@ -7613,12 +7613,12 @@ async function renderTestHistory(testId) {
             outcomeMap[CONFIG.optionSets.outcomeFailed] = "Failed";
             outcomeMap[CONFIG.optionSets.outcomeError] = "Error";
             outcomeMap[CONFIG.optionSets.outcomeSkipped] = "Skipped";
-            const outcome = outcomeMap[r.itt_outcome] || "?";
+            const outcome = outcomeMap[r.jbe_outcome] || "?";
             html += `<tr>
                 <td>${formatDate(r.createdon)}</td>
                 <td>${outcomeBadge(outcome)}</td>
-                <td>${formatDuration(r.itt_durationms)}</td>
-                <td style="font-size:12px;color:var(--accent-red)">${escapeHtml((r.itt_errormessage || "").substring(0, 60))}</td>
+                <td>${formatDuration(r.jbe_durationms)}</td>
+                <td style="font-size:12px;color:var(--accent-red)">${escapeHtml((r.jbe_errormessage || "").substring(0, 60))}</td>
             </tr>`;
         }
         html += `</tbody></table>`;
@@ -7638,14 +7638,14 @@ async function renderUserStories() {
     <div class="card"><div id="stories-table">${LANG.common_loading}</div></div>`);
 
     try {
-        const cases = await API.getMany("itt_testcases",
-            "$select=itt_testid,itt_title,itt_category,itt_tags,itt_enabled,itt_userstories" +
-            "&$orderby=itt_testid asc&$top=500");
+        const cases = await API.getMany("jbe_testcases",
+            "$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_enabled,jbe_userstories" +
+            "&$orderby=jbe_testid asc&$top=500");
 
         // Alle User Stories extrahieren und gruppieren
         const storyMap = {};
         for (const c of cases) {
-            const stories = (c.itt_userstories || "").split(",").map(s => s.trim()).filter(Boolean);
+            const stories = (c.jbe_userstories || "").split(",").map(s => s.trim()).filter(Boolean);
             for (const story of stories) {
                 const key = story.toUpperCase();
                 if (!storyMap[key]) storyMap[key] = { key, cases: [] };
@@ -7681,7 +7681,7 @@ function renderStoriesTable(storyMap) {
     let html = `<table class="data-table"><thead><tr><th>User Story</th><th>Test Cases</th><th>Active</th><th>Coverage</th><th></th></tr></thead><tbody>`;
     for (const s of stories) {
         const total = s.cases.length;
-        const active = s.cases.filter(c => c.itt_enabled !== false).length;
+        const active = s.cases.filter(c => c.jbe_enabled !== false).length;
         const pct = total > 0 ? Math.round(active / total * 100) : 0;
         const barColor = pct === 100 ? "var(--accent-green)" : pct >= 50 ? "var(--accent-yellow)" : "var(--accent-red)";
         html += `<tr>
@@ -7724,9 +7724,9 @@ async function renderStoryDetail(storyKey) {
     </div>`);
 
     try {
-        const cases = await API.getMany("itt_testcases",
-            "$select=itt_testid,itt_title,itt_category,itt_tags,itt_enabled,itt_userstories" +
-            "&$filter=contains(itt_userstories,'" + storyKey + "')&$orderby=itt_testid asc");
+        const cases = await API.getMany("jbe_testcases",
+            "$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_enabled,jbe_userstories" +
+            "&$filter=contains(jbe_userstories,'" + storyKey + "')&$orderby=jbe_testid asc");
 
         const categoryNames = {};
         categoryNames[CONFIG.optionSets.catUpdateSource] = "Update Source";
@@ -7742,13 +7742,13 @@ async function renderStoryDetail(storyKey) {
         if (cases.length > 0) {
             let html = `<table class="data-table"><thead><tr><th>ID</th><th>Titel</th><th>Kategorie</th><th>Status</th><th></th></tr></thead><tbody>`;
             for (const c of cases) {
-                const status = c.itt_enabled !== false ? `<span class="badge badge-active">Aktiv</span>` : `<span class="badge badge-disabled">Deaktiviert</span>`;
+                const status = c.jbe_enabled !== false ? `<span class="badge badge-active">Aktiv</span>` : `<span class="badge badge-disabled">Deaktiviert</span>`;
                 html += `<tr>
-                    <td><strong>${escapeHtml(c.itt_testid) || "-"}</strong></td>
-                    <td>${escapeHtml(c.itt_title) || "-"}</td>
-                    <td>${categoryNames[c.itt_category] || "-"}</td>
+                    <td><strong>${escapeHtml(c.jbe_testid) || "-"}</strong></td>
+                    <td>${escapeHtml(c.jbe_title) || "-"}</td>
+                    <td>${categoryNames[c.jbe_category] || "-"}</td>
                     <td>${status}</td>
-                    <td><a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a></td>
+                    <td><a href="#cases/${c.jbe_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a></td>
                 </tr>`;
             }
             html += `</tbody></table>`;
@@ -7758,18 +7758,18 @@ async function renderStoryDetail(storyKey) {
         }
 
         // Testergebnisse: die TestIDs dieser Story in den Results suchen
-        const testIds = cases.map(c => c.itt_testid).filter(Boolean);
+        const testIds = cases.map(c => c.jbe_testid).filter(Boolean);
         if (testIds.length > 0) {
             // Letzte Ergebnisse pro TestID laden
-            const results = await API.getMany("itt_testrunresults",
-                "$select=itt_testid,itt_outcome,itt_durationms,itt_errormessage,createdon" +
+            const results = await API.getMany("jbe_testrunresults",
+                "$select=jbe_testid,jbe_outcome,jbe_durationms,jbe_errormessage,createdon" +
                 "&$orderby=createdon desc&$top=100");
 
             // Filtern auf relevante TestIDs und neuestes pro Test
             const latestPerTest = {};
             for (const r of results) {
-                if (testIds.includes(r.itt_testid) && !latestPerTest[r.itt_testid]) {
-                    latestPerTest[r.itt_testid] = r;
+                if (testIds.includes(r.jbe_testid) && !latestPerTest[r.jbe_testid]) {
+                    latestPerTest[r.jbe_testid] = r;
                 }
             }
 
@@ -7784,14 +7784,14 @@ async function renderStoryDetail(storyKey) {
             for (const tid of testIds) {
                 const r = latestPerTest[tid];
                 if (r) {
-                    const oName = outcomeNames[r.itt_outcome] || "?";
-                    if (r.itt_outcome === CONFIG.optionSets.outcomePassed) passed++;
-                    else if (r.itt_outcome === CONFIG.optionSets.outcomeFailed) failed++;
+                    const oName = outcomeNames[r.jbe_outcome] || "?";
+                    if (r.jbe_outcome === CONFIG.optionSets.outcomePassed) passed++;
+                    else if (r.jbe_outcome === CONFIG.optionSets.outcomeFailed) failed++;
                     else other++;
                     rhtml += `<tr>
                         <td><strong>${tid}</strong></td>
                         <td>${outcomeBadge(oName)}</td>
-                        <td>${formatDuration(r.itt_durationms)}</td>
+                        <td>${formatDuration(r.jbe_durationms)}</td>
                         <td>${formatDate(r.createdon)}</td>
                     </tr>`;
                 } else {
@@ -7881,7 +7881,7 @@ async function loadEntities() {
         let html = `<div class="toolbar" style="margin-bottom:16px">
             <input type="text" class="form-input search-input" id="meta-entity-search" placeholder="${LANG.meta_search}">
             <label class="checkbox-label"><input type="checkbox" id="meta-custom-only"> Nur Custom</label>
-            <label class="checkbox-label"><input type="checkbox" id="meta-publisher-only" checked> Nur itt_</label>
+            <label class="checkbox-label"><input type="checkbox" id="meta-publisher-only" checked> Nur jbe_</label>
         </div>`;
 
         const renderTable = (list) => {
@@ -7908,11 +7908,11 @@ async function loadEntities() {
             let filtered = entities;
             if (search) filtered = filtered.filter(e => e.LogicalName.includes(search) || (e.DisplayName?.UserLocalizedLabel?.Label || "").toLowerCase().includes(search));
             if (customOnly) filtered = filtered.filter(e => e.IsCustomEntity);
-            if (publisherOnly) filtered = filtered.filter(e => e.LogicalName.startsWith("itt_"));
+            if (publisherOnly) filtered = filtered.filter(e => e.LogicalName.startsWith("jbe_"));
             $("#meta-table").innerHTML = renderTable(filtered);
         };
 
-        html += `<div id="meta-table">${renderTable(entities.filter(e => e.LogicalName.startsWith("itt_")))}</div>`;
+        html += `<div id="meta-table">${renderTable(entities.filter(e => e.LogicalName.startsWith("jbe_")))}</div>`;
         $("#meta-content").innerHTML = html;
 
         $("#meta-entity-search").addEventListener("input", applyFilter);
@@ -8021,7 +8021,7 @@ async function loadOptionSets() {
 
         let html = `<div class="toolbar" style="margin-bottom:16px">
             <input type="text" class="form-input search-input" id="meta-os-search" placeholder="OptionSet suchen...">
-            <label class="checkbox-label"><input type="checkbox" id="meta-os-publisher" checked> Nur itt_</label>
+            <label class="checkbox-label"><input type="checkbox" id="meta-os-publisher" checked> Nur jbe_</label>
         </div>`;
 
         const renderOS = (list) => {
@@ -8044,11 +8044,11 @@ async function loadOptionSets() {
             const publisherOnly = $("#meta-os-publisher")?.checked;
             let filtered = optionSets;
             if (search) filtered = filtered.filter(o => o.Name.toLowerCase().includes(search));
-            if (publisherOnly) filtered = filtered.filter(o => o.Name.startsWith("itt_"));
+            if (publisherOnly) filtered = filtered.filter(o => o.Name.startsWith("jbe_"));
             $("#meta-os-table").innerHTML = renderOS(filtered);
         };
 
-        html += `<div id="meta-os-table">${renderOS(optionSets.filter(o => o.Name.startsWith("itt_")))}</div>`;
+        html += `<div id="meta-os-table">${renderOS(optionSets.filter(o => o.Name.startsWith("jbe_")))}</div>`;
         html += `<div id="meta-os-values"></div>`;
         $("#meta-content").innerHTML = html;
         $("#meta-os-search").addEventListener("input", applyFilter);
@@ -8088,7 +8088,7 @@ async function loadCustomApis() {
 
         let html = `<div class="toolbar" style="margin-bottom:16px">
             <input type="text" class="form-input search-input" id="meta-api-search" placeholder="Custom API suchen...">
-            <label class="checkbox-label"><input type="checkbox" id="meta-api-publisher" checked> Nur itt_</label>
+            <label class="checkbox-label"><input type="checkbox" id="meta-api-publisher" checked> Nur jbe_</label>
         </div>`;
 
         const renderApis = (list) => {
@@ -8112,11 +8112,11 @@ async function loadCustomApis() {
             const publisherOnly = $("#meta-api-publisher")?.checked;
             let filtered = apis;
             if (search) filtered = filtered.filter(a => a.uniquename.toLowerCase().includes(search) || (a.displayname || "").toLowerCase().includes(search));
-            if (publisherOnly) filtered = filtered.filter(a => a.uniquename.startsWith("itt_"));
+            if (publisherOnly) filtered = filtered.filter(a => a.uniquename.startsWith("jbe_"));
             $("#meta-api-table").innerHTML = renderApis(filtered);
         };
 
-        html += `<div id="meta-api-table">${renderApis(apis.filter(a => a.uniquename.startsWith("itt_")))}</div>`;
+        html += `<div id="meta-api-table">${renderApis(apis.filter(a => a.uniquename.startsWith("jbe_")))}</div>`;
         html += `<div id="meta-api-snippet"></div>`;
         $("#meta-content").innerHTML = html;
         $("#meta-api-search").addEventListener("input", applyFilter);
@@ -8310,7 +8310,7 @@ const HelpContent = {
         { group: "FAQ", id: "faq-testcases", title: "Testf\u00e4lle", roles: ["tester","dev"], content: `
 <h2>FAQ: Testf\u00e4lle</h2>
 <h3>Import aus JSON-Dateien?</h3>
-<p>Ja, per PowerShell-Skript. Upsert auf itt_testid.</p>
+<p>Ja, per PowerShell-Skript. Upsert auf jbe_testid.</p>
 <h3>Testfall deaktivieren?</h3>
 <p>Wird bei Gesamtl\u00e4ufen \u00fcbersprungen. Gezielt \u00fcber ID weiterhin startbar.</p>
 <h3>Mehrere User Stories?</h3>
@@ -8336,9 +8336,9 @@ const HelpContent = {
 <h3>Entities</h3>
 <table class="help-table">
 <tr><th>Entity</th><th>Schema</th></tr>
-<tr><td>Testfall</td><td><code>itt_testcase</code></td></tr>
-<tr><td>Testlauf</td><td><code>itt_testrun</code></td></tr>
-<tr><td>Testergebnis</td><td><code>itt_testrunresult</code></td></tr>
+<tr><td>Testfall</td><td><code>jbe_testcase</code></td></tr>
+<tr><td>Testlauf</td><td><code>jbe_testrun</code></td></tr>
+<tr><td>Testergebnis</td><td><code>jbe_testrunresult</code></td></tr>
 </table>
 <h3>OptionSets (100000xxx)</h3>
 <table class="help-table">
@@ -8352,11 +8352,11 @@ const HelpContent = {
         { group: "Deployment", id: "deploy-install", title: "Installation", roles: ["admin"], content: `
 <h2>Installation</h2>
 <ol>
-<li>Solution <code>itt_testing</code> erstellen</li>
+<li>Solution <code>jbe_testing</code> erstellen</li>
 <li>Entities anlegen (oder <code>Create-TestingEntities.ps1</code>)</li>
-<li>Web Resource: Name <code>itt_testcenter</code>, Typ HTML, hochladen</li>
+<li>Web Resource: Name <code>jbe_testcenter</code>, Typ HTML, hochladen</li>
 <li>Optional: Sitemap-Eintrag</li>
-<li>Custom API <code>itt_RunIntegrationTests</code> registrieren</li>
+<li>Custom API <code>jbe_RunIntegrationTests</code> registrieren</li>
 <li>Sicherheitsrollen: Lese-/Schreibrechte auf alle drei Entities</li>
 </ol>
 <div class="help-tip">Nach Upload: Publizieren. Bei Updates: Browser-Cache leeren (Ctrl+F5).</div>
@@ -8443,7 +8443,7 @@ const FlowViz = {
         for (let i = 0; i < existingSources.length; i++) {
             const src = existingSources[i];
             nodes.push({ id: `pre_cs_${i}`, phase: "precondition", type: "precondition",
-                label: `ContactSource [${src.alias || i}]`, entity: "itt_contactsource",
+                label: `ContactSource [${src.alias || i}]`, entity: "jbe_contactsource",
                 fields: src, icon: "CS" });
         }
 
@@ -8555,7 +8555,7 @@ const FlowViz = {
                 } else if (n.alias) {
                     subtitle = `[${n.alias}]`;
                 } else if (n.entity) {
-                    subtitle = n.entity.replace("itt_", "").replace("itt_", "");
+                    subtitle = n.entity.replace("jbe_", "").replace("jbe_", "");
                 }
                 if (n.waitSeconds) subtitle = `Timeout: ${n.waitSeconds}s`;
                 svg += `<text x="${x + 20}" y="${y + 48}" fill="${c.text}" font-size="10" opacity="0.7">${this.escSvg(subtitle.substring(0, 28))}</text>`;
@@ -8786,16 +8786,16 @@ async function activateDemoMode() {
 // ── Init ────────────────────────────────────────────────────────
 
 (async function initApp() {
-    ITTLog.info("App", "Integration Test Center wird initialisiert...");
+    JBELog.info("App", "Integration Test Center wird initialisiert...");
     // Auto-detect: if CRM API is unreachable, switch to demo mode
     try {
         const resp = await window.fetch("/api/data/v9.2/WhoAmI", {
             headers: { "Accept": "application/json" }
         });
         if (!resp.ok) throw new Error("API " + resp.status);
-        ITTLog.info("App", "Live-Modus: Dataverse API erreichbar");
+        JBELog.info("App", "Live-Modus: Dataverse API erreichbar");
     } catch {
-        ITTLog.info("App", "Demo-Modus: Dataverse API nicht erreichbar, lade Demo-Daten");
+        JBELog.info("App", "Demo-Modus: Dataverse API nicht erreichbar, lade Demo-Daten");
         await activateDemoMode();
     }
 
@@ -8808,7 +8808,7 @@ async function activateDemoMode() {
         const packSel = document.getElementById("pack-selector");
         if (packSel) {
             try {
-                const count = await API.count("itt_testcases", "itt_enabled eq true");
+                const count = await API.count("jbe_testcases", "jbe_enabled eq true");
                 packSel.innerHTML = `<option value="">Live: ${count} Test Cases</option>`;
             } catch {
                 packSel.innerHTML = `<option value="">Live Mode</option>`;
@@ -8816,7 +8816,7 @@ async function activateDemoMode() {
         }
     }
 
-    ITTLog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
+    JBELog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
 
     // CH-02: Warnung bei Tab-Closen während Testlauf
     window.addEventListener("beforeunload", e => {

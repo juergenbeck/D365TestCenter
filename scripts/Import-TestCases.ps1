@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Imports test cases from pack JSON files into Dataverse itt_testcases.
+    Imports test cases from pack JSON files into Dataverse jbe_testcases.
 
 .DESCRIPTION
     Reads test cases from a pack file and creates them as records
-    in the itt_testcases entity. Idempotent: skips records where itt_testid
+    in the jbe_testcases entity. Idempotent: skips records where jbe_testid
     already exists.
 
 .NOTES
@@ -56,12 +56,12 @@ $errors  = 0
 
 # --- Jeden Testfall verarbeiten ---
 foreach ($tc in $testCases) {
-    $testId = $tc.itt_testid
-    $title  = $tc.itt_title
+    $testId = $tc.jbe_testid
+    $title  = $tc.jbe_title
 
     try {
         # Idempotenz-Check: existiert der Record bereits?
-        $filterUrl = "$baseUrl/itt_testcases?`$filter=itt_testid eq '$testId'&`$select=itt_testcaseid"
+        $filterUrl = "$baseUrl/jbe_testcases?`$filter=jbe_testid eq '$testId'&`$select=jbe_testcaseid"
         $existCheck = Invoke-RestMethod -Uri $filterUrl -Headers $headers -Method Get
 
         if ($existCheck.value -and $existCheck.value.Count -gt 0) {
@@ -70,22 +70,22 @@ foreach ($tc in $testCases) {
             continue
         }
 
-        # itt_definitionjson: Object -> JSON-String
-        $defJsonString = $tc.itt_definitionjson | ConvertTo-Json -Depth 20 -Compress
+        # jbe_definitionjson: Object -> JSON-String
+        $defJsonString = $tc.jbe_definitionjson | ConvertTo-Json -Depth 20 -Compress
 
         # Record-Body erstellen (nur die 7 Felder, kein PK, kein Name)
         $body = @{
-            itt_testid         = $tc.itt_testid
-            itt_title          = $tc.itt_title
-            itt_category       = $tc.itt_category
-            itt_tags           = $tc.itt_tags
-            itt_userstories    = $tc.itt_userstories
-            itt_enabled        = $tc.itt_enabled
-            itt_definitionjson = $defJsonString
+            jbe_testid         = $tc.jbe_testid
+            jbe_title          = $tc.jbe_title
+            jbe_category       = $tc.jbe_category
+            jbe_tags           = $tc.jbe_tags
+            jbe_userstories    = $tc.jbe_userstories
+            jbe_enabled        = $tc.jbe_enabled
+            jbe_definitionjson = $defJsonString
         } | ConvertTo-Json -Depth 5
 
         # POST: Record anlegen
-        $createUrl = "$baseUrl/itt_testcases"
+        $createUrl = "$baseUrl/jbe_testcases"
         Invoke-RestMethod -Uri $createUrl -Headers $createHeaders -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
 
         Write-Host "[CREATE] $testId : $title"

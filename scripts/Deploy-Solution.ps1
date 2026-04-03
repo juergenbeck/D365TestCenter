@@ -4,10 +4,10 @@
 
 .DESCRIPTION
     Creates:
-    - Publisher "ITT" (prefix: itt, OptionValuePrefix: 100571)
+    - Publisher "JBE" (prefix: itt, OptionValuePrefix: 100571)
     - Solution "IntegrationTestCenter"
-    - 5 global OptionSets (itt_teststatus, itt_testoutcome, itt_testcategory, itt_stepphase, itt_stepstatus)
-    - 4 custom tables (itt_testcase, itt_testrun, itt_testrunresult, itt_teststep)
+    - 5 global OptionSets (jbe_teststatus, jbe_testoutcome, jbe_testcategory, jbe_stepphase, jbe_stepstatus)
+    - 4 custom tables (jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep)
     - All attributes on the 4 tables
     - N:1 relationships (testrunresult -> testrun, teststep -> testrunresult)
     - Web Resources (HTML + JSON packs)
@@ -274,7 +274,7 @@ $ovBase = $optPrefix * 10000
 
 $optionSets = @(
     @{
-        Name = "itt_teststatus"
+        Name = "jbe_teststatus"
         DE   = "Teststatus"
         EN   = "Test Status"
         Desc = "Status of a test run"
@@ -286,7 +286,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_testoutcome"
+        Name = "jbe_testoutcome"
         DE   = "Testergebnis"
         EN   = "Test Outcome"
         Desc = "Outcome of a single test case execution"
@@ -297,7 +297,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_testcategory"
+        Name = "jbe_testcategory"
         DE   = "Testkategorie"
         EN   = "Test Category"
         Desc = "Category of a test case"
@@ -314,7 +314,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_stepphase"
+        Name = "jbe_stepphase"
         DE   = "Schrittphase"
         EN   = "Step Phase"
         Desc = "Phase of a test step"
@@ -326,7 +326,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_stepstatus"
+        Name = "jbe_stepstatus"
         DE   = "Schrittstatus"
         EN   = "Step Status"
         Desc = "Status of a test step"
@@ -388,20 +388,20 @@ foreach ($os in $optionSets) {
 }
 
 # ==========================================================================
-#  STEP 4: ENTITY itt_testcase
+#  STEP 4: ENTITY jbe_testcase
 # ==========================================================================
 
 Write-Host ""
-Write-Host "-- Schritt 4/10: Tabelle itt_testcase ------------------------------" -ForegroundColor Cyan
+Write-Host "-- Schritt 4/10: Tabelle jbe_testcase ------------------------------" -ForegroundColor Cyan
 
-if (Test-EntityExists "itt_testcase") {
-    Write-Host "  [SKIP] itt_testcase existiert bereits" -ForegroundColor DarkGray
+if (Test-EntityExists "jbe_testcase") {
+    Write-Host "  [SKIP] jbe_testcase existiert bereits" -ForegroundColor DarkGray
 } else {
-    Write-Host "  [CREATE] itt_testcase..." -ForegroundColor Green
+    Write-Host "  [CREATE] jbe_testcase..." -ForegroundColor Green
 
     $tableBody = @{
         "@odata.type"          = "Microsoft.Dynamics.CRM.EntityMetadata"
-        SchemaName             = "itt_testcase"
+        SchemaName             = "jbe_testcase"
         DisplayName            = New-Label "Testfall" "Test Case"
         DisplayCollectionName  = New-Label "Testfälle" "Test Cases"
         Description            = New-Label "Definition eines Integrationstestfalls" "Definition of an integration test case"
@@ -409,11 +409,11 @@ if (Test-EntityExists "itt_testcase") {
         IsActivity             = $false
         HasNotes               = $false
         HasActivities          = $false
-        PrimaryNameAttribute   = "itt_name"
+        PrimaryNameAttribute   = "jbe_name"
         Attributes             = @(
             @{
                 "@odata.type"     = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-                SchemaName        = "itt_name"
+                SchemaName        = "jbe_name"
                 DisplayName       = New-Label "Name" "Name"
                 Description       = New-Label "Automatisch generierte Testfall-Nr." "Auto-generated test case number"
                 IsPrimaryName     = $true
@@ -432,15 +432,15 @@ if (Test-EntityExists "itt_testcase") {
         -Headers ($headers + @{ "MSCRM.SolutionUniqueName" = $solutionName }) `
         -Body $tableBody | Out-Null
 
-    Write-Host "    Erstellt: itt_testcase" -ForegroundColor Green
+    Write-Host "    Erstellt: jbe_testcase" -ForegroundColor Green
 }
 
-# Attributes on itt_testcase
-Write-Host "  Attribute auf itt_testcase:" -ForegroundColor Cyan
+# Attributes on jbe_testcase
+Write-Host "  Attribute auf jbe_testcase:" -ForegroundColor Cyan
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_TestId"
+    SchemaName    = "jbe_TestId"
     DisplayName   = New-Label "Test ID" "Test ID"
     Description   = New-Label "Eindeutige Test-ID (z.B. FG-LUW01)" "Unique test ID (e.g. FG-LUW01)"
     RequiredLevel = @{ Value = "ApplicationRequired" }
@@ -448,9 +448,9 @@ New-Attribute "itt_testcase" @{
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_Title"
+    SchemaName    = "jbe_Title"
     DisplayName   = New-Label "Titel" "Title"
     Description   = New-Label "Beschreibender Titel des Testfalls" "Descriptive title of the test case"
     RequiredLevel = @{ Value = "ApplicationRequired" }
@@ -458,18 +458,18 @@ New-Attribute "itt_testcase" @{
     FormatName    = @{ Value = "Text" }
 }
 
-$catOsId = Get-GlobalOptionSetId "itt_testcategory"
-New-Attribute "itt_testcase" @{
+$catOsId = Get-GlobalOptionSetId "jbe_testcategory"
+New-Attribute "jbe_testcase" @{
     "@odata.type"                      = "Microsoft.Dynamics.CRM.PicklistAttributeMetadata"
-    SchemaName                         = "itt_Category"
+    SchemaName                         = "jbe_Category"
     DisplayName                        = New-Label "Kategorie" "Category"
     RequiredLevel                      = @{ Value = "None" }
     "GlobalOptionSet@odata.bind"       = "/GlobalOptionSetDefinitions($catOsId)"
 }
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_Tags"
+    SchemaName    = "jbe_Tags"
     DisplayName   = New-Label "Tags" "Tags"
     Description   = New-Label "Kommagetrennte Tags" "Comma-separated tags"
     RequiredLevel = @{ Value = "None" }
@@ -477,9 +477,9 @@ New-Attribute "itt_testcase" @{
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_UserStories"
+    SchemaName    = "jbe_UserStories"
     DisplayName   = New-Label "User Stories" "User Stories"
     Description   = New-Label "Kommagetrennte Story-Keys (z.B. DYN-8621,DYN-8768)" "Comma-separated story keys"
     RequiredLevel = @{ Value = "None" }
@@ -487,9 +487,9 @@ New-Attribute "itt_testcase" @{
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.BooleanAttributeMetadata"
-    SchemaName    = "itt_Enabled"
+    SchemaName    = "jbe_Enabled"
     DisplayName   = New-Label "Aktiv" "Enabled"
     Description   = New-Label "Ob der Testfall aktiv ist" "Whether the test case is active"
     RequiredLevel = @{ Value = "None" }
@@ -501,9 +501,9 @@ New-Attribute "itt_testcase" @{
     }
 }
 
-New-Attribute "itt_testcase" @{
+New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_DefinitionJson"
+    SchemaName    = "jbe_DefinitionJson"
     DisplayName   = New-Label "Definition (JSON)" "Definition (JSON)"
     Description   = New-Label "JSON-Definition mit Steps und Assertions" "JSON definition with steps and assertions"
     RequiredLevel = @{ Value = "None" }
@@ -512,20 +512,20 @@ New-Attribute "itt_testcase" @{
 }
 
 # ==========================================================================
-#  STEP 5: ENTITY itt_testrun
+#  STEP 5: ENTITY jbe_testrun
 # ==========================================================================
 
 Write-Host ""
-Write-Host "-- Schritt 5/10: Tabelle itt_testrun -------------------------------" -ForegroundColor Cyan
+Write-Host "-- Schritt 5/10: Tabelle jbe_testrun -------------------------------" -ForegroundColor Cyan
 
-if (Test-EntityExists "itt_testrun") {
-    Write-Host "  [SKIP] itt_testrun existiert bereits" -ForegroundColor DarkGray
+if (Test-EntityExists "jbe_testrun") {
+    Write-Host "  [SKIP] jbe_testrun existiert bereits" -ForegroundColor DarkGray
 } else {
-    Write-Host "  [CREATE] itt_testrun..." -ForegroundColor Green
+    Write-Host "  [CREATE] jbe_testrun..." -ForegroundColor Green
 
     $tableBody = @{
         "@odata.type"          = "Microsoft.Dynamics.CRM.EntityMetadata"
-        SchemaName             = "itt_testrun"
+        SchemaName             = "jbe_testrun"
         DisplayName            = New-Label "Testlauf" "Test Run"
         DisplayCollectionName  = New-Label "Testläufe" "Test Runs"
         Description            = New-Label "Ergebnis eines Testdurchlaufs" "Result of a test execution run"
@@ -533,11 +533,11 @@ if (Test-EntityExists "itt_testrun") {
         IsActivity             = $false
         HasNotes               = $false
         HasActivities          = $false
-        PrimaryNameAttribute   = "itt_name"
+        PrimaryNameAttribute   = "jbe_name"
         Attributes             = @(
             @{
                 "@odata.type"     = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-                SchemaName        = "itt_name"
+                SchemaName        = "jbe_name"
                 DisplayName       = New-Label "Name" "Name"
                 Description       = New-Label "Automatisch generierte Testlauf-Nr." "Auto-generated test run number"
                 IsPrimaryName     = $true
@@ -556,24 +556,24 @@ if (Test-EntityExists "itt_testrun") {
         -Headers ($headers + @{ "MSCRM.SolutionUniqueName" = $solutionName }) `
         -Body $tableBody | Out-Null
 
-    Write-Host "    Erstellt: itt_testrun" -ForegroundColor Green
+    Write-Host "    Erstellt: jbe_testrun" -ForegroundColor Green
 }
 
-# Attributes on itt_testrun
-Write-Host "  Attribute auf itt_testrun:" -ForegroundColor Cyan
+# Attributes on jbe_testrun
+Write-Host "  Attribute auf jbe_testrun:" -ForegroundColor Cyan
 
-$statusOsId = Get-GlobalOptionSetId "itt_teststatus"
-New-Attribute "itt_testrun" @{
+$statusOsId = Get-GlobalOptionSetId "jbe_teststatus"
+New-Attribute "jbe_testrun" @{
     "@odata.type"                      = "Microsoft.Dynamics.CRM.PicklistAttributeMetadata"
-    SchemaName                         = "itt_TestStatus"
+    SchemaName                         = "jbe_TestStatus"
     DisplayName                        = New-Label "Teststatus" "Test Status"
     RequiredLevel                      = @{ Value = "None" }
     "GlobalOptionSet@odata.bind"       = "/GlobalOptionSetDefinitions($statusOsId)"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_Passed"
+    SchemaName    = "jbe_Passed"
     DisplayName   = New-Label "Bestanden" "Passed"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -581,9 +581,9 @@ New-Attribute "itt_testrun" @{
     Format        = "None"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_Failed"
+    SchemaName    = "jbe_Failed"
     DisplayName   = New-Label "Fehlgeschlagen" "Failed"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -591,9 +591,9 @@ New-Attribute "itt_testrun" @{
     Format        = "None"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_Total"
+    SchemaName    = "jbe_Total"
     DisplayName   = New-Label "Gesamt" "Total"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -601,27 +601,27 @@ New-Attribute "itt_testrun" @{
     Format        = "None"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type"    = "Microsoft.Dynamics.CRM.DateTimeAttributeMetadata"
-    SchemaName       = "itt_StartedOn"
+    SchemaName       = "jbe_StartedOn"
     DisplayName      = New-Label "Gestartet am" "Started On"
     RequiredLevel    = @{ Value = "None" }
     Format           = "DateAndTime"
     DateTimeBehavior  = @{ Value = "TimeZoneIndependent" }
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type"    = "Microsoft.Dynamics.CRM.DateTimeAttributeMetadata"
-    SchemaName       = "itt_CompletedOn"
+    SchemaName       = "jbe_CompletedOn"
     DisplayName      = New-Label "Abgeschlossen am" "Completed On"
     RequiredLevel    = @{ Value = "None" }
     Format           = "DateAndTime"
     DateTimeBehavior  = @{ Value = "TimeZoneIndependent" }
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_TestCaseFilter"
+    SchemaName    = "jbe_TestCaseFilter"
     DisplayName   = New-Label "Filter" "Filter"
     Description   = New-Label "Testfall-Filter (z.B. *, tag:LUW, story:DYN-8621)" "Test case filter"
     RequiredLevel = @{ Value = "None" }
@@ -629,27 +629,27 @@ New-Attribute "itt_testrun" @{
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_TestSummary"
+    SchemaName    = "jbe_TestSummary"
     DisplayName   = New-Label "Zusammenfassung" "Summary"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100000
     Format        = "TextArea"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_FullLog"
+    SchemaName    = "jbe_FullLog"
     DisplayName   = New-Label "Vollstaendiges Log" "Full Log"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"
 }
 
-New-Attribute "itt_testrun" @{
+New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.BooleanAttributeMetadata"
-    SchemaName    = "itt_KeepRecords"
+    SchemaName    = "jbe_KeepRecords"
     DisplayName   = New-Label "Testdaten beibehalten" "Keep Test Records"
     Description   = New-Label "Ob Testdaten nach dem Lauf beibehalten werden sollen" "Whether to keep test data after the run"
     RequiredLevel = @{ Value = "None" }
@@ -662,20 +662,20 @@ New-Attribute "itt_testrun" @{
 }
 
 # ==========================================================================
-#  STEP 6: ENTITY itt_testrunresult
+#  STEP 6: ENTITY jbe_testrunresult
 # ==========================================================================
 
 Write-Host ""
-Write-Host "-- Schritt 6/10: Tabelle itt_testrunresult -------------------------" -ForegroundColor Cyan
+Write-Host "-- Schritt 6/10: Tabelle jbe_testrunresult -------------------------" -ForegroundColor Cyan
 
-if (Test-EntityExists "itt_testrunresult") {
-    Write-Host "  [SKIP] itt_testrunresult existiert bereits" -ForegroundColor DarkGray
+if (Test-EntityExists "jbe_testrunresult") {
+    Write-Host "  [SKIP] jbe_testrunresult existiert bereits" -ForegroundColor DarkGray
 } else {
-    Write-Host "  [CREATE] itt_testrunresult..." -ForegroundColor Green
+    Write-Host "  [CREATE] jbe_testrunresult..." -ForegroundColor Green
 
     $tableBody = @{
         "@odata.type"          = "Microsoft.Dynamics.CRM.EntityMetadata"
-        SchemaName             = "itt_testrunresult"
+        SchemaName             = "jbe_testrunresult"
         DisplayName            = New-Label "Testlauf-Ergebnis" "Test Run Result"
         DisplayCollectionName  = New-Label "Testlauf-Ergebnisse" "Test Run Results"
         Description            = New-Label "Einzelergebnis eines Testfalls in einem Testlauf" "Individual result of a test case in a test run"
@@ -683,11 +683,11 @@ if (Test-EntityExists "itt_testrunresult") {
         IsActivity             = $false
         HasNotes               = $false
         HasActivities          = $false
-        PrimaryNameAttribute   = "itt_name"
+        PrimaryNameAttribute   = "jbe_name"
         Attributes             = @(
             @{
                 "@odata.type"     = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-                SchemaName        = "itt_name"
+                SchemaName        = "jbe_name"
                 DisplayName       = New-Label "Name" "Name"
                 Description       = New-Label "Automatisch generierte Ergebnis-Nr." "Auto-generated result number"
                 IsPrimaryName     = $true
@@ -706,15 +706,15 @@ if (Test-EntityExists "itt_testrunresult") {
         -Headers ($headers + @{ "MSCRM.SolutionUniqueName" = $solutionName }) `
         -Body $tableBody | Out-Null
 
-    Write-Host "    Erstellt: itt_testrunresult" -ForegroundColor Green
+    Write-Host "    Erstellt: jbe_testrunresult" -ForegroundColor Green
 }
 
-# Attributes on itt_testrunresult
-Write-Host "  Attribute auf itt_testrunresult:" -ForegroundColor Cyan
+# Attributes on jbe_testrunresult
+Write-Host "  Attribute auf jbe_testrunresult:" -ForegroundColor Cyan
 
-New-Attribute "itt_testrunresult" @{
+New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_TestId"
+    SchemaName    = "jbe_TestId"
     DisplayName   = New-Label "Test ID" "Test ID"
     Description   = New-Label "Test-ID des ausgefuehrten Testfalls" "Test ID of the executed test case"
     RequiredLevel = @{ Value = "None" }
@@ -722,18 +722,18 @@ New-Attribute "itt_testrunresult" @{
     FormatName    = @{ Value = "Text" }
 }
 
-$outcomeOsId = Get-GlobalOptionSetId "itt_testoutcome"
-New-Attribute "itt_testrunresult" @{
+$outcomeOsId = Get-GlobalOptionSetId "jbe_testoutcome"
+New-Attribute "jbe_testrunresult" @{
     "@odata.type"                      = "Microsoft.Dynamics.CRM.PicklistAttributeMetadata"
-    SchemaName                         = "itt_Outcome"
+    SchemaName                         = "jbe_Outcome"
     DisplayName                        = New-Label "Ergebnis" "Outcome"
     RequiredLevel                      = @{ Value = "None" }
     "GlobalOptionSet@odata.bind"       = "/GlobalOptionSetDefinitions($outcomeOsId)"
 }
 
-New-Attribute "itt_testrunresult" @{
+New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_DurationMs"
+    SchemaName    = "jbe_DurationMs"
     DisplayName   = New-Label "Dauer (ms)" "Duration (ms)"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -741,27 +741,27 @@ New-Attribute "itt_testrunresult" @{
     Format        = "None"
 }
 
-New-Attribute "itt_testrunresult" @{
+New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_ErrorMessage"
+    SchemaName    = "jbe_ErrorMessage"
     DisplayName   = New-Label "Fehlermeldung" "Error Message"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100000
     Format        = "TextArea"
 }
 
-New-Attribute "itt_testrunresult" @{
+New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_AssertionResults"
+    SchemaName    = "jbe_AssertionResults"
     DisplayName   = New-Label "Assertion-Ergebnisse (JSON)" "Assertion Results (JSON)"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"
 }
 
-New-Attribute "itt_testrunresult" @{
+New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_TrackedRecords"
+    SchemaName    = "jbe_TrackedRecords"
     DisplayName   = New-Label "Erzeugte Records (JSON)" "Tracked Records (JSON)"
     Description   = New-Label "JSON-Array der von diesem Test erzeugten Dataverse-Records fuer spaeteres Cleanup" "JSON array of Dataverse records created by this test for later cleanup"
     RequiredLevel = @{ Value = "None" }
@@ -770,20 +770,20 @@ New-Attribute "itt_testrunresult" @{
 }
 
 # ==========================================================================
-#  STEP 7: ENTITY itt_teststep
+#  STEP 7: ENTITY jbe_teststep
 # ==========================================================================
 
 Write-Host ""
-Write-Host "-- Schritt 7/10: Tabelle itt_teststep -----------------------------" -ForegroundColor Cyan
+Write-Host "-- Schritt 7/10: Tabelle jbe_teststep -----------------------------" -ForegroundColor Cyan
 
-if (Test-EntityExists "itt_teststep") {
-    Write-Host "  [SKIP] itt_teststep existiert bereits" -ForegroundColor DarkGray
+if (Test-EntityExists "jbe_teststep") {
+    Write-Host "  [SKIP] jbe_teststep existiert bereits" -ForegroundColor DarkGray
 } else {
-    Write-Host "  [CREATE] itt_teststep..." -ForegroundColor Green
+    Write-Host "  [CREATE] jbe_teststep..." -ForegroundColor Green
 
     $tableBody = @{
         "@odata.type"          = "Microsoft.Dynamics.CRM.EntityMetadata"
-        SchemaName             = "itt_teststep"
+        SchemaName             = "jbe_teststep"
         DisplayName            = New-Label "Testschritt" "Test Step"
         DisplayCollectionName  = New-Label "Testschritte" "Test Steps"
         Description            = New-Label "Einzelner Schritt innerhalb eines Testergebnisses" "Individual step within a test run result"
@@ -791,11 +791,11 @@ if (Test-EntityExists "itt_teststep") {
         IsActivity             = $false
         HasNotes               = $false
         HasActivities          = $false
-        PrimaryNameAttribute   = "itt_name"
+        PrimaryNameAttribute   = "jbe_name"
         Attributes             = @(
             @{
                 "@odata.type"     = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-                SchemaName        = "itt_name"
+                SchemaName        = "jbe_name"
                 DisplayName       = New-Label "Name" "Name"
                 Description       = New-Label "Automatisch generierte Testschritt-Nr." "Auto-generated test step number"
                 IsPrimaryName     = $true
@@ -814,96 +814,96 @@ if (Test-EntityExists "itt_teststep") {
         -Headers ($headers + @{ "MSCRM.SolutionUniqueName" = $solutionName }) `
         -Body $tableBody | Out-Null
 
-    Write-Host "    Erstellt: itt_teststep" -ForegroundColor Green
+    Write-Host "    Erstellt: jbe_teststep" -ForegroundColor Green
 }
 
-# Attributes on itt_teststep
-Write-Host "  Attribute auf itt_teststep:" -ForegroundColor Cyan
+# Attributes on jbe_teststep
+Write-Host "  Attribute auf jbe_teststep:" -ForegroundColor Cyan
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_Action"
+    SchemaName    = "jbe_Action"
     DisplayName   = New-Label "Aktion" "Action"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_Entity"
+    SchemaName    = "jbe_Entity"
     DisplayName   = New-Label "Tabelle" "Entity"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 200
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_Alias"
+    SchemaName    = "jbe_Alias"
     DisplayName   = New-Label "Alias" "Alias"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_RecordId"
+    SchemaName    = "jbe_RecordId"
     DisplayName   = New-Label "Record ID" "Record ID"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_RecordUrl"
+    SchemaName    = "jbe_RecordUrl"
     DisplayName   = New-Label "Record URL" "Record URL"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 200
     FormatName    = @{ Value = "Url" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_AssertionField"
+    SchemaName    = "jbe_AssertionField"
     DisplayName   = New-Label "Assertionsfeld" "Assertion Field"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 200
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_AssertionOperator"
+    SchemaName    = "jbe_AssertionOperator"
     DisplayName   = New-Label "Operator" "Operator"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 50
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_ExpectedValue"
+    SchemaName    = "jbe_ExpectedValue"
     DisplayName   = New-Label "Erwarteter Wert" "Expected Value"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 2000
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
-    SchemaName    = "itt_ActualValue"
+    SchemaName    = "jbe_ActualValue"
     DisplayName   = New-Label "Tatsaechlicher Wert" "Actual Value"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 2000
     FormatName    = @{ Value = "Text" }
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_StepNumber"
+    SchemaName    = "jbe_StepNumber"
     DisplayName   = New-Label "Schrittnummer" "Step Number"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -911,9 +911,9 @@ New-Attribute "itt_teststep" @{
     Format        = "None"
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.IntegerAttributeMetadata"
-    SchemaName    = "itt_DurationMs"
+    SchemaName    = "jbe_DurationMs"
     DisplayName   = New-Label "Dauer (ms)" "Duration (ms)"
     RequiredLevel = @{ Value = "None" }
     MinValue      = 0
@@ -921,46 +921,46 @@ New-Attribute "itt_teststep" @{
     Format        = "None"
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_InputData"
+    SchemaName    = "jbe_InputData"
     DisplayName   = New-Label "Eingabedaten" "Input Data"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_OutputData"
+    SchemaName    = "jbe_OutputData"
     DisplayName   = New-Label "Ausgabedaten" "Output Data"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"
 }
 
-New-Attribute "itt_teststep" @{
+New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
-    SchemaName    = "itt_ErrorMessage"
+    SchemaName    = "jbe_ErrorMessage"
     DisplayName   = New-Label "Fehlermeldung" "Error Message"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 100000
     Format        = "TextArea"
 }
 
-$phaseOsId = Get-GlobalOptionSetId "itt_stepphase"
-New-Attribute "itt_teststep" @{
+$phaseOsId = Get-GlobalOptionSetId "jbe_stepphase"
+New-Attribute "jbe_teststep" @{
     "@odata.type"                      = "Microsoft.Dynamics.CRM.PicklistAttributeMetadata"
-    SchemaName                         = "itt_Phase"
+    SchemaName                         = "jbe_Phase"
     DisplayName                        = New-Label "Phase" "Phase"
     RequiredLevel                      = @{ Value = "None" }
     "GlobalOptionSet@odata.bind"       = "/GlobalOptionSetDefinitions($phaseOsId)"
 }
 
-$stepStatusOsId = Get-GlobalOptionSetId "itt_stepstatus"
-New-Attribute "itt_teststep" @{
+$stepStatusOsId = Get-GlobalOptionSetId "jbe_stepstatus"
+New-Attribute "jbe_teststep" @{
     "@odata.type"                      = "Microsoft.Dynamics.CRM.PicklistAttributeMetadata"
-    SchemaName                         = "itt_StepStatus"
+    SchemaName                         = "jbe_StepStatus"
     DisplayName                        = New-Label "Status" "Status"
     RequiredLevel                      = @{ Value = "None" }
     "GlobalOptionSet@odata.bind"       = "/GlobalOptionSetDefinitions($stepStatusOsId)"
@@ -975,7 +975,7 @@ Write-Host "-- Schritt 8/10: Relationships ------------------------------------"
 
 # --- testrunresult -> testrun ---
 
-$relSchemaName = "itt_testrunresult_testrun"
+$relSchemaName = "jbe_testrunresult_testrun"
 
 if (Test-RelationshipExists $relSchemaName) {
     Write-Host "  [SKIP] $relSchemaName existiert bereits" -ForegroundColor DarkGray
@@ -985,11 +985,11 @@ if (Test-RelationshipExists $relSchemaName) {
     $relBody = @{
         "@odata.type"      = "Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata"
         SchemaName         = $relSchemaName
-        ReferencedEntity   = "itt_testrun"
-        ReferencingEntity  = "itt_testrunresult"
+        ReferencedEntity   = "jbe_testrun"
+        ReferencingEntity  = "jbe_testrunresult"
         Lookup             = @{
             "@odata.type" = "Microsoft.Dynamics.CRM.LookupAttributeMetadata"
-            SchemaName    = "itt_TestRunId"
+            SchemaName    = "jbe_TestRunId"
             DisplayName   = New-Label "Testlauf" "Test Run"
             RequiredLevel = @{ Value = "None" }
         }
@@ -1012,7 +1012,7 @@ if (Test-RelationshipExists $relSchemaName) {
 }
 
 # --- teststep -> testrunresult ---
-$relSchemaName2 = "itt_teststep_testrunresult"
+$relSchemaName2 = "jbe_teststep_testrunresult"
 
 if (Test-RelationshipExists $relSchemaName2) {
     Write-Host "  [SKIP] $relSchemaName2 existiert bereits" -ForegroundColor DarkGray
@@ -1022,11 +1022,11 @@ if (Test-RelationshipExists $relSchemaName2) {
     $relBody2 = @{
         "@odata.type"      = "Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata"
         SchemaName         = $relSchemaName2
-        ReferencedEntity   = "itt_testrunresult"
-        ReferencingEntity  = "itt_teststep"
+        ReferencedEntity   = "jbe_testrunresult"
+        ReferencingEntity  = "jbe_teststep"
         Lookup             = @{
             "@odata.type" = "Microsoft.Dynamics.CRM.LookupAttributeMetadata"
-            SchemaName    = "itt_TestRunResultId"
+            SchemaName    = "jbe_TestRunResultId"
             DisplayName   = New-Label "Testergebnis" "Test Run Result"
             RequiredLevel = @{ Value = "None" }
         }
@@ -1058,13 +1058,13 @@ Write-Host "-- Schritt 9/10: Web Resources ------------------------------------"
 $webresourceDir = Join-Path (Split-Path $scriptDir -Parent) "webresource"
 
 $webResources = @(
-    @{ Name = "itt_/testcenter.html";              File = "d365testcenter.html";         Type = 1  } # 1 = HTML
-    @{ Name = "itt_/packs/manifest.json";          File = "packs/manifest.json";         Type = 3  } # 3 = Script (JSON)
-    @{ Name = "itt_/packs/standard.json";          File = "packs/standard.json";         Type = 3  }
-    @{ Name = "itt_/packs/demo-standard.json";     File = "packs/demo-standard.json";    Type = 3  }
-    @{ Name = "itt_/packs/empty.json";              File = "packs/empty.json";            Type = 3  }
+    @{ Name = "jbe_/testcenter.html";              File = "d365testcenter.html";         Type = 1  } # 1 = HTML
+    @{ Name = "jbe_/packs/manifest.json";          File = "packs/manifest.json";         Type = 3  } # 3 = Script (JSON)
+    @{ Name = "jbe_/packs/standard.json";          File = "packs/standard.json";         Type = 3  }
+    @{ Name = "jbe_/packs/demo-standard.json";     File = "packs/demo-standard.json";    Type = 3  }
+    @{ Name = "jbe_/packs/empty.json";              File = "packs/empty.json";            Type = 3  }
     # Add custom packs here:
-    # @{ Name = "itt_/packs/custom-pack.json";     File = "packs/custom-pack.json";    Type = 3  }
+    # @{ Name = "jbe_/packs/custom-pack.json";     File = "packs/custom-pack.json";    Type = 3  }
 )
 
 foreach ($wr in $webResources) {
@@ -1138,11 +1138,11 @@ Write-Host "  Deployment abgeschlossen!" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 Write-Host "  Solution: $solutionName" -ForegroundColor Green
 Write-Host "  Publisher: $pubUnique (prefix: $pubPrefix)" -ForegroundColor Green
-Write-Host "  Entities: itt_testcase, itt_testrun, itt_testrunresult, itt_teststep" -ForegroundColor Green
-Write-Host "  OptionSets: itt_teststatus, itt_testoutcome, itt_testcategory, itt_stepphase, itt_stepstatus" -ForegroundColor Green
+Write-Host "  Entities: jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep" -ForegroundColor Green
+Write-Host "  OptionSets: jbe_teststatus, jbe_testoutcome, jbe_testcategory, jbe_stepphase, jbe_stepstatus" -ForegroundColor Green
 Write-Host "  Web Resources: $($webResources.Count) Dateien" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
-Write-Host "  URL: $($config.resource)WebResources/itt_/testcenter.html" -ForegroundColor Cyan
+Write-Host "  URL: $($config.resource)WebResources/jbe_/testcenter.html" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Green
 
 } finally {

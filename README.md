@@ -65,7 +65,7 @@ The script creates the publisher, solution, entities, option sets, and web resou
 Navigate to your environment's Web Resources and open `d365testcenter.html`, or access it directly:
 
 ```
-https://your-org.crm4.dynamics.com/WebResources/itt_/testcenter.html
+https://your-org.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
 ### 4. Try the Demo Mode
@@ -109,10 +109,10 @@ Open `webresource/d365testcenter.html` as a local file in your browser. The app 
 
 | Entity | Description |
 |--------|-------------|
-| `itt_testcase` | Test case definition (JSON) |
-| `itt_testrun` | A test run |
-| `itt_testrunresult` | Result per test case in a run |
-| `itt_teststep` | Individual step log entry |
+| `jbe_testcase` | Test case definition (JSON) |
+| `jbe_testrun` | A test run |
+| `jbe_testrunresult` | Result per test case in a run |
+| `jbe_teststep` | Individual step log entry |
 
 ## License
 

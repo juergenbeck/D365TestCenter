@@ -5,14 +5,14 @@
   "color": "#78909c",
   "testCases": [
     {
-      "itt_testcaseid": "00000000-0000-4000-8000-000000000001",
-      "itt_testid": "EXAMPLE-01",
-      "itt_title": "Beispiel-Testfall (bitte anpassen)",
-      "itt_category": 100000005,
-      "itt_tags": "Beispiel",
-      "itt_userstories": "",
-      "itt_enabled": true,
-      "itt_definitionjson": {
+      "jbe_testcaseid": "00000000-0000-4000-8000-000000000001",
+      "jbe_testid": "EXAMPLE-01",
+      "jbe_title": "Beispiel-Testfall (bitte anpassen)",
+      "jbe_category": 100000005,
+      "jbe_tags": "Beispiel",
+      "jbe_userstories": "",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
         "preconditions": { "createAccount": true, "createContact": true },
         "steps": [
           { "action": "CreateRecord", "entity": "account", "alias": "acc1", "fields": { "name": "Testfirma GmbH" } },

@@ -107,7 +107,7 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 - **User Story:** DYN-8621
 - **Preconditions:** Account, Contact und eine ContactSource (PISA, alias "pisa1")
 - **Steps:** UpdateContactSource mit neuem Vornamen, Wait 5s, CallGovernanceApiContact
-- **Assertions:** Contact.firstname und ContactSource.itt_firstname prüfen
+- **Assertions:** Contact.firstname und ContactSource.jbe_firstname prüfen
 
 #### TC02: LUW All Fields Update
 
@@ -362,14 +362,14 @@ Dieser Testfall erstellt einen Account mit dem Namen "Testfirma GmbH", wartet 3 
 
     testCases: [
         {
-            itt_testcaseid: "aaaaaaaa-0001-4000-8000-bbbbbbbbbbbb",
-            itt_testid: "MEIN-TC01",
-            itt_title: "Erster eigener Testfall",
-            itt_category: 100000005,
-            itt_tags: "Demo",
-            itt_userstories: "PROJ-9999",
-            itt_enabled: true,
-            itt_definition_json: JSON.stringify({
+            jbe_testcaseid: "aaaaaaaa-0001-4000-8000-bbbbbbbbbbbb",
+            jbe_testid: "MEIN-TC01",
+            jbe_title: "Erster eigener Testfall",
+            jbe_category: 100000005,
+            jbe_tags: "Demo",
+            jbe_userstories: "PROJ-9999",
+            jbe_enabled: true,
+            jbe_definition_json: JSON.stringify({
                 preconditions: { createAccount: true },
                 steps: [
                     {
@@ -435,16 +435,16 @@ Für realistische Demo-Daten können Testläufe als Getter definiert werden, die
 get testRuns() {
     return [
         {
-            itt_testrunid: "...",
-            itt_teststatus: 100000002,  // Abgeschlossen
-            itt_passed: 5,
-            itt_failed: 1,
-            itt_total: 6,
-            itt_started_on: _makeDate(0, 10, 0),   // heute, 10:00
-            itt_completed_on: _makeDate(0, 10, 8),  // heute, 10:08
-            itt_testcasefilter: "*",
-            itt_testsummary: "6 Tests ausgeführt.",
-            itt_fulllog: "..."
+            jbe_testrunid: "...",
+            jbe_teststatus: 100000002,  // Abgeschlossen
+            jbe_passed: 5,
+            jbe_failed: 1,
+            jbe_total: 6,
+            jbe_started_on: _makeDate(0, 10, 0),   // heute, 10:00
+            jbe_completed_on: _makeDate(0, 10, 8),  // heute, 10:08
+            jbe_testcasefilter: "*",
+            jbe_testsummary: "6 Tests ausgeführt.",
+            jbe_fulllog: "..."
         }
     ];
 }

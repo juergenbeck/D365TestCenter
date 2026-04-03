@@ -4,7 +4,7 @@ Dieses Dokument beschreibt das JSON-Schema eines Testfalls, alle verfügbaren Ac
 
 ## JSON-Schema eines Testfalls
 
-Jeder Testfall wird als JSON-Objekt im Feld `itt_definition_json` gespeichert. Das Objekt hat drei Hauptabschnitte:
+Jeder Testfall wird als JSON-Objekt im Feld `jbe_definition_json` gespeichert. Das Objekt hat drei Hauptabschnitte:
 
 ```json
 {
@@ -123,16 +123,16 @@ Erstellt eine neue ContactSource-Entität im Field-Governance-Kontext.
 |-----------|-----|---------|--------------|
 | `action` | String | Pflicht | `"CreateContactSource"` |
 | `alias` | String | Optional | Alias für die neue ContactSource |
-| `fields` | Object | Pflicht | Feldwerte inkl. `itt_sourcesystem` |
+| `fields` | Object | Pflicht | Feldwerte inkl. `jbe_sourcesystem` |
 
 ```json
 {
   "action": "CreateContactSource",
   "alias": "newcs",
   "fields": {
-    "itt_firstname": "Neu",
-    "itt_lastname": "Kontakt",
-    "itt_sourcesystem": 4
+    "jbe_firstname": "Neu",
+    "jbe_lastname": "Kontakt",
+    "jbe_sourcesystem": 4
   }
 }
 ```
@@ -152,7 +152,7 @@ Aktualisiert eine bestehende ContactSource.
   "action": "UpdateContactSource",
   "alias": "pisa1",
   "fields": {
-    "itt_firstname": "Maximilian"
+    "jbe_firstname": "Maximilian"
   }
 }
 ```
@@ -180,13 +180,13 @@ Ruft eine Custom API (Action oder Function) in Dataverse auf.
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
 | `action` | String | Pflicht | `"ExecuteAction"` |
-| `apiName` | String | Pflicht | Vollständiger Name der Custom API (z.B. `"itt_RunIntegrationTests"`) |
+| `apiName` | String | Pflicht | Vollständiger Name der Custom API (z.B. `"jbe_RunIntegrationTests"`) |
 | `parameters` | Object | Optional | Eingabeparameter für die Custom API |
 
 ```json
 {
   "action": "ExecuteAction",
-  "apiName": "itt_RunIntegrationTests",
+  "apiName": "jbe_RunIntegrationTests",
   "parameters": {}
 }
 ```
@@ -224,7 +224,7 @@ Prüft Umgebungsvoraussetzungen vor dem eigentlichen Testlauf (Pre-Flight-Diagno
 |-----------|-----|---------|--------------|
 | `action` | String | Pflicht | `"AssertEnvironment"` |
 
-Die Custom API `itt_AssertEnvironment` ist als Function registriert und validiert, ob die notwendigen Entities und Konfigurationen vorhanden sind.
+Die Custom API `jbe_AssertEnvironment` ist als Function registriert und validiert, ob die notwendigen Entities und Konfigurationen vorhanden sind.
 
 ## Assertions
 
@@ -354,8 +354,8 @@ Beim Starten eines Testlaufs kann ein globaler Timeout pro Testfall eingestellt 
 ### 1. Erstellen
 
 - Testfall wird über den JSON-Editor im Test Center erstellt oder per PowerShell-Import.
-- Metadaten (Test ID, Titel, Kategorie, Tags, User Stories) werden als Felder des `itt_testcase`-Datensatzes gespeichert.
-- Die JSON-Definition wird im Memo-Feld `itt_definition_json` abgelegt.
+- Metadaten (Test ID, Titel, Kategorie, Tags, User Stories) werden als Felder des `jbe_testcase`-Datensatzes gespeichert.
+- Die JSON-Definition wird im Memo-Feld `jbe_definition_json` abgelegt.
 
 ### 2. Validieren
 
@@ -366,14 +366,14 @@ Beim Starten eines Testlaufs kann ein globaler Timeout pro Testfall eingestellt 
 ### 3. Ausführen
 
 - Der Testlauf wird über die UI gestartet (Filteroptionen: alle, Kategorie, Tag, User Story, einzelne IDs).
-- Ein `itt_testrun`-Datensatz wird erstellt (Status: `Geplant`, dann `Läuft`).
-- Optional wird die Custom API `itt_RunIntegrationTests` aufgerufen.
+- Ein `jbe_testrun`-Datensatz wird erstellt (Status: `Geplant`, dann `Läuft`).
+- Optional wird die Custom API `jbe_RunIntegrationTests` aufgerufen.
 - Jeder Testfall wird sequentiell verarbeitet:
   1. Preconditions werden aufgebaut (Account, Contact, ContactSources).
   2. Steps werden der Reihe nach ausgeführt, Platzhalter aufgelöst.
   3. Assertions werden gegen den resultierenden Zustand geprüft.
-- Pro Testfall wird ein `itt_testrunresult`-Datensatz mit Outcome, Dauer und Fehlermeldung erstellt.
-- Der `itt_testrun`-Datensatz wird laufend aktualisiert (Passed/Failed-Zähler, Log).
+- Pro Testfall wird ein `jbe_testrunresult`-Datensatz mit Outcome, Dauer und Fehlermeldung erstellt.
+- Der `jbe_testrun`-Datensatz wird laufend aktualisiert (Passed/Failed-Zähler, Log).
 - Die UI pollt alle 3 Sekunden den aktuellen Zustand und zeigt Live-Fortschritt.
 
 ### 4. Ergebnis

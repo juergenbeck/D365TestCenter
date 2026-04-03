@@ -1,5 +1,5 @@
 {
-  "$schema": "ITT Pack Manifest v1.0",
+  "$schema": "JBE Pack Manifest v1.0",
   "description": "Available demo packs for the Integration Test Center. Register new packs here.",
   "packs": [
     {

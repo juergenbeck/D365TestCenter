@@ -7,37 +7,37 @@ using Newtonsoft.Json;
 namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
-/// Custom API: itt_RunIntegrationTests
-/// Liest einen itt_testrun-Record, deserialisiert die Testfälle,
+/// Custom API: jbe_RunIntegrationTests
+/// Liest einen jbe_testrun-Record, deserialisiert die Testfälle,
 /// filtert nach Konfiguration, führt die Tests aus und schreibt das Ergebnis zurück.
 ///
 /// Registrierung:
-///   MessageName: itt_RunIntegrationTests
+///   MessageName: jbe_RunIntegrationTests
 ///   Binding:     Unbound
-///   Input:       TestRunId (EntityReference auf itt_testrun)
+///   Input:       TestRunId (EntityReference auf jbe_testrun)
 ///   Output:      Success (bool), ResultJson (string), Summary (string)
 /// </summary>
 public sealed class RunIntegrationTestsApi : IPlugin
 {
-    private const string TestRunEntity = "itt_testrun";
+    private const string TestRunEntity = "jbe_testrun";
 
     // ── Felder: Konfiguration ─────────────────────────────────────
-    private const string TestRunConfigField = "itt_testconfig_json";
-    private const string TestRunFilterField = "itt_testcasefilter";
-    private const string TestRunEnvironmentField = "itt_environment";
+    private const string TestRunConfigField = "jbe_testconfig_json";
+    private const string TestRunFilterField = "jbe_testcasefilter";
+    private const string TestRunEnvironmentField = "jbe_environment";
 
     // ── Felder: Status & Ergebnis ─────────────────────────────────
-    private const string TestRunStatusField = "itt_teststatus";
-    private const string TestRunSummaryField = "itt_testsummary";
-    private const string TestRunResultField = "itt_testresult_json";
-    private const string TestRunFullLogField = "itt_fulllog";
+    private const string TestRunStatusField = "jbe_teststatus";
+    private const string TestRunSummaryField = "jbe_testsummary";
+    private const string TestRunResultField = "jbe_testresult_json";
+    private const string TestRunFullLogField = "jbe_fulllog";
 
     // ── Felder: Statistiken ───────────────────────────────────────
-    private const string TestRunStartedOnField = "itt_started_on";
-    private const string TestRunCompletedOnField = "itt_completed_on";
-    private const string TestRunTotalField = "itt_total";
-    private const string TestRunPassedField = "itt_passed";
-    private const string TestRunFailedField = "itt_failed";
+    private const string TestRunStartedOnField = "jbe_started_on";
+    private const string TestRunCompletedOnField = "jbe_completed_on";
+    private const string TestRunTotalField = "jbe_total";
+    private const string TestRunPassedField = "jbe_passed";
+    private const string TestRunFailedField = "jbe_failed";
 
     // ── Status-OptionSet-Werte (Publisher-Prefix: 595300xxx) ──
     private const int StatusGeplant = 595300000;
@@ -241,7 +241,7 @@ public sealed class RunIntegrationTestsApi : IPlugin
     }
 
     /// <summary>
-    /// Filtert Testfälle anhand des itt_testcasefilter-Felds.
+    /// Filtert Testfälle anhand des jbe_testcasefilter-Felds.
     /// Unterstützte Formate:
     ///   "*" oder leer    → alle aktivierten Tests
     ///   "TC01,TC02"      → nur diese IDs

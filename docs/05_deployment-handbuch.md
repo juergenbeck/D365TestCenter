@@ -12,7 +12,7 @@ Schritt-für-Schritt-Anleitung zur Einrichtung des Integration Test Centers in e
 
 ## Schritt 1: Publisher und Prefix konfigurieren
 
-Im Quellcode der HTML-Datei (`itt_testcenter.html`) befindet sich ein `CONFIG`-Block, der den Publisher-Prefix und die Entity-Namen definiert.
+Im Quellcode der HTML-Datei (`jbe_testcenter.html`) befindet sich ein `CONFIG`-Block, der den Publisher-Prefix und die Entity-Namen definiert.
 
 ### CONFIG-Block anpassen
 
@@ -21,9 +21,9 @@ const CONFIG = {
     prefix: "itt",                    // Publisher-Prefix (ohne Unterstrich)
     optionSetBase: 100000000,         // Basis für OptionSet-Werte
     entities: {
-        testcase: "itt_testcase",
-        testrun: "itt_testrun",
-        testrunresult: "itt_testrunresult"
+        testcase: "jbe_testcase",
+        testrun: "jbe_testrun",
+        testrunresult: "jbe_testrunresult"
     },
     // ... (Felder und OptionSets)
 };
@@ -43,82 +43,82 @@ Falls ein anderer Publisher verwendet wird (z.B. `xyz` statt `itt`):
 
 Drei Custom Entities müssen in Dataverse erstellt werden. Dies kann manuell im Maker Portal oder per PowerShell-Skript (`Create-TestingEntities.ps1`) erfolgen.
 
-### Entity 1: Testfall (`itt_testcase`)
+### Entity 1: Testfall (`jbe_testcase`)
 
 | Eigenschaft | Wert |
 |-------------|------|
 | Anzeigename | Testfall |
-| Schema-Name | `itt_testcase` |
+| Schema-Name | `jbe_testcase` |
 | Pluralname | Testfälle |
-| EntitySet-Name | `itt_testcases` |
-| Primäres Namensfeld | `itt_name` (AutoNumber empfohlen: `TC-{SEQNUM:8}`) |
+| EntitySet-Name | `jbe_testcases` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `TC-{SEQNUM:8}`) |
 
 **Felder:**
 
 | Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
 |-------------|-------------|-----|---------|--------------|
-| `itt_testid` | Test ID | String (100) | Pflicht (ApplicationRequired) | Eindeutige Test-ID (z.B. TC01, BTC01) |
-| `itt_title` | Titel | String (300) | Pflicht (ApplicationRequired) | Beschreibender Titel |
-| `itt_category` | Kategorie | OptionSet (Picklist) | Empfohlen | Testkategorie (siehe OptionSets) |
-| `itt_tags` | Tags | String (500) | Optional | Kommagetrennte Tags |
-| `itt_userstories` | User Stories | String (500) | Optional | Kommagetrennte Jira-Keys |
-| `itt_enabled` | Aktiv | Boolean | Optional | Testfall aktiv/deaktiviert (Standard: true) |
-| `itt_definition_json` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
+| `jbe_testid` | Test ID | String (100) | Pflicht (ApplicationRequired) | Eindeutige Test-ID (z.B. TC01, BTC01) |
+| `jbe_title` | Titel | String (300) | Pflicht (ApplicationRequired) | Beschreibender Titel |
+| `jbe_category` | Kategorie | OptionSet (Picklist) | Empfohlen | Testkategorie (siehe OptionSets) |
+| `jbe_tags` | Tags | String (500) | Optional | Kommagetrennte Tags |
+| `jbe_userstories` | User Stories | String (500) | Optional | Kommagetrennte Jira-Keys |
+| `jbe_enabled` | Aktiv | Boolean | Optional | Testfall aktiv/deaktiviert (Standard: true) |
+| `jbe_definition_json` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
 
-**Alternate Key:** `itt_testid` (ermöglicht Upsert bei Import).
+**Alternate Key:** `jbe_testid` (ermöglicht Upsert bei Import).
 
-### Entity 2: Testlauf (`itt_testrun`)
+### Entity 2: Testlauf (`jbe_testrun`)
 
 | Eigenschaft | Wert |
 |-------------|------|
 | Anzeigename | Testlauf |
-| Schema-Name | `itt_testrun` |
+| Schema-Name | `jbe_testrun` |
 | Pluralname | Testläufe |
-| EntitySet-Name | `itt_testruns` |
-| Primäres Namensfeld | `itt_name` (AutoNumber empfohlen: `RUN-{SEQNUM:8}`) |
+| EntitySet-Name | `jbe_testruns` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RUN-{SEQNUM:8}`) |
 
 **Felder:**
 
 | Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
 |-------------|-------------|-----|---------|--------------|
-| `itt_teststatus` | Status | OptionSet (Picklist) | Optional | Teststatus (siehe OptionSets) |
-| `itt_passed` | Bestanden | Integer | Optional | Anzahl bestandener Tests |
-| `itt_failed` | Fehlgeschlagen | Integer | Optional | Anzahl fehlgeschlagener Tests |
-| `itt_total` | Gesamt | Integer | Optional | Gesamtanzahl Tests im Lauf |
-| `itt_started_on` | Gestartet | DateTime | Optional | Startzeitpunkt |
-| `itt_completed_on` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
-| `itt_testcasefilter` | Testfall-Filter | String (500) | Optional | Angewendeter Filter (z.B. `"*"`, `"story:DYN-1234"`) |
-| `itt_testsummary` | Zusammenfassung | Memo (Multiline) | Optional | Textuelle Zusammenfassung |
-| `itt_fulllog` | Vollständiges Log | Memo (Multiline) | Optional | Komplettes Ausführungslog |
-| `itt_testresult_json` | Ergebnis (JSON) | Memo (Multiline) | Optional | Strukturiertes Ergebnis als JSON |
+| `jbe_teststatus` | Status | OptionSet (Picklist) | Optional | Teststatus (siehe OptionSets) |
+| `jbe_passed` | Bestanden | Integer | Optional | Anzahl bestandener Tests |
+| `jbe_failed` | Fehlgeschlagen | Integer | Optional | Anzahl fehlgeschlagener Tests |
+| `jbe_total` | Gesamt | Integer | Optional | Gesamtanzahl Tests im Lauf |
+| `jbe_started_on` | Gestartet | DateTime | Optional | Startzeitpunkt |
+| `jbe_completed_on` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
+| `jbe_testcasefilter` | Testfall-Filter | String (500) | Optional | Angewendeter Filter (z.B. `"*"`, `"story:DYN-1234"`) |
+| `jbe_testsummary` | Zusammenfassung | Memo (Multiline) | Optional | Textuelle Zusammenfassung |
+| `jbe_fulllog` | Vollständiges Log | Memo (Multiline) | Optional | Komplettes Ausführungslog |
+| `jbe_testresult_json` | Ergebnis (JSON) | Memo (Multiline) | Optional | Strukturiertes Ergebnis als JSON |
 
-### Entity 3: Testergebnis (`itt_testrunresult`)
+### Entity 3: Testergebnis (`jbe_testrunresult`)
 
 | Eigenschaft | Wert |
 |-------------|------|
 | Anzeigename | Testergebnis |
-| Schema-Name | `itt_testrunresult` |
+| Schema-Name | `jbe_testrunresult` |
 | Pluralname | Testergebnisse |
-| EntitySet-Name | `itt_testrunresults` |
-| Primäres Namensfeld | `itt_name` (AutoNumber empfohlen: `RES-{SEQNUM:8}`) |
+| EntitySet-Name | `jbe_testrunresults` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RES-{SEQNUM:8}`) |
 
 **Felder:**
 
 | Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
 |-------------|-------------|-----|---------|--------------|
-| `itt_testrunid` | Testlauf | Lookup auf `itt_testrun` | Optional | Zugehöriger Testlauf |
-| `itt_testcaseid` | Testfall | Lookup auf `itt_testcase` | Optional | Zugehöriger Testfall |
-| `itt_testid` | Test ID | String (100) | Optional | Test-ID (redundant für schnelle Abfragen) |
-| `itt_outcome` | Ergebnis | OptionSet (Picklist) | Optional | Testergebnis (siehe OptionSets) |
-| `itt_duration_ms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
-| `itt_error_message` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
-| `itt_assertion_results` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
+| `jbe_testrunid` | Testlauf | Lookup auf `jbe_testrun` | Optional | Zugehöriger Testlauf |
+| `jbe_testcaseid` | Testfall | Lookup auf `jbe_testcase` | Optional | Zugehöriger Testfall |
+| `jbe_testid` | Test ID | String (100) | Optional | Test-ID (redundant für schnelle Abfragen) |
+| `jbe_outcome` | Ergebnis | OptionSet (Picklist) | Optional | Testergebnis (siehe OptionSets) |
+| `jbe_duration_ms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
+| `jbe_error_message` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
+| `jbe_assertion_results` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
 
 ### OptionSets
 
 Die folgenden globalen OptionSets müssen angelegt werden (Basiswert: `100000000`):
 
-**itt_teststatus (Teststatus):**
+**jbe_teststatus (Teststatus):**
 
 | Wert | Label |
 |------|-------|
@@ -127,7 +127,7 @@ Die folgenden globalen OptionSets müssen angelegt werden (Basiswert: `100000000
 | 100000002 | Abgeschlossen |
 | 100000003 | Fehler |
 
-**itt_testoutcome (Testergebnis):**
+**jbe_testoutcome (Testergebnis):**
 
 | Wert | Label |
 |------|-------|
@@ -137,7 +137,7 @@ Die folgenden globalen OptionSets müssen angelegt werden (Basiswert: `100000000
 | 100000003 | Skipped |
 | 100000004 | NotImplemented |
 
-**itt_testcategory (Testkategorie):**
+**jbe_testcategory (Testkategorie):**
 
 | Wert | Label |
 |------|-------|
@@ -157,12 +157,12 @@ Die folgenden globalen OptionSets müssen angelegt werden (Basiswert: `100000000
 
 ### 3.1 Web Resource erstellen
 
-1. Im Maker Portal die Solution öffnen (z.B. `itt_testing`).
+1. Im Maker Portal die Solution öffnen (z.B. `jbe_testing`).
 2. Neue Web Resource hinzufügen:
    - **Anzeigename:** Integration Test Center
-   - **Name (Schema):** `itt_testcenter` (wird zu `itt_/itt_testcenter.html`)
+   - **Name (Schema):** `jbe_testcenter` (wird zu `jbe_/jbe_testcenter.html`)
    - **Typ:** Webseite (HTML)
-   - **Inhalt:** Die Datei `itt_testcenter.html` hochladen.
+   - **Inhalt:** Die Datei `jbe_testcenter.html` hochladen.
 3. Speichern und publizieren.
 
 ### 3.2 Sitemap-Eintrag erstellen (optional, aber empfohlen)
@@ -172,12 +172,12 @@ Einen Sitemap-Eintrag anlegen, damit das Test Center im CRM-Navigationsmenü ers
 - **Bereich:** z.B. "Testing" oder unter einem bestehenden Bereich
 - **Gruppe:** z.B. "Integration Tests"
 - **SubArea-Typ:** Web Resource
-- **Web Resource:** `itt_testcenter`
+- **Web Resource:** `jbe_testcenter`
 
 Alternativ kann die Web Resource direkt per URL aufgerufen werden:
 
 ```
-https://<umgebung>.crm4.dynamics.com/WebResources/itt_/itt_testcenter.html
+https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
 ```
 
 ### 3.3 Demo-Modus
@@ -191,13 +191,13 @@ Wenn die Web Resource außerhalb von Dynamics 365 geöffnet wird (oder die CRM-A
 
 ## Schritt 4: Custom API registrieren (optional)
 
-Die Custom API `itt_RunIntegrationTests` ermöglicht die serverseitige Testausführung über ein Plugin.
+Die Custom API `jbe_RunIntegrationTests` ermöglicht die serverseitige Testausführung über ein Plugin.
 
 ### API-Definition
 
 | Eigenschaft | Wert |
 |-------------|------|
-| Unique Name | `itt_RunIntegrationTests` |
+| Unique Name | `jbe_RunIntegrationTests` |
 | Display Name | Run Integration Tests |
 | Binding Type | Unbound (0) |
 | Is Function | Nein (Action) |
@@ -207,14 +207,14 @@ Die Custom API `itt_RunIntegrationTests` ermöglicht die serverseitige Testausf�
 
 | Name | Typ | Pflicht | Beschreibung |
 |------|-----|---------|--------------|
-| `TestRunId` | EntityReference (itt_testrun) | Ja | Referenz auf den zu startenden Testlauf |
+| `TestRunId` | EntityReference (jbe_testrun) | Ja | Referenz auf den zu startenden Testlauf |
 
 ### Plugin-Assembly
 
 Falls die Custom API serverseitig Tests ausführen soll:
 
 1. Plugin-Assembly mit der Testausführungslogik erstellen (IPlugin-Implementierung).
-2. Plugin-Step auf `itt_RunIntegrationTests` (PostOperation, Synchronous) registrieren.
+2. Plugin-Step auf `jbe_RunIntegrationTests` (PostOperation, Synchronous) registrieren.
 3. Das Plugin liest den Testlauf-Record, führt die zugeordneten Testfälle aus und schreibt Ergebnisse zurück.
 
 **Hinweis:** Die Custom API ist optional. Das Test Center funktioniert auch ohne sie, indem der Testlauf clientseitig über die MockAPI/DemoMode-Simulation ausgeführt wird.
@@ -223,9 +223,9 @@ Falls die Custom API serverseitig Tests ausführen soll:
 
 | API | Typ | Beschreibung |
 |-----|-----|--------------|
-| `itt_GovernanceApiContact` | Action | Ruft die Governance-API für einen Kontakt auf |
-| `itt_GovernanceApiContactSource` | Action | Ruft die Governance-API für eine Quell-Entität auf |
-| `itt_AssertEnvironment` | Function | Prüft Umgebungsvoraussetzungen für Integrationstests |
+| `jbe_GovernanceApiContact` | Action | Ruft die Governance-API für einen Kontakt auf |
+| `jbe_GovernanceApiContactSource` | Action | Ruft die Governance-API für eine Quell-Entität auf |
+| `jbe_AssertEnvironment` | Function | Prüft Umgebungsvoraussetzungen für Integrationstests |
 
 ## Schritt 5: Security Roles
 
@@ -233,23 +233,23 @@ Falls die Custom API serverseitig Tests ausführen soll:
 
 | Entity | Tester | Entwickler | Admin |
 |--------|--------|------------|-------|
-| `itt_testcase` | Lesen | Lesen, Schreiben, Erstellen | Vollzugriff |
-| `itt_testrun` | Lesen, Erstellen | Lesen, Schreiben, Erstellen | Vollzugriff |
-| `itt_testrunresult` | Lesen | Lesen, Schreiben, Erstellen | Vollzugriff |
+| `jbe_testcase` | Lesen | Lesen, Schreiben, Erstellen | Vollzugriff |
+| `jbe_testrun` | Lesen, Erstellen | Lesen, Schreiben, Erstellen | Vollzugriff |
+| `jbe_testrunresult` | Lesen | Lesen, Schreiben, Erstellen | Vollzugriff |
 | Getestete Entities (z.B. Contact, Account) | Lesen, Schreiben, Erstellen | Lesen, Schreiben, Erstellen, Löschen | Vollzugriff |
 
 ### Rollen-Empfehlung
 
-**ITT Tester:**
-- `itt_testcase`: Lesen (Organization)
-- `itt_testrun`: Lesen, Erstellen, Schreiben (Organization)
-- `itt_testrunresult`: Lesen (Organization)
+**JBE Tester:**
+- `jbe_testcase`: Lesen (Organization)
+- `jbe_testrun`: Lesen, Erstellen, Schreiben (Organization)
+- `jbe_testrunresult`: Lesen (Organization)
 - Kann Testläufe starten und Ergebnisse einsehen, aber keine Testfälle bearbeiten.
 
 **ITT Entwickler:**
 - Alle Rechte des Testers, zusätzlich:
-- `itt_testcase`: Erstellen, Schreiben, Löschen (Organization)
-- `itt_testrunresult`: Erstellen, Schreiben (Organization)
+- `jbe_testcase`: Erstellen, Schreiben, Löschen (Organization)
+- `jbe_testrunresult`: Erstellen, Schreiben (Organization)
 - Kann Testfälle erstellen, bearbeiten und Ergebnisse korrigieren.
 
 **ITT Admin:**
@@ -261,7 +261,7 @@ Falls die Custom API serverseitig Tests ausführen soll:
 ### 6.1 URL aufrufen
 
 ```
-https://<umgebung>.crm4.dynamics.com/WebResources/itt_/itt_testcenter.html
+https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
 ```
 
 ### 6.2 Demo-Modus prüfen

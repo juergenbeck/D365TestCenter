@@ -2,13 +2,13 @@
 <#
 .SYNOPSIS
     Erstellt die Dataverse-Entities für das Integration Test Center.
-    Solution: itt_testing (eigene Solution, getrennt von Produktionscode)
+    Solution: jbe_testing (eigene Solution, getrennt von Produktionscode)
 
 .DESCRIPTION
     Entities:
-    - itt_testcase: Testfall-Speicherung (JSON-Definition, Metadaten)
-    - itt_testrun: Testlauf-Steuerung (Status, Filter, Ergebnis)
-    - itt_testrunresult: Einzelergebnis pro Testfall (N:1 auf testrun + testcase)
+    - jbe_testcase: Testfall-Speicherung (JSON-Definition, Metadaten)
+    - jbe_testrun: Testlauf-Steuerung (Status, Filter, Ergebnis)
+    - jbe_testrunresult: Einzelergebnis pro Testfall (N:1 auf testrun + testcase)
 
 .PARAMETER Environment
     Zielumgebung: DEV, TEST (Standard: DEV)
@@ -49,7 +49,7 @@ if ($WhatIf) { Write-Host "[WhatIf-Modus: keine Änderungen]" -ForegroundColor Y
 
 $optionSets = @(
     @{
-        Name = "itt_teststatus"
+        Name = "jbe_teststatus"
         DisplayName = "Test Status"
         Options = @(
             @{ Value = 595300000; Label = "Geplant" }
@@ -59,7 +59,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_testoutcome"
+        Name = "jbe_testoutcome"
         DisplayName = "Test Outcome"
         Options = @(
             @{ Value = 595300000; Label = "Passed" }
@@ -70,7 +70,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_testcategory"
+        Name = "jbe_testcategory"
         DisplayName = "Test Category"
         Options = @(
             @{ Value = 595300000; Label = "Update Source Record" }
@@ -85,7 +85,7 @@ $optionSets = @(
         )
     },
     @{
-        Name = "itt_testenvironment"
+        Name = "jbe_testenvironment"
         DisplayName = "Test Environment"
         Options = @(
             @{ Value = 595300000; Label = "DEV" }
@@ -101,58 +101,58 @@ $optionSets = @(
 
 $entities = @(
     @{
-        SchemaName = "itt_testcase"
+        SchemaName = "jbe_testcase"
         DisplayName = "Test Case"
         DisplayCollectionName = "Test Cases"
         Description = "Testfall-Definition für das Integration Test Center"
-        PrimaryField = @{ SchemaName = "itt_name"; DisplayName = "Name"; AutoNumber = "TC-{SEQNUM:5}" }
+        PrimaryField = @{ SchemaName = "jbe_name"; DisplayName = "Name"; AutoNumber = "TC-{SEQNUM:5}" }
         Attributes = @(
-            @{ SchemaName = "itt_testid"; Type = "String"; MaxLength = 20; DisplayName = "Test ID"; Description = "TC01, TCC05, BTC12" }
-            @{ SchemaName = "itt_title"; Type = "String"; MaxLength = 200; DisplayName = "Title"; Description = "Human-readable test title" }
-            @{ SchemaName = "itt_category"; Type = "Picklist"; OptionSet = "itt_testcategory"; DisplayName = "Category" }
-            @{ SchemaName = "itt_tags"; Type = "String"; MaxLength = 500; DisplayName = "Tags"; Description = "Comma-separated tags" }
-            @{ SchemaName = "itt_enabled"; Type = "Boolean"; DisplayName = "Enabled"; DefaultValue = $true }
-            @{ SchemaName = "itt_definition_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Definition (JSON)"; Description = "Full test case JSON (preconditions + steps + assertions)" }
+            @{ SchemaName = "jbe_testid"; Type = "String"; MaxLength = 20; DisplayName = "Test ID"; Description = "TC01, TCC05, BTC12" }
+            @{ SchemaName = "jbe_title"; Type = "String"; MaxLength = 200; DisplayName = "Title"; Description = "Human-readable test title" }
+            @{ SchemaName = "jbe_category"; Type = "Picklist"; OptionSet = "jbe_testcategory"; DisplayName = "Category" }
+            @{ SchemaName = "jbe_tags"; Type = "String"; MaxLength = 500; DisplayName = "Tags"; Description = "Comma-separated tags" }
+            @{ SchemaName = "jbe_enabled"; Type = "Boolean"; DisplayName = "Enabled"; DefaultValue = $true }
+            @{ SchemaName = "jbe_definition_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Definition (JSON)"; Description = "Full test case JSON (preconditions + steps + assertions)" }
         )
         AlternateKeys = @(
-            @{ Name = "itt_testid_key"; Attributes = @("itt_testid") }
+            @{ Name = "jbe_testid_key"; Attributes = @("jbe_testid") }
         )
     },
     @{
-        SchemaName = "itt_testrun"
+        SchemaName = "jbe_testrun"
         DisplayName = "Test Run"
         DisplayCollectionName = "Test Runs"
         Description = "Testlauf-Steuerung und Ergebnisse"
-        PrimaryField = @{ SchemaName = "itt_name"; DisplayName = "Name"; AutoNumber = "TR-{SEQNUM:5}" }
+        PrimaryField = @{ SchemaName = "jbe_name"; DisplayName = "Name"; AutoNumber = "TR-{SEQNUM:5}" }
         Attributes = @(
-            @{ SchemaName = "itt_teststatus"; Type = "Picklist"; OptionSet = "itt_teststatus"; DisplayName = "Status" }
-            @{ SchemaName = "itt_testcasefilter"; Type = "String"; MaxLength = 500; DisplayName = "Test Case Filter"; Description = "*, TC01,TC02, tag:LUW, category:Bridge" }
-            @{ SchemaName = "itt_environment"; Type = "Picklist"; OptionSet = "itt_testenvironment"; DisplayName = "Environment" }
-            @{ SchemaName = "itt_started_on"; Type = "DateTime"; DisplayName = "Started On" }
-            @{ SchemaName = "itt_completed_on"; Type = "DateTime"; DisplayName = "Completed On" }
-            @{ SchemaName = "itt_total"; Type = "Integer"; DisplayName = "Total"; Min = 0; Max = 10000 }
-            @{ SchemaName = "itt_passed"; Type = "Integer"; DisplayName = "Passed"; Min = 0; Max = 10000 }
-            @{ SchemaName = "itt_failed"; Type = "Integer"; DisplayName = "Failed"; Min = 0; Max = 10000 }
-            @{ SchemaName = "itt_testsummary"; Type = "Memo"; MaxLength = 100000; DisplayName = "Summary" }
-            @{ SchemaName = "itt_testresult_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Result (JSON)" }
-            @{ SchemaName = "itt_fulllog"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Full Log" }
-            @{ SchemaName = "itt_testconfig_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Test Config (JSON)"; Description = "Optional inline test JSON (backwards compatibility)" }
+            @{ SchemaName = "jbe_teststatus"; Type = "Picklist"; OptionSet = "jbe_teststatus"; DisplayName = "Status" }
+            @{ SchemaName = "jbe_testcasefilter"; Type = "String"; MaxLength = 500; DisplayName = "Test Case Filter"; Description = "*, TC01,TC02, tag:LUW, category:Bridge" }
+            @{ SchemaName = "jbe_environment"; Type = "Picklist"; OptionSet = "jbe_testenvironment"; DisplayName = "Environment" }
+            @{ SchemaName = "jbe_started_on"; Type = "DateTime"; DisplayName = "Started On" }
+            @{ SchemaName = "jbe_completed_on"; Type = "DateTime"; DisplayName = "Completed On" }
+            @{ SchemaName = "jbe_total"; Type = "Integer"; DisplayName = "Total"; Min = 0; Max = 10000 }
+            @{ SchemaName = "jbe_passed"; Type = "Integer"; DisplayName = "Passed"; Min = 0; Max = 10000 }
+            @{ SchemaName = "jbe_failed"; Type = "Integer"; DisplayName = "Failed"; Min = 0; Max = 10000 }
+            @{ SchemaName = "jbe_testsummary"; Type = "Memo"; MaxLength = 100000; DisplayName = "Summary" }
+            @{ SchemaName = "jbe_testresult_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Result (JSON)" }
+            @{ SchemaName = "jbe_fulllog"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Full Log" }
+            @{ SchemaName = "jbe_testconfig_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Test Config (JSON)"; Description = "Optional inline test JSON (backwards compatibility)" }
         )
     },
     @{
-        SchemaName = "itt_testrunresult"
+        SchemaName = "jbe_testrunresult"
         DisplayName = "Test Run Result"
         DisplayCollectionName = "Test Run Results"
         Description = "Einzelergebnis pro Testfall in einem Testlauf"
-        PrimaryField = @{ SchemaName = "itt_name"; DisplayName = "Name"; AutoNumber = "RE-{SEQNUM:6}" }
+        PrimaryField = @{ SchemaName = "jbe_name"; DisplayName = "Name"; AutoNumber = "RE-{SEQNUM:6}" }
         Attributes = @(
-            @{ SchemaName = "itt_testrunid"; Type = "Lookup"; Target = "itt_testrun"; DisplayName = "Test Run" }
-            @{ SchemaName = "itt_testcaseid"; Type = "Lookup"; Target = "itt_testcase"; DisplayName = "Test Case" }
-            @{ SchemaName = "itt_testid"; Type = "String"; MaxLength = 20; DisplayName = "Test ID"; Description = "Denormalized for subgrid display" }
-            @{ SchemaName = "itt_outcome"; Type = "Picklist"; OptionSet = "itt_testoutcome"; DisplayName = "Outcome" }
-            @{ SchemaName = "itt_duration_ms"; Type = "Integer"; DisplayName = "Duration (ms)"; Min = 0; Max = 600000 }
-            @{ SchemaName = "itt_error_message"; Type = "Memo"; MaxLength = 100000; DisplayName = "Error Message" }
-            @{ SchemaName = "itt_assertion_results_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Assertion Results (JSON)" }
+            @{ SchemaName = "jbe_testrunid"; Type = "Lookup"; Target = "jbe_testrun"; DisplayName = "Test Run" }
+            @{ SchemaName = "jbe_testcaseid"; Type = "Lookup"; Target = "jbe_testcase"; DisplayName = "Test Case" }
+            @{ SchemaName = "jbe_testid"; Type = "String"; MaxLength = 20; DisplayName = "Test ID"; Description = "Denormalized for subgrid display" }
+            @{ SchemaName = "jbe_outcome"; Type = "Picklist"; OptionSet = "jbe_testoutcome"; DisplayName = "Outcome" }
+            @{ SchemaName = "jbe_duration_ms"; Type = "Integer"; DisplayName = "Duration (ms)"; Min = 0; Max = 600000 }
+            @{ SchemaName = "jbe_error_message"; Type = "Memo"; MaxLength = 100000; DisplayName = "Error Message" }
+            @{ SchemaName = "jbe_assertion_results_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Assertion Results (JSON)" }
         )
     }
 )
@@ -211,4 +211,4 @@ Write-Host "  1. Globale OptionSets anlegen (POST GlobalOptionSetDefinitions)"
 Write-Host "  2. Entities anlegen (POST EntityDefinitions)"
 Write-Host "  3. Attribute anlegen (POST EntityDefinitions(.../Attributes))"
 Write-Host "  4. Alternate Keys anlegen (POST EntityDefinitions(.../Keys))"
-Write-Host "  5. Solution itt_testing erstellen und alle Komponenten hinzufügen"
+Write-Host "  5. Solution jbe_testing erstellen und alle Komponenten hinzufügen"
