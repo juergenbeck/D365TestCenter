@@ -5951,6 +5951,7 @@ function renderCasesTable(cases) {
             <td style="white-space:nowrap">
                 <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.itt_testid)}',false)" title="Start test run" style="padding:2px 8px">&#9654;</button>
                 <a href="#cases/${c.itt_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a>
+                <a href="/main.aspx?etn=itt_testcase&id=${c.itt_testcaseid}&pagetype=entityrecord" target="_blank" class="btn btn-sm" title="Open in CRM" style="padding:2px 6px;color:var(--accent-blue)">CRM</a>
             </td>
         </tr>`;
     }
@@ -6828,7 +6829,7 @@ async function _renderLiveDetail(runId, testId) {
             try {
                 steps = await API.getMany("itt_teststeps",
                     `$filter=_itt_testrunresultid_value eq '${result.itt_testrunresultid}'&$orderby=itt_stepnumber asc` +
-                    `&$select=itt_stepnumber,itt_phase,itt_action,itt_entity,itt_alias,itt_durationms,itt_stepstatus,itt_errormessage,itt_inputdata,itt_outputdata,itt_assertionfield,itt_expectedvalue,itt_actualvalue,itt_recordid,itt_recordurl`);
+                    `&$select=itt_teststepid,itt_stepnumber,itt_phase,itt_action,itt_entity,itt_alias,itt_durationms,itt_stepstatus,itt_errormessage,itt_inputdata,itt_outputdata,itt_assertionfield,itt_expectedvalue,itt_actualvalue,itt_recordid,itt_recordurl`);
                 _detailStepsCache[result.itt_testrunresultid] = steps;
             } catch { /* Steps might not exist yet */ }
         }
@@ -7080,7 +7081,10 @@ async function _renderLiveDetail(runId, testId) {
                 html += `<span class="step-action">${escapeHtml(s.itt_action) || phaseNames[s.itt_phase] || "?"}</span>`;
                 html += `<span class="step-entity">${escapeHtml(entityDisplay)}${aliasDisplay}</span>`;
                 if (s.itt_recordurl && s.itt_recordid) {
-                    html += `<a href="${escapeHtml(s.itt_recordurl)}" target="_blank" title="Open record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;
+                    html += `<a href="${escapeHtml(s.itt_recordurl)}" target="_blank" title="Open created/updated record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;
+                }
+                if (s.itt_teststepid) {
+                    html += `<a href="/main.aspx?etn=itt_teststep&id=${s.itt_teststepid}&pagetype=entityrecord" target="_blank" title="Open step record in CRM" style="color:var(--text-muted);font-size:10px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">step</a>`;
                 }
                 html += `<span class="step-dur">${durStr}</span>`;
                 html += `</div>`;
@@ -8798,6 +8802,20 @@ async function activateDemoMode() {
     await loadUserInfo();
     const versionEl = document.getElementById("app-version");
     if (versionEl) versionEl.textContent = "v" + CONFIG.version;
+
+    // Live-Modus: Pack-Selector durch Testfall-Info ersetzen
+    if (!_demoModeActive) {
+        const packSel = document.getElementById("pack-selector");
+        if (packSel) {
+            try {
+                const count = await API.count("itt_testcases", "itt_enabled eq true");
+                packSel.innerHTML = `<option value="">Live: ${count} Test Cases</option>`;
+            } catch {
+                packSel.innerHTML = `<option value="">Live Mode</option>`;
+            }
+        }
+    }
+
     ITTLog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
 
     // CH-02: Warnung bei Tab-Closen während Testlauf

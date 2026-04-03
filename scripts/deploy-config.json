@@ -1,7 +1,7 @@
 {
-  "solutionUniqueName": "IntegrationTestCenter",
+  "publisherUniqueName": "itt",
+  "resource": "https://YOUR-ORG.crm4.dynamics.com/",
   "publisherOptionValuePrefix": 10571,
   "publisherPrefix": "itt",
-  "resource": "https://YOUR-ORG.crm4.dynamics.com/",
-  "publisherUniqueName": "itt"
+  "solutionUniqueName": "IntegrationTestCenter"
 }
