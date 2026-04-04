@@ -136,13 +136,42 @@ function Get-GlobalOptionSetId([string]$Name) {
     return $id
 }
 
-function New-Label([string]$DE, [string]$EN) {
-    return @{
-        LocalizedLabels = @(
-            @{ "@odata.type" = "Microsoft.Dynamics.CRM.LocalizedLabel"; Label = $DE; LanguageCode = 1031 }
-            @{ "@odata.type" = "Microsoft.Dynamics.CRM.LocalizedLabel"; Label = $EN; LanguageCode = 1033 }
-        )
+# Detect available languages on the org
+$script:orgLanguages = @(1031)  # Default: DE only
+try {
+    $orgInfo = Invoke-RestMethod -Uri "$baseUrl/organizations?`$select=languagecode" -Headers $headers
+    $baseLang = $orgInfo.value[0].languagecode
+    $script:orgLanguages = @($baseLang)
+    # Try to add 1033 (EN) if base is not EN
+    if ($baseLang -ne 1033) {
+        try {
+            # Test if EN is available by checking RetrieveAvailableLanguages
+            $availLangs = Invoke-RestMethod -Uri "$baseUrl/RetrieveAvailableLanguages" -Headers $headers -Method Get
+            if ($availLangs.LocaleIds -contains 1033) { $script:orgLanguages += 1033 }
+        } catch {}
     }
+    if ($baseLang -ne 1031 -and $script:orgLanguages -notcontains 1031) {
+        try {
+            $availLangs = Invoke-RestMethod -Uri "$baseUrl/RetrieveAvailableLanguages" -Headers $headers -Method Get
+            if ($availLangs.LocaleIds -contains 1031) { $script:orgLanguages += 1031 }
+        } catch {}
+    }
+} catch {}
+Write-Host "  Languages: $($script:orgLanguages -join ', ')" -ForegroundColor Gray
+
+function New-Label([string]$DE, [string]$EN) {
+    $labels = @()
+    if ($script:orgLanguages -contains 1031) {
+        $labels += @{ "@odata.type" = "Microsoft.Dynamics.CRM.LocalizedLabel"; Label = $DE; LanguageCode = 1031 }
+    }
+    if ($script:orgLanguages -contains 1033) {
+        $labels += @{ "@odata.type" = "Microsoft.Dynamics.CRM.LocalizedLabel"; Label = $EN; LanguageCode = 1033 }
+    }
+    # Fallback: at least one label with base language
+    if ($labels.Count -eq 0) {
+        $labels += @{ "@odata.type" = "Microsoft.Dynamics.CRM.LocalizedLabel"; Label = $DE; LanguageCode = $script:orgLanguages[0] }
+    }
+    return @{ LocalizedLabels = $labels }
 }
 
 function New-OptionItem([int]$Value, [string]$DE, [string]$EN) {

@@ -1,7 +1,7 @@
 {
-  "publisherUniqueName": "jbe",
   "publisherPrefix": "jbe",
-  "publisherOptionValuePrefix": 10571,
+  "publisherUniqueName": "jbe",
+  "solutionUniqueName": "D365TestCenter",
   "resource": "https://YOUR-ORG.crm4.dynamics.com/",
-  "solutionUniqueName": "D365TestCenter"
+  "publisherOptionValuePrefix": 10571
 }
