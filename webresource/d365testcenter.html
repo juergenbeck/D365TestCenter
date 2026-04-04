@@ -5865,12 +5865,14 @@ async function renderTestCases() {
             "$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_enabled,jbe_userstories" +
             "&$orderby=jbe_testid asc&$top=500");
         State.testCases = cases;
-        renderCasesTable(cases);
 
         $("#case-search").addEventListener("input", () => filterCases());
         $("#case-category").addEventListener("change", () => filterCases());
         $("#case-story").addEventListener("input", () => filterCases());
         $("#case-active-only").addEventListener("change", () => filterCases());
+
+        // Initial render mit Tag-Filter (falls aktiv)
+        filterCases();
     } catch (err) {
         $("#cases-table").innerHTML = `<div class="empty-state"><div class="empty-icon">&#x1f50d;</div>
             <p>Failed to load test cases.</p>
