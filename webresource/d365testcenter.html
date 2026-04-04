@@ -6808,6 +6808,161 @@ window._detailGoToRaw = function() {
     _detailSwitchTab("raw");
 };
 
+// Jira-formatierten Testbericht in die Zwischenablage kopieren
+window._copyJiraReport = async function(testId) {
+    // Testfall und letztes Ergebnis finden
+    const testCase = State.testCases?.find(c => c.jbe_testid === testId);
+    if (!testCase) { alert("Test case not found."); return; }
+
+    // Letztes Ergebnis laden
+    let result = null;
+    try {
+        const results = await API.getMany("jbe_testrunresults",
+            `$filter=jbe_testid eq '${testId}'&$orderby=createdon desc&$top=1` +
+            `&$select=jbe_outcome,jbe_durationms,jbe_errormessage,jbe_assertionresults,createdon`);
+        if (results.length > 0) result = results[0];
+    } catch {}
+
+    // Steps laden
+    let steps = [];
+    if (result?.jbe_testrunresultid) {
+        try {
+            steps = await API.getMany("jbe_teststeps",
+                `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'` +
+                `&$orderby=jbe_stepnumber asc&$select=jbe_action,jbe_entity,jbe_alias,jbe_phase,jbe_stepstatus,jbe_durationms,jbe_inputdata`);
+        } catch {}
+    }
+
+    // Assertions parsen
+    let assertions = [];
+    try { assertions = JSON.parse(result?.jbe_assertionresults || "[]"); } catch {}
+
+    // Definition parsen
+    let def = {};
+    try { def = JSON.parse(testCase.jbe_definitionjson || "{}"); } catch {}
+
+    const isPassed = result?.jbe_outcome === CONFIG.optionSets.outcomePassed;
+    const outcomeIcon = isPassed ? "(/)" : "(x)";
+    const outcomeText = isPassed ? "BESTANDEN" : "FEHLGESCHLAGEN";
+    const durSec = result?.jbe_durationms ? (result.jbe_durationms / 1000).toFixed(1) + "s" : "?";
+    const testDate = result?.createdon ? new Date(result.createdon) : new Date();
+    const dateStr = testDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const timeStr = testDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    const orgUrl = window.location.origin || "Dynamics 365";
+
+    // Jira-Text aufbauen
+    let jira = `*Integrationstest: ${testId} \u2014 ${testCase.jbe_title || ""}*\n\n`;
+    jira += `Getestet am ${dateStr} um ${timeStr} Uhr auf ${orgUrl.replace("https://", "")}.\n`;
+    jira += `Dauer: ${durSec} | Ergebnis: ${outcomeIcon} *${outcomeText}*\n`;
+
+    // User Stories
+    if (testCase.jbe_userstories) {
+        jira += `Verknüpfte Stories: ${testCase.jbe_userstories}\n`;
+    }
+
+    // Vorbedingungen
+    const preconds = def.preconditions || [];
+    if (preconds.length > 0) {
+        jira += `\n*Vorbedingungen:*\n`;
+        for (const p of preconds) {
+            const entity = (p.entity || "").replace(/s$/, "");
+            const alias = p.alias ? ` (${p.alias})` : "";
+            const fields = p.fields || {};
+            const fieldDesc = Object.entries(fields)
+                .filter(([k]) => !k.includes("@odata.bind"))
+                .map(([k, v]) => `${k}=${typeof v === "string" && v.includes("{") ? "(generiert)" : v}`)
+                .slice(0, 3).join(", ");
+            jira += `- ${entity}${alias} erstellt${fieldDesc ? ": " + fieldDesc : ""}\n`;
+        }
+    }
+
+    // Schritte
+    const testSteps = def.steps || [];
+    if (testSteps.length > 0) {
+        jira += `\n*Durchgeführte Schritte:*\n`;
+        for (const s of testSteps) {
+            const action = s.action || "?";
+            switch (action) {
+                case "CreateRecord":
+                    jira += `# ${(s.entity || "").replace(/s$/, "")} erstellt${s.alias ? " (" + s.alias + ")" : ""}\n`;
+                    break;
+                case "UpdateRecord":
+                    const uFields = Object.keys(s.fields || {}).join(", ");
+                    jira += `# ${s.alias || "Record"} aktualisiert (${uFields})\n`;
+                    break;
+                case "DeleteRecord":
+                    jira += `# ${s.alias || "Record"} gelöscht\n`;
+                    break;
+                case "Wait":
+                    jira += `# ${s.waitSeconds || 5}s gewartet (async Plugin-Verarbeitung)\n`;
+                    break;
+                case "ExecuteAction":
+                    jira += `# Custom Action aufgerufen: ${s.apiName || "?"}\n`;
+                    break;
+                default:
+                    jira += `# ${action}${s.alias ? " (" + s.alias + ")" : ""}\n`;
+            }
+        }
+    }
+
+    // Prüfungen
+    const asserts = def.assertions || [];
+    if (asserts.length > 0) {
+        jira += `\n*Prüfungen:*\n`;
+        jira += `||Feld||Operator||Erwartet||Tatsächlich||Ergebnis||\n`;
+        for (let i = 0; i < asserts.length; i++) {
+            const a = asserts[i];
+            const field = a.field || a.target || "?";
+            const op = a.operator || "?";
+            const expected = a.value || a.expected || "(beliebig)";
+            // Ergebnis aus assertions-Array (wenn vorhanden)
+            const ar = assertions[i];
+            const actual = ar?.actual ?? ar?.actualDisplay ?? "?";
+            const passed = ar?.passed !== false;
+            const icon = passed ? "(/)" : "(x)";
+            jira += `|${field}|${op}|${expected}|${actual}|${icon}|\n`;
+        }
+    }
+
+    // Fehler
+    if (!isPassed && result?.jbe_errormessage) {
+        jira += `\n*Fehlerbeschreibung:*\n`;
+        jira += `{noformat}${result.jbe_errormessage.substring(0, 500)}{noformat}\n`;
+    }
+
+    // Fazit
+    jira += `\n*Fazit:* `;
+    if (isPassed) {
+        jira += `Alle Prüfungen bestanden. Die getestete Funktionalität arbeitet wie erwartet.\n`;
+    } else {
+        const failCount = assertions.filter(a => a?.passed === false).length;
+        jira += `${failCount} von ${asserts.length} Prüfung(en) fehlgeschlagen.\n`;
+    }
+
+    // In Zwischenablage kopieren
+    try {
+        await navigator.clipboard.writeText(jira);
+        // Visuelles Feedback
+        const btn = event?.target;
+        if (btn) {
+            const origText = btn.textContent;
+            btn.textContent = "Copied!";
+            btn.style.color = "var(--accent-green)";
+            btn.style.borderColor = "var(--accent-green)";
+            setTimeout(() => { btn.textContent = origText; btn.style.color = "var(--accent-purple)"; btn.style.borderColor = "var(--accent-purple)"; }, 2000);
+        }
+    } catch (e) {
+        // Fallback: Textarea
+        const ta = document.createElement("textarea");
+        ta.value = jira;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        alert("Jira Report copied to clipboard!");
+    }
+};
+
 async function _renderLiveDetail(runId, testId) {
     const container = document.getElementById("live-detail");
     if (!container) return;
@@ -6991,8 +7146,9 @@ async function _renderLiveDetail(runId, testId) {
 
     // Aktions-Buttons
     html += `<div class="detail-actions">`;
-    html += `<button class="btn btn-sm" onclick="_detailRerunTest('${escapeHtml(testId)}')" style="border:1px solid var(--accent-blue);color:var(--accent-blue)">Erneut starten</button>`;
-    html += `<button class="btn btn-sm" onclick="_detailGoToRaw()" style="border:1px solid var(--text-muted);color:var(--text-secondary)">Definition anzeigen</button>`;
+    html += `<button class="btn btn-sm" onclick="_detailRerunTest('${escapeHtml(testId)}')" style="border:1px solid var(--accent-blue);color:var(--accent-blue)">Rerun</button>`;
+    html += `<button class="btn btn-sm" onclick="_detailGoToRaw()" style="border:1px solid var(--text-muted);color:var(--text-secondary)">Raw</button>`;
+    html += `<button class="btn btn-sm" onclick="_copyJiraReport('${escapeHtml(testId)}')" style="border:1px solid var(--accent-purple);color:var(--accent-purple)" title="Copy Jira-formatted test report to clipboard">Copy Jira Report</button>`;
     if (result?.jbe_testrunresultid) {
         html += `<button class="btn btn-sm" onclick="_cleanupTestRecords('${result.jbe_testrunresultid}', this)" style="color:var(--text-muted);border:1px solid var(--border);font-size:11px" title="Delete test data from Dataverse">Delete test data</button>`;
     }
