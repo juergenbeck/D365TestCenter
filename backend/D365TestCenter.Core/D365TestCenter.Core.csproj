@@ -9,6 +9,8 @@
     <AssemblyName>D365TestCenter.Core</AssemblyName>
     <Authors>Integration Test Center Team</Authors>
     <Description>Integration Test Center — Core-Bibliothek (Modelle, TestRunner, Assertions, Platzhalter)</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

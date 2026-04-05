@@ -236,9 +236,173 @@ if ($existingApi.Count -gt 0) {
     }
 }
 
-# ── Step 6: Publish ───────────────────────────────────────────────
+# ── Step 6: Register CRUD-Trigger Plugin (RunTestsOnStatusChange) ─
 Write-Host ""
-Write-Host "-- Step 6: PublishAllXml --" -ForegroundColor Yellow
+Write-Host "-- Step 6: Register CRUD-Trigger Plugin --" -ForegroundColor Yellow
+
+$crudTypeName = "D365TestCenter.CrmPlugin.RunTestsOnStatusChange"
+$existingCrudType = (Invoke-RestMethod -Uri "$baseUrl/plugintypes?`$filter=typename eq '$crudTypeName'&`$select=plugintypeid" -Headers $readH).value
+
+if ($existingCrudType.Count -gt 0) {
+    $crudTypeId = $existingCrudType[0].plugintypeid
+    Write-Host "  [SKIP] PluginType '$crudTypeName' exists ($crudTypeId)" -ForegroundColor Yellow
+} else {
+    Write-Host "  [CREATE] PluginType '$crudTypeName'" -ForegroundColor Green
+    $crudTypeBody = [PSCustomObject]@{
+        typename = $crudTypeName
+        friendlyname = "Run Tests On Status Change"
+        name = $crudTypeName
+        description = "Triggers test execution when jbe_testrun status changes to Planned"
+        "pluginassemblyid@odata.bind" = "/pluginassemblies($asmId)"
+    } | ConvertTo-Json
+    $crudTypeResp = Invoke-RestMethod -Uri "$baseUrl/plugintypes" -Headers $writeH -Method Post `
+        -Body ([System.Text.Encoding]::UTF8.GetBytes($crudTypeBody)) `
+        -ResponseHeadersVariable respH
+    $crudTypeId = $crudTypeResp.plugintypeid
+    if (-not $crudTypeId) {
+        $eid = "$($respH['OData-EntityId'])"
+        $m = [regex]::Match($eid, '\(([0-9a-f-]+)\)')
+        if ($m.Success) { $crudTypeId = $m.Groups[1].Value }
+    }
+    Write-Host "  Created: $crudTypeId" -ForegroundColor Green
+}
+
+# ── Step 6b: Register Plugin Steps (Create + Update on jbe_testrun) ──
+Write-Host ""
+Write-Host "-- Step 6b: Register Plugin Steps --" -ForegroundColor Yellow
+
+# Get SdkMessage IDs for Create and Update
+$createMsg = (Invoke-RestMethod -Uri "$baseUrl/sdkmessages?`$filter=name eq 'Create'&`$select=sdkmessageid" -Headers $readH).value[0]
+$updateMsg = (Invoke-RestMethod -Uri "$baseUrl/sdkmessages?`$filter=name eq 'Update'&`$select=sdkmessageid" -Headers $readH).value[0]
+
+# Get SdkMessageFilter for jbe_testrun + Create/Update
+$createFilter = (Invoke-RestMethod -Uri "$baseUrl/sdkmessagefilters?`$filter=primaryobjecttypecode eq 'jbe_testrun' and _sdkmessageid_value eq $($createMsg.sdkmessageid)&`$select=sdkmessagefilterid" -Headers $readH).value
+$updateFilter = (Invoke-RestMethod -Uri "$baseUrl/sdkmessagefilters?`$filter=primaryobjecttypecode eq 'jbe_testrun' and _sdkmessageid_value eq $($updateMsg.sdkmessageid)&`$select=sdkmessagefilterid" -Headers $readH).value
+
+if ($createFilter.Count -eq 0 -or $updateFilter.Count -eq 0) {
+    Write-Host "  [WARN] SdkMessageFilter for jbe_testrun not found. Skipping step registration." -ForegroundColor Yellow
+} else {
+    # Register PostCreate step (Async)
+    $createStepName = "D365TestCenter.RunTestsOnStatusChange: Create of jbe_testrun"
+    $existingCreateStep = (Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingsteps?`$filter=name eq '$([uri]::EscapeDataString($createStepName))'&`$select=sdkmessageprocessingstepid" -Headers $readH).value
+
+    if ($existingCreateStep.Count -gt 0) {
+        Write-Host "  [SKIP] Step 'Create' exists" -ForegroundColor Yellow
+    } else {
+        Write-Host "  [CREATE] Step 'Create' (PostOperation, Async)" -ForegroundColor Green
+        $createStepBody = [PSCustomObject]@{
+            name = $createStepName
+            description = "Triggers test execution when a new TestRun is created with status Planned"
+            stage = 40          # PostOperation
+            mode = 1            # Async
+            rank = 1
+            supporteddeployment = 0  # Server only
+            "sdkmessageid@odata.bind" = "/sdkmessages($($createMsg.sdkmessageid))"
+            "sdkmessagefilterid@odata.bind" = "/sdkmessagefilters($($createFilter[0].sdkmessagefilterid))"
+            "plugintypeid@odata.bind" = "/plugintypes($crudTypeId)"
+        } | ConvertTo-Json
+        try {
+            Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingsteps" -Headers $writeH -Method Post `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes($createStepBody)) `
+                -ResponseHeadersVariable respH
+            $createStepId = $null
+            $eid = "$($respH['OData-EntityId'])"
+            $m = [regex]::Match($eid, '\(([0-9a-f-]+)\)')
+            if ($m.Success) { $createStepId = $m.Groups[1].Value }
+            Write-Host "  Created: $createStepId" -ForegroundColor Green
+
+            # Add to solution
+            $solBody = [PSCustomObject]@{
+                ComponentId = $createStepId
+                ComponentType = 92  # SdkMessageProcessingStep
+                SolutionUniqueName = $solName
+                AddRequiredComponents = $true
+            } | ConvertTo-Json
+            Invoke-RestMethod -Uri "$baseUrl/AddSolutionComponent" -Headers $writeH -Method Post `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes($solBody))
+            Write-Host "  Added to solution" -ForegroundColor Gray
+        } catch {
+            Write-Host "  [ERROR] Create step: $($_.ErrorDetails.Message ?? $_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    # Register PostUpdate step (Async, FilteringAttributes: jbe_teststatus)
+    $updateStepName = "D365TestCenter.RunTestsOnStatusChange: Update of jbe_testrun"
+    $existingUpdateStep = (Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingsteps?`$filter=name eq '$([uri]::EscapeDataString($updateStepName))'&`$select=sdkmessageprocessingstepid" -Headers $readH).value
+
+    if ($existingUpdateStep.Count -gt 0) {
+        $updateStepId = $existingUpdateStep[0].sdkmessageprocessingstepid
+        Write-Host "  [SKIP] Step 'Update' exists ($updateStepId)" -ForegroundColor Yellow
+    } else {
+        Write-Host "  [CREATE] Step 'Update' (PostOperation, Async, Filter: jbe_teststatus)" -ForegroundColor Green
+        $updateStepBody = [PSCustomObject]@{
+            name = $updateStepName
+            description = "Triggers test execution when TestRun status changes to Planned (retrigger)"
+            stage = 40          # PostOperation
+            mode = 1            # Async
+            rank = 1
+            filteringattributes = "jbe_teststatus"
+            supporteddeployment = 0  # Server only
+            "sdkmessageid@odata.bind" = "/sdkmessages($($updateMsg.sdkmessageid))"
+            "sdkmessagefilterid@odata.bind" = "/sdkmessagefilters($($updateFilter[0].sdkmessagefilterid))"
+            "plugintypeid@odata.bind" = "/plugintypes($crudTypeId)"
+        } | ConvertTo-Json
+        try {
+            Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingsteps" -Headers $writeH -Method Post `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes($updateStepBody)) `
+                -ResponseHeadersVariable respH
+            $updateStepId = $null
+            $eid = "$($respH['OData-EntityId'])"
+            $m = [regex]::Match($eid, '\(([0-9a-f-]+)\)')
+            if ($m.Success) { $updateStepId = $m.Groups[1].Value }
+            Write-Host "  Created: $updateStepId" -ForegroundColor Green
+
+            # Add to solution
+            $solBody = [PSCustomObject]@{
+                ComponentId = $updateStepId
+                ComponentType = 92
+                SolutionUniqueName = $solName
+                AddRequiredComponents = $true
+            } | ConvertTo-Json
+            Invoke-RestMethod -Uri "$baseUrl/AddSolutionComponent" -Headers $writeH -Method Post `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes($solBody))
+            Write-Host "  Added to solution" -ForegroundColor Gray
+        } catch {
+            Write-Host "  [ERROR] Update step: $($_.ErrorDetails.Message ?? $_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    # Register PreImage for Update step (to detect status transitions)
+    if ($updateStepId) {
+        $preImageName = "PreImage"
+        $existingPreImage = (Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingstepimages?`$filter=_sdkmessageprocessingstepid_value eq $updateStepId and imagetype eq 0&`$select=sdkmessageprocessingstepimageid" -Headers $readH).value
+
+        if ($existingPreImage.Count -gt 0) {
+            Write-Host "  [SKIP] PreImage exists" -ForegroundColor Yellow
+        } else {
+            Write-Host "  [CREATE] PreImage (jbe_teststatus)" -ForegroundColor Green
+            $preImageBody = [PSCustomObject]@{
+                name = $preImageName
+                entityalias = $preImageName
+                imagetype = 0  # PreImage
+                messagepropertyname = "Id"
+                attributes = "jbe_teststatus"
+                "sdkmessageprocessingstepid@odata.bind" = "/sdkmessageprocessingsteps($updateStepId)"
+            } | ConvertTo-Json
+            try {
+                Invoke-RestMethod -Uri "$baseUrl/sdkmessageprocessingstepimages" -Headers $writeH -Method Post `
+                    -Body ([System.Text.Encoding]::UTF8.GetBytes($preImageBody))
+                Write-Host "  PreImage registered." -ForegroundColor Green
+            } catch {
+                Write-Host "  [WARN] PreImage: $($_.ErrorDetails.Message ?? $_.Exception.Message)" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
+# ── Step 7: Publish ───────────────────────────────────────────────
+Write-Host ""
+Write-Host "-- Step 7: PublishAllXml --" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$baseUrl/PublishAllXml" -Headers $writeH -Method Post -Body "{}"
     Write-Host "  Published." -ForegroundColor Green
