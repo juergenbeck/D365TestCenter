@@ -7,23 +7,28 @@ using Newtonsoft.Json;
 namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
-/// Plugin on jbe_testrun: triggers test execution when status changes to "Geplant" (Planned).
+/// Plugin on jbe_testrun: executes tests in batches when status is "Planned" or "Running".
 ///
-/// Supports two scenarios:
-///   1. New TestRun: PostCreate with status "Geplant" starts execution
-///   2. Retrigger:   PostUpdate status change to "Geplant" deletes old results, restarts execution
+/// Batch architecture (to stay within the 2-minute Sandbox timeout):
+///   1. Status "Planned" -> delete old results, load test cases, start first batch
+///   2. Status "Running" + batchoffset > 0 -> continue with next batch
+///   3. All tests done -> status "Completed"
+///
+/// Each batch processes up to BatchSize test cases (default: 5).
+/// After each batch, the plugin updates jbe_batchoffset and jbe_teststatus,
+/// which triggers the next async execution via the Update step.
 ///
 /// Registration:
 ///   Entity:              jbe_testrun
 ///   Message:             Create (PostOperation, Async)
 ///   Message:             Update (PostOperation, Async)
-///   FilteringAttributes: jbe_teststatus (Update only)
-///
-/// The plugin reads test cases from jbe_testcase records (filtered by jbe_testcasefilter),
-/// executes them using TestRunner, and writes results back to jbe_testrunresult + jbe_teststep.
+///   FilteringAttributes: jbe_teststatus,jbe_batchoffset (Update only)
+///   PreImage:            jbe_teststatus (Update only)
 /// </summary>
 public sealed class RunTestsOnStatusChange : IPlugin
 {
+    private const int BatchSize = 5;
+
     // ── Entity Names ─────────────────────────────────────────────
     private const string TestRunEntity = "jbe_testrun";
     private const string TestCaseEntity = "jbe_testcase";
@@ -41,6 +46,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldTotal = "jbe_total";
     private const string FldPassed = "jbe_passed";
     private const string FldFailed = "jbe_failed";
+    private const string FldBatchOffset = "jbe_batchoffset";
 
     // ── TestRunResult Fields ─────────────────────────────────────
     private const string FldResultTestId = "jbe_testid";
@@ -48,23 +54,15 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldResultDuration = "jbe_durationms";
     private const string FldResultError = "jbe_errormessage";
     private const string FldResultAssertions = "jbe_assertionresults";
-    private const string FldResultTracked = "jbe_trackedrecords";
     private const string FldResultTestRun = "jbe_testrunid";
 
     // ── TestStep Fields ──────────────────────────────────────────
     private const string FldStepNumber = "jbe_stepnumber";
     private const string FldStepAction = "jbe_action";
-    private const string FldStepEntity = "jbe_entity";
-    private const string FldStepAlias = "jbe_alias";
-    private const string FldStepRecordId = "jbe_recordid";
-    private const string FldStepRecordUrl = "jbe_recordurl";
     private const string FldStepAssertionField = "jbe_assertionfield";
-    private const string FldStepAssertionOp = "jbe_assertionoperator";
     private const string FldStepExpected = "jbe_expectedvalue";
     private const string FldStepActual = "jbe_actualvalue";
     private const string FldStepDuration = "jbe_durationms";
-    private const string FldStepInput = "jbe_inputdata";
-    private const string FldStepOutput = "jbe_outputdata";
     private const string FldStepError = "jbe_errormessage";
     private const string FldStepPhase = "jbe_phase";
     private const string FldStepStatus = "jbe_stepstatus";
@@ -75,31 +73,24 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldTcTitle = "jbe_title";
     private const string FldTcDefinition = "jbe_definitionjson";
     private const string FldTcEnabled = "jbe_enabled";
-    private const string FldTcTags = "jbe_tags";
-    private const string FldTcCategory = "jbe_category";
 
-    // ── Status OptionSet Values (jbe_teststatus) ─────────────────
+    // ── Status OptionSet Values ──────────────────────────────────
     private const int StatusPlanned = 105710000;
     private const int StatusRunning = 105710001;
     private const int StatusCompleted = 105710002;
     private const int StatusFailed = 105710003;
 
-    // ── Outcome OptionSet Values (jbe_testoutcome) ───────────────
+    // ── Outcome OptionSet Values ─────────────────────────────────
     private const int OutcomePassed = 105710000;
     private const int OutcomeFailed = 105710001;
     private const int OutcomeError = 105710002;
     private const int OutcomeSkipped = 105710003;
 
-    // ── Step Phase OptionSet (jbe_stepphase) ─────────────────────
-    private const int PhasePrecondition = 105710000;
+    // ── Step Phase/Status OptionSet ──────────────────────────────
     private const int PhaseExecution = 105710001;
     private const int PhaseAssertion = 105710002;
-
-    // ── Step Status OptionSet (jbe_stepstatus) ───────────────────
     private const int StepPassed = 105710000;
     private const int StepFailed = 105710001;
-    private const int StepError = 105710002;
-    private const int StepSkipped = 105710003;
 
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
@@ -115,78 +106,93 @@ public sealed class RunTestsOnStatusChange : IPlugin
             .GetService(typeof(ITracingService));
         var factory = (IOrganizationServiceFactory)serviceProvider
             .GetService(typeof(IOrganizationServiceFactory));
-        var service = factory.CreateOrganizationService(context.UserId);
+        // Use SYSTEM context (null) to ensure read access to all test cases
+        // regardless of the triggering user's security role
+        var service = factory.CreateOrganizationService(null);
 
-        // ── Guard: Only fire on jbe_testrun ──────────────────────
         if (context.PrimaryEntityName != TestRunEntity)
             return;
 
-        // ── Guard: Depth check (prevent recursion from our own updates) ──
-        if (context.Depth > 2)
-        {
-            tracingService.Trace("RunTestsOnStatusChange: Depth {0} > 2, skipping", context.Depth);
-            return;
-        }
-
-        // ── Read the TestRun record ──────────────────────────────
         var testRunId = context.PrimaryEntityId;
         var testRun = service.Retrieve(TestRunEntity, testRunId,
-            new ColumnSet(FldStatus, FldFilter, FldKeepRecords));
+            new ColumnSet(FldStatus, FldFilter, FldKeepRecords, FldBatchOffset,
+                          FldPassed, FldFailed, FldTotal));
 
         var status = testRun.GetAttributeValue<OptionSetValue>(FldStatus);
-        if (status == null || status.Value != StatusPlanned)
-        {
-            tracingService.Trace("RunTestsOnStatusChange: Status is not 'Planned' ({0}), skipping",
-                status?.Value.ToString() ?? "null");
+        if (status == null)
             return;
-        }
 
-        // ── Guard: On Update, only fire when status actually changed to Planned ──
-        if (context.MessageName == "Update")
+        var batchOffset = testRun.GetAttributeValue<int?>(FldBatchOffset) ?? 0;
+
+        tracingService.Trace("RunTests: Status={0}, Offset={1}, Message={2}",
+            status.Value, batchOffset, context.MessageName);
+
+        // ── SCENARIO 1: Status = Planned -> Start new run ────────
+        if (status.Value == StatusPlanned)
         {
-            if (context.PreEntityImages.Contains("PreImage"))
+            // Guard: On Update, check PreImage to prevent re-fire
+            if (context.MessageName == "Update" &&
+                context.PreEntityImages.Contains("PreImage"))
             {
-                var preImage = context.PreEntityImages["PreImage"];
-                var oldStatus = preImage.GetAttributeValue<OptionSetValue>(FldStatus);
-                if (oldStatus != null && oldStatus.Value == StatusPlanned)
+                var preStatus = context.PreEntityImages["PreImage"]
+                    .GetAttributeValue<OptionSetValue>(FldStatus);
+                if (preStatus != null && preStatus.Value == StatusPlanned)
                 {
-                    tracingService.Trace("RunTestsOnStatusChange: Status was already 'Planned', skipping");
+                    tracingService.Trace("Status was already Planned, skipping");
                     return;
                 }
             }
+
+            StartNewRun(service, tracingService, testRunId, testRun);
+            return;
         }
 
-        tracingService.Trace("RunTestsOnStatusChange: Triggered for TestRun {0}", testRunId);
+        // ── SCENARIO 2: Status = Running + Offset > 0 -> Continue batch ──
+        if (status.Value == StatusRunning && batchOffset > 0)
+        {
+            ContinueBatch(service, tracingService, testRunId, testRun, batchOffset);
+            return;
+        }
 
+        // All other status values: do nothing
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Start new run: delete old results, load tests, run first batch
+    // ════════════════════════════════════════════════════════════════
+
+    private void StartNewRun(
+        IOrganizationService service, ITracingService trace,
+        Guid testRunId, Entity testRun)
+    {
         try
         {
-            // ── Set status to Running ────────────────────────────
-            var runningUpdate = new Entity(TestRunEntity, testRunId)
+            // Set status to Running
+            var startUpdate = new Entity(TestRunEntity, testRunId)
             {
                 [FldStatus] = new OptionSetValue(StatusRunning),
                 [FldSummary] = "Testausführung gestartet...",
                 [FldStartedOn] = DateTime.UtcNow,
+                [FldBatchOffset] = 0,
                 [FldTotal] = 0,
                 [FldPassed] = 0,
                 [FldFailed] = 0
             };
-            service.Update(runningUpdate);
+            service.Update(startUpdate);
 
-            // ── Delete old results (retrigger scenario) ──────────
-            DeleteOldResults(service, testRunId, tracingService);
+            // Delete old results
+            DeleteOldResults(service, testRunId, trace);
 
-            // ── Load test cases from jbe_testcase ────────────────
+            // Load and run first batch
             var filter = testRun.GetAttributeValue<string>(FldFilter);
-            var testCases = LoadTestCases(service, filter, tracingService);
+            var testCases = LoadTestCases(service, filter, trace);
 
             if (testCases.Count == 0)
             {
-                var msg = $"Keine Testfälle gefunden (Filter: {filter ?? "*"})";
-                tracingService.Trace(msg);
                 var emptyUpdate = new Entity(TestRunEntity, testRunId)
                 {
                     [FldStatus] = new OptionSetValue(StatusCompleted),
-                    [FldSummary] = msg,
+                    [FldSummary] = $"Keine Testfälle gefunden (Filter: {filter ?? "*"})",
                     [FldCompletedOn] = DateTime.UtcNow,
                     [FldTotal] = 0
                 };
@@ -194,76 +200,148 @@ public sealed class RunTestsOnStatusChange : IPlugin
                 return;
             }
 
-            tracingService.Trace("Loaded {0} test cases", testCases.Count);
+            trace.Trace("Loaded {0} test cases, starting batch 0-{1}", testCases.Count, Math.Min(BatchSize, testCases.Count));
 
-            // ── Execute tests ────────────────────────────────────
-            var runner = new TestRunner(service);
-
-            runner.OnTestCompleted += (index, total, tcResult) =>
-            {
-                try
-                {
-                    var progress = $"[{index}/{total}] {tcResult.TestId}: {tcResult.Outcome}";
-                    var progressUpdate = new Entity(TestRunEntity, testRunId)
-                    {
-                        [FldSummary] = $"Wird ausgeführt... {progress}"
-                    };
-                    service.Update(progressUpdate);
-                }
-                catch
-                {
-                    // Progress update is non-critical
-                }
-            };
-
-            var result = runner.RunAll(testCases);
-
-            // ── Write results to jbe_testrunresult + jbe_teststep ──
-            WriteResultRecords(service, testRunId, result, tracingService);
-
-            // ── Update TestRun with final results ────────────────
-            var summary = BuildSummary(result);
-            var finalUpdate = new Entity(TestRunEntity, testRunId)
-            {
-                [FldStatus] = new OptionSetValue(StatusCompleted),
-                [FldSummary] = Truncate(summary, 4000),
-                [FldFullLog] = Truncate(result.FullLog, 1000000),
-                [FldCompletedOn] = DateTime.UtcNow,
-                [FldTotal] = result.TotalCount,
-                [FldPassed] = result.PassedCount,
-                [FldFailed] = result.FailedCount
-            };
-            service.Update(finalUpdate);
-
-            tracingService.Trace("RunTestsOnStatusChange completed: {0}",
-                Truncate(summary, 500));
+            RunBatch(service, trace, testRunId, testCases, 0);
         }
         catch (Exception ex)
         {
-            tracingService.Trace("RunTestsOnStatusChange error: {0}", ex.Message);
-
-            try
-            {
-                var errorUpdate = new Entity(TestRunEntity, testRunId)
-                {
-                    [FldStatus] = new OptionSetValue(StatusFailed),
-                    [FldSummary] = Truncate($"Fehler: {ex.Message}", 4000),
-                    [FldCompletedOn] = DateTime.UtcNow
-                };
-                service.Update(errorUpdate);
-            }
-            catch
-            {
-                // Error update is non-critical
-            }
-
-            // Do NOT rethrow - async plugins that throw show ugly system errors.
-            // The error is captured in the TestRun record.
+            trace.Trace("StartNewRun error: {0}", ex.Message);
+            SetError(service, testRunId, ex.Message);
         }
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  Load test cases from jbe_testcase entity
+    //  Continue batch: load tests, run next batch from offset
+    // ════════════════════════════════════════════════════════════════
+
+    private void ContinueBatch(
+        IOrganizationService service, ITracingService trace,
+        Guid testRunId, Entity testRun, int offset)
+    {
+        try
+        {
+            var filter = testRun.GetAttributeValue<string>(FldFilter);
+            var testCases = LoadTestCases(service, filter, trace);
+
+            if (offset >= testCases.Count)
+            {
+                // All done
+                FinishRun(service, trace, testRunId);
+                return;
+            }
+
+            trace.Trace("Continuing batch from offset {0}, total {1}", offset, testCases.Count);
+            RunBatch(service, trace, testRunId, testCases, offset);
+        }
+        catch (Exception ex)
+        {
+            trace.Trace("ContinueBatch error: {0}", ex.Message);
+            SetError(service, testRunId, ex.Message);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Run a batch of test cases
+    // ════════════════════════════════════════════════════════════════
+
+    private void RunBatch(
+        IOrganizationService service, ITracingService trace,
+        Guid testRunId, List<TestCase> allTests, int offset)
+    {
+        var batch = allTests.Skip(offset).Take(BatchSize).ToList();
+        var runner = new TestRunner(service);
+        var result = runner.RunAll(batch);
+
+        // Write result records
+        WriteResultRecords(service, testRunId, result, trace);
+
+        // Accumulate counters (read current, add batch)
+        var current = service.Retrieve(TestRunEntity, testRunId,
+            new ColumnSet(FldPassed, FldFailed, FldTotal));
+        var prevPassed = current.GetAttributeValue<int?>(FldPassed) ?? 0;
+        var prevFailed = current.GetAttributeValue<int?>(FldFailed) ?? 0;
+        var prevTotal = current.GetAttributeValue<int?>(FldTotal) ?? 0;
+
+        var newOffset = offset + batch.Count;
+        var isLastBatch = newOffset >= allTests.Count;
+
+        var summary = new StringBuilder();
+        summary.AppendLine($"Batch {offset + 1}-{newOffset} von {allTests.Count}:");
+        summary.AppendLine($"  Dieser Batch: {result.PassedCount}/{batch.Count} bestanden");
+        summary.AppendLine($"  Gesamt bisher: {prevPassed + result.PassedCount}/{prevTotal + result.TotalCount}");
+
+        foreach (var tc in result.Results)
+        {
+            var icon = tc.Outcome switch
+            {
+                TestOutcome.Passed => "[OK]",
+                TestOutcome.Failed => "[FAIL]",
+                TestOutcome.Error => "[ERR]",
+                TestOutcome.Skipped => "[SKIP]",
+                _ => "[?]"
+            };
+            summary.AppendLine($"{icon} {tc.TestId}: {tc.Title} ({tc.DurationMs}ms)");
+        }
+
+        if (isLastBatch)
+        {
+            // All done: set Completed
+            var totalPassed = prevPassed + result.PassedCount;
+            var totalFailed = prevFailed + result.FailedCount + result.ErrorCount;
+            var totalCount = prevTotal + result.TotalCount;
+
+            var finalUpdate = new Entity(TestRunEntity, testRunId)
+            {
+                [FldStatus] = new OptionSetValue(StatusCompleted),
+                [FldSummary] = Truncate($"{totalPassed}/{totalCount} bestanden, {totalFailed} fehlgeschlagen\n\n{summary}", 4000),
+                [FldCompletedOn] = DateTime.UtcNow,
+                [FldTotal] = totalCount,
+                [FldPassed] = totalPassed,
+                [FldFailed] = totalFailed,
+                [FldBatchOffset] = 0
+            };
+            service.Update(finalUpdate);
+            trace.Trace("All batches complete: {0}/{1} passed", totalPassed, totalCount);
+        }
+        else
+        {
+            // More batches: update counters and trigger next batch
+            var progressUpdate = new Entity(TestRunEntity, testRunId)
+            {
+                [FldSummary] = Truncate($"Wird ausgeführt... {summary}", 4000),
+                [FldTotal] = prevTotal + result.TotalCount,
+                [FldPassed] = prevPassed + result.PassedCount,
+                [FldFailed] = prevFailed + result.FailedCount + result.ErrorCount,
+                [FldBatchOffset] = newOffset  // This triggers the Update step for next batch
+            };
+            service.Update(progressUpdate);
+            trace.Trace("Batch done, next offset: {0}", newOffset);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Finish run: build final summary from all results
+    // ════════════════════════════════════════════════════════════════
+
+    private void FinishRun(
+        IOrganizationService service, ITracingService trace, Guid testRunId)
+    {
+        var current = service.Retrieve(TestRunEntity, testRunId,
+            new ColumnSet(FldPassed, FldFailed, FldTotal));
+
+        var finalUpdate = new Entity(TestRunEntity, testRunId)
+        {
+            [FldStatus] = new OptionSetValue(StatusCompleted),
+            [FldCompletedOn] = DateTime.UtcNow,
+            [FldBatchOffset] = 0
+        };
+        service.Update(finalUpdate);
+        trace.Trace("Run finished");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Load test cases
     // ════════════════════════════════════════════════════════════════
 
     private static List<TestCase> LoadTestCases(
@@ -271,35 +349,25 @@ public sealed class RunTestsOnStatusChange : IPlugin
     {
         var query = new QueryExpression(TestCaseEntity)
         {
-            ColumnSet = new ColumnSet(
-                FldTcTestId, FldTcTitle, FldTcDefinition,
-                FldTcEnabled, FldTcTags, FldTcCategory),
+            ColumnSet = new ColumnSet(FldTcTestId, FldTcTitle, FldTcDefinition, FldTcEnabled),
             NoLock = true
         };
         query.Criteria.AddCondition(FldTcEnabled, ConditionOperator.Equal, true);
 
         var records = service.RetrieveMultiple(query);
-        trace.Trace("Found {0} enabled test case records", records.Entities.Count);
-
         var testCases = new List<TestCase>();
 
         foreach (var record in records.Entities)
         {
             var testId = record.GetAttributeValue<string>(FldTcTestId);
-            var definitionJson = record.GetAttributeValue<string>(FldTcDefinition);
-
-            if (string.IsNullOrWhiteSpace(definitionJson))
-            {
-                trace.Trace("Skipping {0}: no definition JSON", testId);
-                continue;
-            }
+            var defJson = record.GetAttributeValue<string>(FldTcDefinition);
+            if (string.IsNullOrWhiteSpace(defJson)) continue;
 
             try
             {
-                var tc = JsonConvert.DeserializeObject<TestCase>(definitionJson);
+                var tc = JsonConvert.DeserializeObject<TestCase>(defJson);
                 if (tc != null)
                 {
-                    // Ensure ID and title from record fields (authoritative)
                     tc.Id = testId ?? tc.Id;
                     tc.Title = record.GetAttributeValue<string>(FldTcTitle) ?? tc.Title;
                     testCases.Add(tc);
@@ -311,7 +379,6 @@ public sealed class RunTestsOnStatusChange : IPlugin
             }
         }
 
-        // Apply filter
         return ApplyFilter(testCases, filter);
     }
 
@@ -327,90 +394,60 @@ public sealed class RunTestsOnStatusChange : IPlugin
         if (trimmed.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
         {
             var tag = trimmed.Substring("tag:".Length).Trim();
-            return enabled
-                .Where(tc => tc.Tags.Any(t =>
-                    t.Equals(tag, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
+            return enabled.Where(tc => tc.Tags.Any(t =>
+                t.Equals(tag, StringComparison.OrdinalIgnoreCase))).ToList();
         }
 
         if (trimmed.StartsWith("category:", StringComparison.OrdinalIgnoreCase))
         {
-            var category = trimmed.Substring("category:".Length).Trim();
-            return enabled
-                .Where(tc => (tc.Category ?? "")
-                    .Equals(category, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var cat = trimmed.Substring("category:".Length).Trim();
+            return enabled.Where(tc => (tc.Category ?? "")
+                .Equals(cat, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
-        // Comma-separated test case IDs or wildcard patterns: "STD*", "TC01,TC02"
         var ids = trimmed.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .ToArray();
-
-        return enabled
-            .Where(tc => ids.Any(pattern =>
-                MatchesPattern(tc.Id, pattern)))
-            .ToList();
+            .Select(s => s.Trim()).ToArray();
+        return enabled.Where(tc => ids.Any(p => MatchesPattern(tc.Id, p))).ToList();
     }
 
     private static bool MatchesPattern(string testId, string pattern)
     {
         if (pattern.EndsWith("*"))
-        {
-            var prefix = pattern.Substring(0, pattern.Length - 1);
-            return testId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-        }
+            return testId.StartsWith(pattern.Substring(0, pattern.Length - 1),
+                StringComparison.OrdinalIgnoreCase);
         return testId.Equals(pattern, StringComparison.OrdinalIgnoreCase);
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  Delete old results (for retrigger scenario)
+    //  Delete old results
     // ════════════════════════════════════════════════════════════════
 
     private static void DeleteOldResults(
         IOrganizationService service, Guid testRunId, ITracingService trace)
     {
-        // Delete jbe_teststep records first (child of testrunresult)
-        var stepQuery = new QueryExpression(TestStepEntity)
-        {
-            ColumnSet = new ColumnSet(false),
-            NoLock = true
-        };
-        var stepLink = stepQuery.AddLink(
-            TestRunResultEntity, FldStepRunResult, "jbe_testrunresultid");
-        stepLink.LinkCriteria.AddCondition(
-            FldResultTestRun, ConditionOperator.Equal, testRunId);
+        // Delete steps first (child of results)
+        var stepQuery = new QueryExpression(TestStepEntity) { ColumnSet = new ColumnSet(false), NoLock = true };
+        var stepLink = stepQuery.AddLink(TestRunResultEntity, FldStepRunResult, "jbe_testrunresultid");
+        stepLink.LinkCriteria.AddCondition(FldResultTestRun, ConditionOperator.Equal, testRunId);
 
         var steps = service.RetrieveMultiple(stepQuery);
         foreach (var step in steps.Entities)
-        {
             service.Delete(TestStepEntity, step.Id);
-        }
 
-        if (steps.Entities.Count > 0)
-            trace.Trace("Deleted {0} old test step records", steps.Entities.Count);
-
-        // Delete jbe_testrunresult records
-        var resultQuery = new QueryExpression(TestRunResultEntity)
-        {
-            ColumnSet = new ColumnSet(false),
-            NoLock = true
-        };
-        resultQuery.Criteria.AddCondition(
-            FldResultTestRun, ConditionOperator.Equal, testRunId);
+        // Delete results
+        var resultQuery = new QueryExpression(TestRunResultEntity) { ColumnSet = new ColumnSet(false), NoLock = true };
+        resultQuery.Criteria.AddCondition(FldResultTestRun, ConditionOperator.Equal, testRunId);
 
         var results = service.RetrieveMultiple(resultQuery);
         foreach (var result in results.Entities)
-        {
             service.Delete(TestRunResultEntity, result.Id);
-        }
 
-        if (results.Entities.Count > 0)
-            trace.Trace("Deleted {0} old test run result records", results.Entities.Count);
+        if (steps.Entities.Count > 0 || results.Entities.Count > 0)
+            trace.Trace("Deleted {0} steps + {1} results", steps.Entities.Count, results.Entities.Count);
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  Write result records (jbe_testrunresult + jbe_teststep)
+    //  Write result records
     // ════════════════════════════════════════════════════════════════
 
     private static void WriteResultRecords(
@@ -421,7 +458,6 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
         foreach (var tcResult in result.Results)
         {
-            // Create jbe_testrunresult
             var resultRecord = new Entity(TestRunResultEntity)
             {
                 [FldResultTestId] = tcResult.TestId,
@@ -436,51 +472,60 @@ public sealed class RunTestsOnStatusChange : IPlugin
             var resultId = service.Create(resultRecord);
             var resultRef = new EntityReference(TestRunResultEntity, resultId);
 
-            // Create jbe_teststep records for each step result
             foreach (var stepResult in tcResult.StepResults)
             {
-                var stepRecord = new Entity(TestStepEntity)
+                service.Create(new Entity(TestStepEntity)
                 {
                     [FldStepNumber] = stepResult.StepNumber,
                     [FldStepAction] = Truncate(stepResult.Description, 500),
                     [FldStepDuration] = (int)stepResult.DurationMs,
                     [FldStepError] = Truncate(stepResult.Message, 4000),
                     [FldStepPhase] = new OptionSetValue(PhaseExecution),
-                    [FldStepStatus] = new OptionSetValue(
-                        stepResult.Success ? StepPassed : StepFailed),
+                    [FldStepStatus] = new OptionSetValue(stepResult.Success ? StepPassed : StepFailed),
                     [FldStepRunResult] = resultRef
-                };
-                service.Create(stepRecord);
+                });
             }
 
-            // Create jbe_teststep records for each assertion result
-            int assertionIndex = 0;
+            int aIdx = 0;
             foreach (var assertion in tcResult.Assertions)
             {
-                assertionIndex++;
-                var assertionStep = new Entity(TestStepEntity)
+                aIdx++;
+                service.Create(new Entity(TestStepEntity)
                 {
-                    [FldStepNumber] = 1000 + assertionIndex,
+                    [FldStepNumber] = 1000 + aIdx,
                     [FldStepAction] = "Assertion",
                     [FldStepAssertionField] = Truncate(assertion.Description, 500),
                     [FldStepExpected] = Truncate(assertion.ExpectedDisplay, 4000),
                     [FldStepActual] = Truncate(assertion.ActualDisplay, 4000),
                     [FldStepError] = Truncate(assertion.Message, 4000),
                     [FldStepPhase] = new OptionSetValue(PhaseAssertion),
-                    [FldStepStatus] = new OptionSetValue(
-                        assertion.Passed ? StepPassed : StepFailed),
+                    [FldStepStatus] = new OptionSetValue(assertion.Passed ? StepPassed : StepFailed),
                     [FldStepRunResult] = resultRef
-                };
-                service.Create(assertionStep);
+                });
             }
         }
 
-        trace.Trace("Created {0} result records with steps", result.Results.Count);
+        trace.Trace("Wrote {0} result records", result.Results.Count);
     }
 
     // ════════════════════════════════════════════════════════════════
     //  Helpers
     // ════════════════════════════════════════════════════════════════
+
+    private static void SetError(IOrganizationService service, Guid testRunId, string message)
+    {
+        try
+        {
+            service.Update(new Entity(TestRunEntity, testRunId)
+            {
+                [FldStatus] = new OptionSetValue(StatusFailed),
+                [FldSummary] = Truncate($"Fehler: {message}", 4000),
+                [FldCompletedOn] = DateTime.UtcNow,
+                [FldBatchOffset] = 0
+            });
+        }
+        catch { /* Error update is non-critical */ }
+    }
 
     private static int MapOutcome(TestOutcome outcome) => outcome switch
     {
@@ -490,36 +535,6 @@ public sealed class RunTestsOnStatusChange : IPlugin
         TestOutcome.Skipped => OutcomeSkipped,
         _ => OutcomeError
     };
-
-    private static string BuildSummary(TestRunResult result)
-    {
-        var duration = (result.CompletedAt - result.StartedAt).TotalSeconds;
-        var sb = new StringBuilder();
-
-        sb.AppendLine(
-            $"{result.PassedCount}/{result.TotalCount} bestanden, " +
-            $"{result.FailedCount} fehlgeschlagen, " +
-            $"{result.ErrorCount} Fehler ({duration:F1}s)");
-
-        foreach (var tc in result.Results)
-        {
-            var icon = tc.Outcome switch
-            {
-                TestOutcome.Passed => "[OK]",
-                TestOutcome.Failed => "[FAIL]",
-                TestOutcome.Error => "[ERR]",
-                TestOutcome.Skipped => "[SKIP]",
-                _ => "[?]"
-            };
-
-            sb.AppendLine($"{icon} {tc.TestId}: {tc.Title} ({tc.DurationMs}ms)");
-
-            if (!string.IsNullOrWhiteSpace(tc.ErrorMessage))
-                sb.AppendLine($"  Fehler: {tc.ErrorMessage}");
-        }
-
-        return sb.ToString();
-    }
 
     private static string Truncate(string? value, int maxLength)
     {
