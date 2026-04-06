@@ -14,6 +14,7 @@ namespace D365TestCenter.Core;
 public sealed class TestRunner
 {
     private readonly IOrganizationService _service;
+    private readonly EntityMetadataCache _entityMetadata;
     private readonly TestDataFactory _dataFactory;
     private readonly PlaceholderEngine _placeholderEngine;
     private readonly AsyncPluginWaiter _waiter;
@@ -78,6 +79,7 @@ public sealed class TestRunner
     public TestRunner(IOrganizationService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
+        _entityMetadata = new EntityMetadataCache(service, msg => Log($"      {msg}"));
         _dataFactory = new TestDataFactory();
         _placeholderEngine = new PlaceholderEngine();
         _waiter = new AsyncPluginWaiter();
@@ -369,6 +371,22 @@ public sealed class TestRunner
             Thread.Sleep(500);
         }
 
+        // Generische Preconditions (Array-Format: [{entity, alias, fields}])
+        foreach (var gp in pre.GenericRecords)
+        {
+            var gpFields = ResolveFieldValues(
+                _dataFactory.ResolveTemplateData(gp.Fields, ctx), ctx);
+
+            var gpEntityName = ResolveEntity(gp.Entity);
+            var gpEntity = new Entity(gpEntityName);
+            ApplyFields(gpEntity, gpFields);
+
+            var gpAlias = gp.Alias ?? $"pre_{pre.GenericRecords.IndexOf(gp)}";
+            var gpId = _service.Create(gpEntity);
+            ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
+            Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
+        }
+
         // ContactInitialState überschreiben
         if (pre.ContactInitialState.Count > 0 && ctx.ContactId.HasValue)
         {
@@ -593,11 +611,18 @@ public sealed class TestRunner
 
     private static readonly GenericRecordWaiter _recordWaiter = new GenericRecordWaiter();
 
+    /// <summary>Resolves EntitySetName (plural, Web API) to LogicalName (singular, SDK).</summary>
+    private string ResolveEntity(string? entityNameFromJson)
+    {
+        if (string.IsNullOrWhiteSpace(entityNameFromJson))
+            throw new InvalidOperationException("Entity-Name fehlt.");
+        return _entityMetadata.ResolveLogicalName(entityNameFromJson);
+    }
+
     private void StepCreateGenericRecord(
         TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
     {
-        var entityName = step.Entity
-            ?? throw new InvalidOperationException("CreateRecord benötigt 'entity'.");
+        var entityName = ResolveEntity(step.Entity);
         var alias = step.Alias ?? $"record_{step.StepNumber}";
 
         var entity = new Entity(entityName);
@@ -619,7 +644,7 @@ public sealed class TestRunner
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
         var recordId = ctx.ResolveRecordId(alias);
-        var entityName = step.Entity ?? ctx.ResolveRecordEntityName(alias);
+        var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
 
         var entity = new Entity(entityName, recordId);
         ApplyFields(entity, resolvedFields, allowNull: true);
@@ -636,7 +661,7 @@ public sealed class TestRunner
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
         var recordId = ctx.ResolveRecordId(alias);
-        var entityName = step.Entity ?? ctx.ResolveRecordEntityName(alias);
+        var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
 
         _service.Delete(entityName, recordId);
         Log($"      DeleteRecord [{alias}] in '{entityName}': {recordId}");
@@ -644,8 +669,7 @@ public sealed class TestRunner
 
     private void StepWaitForRecord(TestStep step, TestContext ctx)
     {
-        var entityName = step.Entity
-            ?? throw new InvalidOperationException("WaitForRecord benötigt 'entity'.");
+        var entityName = ResolveEntity(step.Entity);
         var filters = step.Filter
             ?? throw new InvalidOperationException("WaitForRecord benötigt 'filter'.");
         var alias = step.Alias ?? $"found_{step.StepNumber}";
@@ -693,7 +717,7 @@ public sealed class TestRunner
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
         var recordId = ctx.ResolveRecordId(alias);
-        var entityName = step.Entity ?? ctx.ResolveRecordEntityName(alias);
+        var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
         var fieldName = step.Fields.Keys.FirstOrDefault()
             ?? throw new InvalidOperationException("WaitForFieldValue: 'field' in fields fehlt.");
         var expectedValue = step.StepExpectedValue
@@ -916,6 +940,10 @@ public sealed class TestRunner
 
         foreach (var assertion in tc.Assertions)
         {
+            // Resolve EntitySetName to LogicalName before evaluation
+            if (!string.IsNullOrEmpty(assertion.Entity))
+                assertion.Entity = ResolveEntity(assertion.Entity);
+
             var ar = _assertionEngine.Evaluate(assertion, ctx, _service);
             result.Assertions.Add(ar);
 
@@ -959,7 +987,7 @@ public sealed class TestRunner
     //  Hilfsmethoden
     // ════════════════════════════════════════════════════════════════
 
-    private static void ApplyFields(
+    private void ApplyFields(
         Entity entity, Dictionary<string, object?> fields,
         bool allowNull = false)
     {
@@ -971,6 +999,19 @@ public sealed class TestRunner
             {
                 if (allowNull) entity[key] = null;
                 continue;
+            }
+
+            // Web API @odata.bind Lookup-Syntax: "fieldname_target@odata.bind" = "/entitysets(guid)"
+            if (key.EndsWith("@odata.bind", StringComparison.OrdinalIgnoreCase))
+            {
+                var strVal = ConvertValue(value)?.ToString() ?? "";
+                var bindResult = ParseODataBind(key, strVal);
+                if (bindResult.HasValue)
+                {
+                    entity[bindResult.Value.FieldName] =
+                        new EntityReference(bindResult.Value.TargetEntity, bindResult.Value.Id);
+                    continue;
+                }
             }
 
             var converted = ConvertValue(value);
@@ -991,9 +1032,140 @@ public sealed class TestRunner
             {
                 converted = new EntityReference(targetEntity, guid);
             }
+            else
+            {
+                // Metadata-based type detection for all other fields
+                var attrType = _entityMetadata.GetAttributeType(entity.LogicalName, key);
+                if (attrType != null)
+                {
+                    switch (attrType.Value)
+                    {
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Lookup:
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Customer:
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Owner:
+                            if (converted is string sv && Guid.TryParse(sv, out var g))
+                            {
+                                var target = _entityMetadata.GetLookupTarget(entity.LogicalName, key);
+                                if (target != null)
+                                    converted = new EntityReference(target, g);
+                            }
+                            break;
+
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Money:
+                            converted = converted switch
+                            {
+                                decimal d => new Money(d),
+                                int i2 => new Money(i2),
+                                double d2 => new Money((decimal)d2),
+                                string ms when decimal.TryParse(ms,
+                                    System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out var md)
+                                    => new Money(md),
+                                _ => converted
+                            };
+                            break;
+
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Decimal:
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Double:
+                            converted = converted switch
+                            {
+                                int i4 => (decimal)i4,
+                                double d3 => (decimal)d3,
+                                string ds when decimal.TryParse(ds,
+                                    System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out var dd)
+                                    => dd,
+                                _ => converted
+                            };
+                            break;
+
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Picklist:
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.State:
+                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Status:
+                            if (converted is not OptionSetValue)
+                            {
+                                converted = converted switch
+                                {
+                                    int i3 => new OptionSetValue(i3),
+                                    string ps when int.TryParse(ps, out var pi)
+                                        => new OptionSetValue(pi),
+                                    _ => converted
+                                };
+                            }
+                            break;
+                    }
+                }
+            }
 
             entity[key] = converted;
         }
+    }
+
+    /// <summary>
+    /// Parses Web API @odata.bind syntax: "parentcustomerid_account@odata.bind" = "/accounts(guid)"
+    /// Returns the SDK field name, target entity, and GUID.
+    /// </summary>
+    private (string FieldName, string TargetEntity, Guid Id)? ParseODataBind(string bindKey, string bindValue)
+    {
+        // Extract field name: remove @odata.bind suffix
+        var fieldPart = bindKey.Substring(0, bindKey.Length - "@odata.bind".Length);
+
+        // Strategy: always extract target entity from the bind VALUE (most reliable)
+        // The value is like "/accounts(guid)" or "/lm_bestellunges(guid)"
+        var entitySetFromValue = ExtractEntityFromBindValue(bindValue);
+
+        string fieldName;
+        string targetEntity;
+
+        if (entitySetFromValue != null)
+        {
+            // Resolve EntitySetName from value to LogicalName
+            targetEntity = _entityMetadata.ResolveLogicalName(entitySetFromValue);
+
+            // The field name: try to strip the target entity suffix from the field part
+            // "parentcustomerid_account" -> "parentcustomerid" (strip "_account")
+            // "lm_bestellungid" -> "lm_bestellungid" (no standard entity suffix to strip)
+            var suffix = "_" + targetEntity;
+            if (fieldPart.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                fieldName = fieldPart.Substring(0, fieldPart.Length - suffix.Length);
+            else
+                fieldName = fieldPart; // Custom entity lookup: field name IS the full field part
+        }
+        else
+        {
+            // Fallback: try to split at last underscore
+            var lastUnderscore = fieldPart.LastIndexOf('_');
+            if (lastUnderscore > 0)
+            {
+                fieldName = fieldPart.Substring(0, lastUnderscore);
+                targetEntity = fieldPart.Substring(lastUnderscore + 1);
+            }
+            else
+            {
+                fieldName = fieldPart;
+                targetEntity = fieldPart;
+            }
+        }
+
+        // Resolve EntitySetName to LogicalName
+        targetEntity = _entityMetadata.ResolveLogicalName(targetEntity);
+
+        // Extract GUID from value: "/accounts(5c013fbf-...)" or "/accounts({acc1.id})"
+        var match = System.Text.RegularExpressions.Regex.Match(
+            bindValue, @"\(([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)");
+        if (match.Success && Guid.TryParse(match.Groups[1].Value, out var id))
+        {
+            return (fieldName, targetEntity, id);
+        }
+
+        return null;
+    }
+
+    private static string? ExtractEntityFromBindValue(string bindValue)
+    {
+        // Extract entity set name from "/accounts(guid)" pattern
+        var match = System.Text.RegularExpressions.Regex.Match(bindValue, @"^/?(\w+)\(");
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     private static object ConvertValue(object value)
@@ -1010,6 +1182,9 @@ public sealed class TestRunner
                 _ => jt.ToString()
             };
         }
+
+        // Ensure Int64 -> Int32 for Dataverse compatibility
+        if (value is long l) return (int)l;
 
         return value;
     }
@@ -1031,15 +1206,13 @@ public sealed class TestRunner
 
             if (strVal == null) continue;
 
-            // Platzhalter auflösen (FGTestTool + Erweiterungen)
+            // Platzhalter auflösen: erst PlaceholderEngine (generisch), dann FGTestTool-Kompatibilität
+            strVal = _placeholderEngine.Resolve(strVal, ctx);
+
+            // FGTestTool-Kompatibilität: zusätzliche Legacy-Platzhalter
             strVal = strVal
                 .Replace("{CONTACT_ID}", ctx.ContactId?.ToString() ?? "")
-                .Replace("{ACCOUNT_ID}", ctx.AccountId?.ToString() ?? "")
-                .Replace("{TESTID}", ctx.TestId)
-                .Replace("{TIMESTAMP}", DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff"))
-                .Replace("{TIMESTAMP_COMPACT}", DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"))
-                .Replace("{GUID}", Guid.NewGuid().ToString("N").Substring(0, 8))
-                .Replace("{NOW_UTC}", DateTime.UtcNow.ToString("O"));
+                .Replace("{ACCOUNT_ID}", ctx.AccountId?.ToString() ?? "");
 
             foreach (var csKvp in ctx.ContactSourceIds)
                 strVal = strVal.Replace($"{{CS:{csKvp.Key}}}", csKvp.Value.ToString());

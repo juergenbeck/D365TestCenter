@@ -71,6 +71,7 @@ public sealed class TestCase
     public int? AsyncWaitOverrideSeconds { get; set; }
 
     [JsonProperty("preconditions")]
+    [JsonConverter(typeof(PreconditionsConverter))]
     public TestPreconditions Preconditions { get; set; } = new();
 
     [JsonProperty("steps")]
@@ -97,6 +98,85 @@ public sealed class TestCase
     /// <summary>Geteilter Kontext-Name für Testfälle, die zusammengehören.</summary>
     [JsonProperty("sharedContext")]
     public string? SharedContext { get; set; }
+}
+
+/// <summary>Generische Precondition im Array-Format: [{entity, alias, fields}].</summary>
+public sealed class GenericPrecondition
+{
+    [JsonProperty("entity")]
+    public string Entity { get; set; } = "";
+
+    [JsonProperty("alias")]
+    public string? Alias { get; set; }
+
+    [JsonProperty("fields")]
+    public Dictionary<string, object?> Fields { get; set; } = new();
+
+    [JsonProperty("waitForAsync")]
+    public bool WaitForAsync { get; set; }
+}
+
+/// <summary>
+/// JsonConverter der sowohl Objekt-Format (FGTestTool) als auch Array-Format (generisch) akzeptiert.
+/// </summary>
+public sealed class PreconditionsConverter : JsonConverter<TestPreconditions>
+{
+    public override TestPreconditions? ReadJson(JsonReader reader, Type objectType,
+        TestPreconditions? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        var token = JToken.Load(reader);
+
+        if (token.Type == JTokenType.Object)
+        {
+            // FGTestTool-Format: { createContact: true, contactSources: [...] }
+            var result = new TestPreconditions();
+            serializer.Populate(token.CreateReader(), result);
+            return result;
+        }
+
+        if (token.Type == JTokenType.Array)
+        {
+            // Generisches Format: [ { entity, alias, fields }, ... ]
+            var result = new TestPreconditions
+            {
+                CreateAccount = false,
+                CreateContact = false
+            };
+            result.GenericRecords = token.ToObject<List<GenericPrecondition>>(serializer)
+                ?? new List<GenericPrecondition>();
+            return result;
+        }
+
+        return new TestPreconditions();
+    }
+
+    public override void WriteJson(JsonWriter writer, TestPreconditions? value, JsonSerializer serializer)
+    {
+        if (value != null && value.GenericRecords.Count > 0)
+        {
+            // Array-Format: nur GenericRecords schreiben
+            serializer.Serialize(writer, value.GenericRecords);
+        }
+        else
+        {
+            // Objekt-Format: manuell serialisieren um Endlosschleife zu vermeiden
+            var obj = new JObject();
+            if (value != null)
+            {
+                obj["createContact"] = value.CreateContact;
+                obj["createAccount"] = value.CreateAccount;
+                if (value.AccountData.Count > 0)
+                    obj["accountData"] = JToken.FromObject(value.AccountData, serializer);
+                if (value.ContactData.Count > 0)
+                    obj["contactData"] = JToken.FromObject(value.ContactData, serializer);
+                if (value.ContactInitialState.Count > 0)
+                    obj["contactInitialState"] = JToken.FromObject(value.ContactInitialState, serializer);
+                if (value.ExistingContactSources.Count > 0)
+                    obj["existingContactSources"] = JToken.FromObject(value.ExistingContactSources, serializer);
+            }
+            obj.WriteTo(writer);
+        }
+    }
 }
 
 /// <summary>Vorbedingungen für einen Testfall (Account, Contact, Sources).</summary>
@@ -138,6 +218,10 @@ public sealed class TestPreconditions
         get => _contactSources;
         set { if (value != null && value.Count > 0) _contactSources = value; }
     }
+
+    /// <summary>Generische Precondition-Records im Array-Format (LM/Standard-Tests).</summary>
+    [JsonIgnore]
+    public List<GenericPrecondition> GenericRecords { get; set; } = new();
 }
 
 /// <summary>
@@ -213,6 +297,7 @@ public sealed class TestStep
 
     /// <summary>Filterkriterien für WaitForRecord.</summary>
     [JsonProperty("filter")]
+    [JsonConverter(typeof(FilterListConverter))]
     public List<FilterCondition>? Filter { get; set; }
 
     /// <summary>Erwarteter Feldwert für WaitForFieldValue.</summary>
@@ -279,6 +364,48 @@ public sealed class TestStep
     public int? DelayMs { get; set; }
 }
 
+/// <summary>
+/// JsonConverter der sowohl Objekt-Format {"field":"value"} als auch Array-Format [{field,operator,value}] akzeptiert.
+/// </summary>
+public sealed class FilterListConverter : JsonConverter<List<FilterCondition>>
+{
+    public override List<FilterCondition>? ReadJson(JsonReader reader, Type objectType,
+        List<FilterCondition>? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        var token = JToken.Load(reader);
+
+        if (token.Type == JTokenType.Array)
+        {
+            // Strukturiertes Format: [{field, operator, value}]
+            return token.ToObject<List<FilterCondition>>(serializer)
+                ?? new List<FilterCondition>();
+        }
+
+        if (token.Type == JTokenType.Object)
+        {
+            // Dictionary-Format: {"field1": "value1", "field2": "value2"}
+            var result = new List<FilterCondition>();
+            foreach (var prop in ((JObject)token).Properties())
+            {
+                result.Add(new FilterCondition
+                {
+                    Field = prop.Name,
+                    Operator = "eq",
+                    Value = prop.Value.Type == JTokenType.Null ? null : prop.Value.ToString()
+                });
+            }
+            return result;
+        }
+
+        return new List<FilterCondition>();
+    }
+
+    public override void WriteJson(JsonWriter writer, List<FilterCondition>? value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value);
+    }
+}
+
 /// <summary>Filterkriterium für WaitForRecord und Query-Assertions.</summary>
 public sealed class FilterCondition
 {
@@ -318,6 +445,7 @@ public sealed class TestAssertion
 
     /// <summary>Filterkriterien für target="Query".</summary>
     [JsonProperty("filter")]
+    [JsonConverter(typeof(FilterListConverter))]
     public List<FilterCondition>? AssertionFilter { get; set; }
 
     // ── Bestehend ─────────────────────────────────────────────

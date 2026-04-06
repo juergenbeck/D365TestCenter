@@ -16,6 +16,9 @@ public sealed class PlaceholderEngine
     private static readonly Regex RecordPattern = new(@"\{RECORD:(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex ResultPattern = new(@"\{RESULT:(\w+)\.(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex FakerPattern = new(@"\{FAKER:(\w+)\}", RegexOptions.Compiled);
+    // Web Resource format: {alias.id} for record ID, {alias.fields.fieldname} for field values
+    private static readonly Regex AliasIdPattern = new(@"\{(\w+)\.id\}", RegexOptions.Compiled);
+    private static readonly Regex AliasFieldPattern = new(@"\{(\w+)\.fields\.(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex CsPattern = new(@"\{CS:(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex BridgePattern = new(@"\{BRIDGE:(\d+)\}", RegexOptions.Compiled);
     private static readonly Regex RowPattern = new(@"\{ROW:(\w+)\}", RegexOptions.Compiled);
@@ -63,6 +66,32 @@ public sealed class PlaceholderEngine
             return m.Value;
         });
 
+        // {alias.fields.fieldname} -> Field value from FoundRecords (must come BEFORE {alias.id})
+        result = AliasFieldPattern.Replace(result, m =>
+        {
+            var alias = m.Groups[1].Value;
+            var field = m.Groups[2].Value;
+            if (ctx.FoundRecords.TryGetValue(alias, out var entity) && entity.Contains(field))
+            {
+                var val = entity[field];
+                if (val is EntityReference er) return er.Id.ToString();
+                if (val is OptionSetValue osv) return osv.Value.ToString();
+                return val?.ToString() ?? "";
+            }
+            return m.Value;
+        });
+
+        // {alias.id} -> Record GUID (Web Resource format, same as {RECORD:alias})
+        result = AliasIdPattern.Replace(result, m =>
+        {
+            var alias = m.Groups[1].Value;
+            if (ctx.Records.TryGetValue(alias, out var record))
+                return record.Id.ToString();
+            if (ctx.ContactSourceIds.TryGetValue(alias, out var csId))
+                return csId.ToString();
+            return m.Value;
+        });
+
         // {BRIDGE:n} -> Bridge record GUID by index
         result = BridgePattern.Replace(result, m =>
         {
@@ -71,13 +100,13 @@ public sealed class PlaceholderEngine
             return m.Value;
         });
 
-        // {GENERATED:name} -> generate once, reuse thereafter
+        // {GENERATED:name} -> generate once, reuse thereafter (type-aware)
         result = GeneratedPattern.Replace(result, m =>
         {
             var name = m.Groups[1].Value;
             if (!ctx.GeneratedValues.TryGetValue(name, out var existing))
             {
-                existing = Guid.NewGuid().ToString("N").Substring(0, 8);
+                existing = GenerateTypedValue(name);
                 ctx.GeneratedValues[name] = existing;
             }
             return existing;
@@ -138,6 +167,31 @@ public sealed class PlaceholderEngine
         }
 
         return resolved;
+    }
+
+    /// <summary>
+    /// Generates a type-aware value for {GENERATED:name} placeholders.
+    /// Known names (firstname, lastname, email, phone, company, text, guid) produce realistic data.
+    /// Unknown names produce a random 8-char hex string.
+    /// </summary>
+    private string GenerateTypedValue(string name)
+    {
+        switch (name.ToLowerInvariant())
+        {
+            case "firstname": return _faker.Name.FirstName();
+            case "lastname": return _faker.Name.LastName();
+            case "email": return $"jbetest_{Guid.NewGuid().ToString("N").Substring(0, 8)}@example.com";
+            case "phone": return _faker.Phone.PhoneNumber("+49 555 #######");
+            case "company": return $"JBE Test {_faker.Company.CompanyName()}";
+            case "text": return $"JBE Test {Guid.NewGuid().ToString("N").Substring(0, 12)}";
+            case "guid": return Guid.NewGuid().ToString("N").Substring(0, 8);
+            case "city": return _faker.Address.City();
+            case "street": return _faker.Address.StreetAddress();
+            case "zip": return _faker.Address.ZipCode();
+            case "jobtitle": return _faker.Name.JobTitle();
+            case "website": return $"https://jbetest-{Guid.NewGuid().ToString("N").Substring(0, 8)}.example.com";
+            default: return Guid.NewGuid().ToString("N").Substring(0, 8);
+        }
     }
 
     private string ResolveFakerToken(string tokenName)

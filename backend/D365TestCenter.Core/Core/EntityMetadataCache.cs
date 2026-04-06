@@ -79,6 +79,65 @@ public sealed class EntityMetadataCache
             || type == AttributeTypeCode.Status;
     }
 
+    /// <summary>
+    /// Resolves an EntitySetName (plural, Web API) to a LogicalName (singular, SDK).
+    /// Examples: "accounts" -> "account", "invoicedetails" -> "invoicedetail".
+    /// If the name is already a LogicalName, returns it unchanged.
+    /// </summary>
+    public string ResolveLogicalName(string entityNameFromJson)
+    {
+        // Try as-is first (might already be a LogicalName)
+        if (_cache.ContainsKey(entityNameFromJson))
+            return entityNameFromJson;
+
+        // Known standard entity mappings (EntitySetName -> LogicalName)
+        if (KnownEntitySetNames.TryGetValue(entityNameFromJson, out var logicalName))
+            return logicalName;
+
+        // Custom entities: EntitySetName is typically LogicalName + "es"
+        if (entityNameFromJson.EndsWith("es", StringComparison.OrdinalIgnoreCase)
+            && entityNameFromJson.Length > 2)
+        {
+            var candidate = entityNameFromJson.Substring(0, entityNameFromJson.Length - 2);
+            // Verify it works by trying to load metadata
+            if (GetMetadata(candidate) != null)
+                return candidate;
+        }
+
+        // Fallback: strip trailing "s"
+        if (entityNameFromJson.EndsWith("s", StringComparison.OrdinalIgnoreCase)
+            && entityNameFromJson.Length > 1)
+        {
+            var candidate = entityNameFromJson.Substring(0, entityNameFromJson.Length - 1);
+            if (GetMetadata(candidate) != null)
+                return candidate;
+        }
+
+        // Last resort: return as-is
+        return entityNameFromJson;
+    }
+
+    private static readonly Dictionary<string, string> KnownEntitySetNames
+        = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["accounts"] = "account",
+        ["contacts"] = "contact",
+        ["leads"] = "lead",
+        ["tasks"] = "task",
+        ["opportunities"] = "opportunity",
+        ["invoices"] = "invoice",
+        ["invoicedetails"] = "invoicedetail",
+        ["quotes"] = "quote",
+        ["quotedetails"] = "quotedetail",
+        ["salesorders"] = "salesorder",
+        ["salesorderdetails"] = "salesorderdetail",
+        ["incidents"] = "incident",
+        ["phonecalls"] = "phonecall",
+        ["emails"] = "email",
+        ["appointments"] = "appointment",
+        ["annotations"] = "annotation",
+    };
+
     /// <summary>Checks if a field is a Lookup (Lookup, Customer, Owner).</summary>
     public bool IsLookup(string entityLogicalName, string attributeName)
     {

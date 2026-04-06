@@ -181,12 +181,24 @@ public sealed class GenericRecordWaiter
                 case Newtonsoft.Json.Linq.JTokenType.Integer: return (int)(long)jt;
                 case Newtonsoft.Json.Linq.JTokenType.Float: return (decimal)(double)jt;
                 case Newtonsoft.Json.Linq.JTokenType.Boolean: return (bool)jt;
-                case Newtonsoft.Json.Linq.JTokenType.String: return (string)jt!;
+                case Newtonsoft.Json.Linq.JTokenType.String: return ConvertString((string)jt!);
                 case Newtonsoft.Json.Linq.JTokenType.Null: return DBNull.Value;
                 default: return jt.ToString();
             }
         }
+        if (value is string s) return ConvertString(s);
         return value;
+    }
+
+    /// <summary>Tries to convert string values to their native types (Guid, int, decimal, bool).</summary>
+    private static object ConvertString(string s)
+    {
+        if (Guid.TryParse(s, out var guid)) return guid;
+        if (int.TryParse(s, out var intVal)) return intVal;
+        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var decVal)) return decVal;
+        if (bool.TryParse(s, out var boolVal)) return boolVal;
+        return s;
     }
 
     private static object[] ParseInValues(object value)
