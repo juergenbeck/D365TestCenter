@@ -7,9 +7,8 @@ using Newtonsoft.Json.Linq;
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Orchestriert die Integrationstestausführung:
-/// Setup → Steps → CDH-Logs → Assertions → Cleanup.
-/// Voll kompatibel mit dem FGTestTool-JSON-Format.
+/// Orchestriert die generische Integrationstestausführung:
+/// Setup (Preconditions) -> Steps -> Assertions -> Cleanup.
 /// </summary>
 public sealed class TestRunner
 {
@@ -17,58 +16,8 @@ public sealed class TestRunner
     private readonly EntityMetadataCache _entityMetadata;
     private readonly TestDataFactory _dataFactory;
     private readonly PlaceholderEngine _placeholderEngine;
-    private readonly AsyncPluginWaiter _waiter;
     private readonly AssertionEngine _assertionEngine;
     private readonly StringBuilder _log;
-
-    private const string ContactEntity = "contact";
-    private const string AccountEntity = "account";
-    private const string ContactSourceEntity = "markant_fg_contactsource";
-    private const string MembershipSourceEntity = "markant_fg_membershipsource";
-    private const string CdhLoggingEntity = "markant_fg_logging";
-    private const string PlatformBridgeEntity = "markant_bridge_pf_record";
-
-    private const string CsContactLookup = "markant_contactid";
-    private const string CsSourceSystem = "markant_fg_sourcesystemcode";
-    private const string CsExternalId = "markant_externalid";
-    private const string CsExternalIdModifiedOn = "markant_externalid_modifiedon";
-
-    private const string LogContactLookup = "markant_contactid";
-    private const string LogContactSourceLookup = "markant_fg_contactsourceid";
-    private const string LogNameField = "markant_name";
-    private const string LogCreatedOn = "createdon";
-
-    private static readonly HashSet<string> OptionSetFields = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "markant_fg_sourcesystemcode", "markant_gender", "gendercode",
-        "markant_gendercode", "markant_bridgestatuscode", "markant_eventtype",
-        "markant_membershipstatuscode", "statecode", "statuscode"
-    };
-
-    private static readonly Dictionary<string, string> LookupFields = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["markant_parentcustomerid"] = AccountEntity,
-        ["parentcustomerid"] = AccountEntity,
-        ["markant_accountid"] = AccountEntity,
-        ["markant_communicationlanguageid"] = "markant_communicationlanguage"
-    };
-
-    // DateField-Mapping: Q2-Feldnamen auf markant_fg_contactsource
-    private static readonly Dictionary<string, string> DateFieldMapping = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["markant_firstname"] = "markant_firstname_modifiedon",
-        ["markant_lastname"] = "markant_lastname_modifiedon",
-        ["markant_emailaddress1"] = "markant_emailaddress1_modifiedon",
-        ["markant_gendercode"] = "markant_gender_modifiedon",
-        ["markant_jobtitle"] = "markant_jobtitle_modifiedon",
-        ["markant_telephone1"] = "markant_telephone1_modifiedon",
-        ["markant_telephone2"] = "markant_telephone2_modifiedon",
-        ["markant_mobilephone"] = "markant_mobilephone_modifiedon",
-        ["markant_middlename"] = "markant_middlename_modifiedon",
-        ["markant_academictitle"] = "markant_academictitle_modifiedon",
-        ["markant_parentcustomerid"] = "markant_parentcustomerid_modifiedon",
-        ["markant_communicationlanguageid"] = "markant_communicationlanguage_modifiedon"
-    };
 
     /// <summary>
     /// Wird nach jedem Testfall aufgerufen (index, total, result).
@@ -82,7 +31,6 @@ public sealed class TestRunner
         _entityMetadata = new EntityMetadataCache(service, msg => Log($"      {msg}"));
         _dataFactory = new TestDataFactory();
         _placeholderEngine = new PlaceholderEngine();
-        _waiter = new AsyncPluginWaiter();
         _assertionEngine = new AssertionEngine();
         _log = new StringBuilder();
     }
@@ -96,7 +44,7 @@ public sealed class TestRunner
     /// <summary>Führt eine vollständige Testsequenz aus.</summary>
     public TestRunResult RunAll(List<TestCase> testCases)
     {
-        // Expand data-driven tests: each dataRow becomes a separate test run
+        // Datengetriebene Tests expandieren: jede dataRow wird ein eigener Testlauf
         var expandedTests = ExpandDataDrivenTests(testCases);
 
         var result = new TestRunResult
@@ -105,7 +53,7 @@ public sealed class TestRunner
             TotalCount = expandedTests.Count
         };
 
-        Log("=== FIELD GOVERNANCE INTEGRATIONSTEST ===");
+        Log("=== INTEGRATIONSTEST ===");
         Log($"Testfälle: {expandedTests.Count} (davon {expandedTests.Count - testCases.Count} aus dataRows expandiert)");
         Log($"Start: {result.StartedAt:O}");
 
@@ -128,21 +76,7 @@ public sealed class TestRunner
                 continue;
             }
 
-            if (tc.NotImplemented)
-            {
-                var notImpl = new TestCaseResult
-                {
-                    TestId = tc.Id,
-                    Title = tc.Title,
-                    Outcome = TestOutcome.NotImplemented
-                };
-                result.Results.Add(notImpl);
-                Log($"-- [{index}/{expandedTests.Count}] [{tc.Id}] {tc.Title} -> NOT_IMPLEMENTED --");
-                OnTestCompleted?.Invoke(index, expandedTests.Count, notImpl);
-                continue;
-            }
-
-            // dependsOn: skip if a required test has not passed
+            // dependsOn: überspringen wenn eine Abhängigkeit nicht bestanden hat
             if (tc.DependsOn != null && tc.DependsOn.Count > 0)
             {
                 var missingDeps = tc.DependsOn.Where(dep => !_passedTestIds.Contains(dep)).ToList();
@@ -212,10 +146,6 @@ public sealed class TestRunner
                         Category = tc.Category,
                         Tags = tc.Tags,
                         Enabled = tc.Enabled,
-                        NotImplemented = tc.NotImplemented,
-                        DataMode = tc.DataMode,
-                        CleanupAfterTest = tc.CleanupAfterTest,
-                        AsyncWaitOverrideSeconds = tc.AsyncWaitOverrideSeconds,
                         Preconditions = tc.Preconditions,
                         Steps = tc.Steps,
                         Assertions = tc.Assertions,
@@ -253,10 +183,7 @@ public sealed class TestRunner
             Log("  Phase 2: Teststeps ausführen...");
             ExecuteSteps(tc, ctx);
 
-            Log("  Phase 3: CDH-Logs auswerten...");
-            ReadCdhLogs(ctx);
-
-            Log("  Phase 4: Assertions prüfen...");
+            Log("  Phase 3: Assertions prüfen...");
             var allPassed = EvaluateAssertions(tc, ctx, tcResult);
 
             tcResult.Outcome = allPassed ? TestOutcome.Passed : TestOutcome.Failed;
@@ -270,11 +197,11 @@ public sealed class TestRunner
         }
         finally
         {
-            if (ctx != null && tc.CleanupAfterTest)
+            if (ctx != null)
             {
                 try
                 {
-                    Log("  Phase 5: Cleanup...");
+                    Log("  Phase 4: Cleanup...");
                     Cleanup(ctx);
                 }
                 catch (Exception ex)
@@ -291,88 +218,16 @@ public sealed class TestRunner
         return tcResult;
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
     //  Phase 1: Setup (Preconditions)
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
 
     private TestContext SetupPreconditions(TestCase tc)
     {
         var ctx = new TestContext { TestStartUtc = DateTime.UtcNow, TestId = tc.Id };
-        var pre = tc.Preconditions;
-        var dataMode = tc.DataMode ?? "template";
-
-        // Account erstellen (FGTestTool: createAccount Flag)
-        if (pre.CreateAccount)
-        {
-            var accountData = dataMode == "bogus"
-                ? _dataFactory.GenerateBogusAccountData()
-                : _dataFactory.ResolveTemplateData(pre.AccountData, ctx);
-
-            var entity = new Entity(AccountEntity);
-            ApplyFields(entity, accountData);
-            ctx.AccountId = _service.Create(entity);
-            ctx.CreatedEntities.Add((AccountEntity, ctx.AccountId.Value));
-            Log($"    Account erstellt: {ctx.AccountId.Value}");
-        }
-
-        // Contact erstellen (FGTestTool: createContact Flag)
-        if (pre.CreateContact)
-        {
-            var contactData = dataMode == "bogus"
-                ? _dataFactory.GenerateBogusContactData()
-                : _dataFactory.ResolveTemplateData(pre.ContactData, ctx);
-
-            var entity = new Entity(ContactEntity);
-            ApplyFields(entity, contactData);
-            if (ctx.AccountId.HasValue)
-                entity["parentcustomerid"] = new EntityReference(AccountEntity, ctx.AccountId.Value);
-            ctx.ContactId = _service.Create(entity);
-            ctx.CreatedEntities.Add((ContactEntity, ctx.ContactId.Value));
-            Log($"    Contact erstellt: {ctx.ContactId.Value}");
-        }
-
-        // ContactSources anlegen (ExistingContactSources = FGTestTool-Name)
-        foreach (var csSetup in pre.ExistingContactSources)
-        {
-            var csFields = ResolveFieldValues(
-                _dataFactory.ResolveTemplateData(csSetup.Fields, ctx), ctx);
-            AutoSetDateFields(csFields);
-
-            var externalId = csSetup.ExternalId ?? Guid.NewGuid().ToString("N").Substring(0, 8);
-            var sourceCode = csSetup.SourceSystemCode;
-            var alias = !string.IsNullOrEmpty(csSetup.Alias)
-                ? csSetup.Alias
-                : sourceCode.ToString();
-
-            var csEntity = new Entity(ContactSourceEntity);
-            csEntity[CsSourceSystem] = new OptionSetValue(sourceCode);
-            csEntity[CsExternalId] = externalId;
-            csEntity[CsExternalIdModifiedOn] = DateTime.UtcNow;
-            if (csSetup.LinkToContact && ctx.ContactId.HasValue)
-                csEntity[CsContactLookup] = new EntityReference(ContactEntity, ctx.ContactId.Value);
-            ApplyFields(csEntity, csFields);
-
-            var csId = _service.Create(csEntity);
-            ctx.ContactSourceIds[alias] = csId;
-            ctx.CreatedEntities.Add((ContactSourceEntity, csId));
-            Log($"    ContactSource [{alias}, SourceSystem={sourceCode}] erstellt: {csId} " +
-                $"(ExternalId={externalId})");
-
-            if (csSetup.WaitForGovernance && ctx.ContactId.HasValue)
-            {
-                Log($"    Warte auf Governance für [{alias}]...");
-                var timeout = csSetup.AsyncWaitOverrideSeconds ?? 120;
-                _waiter.WaitForGovernanceCompletionBySource(
-                    _service, ctx.ContactId.Value, csId, DateTime.UtcNow, timeout);
-                Log($"    Governance für [{alias}] abgeschlossen");
-            }
-
-            // OE-T9 Fix: Delay zwischen CS-Anlagen für verschiedene Timestamps
-            Thread.Sleep(500);
-        }
 
         // Generische Preconditions (Array-Format: [{entity, alias, fields}])
-        foreach (var gp in pre.GenericRecords)
+        foreach (var gp in tc.Preconditions)
         {
             var gpFields = ResolveFieldValues(
                 _dataFactory.ResolveTemplateData(gp.Fields, ctx), ctx);
@@ -381,37 +236,19 @@ public sealed class TestRunner
             var gpEntity = new Entity(gpEntityName);
             ApplyFields(gpEntity, gpFields);
 
-            var gpAlias = gp.Alias ?? $"pre_{pre.GenericRecords.IndexOf(gp)}";
+            var gpAlias = gp.Alias ?? $"pre_{tc.Preconditions.IndexOf(gp)}";
             var gpId = _service.Create(gpEntity);
             ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
             Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
-        }
-
-        // ContactInitialState überschreiben
-        if (pre.ContactInitialState.Count > 0 && ctx.ContactId.HasValue)
-        {
-            Log("    ContactInitialState überschreiben...");
-            var stateFields = ResolveFieldValues(pre.ContactInitialState, ctx);
-            var updateEntity = new Entity(ContactEntity, ctx.ContactId.Value);
-            ApplyFields(updateEntity, stateFields, allowNull: true);
-            _service.Update(updateEntity);
-            Thread.Sleep(500);
-        }
-
-        // Snapshot des Kontakts für Unchanged-Assertions
-        if (ctx.ContactId.HasValue)
-        {
-            ctx.CurrentContact = _service.Retrieve(
-                ContactEntity, ctx.ContactId.Value, new ColumnSet(true));
         }
 
         ctx.TestStartUtc = DateTime.UtcNow;
         return ctx;
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
     //  Phase 2: Steps ausführen
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
 
     private void ExecuteSteps(TestCase tc, TestContext ctx)
     {
@@ -424,33 +261,6 @@ public sealed class TestRunner
 
             switch (step.Action.ToUpperInvariant())
             {
-                case "CREATECONTACTSOURCE":
-                    StepCreateContactSource(step, ctx, resolvedFields);
-                    break;
-
-                case "UPDATECONTACTSOURCE":
-                    StepUpdateContactSource(step, ctx, resolvedFields);
-                    break;
-
-                case "UPDATECONTACT":
-                    StepUpdateContact(ctx, resolvedFields);
-                    break;
-
-                case "CREATEPLATFORMBRIDGERECORD":
-                    StepCreatePlatformBridge(step, ctx, resolvedFields);
-                    break;
-
-                case "CALLGOVERNANCEAPI":
-                case "CALLGOVERNANCEAPICONTACT":
-                    StepCallGovernanceForContact(ctx);
-                    break;
-
-                case "CALLGOVERNANCEAPICONTACTSOURCE":
-                    StepCallGovernanceForContactSource(step, ctx);
-                    break;
-
-                // ── Generische Actions ─────────────────────────────
-
                 case "CREATERECORD":
                     StepCreateGenericRecord(step, ctx, resolvedFields);
                     break;
@@ -498,120 +308,13 @@ public sealed class TestRunner
         }
     }
 
-    private void StepCreateContactSource(
-        TestStep step, TestContext ctx,
-        Dictionary<string, object?> resolvedFields)
-    {
-        var sourceCode = step.SourceSystemCode ?? 4;
-        var externalId = step.ExternalId ?? Guid.NewGuid().ToString("N").Substring(0, 8);
-        var alias = step.TargetAlias ?? $"step_{step.StepNumber}";
-
-        AutoSetDateFields(resolvedFields);
-
-        var entity = new Entity(ContactSourceEntity);
-        entity[CsSourceSystem] = new OptionSetValue(sourceCode);
-        entity[CsExternalId] = externalId;
-        entity[CsExternalIdModifiedOn] = DateTime.UtcNow;
-        if (step.LinkToContact && ctx.ContactId.HasValue)
-            entity[CsContactLookup] = new EntityReference(ContactEntity, ctx.ContactId.Value);
-        ApplyFields(entity, resolvedFields);
-
-        var csId = _service.Create(entity);
-        ctx.ContactSourceIds[alias] = csId;
-        ctx.CreatedEntities.Add((ContactSourceEntity, csId));
-        Log($"      ContactSource [{alias}, SourceSystem={sourceCode}] erstellt: {csId}");
-
-        if (step.WaitForGovernance && ctx.ContactId.HasValue)
-        {
-            _waiter.WaitForGovernanceCompletionBySource(
-                _service, ctx.ContactId.Value, csId, DateTime.UtcNow, step.TimeoutSeconds);
-            Log($"      Governance für [{alias}] abgeschlossen");
-        }
-    }
-
-    private void StepUpdateContactSource(
-        TestStep step, TestContext ctx,
-        Dictionary<string, object?> resolvedFields)
-    {
-        // Alias-basierter Lookup (FGTestTool-kompatibel) oder SourceSystem-Fallback
-        var csId = ctx.ResolveContactSourceId(step.TargetAlias, step.SourceSystemCode);
-
-        AutoSetDateFields(resolvedFields);
-
-        var entity = new Entity(ContactSourceEntity, csId);
-        ApplyFields(entity, resolvedFields, allowNull: true);
-        _service.Update(entity);
-        Log($"      ContactSource [{step.TargetAlias ?? step.SourceSystemCode?.ToString()}] aktualisiert: {csId}");
-
-        if (step.WaitForGovernance && ctx.ContactId.HasValue)
-        {
-            _waiter.WaitForGovernanceCompletionBySource(
-                _service, ctx.ContactId.Value, csId, DateTime.UtcNow, step.TimeoutSeconds);
-            Log($"      Governance abgeschlossen");
-        }
-    }
-
-    private void StepUpdateContact(
-        TestContext ctx, Dictionary<string, object?> resolvedFields)
-    {
-        if (!ctx.ContactId.HasValue)
-            throw new InvalidOperationException("Kein Contact im Kontext vorhanden.");
-
-        var entity = new Entity(ContactEntity, ctx.ContactId.Value);
-        ApplyFields(entity, resolvedFields, allowNull: true);
-        _service.Update(entity);
-        Log($"      Contact aktualisiert: {ctx.ContactId.Value}");
-    }
-
-    private void StepCreatePlatformBridge(
-        TestStep step, TestContext ctx,
-        Dictionary<string, object?> resolvedFields)
-    {
-        var entity = new Entity(PlatformBridgeEntity);
-        ApplyFields(entity, resolvedFields);
-
-        var bridgeId = _service.Create(entity);
-        ctx.BridgeRecordIds.Add(bridgeId);
-        ctx.CreatedEntities.Add((PlatformBridgeEntity, bridgeId));
-        Log($"      PlatformBridge erstellt: {bridgeId}");
-
-        if (step.WaitForGovernance)
-        {
-            _waiter.WaitForBridgeProcessing(_service, bridgeId, step.TimeoutSeconds);
-            Log($"      Bridge-Verarbeitung abgeschlossen");
-        }
-    }
-
-    private void StepCallGovernanceForContact(TestContext ctx)
-    {
-        if (!ctx.ContactId.HasValue)
-            throw new InvalidOperationException(
-                "Kein Contact für GovernanceApi vorhanden.");
-
-        var request = new OrganizationRequest("markant_RunFieldGovernanceForContact");
-        request["ContactId"] = ctx.ContactId.Value;
-        _service.Execute(request);
-        Log($"      markant_RunFieldGovernanceForContact aufgerufen: {ctx.ContactId.Value}");
-    }
-
-    private void StepCallGovernanceForContactSource(TestStep step, TestContext ctx)
-    {
-        var csId = ctx.ResolveContactSourceId(step.TargetAlias, step.SourceSystemCode);
-
-        var request = new OrganizationRequest(
-            "markant_RunFieldGovernanceForContactSource");
-        request["ContactSourceId"] = csId;
-        _service.Execute(request);
-        Log($"      markant_RunFieldGovernanceForContactSource: {csId}");
-    }
-
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
     //  Generische Actions
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
 
     private static readonly GenericRecordWaiter _recordWaiter = new GenericRecordWaiter();
 
-    /// <summary>Resolves EntitySetName (plural, Web API) to LogicalName (singular, SDK).</summary>
+    /// <summary>Löst EntitySetName (Plural, Web API) zu LogicalName (Singular, SDK) auf.</summary>
     private string ResolveEntity(string? entityNameFromJson)
     {
         if (string.IsNullOrWhiteSpace(entityNameFromJson))
@@ -636,10 +339,10 @@ public sealed class TestRunner
     private void StepUpdateGenericRecord(
         TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
     {
-        var alias = step.RecordRef ?? step.Alias ?? step.TargetAlias
-            ?? throw new InvalidOperationException("UpdateRecord benötigt 'recordRef', 'alias' oder 'targetAlias'.");
+        var alias = step.RecordRef ?? step.Alias
+            ?? throw new InvalidOperationException("UpdateRecord benötigt 'recordRef' oder 'alias'.");
 
-        // Resolve {RECORD:alias} placeholder in recordRef
+        // {RECORD:alias}-Platzhalter in recordRef auflösen
         if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
@@ -674,7 +377,7 @@ public sealed class TestRunner
             ?? throw new InvalidOperationException("WaitForRecord benötigt 'filter'.");
         var alias = step.Alias ?? $"found_{step.StepNumber}";
 
-        // Resolve placeholders in filter values
+        // Platzhalter in Filter-Werten auflösen
         var resolvedFilters = new List<FilterCondition>();
         foreach (var f in filters)
         {
@@ -720,10 +423,10 @@ public sealed class TestRunner
         var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
         var fieldName = step.Fields.Keys.FirstOrDefault()
             ?? throw new InvalidOperationException("WaitForFieldValue: 'field' in fields fehlt.");
-        var expectedValue = step.StepExpectedValue
+        var expectedValue = step.ExpectedValue
             ?? throw new InvalidOperationException("WaitForFieldValue benötigt 'expectedValue'.");
 
-        // Resolve placeholder in expected value
+        // Platzhalter im erwarteten Wert auflösen
         if (expectedValue is string s)
             expectedValue = _placeholderEngine.Resolve(s, ctx);
 
@@ -755,9 +458,9 @@ public sealed class TestRunner
         Log($"      CallCustomApi '{apiName}' aufgerufen");
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
     //  Pre-Flight-Diagnostics
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
 
     private void StepAssertEnvironment(TestStep step, TestContext ctx)
     {
@@ -886,52 +589,9 @@ public sealed class TestRunner
             || lower == "ein" || lower == "on" || lower == "wahr";
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  Phase 3: CDH-Logs lesen
-    // ════════════════════════════════════════════════════════════════
-
-    private void ReadCdhLogs(TestContext ctx)
-    {
-        if (!ctx.ContactId.HasValue)
-        {
-            Log("    Kein Contact vorhanden -- CDH-Logs übersprungen");
-            return;
-        }
-
-        var qe = new QueryExpression(CdhLoggingEntity)
-        {
-            ColumnSet = new ColumnSet(
-                LogNameField, CdhLogEntry.DiagnosticsFieldName, LogContactLookup,
-                LogContactSourceLookup, LogCreatedOn),
-            TopCount = 50
-        };
-
-        qe.Criteria.AddCondition(
-            LogContactLookup, ConditionOperator.Equal, ctx.ContactId.Value);
-        qe.Criteria.AddCondition(
-            LogCreatedOn, ConditionOperator.GreaterEqual,
-            ctx.TestStartUtc.AddSeconds(-2));
-        qe.Orders.Add(new OrderExpression(LogCreatedOn, OrderType.Descending));
-
-        var results = _service.RetrieveMultiple(qe);
-        ctx.CdhLogs = results.Entities.ToList();
-
-        Log($"    {ctx.CdhLogs.Count} CDH-Log-Einträge geladen");
-        foreach (var e in ctx.CdhLogs)
-        {
-            var entry = CdhLogEntry.FromEntity(e);
-            Log($"    - {entry.Name} (erstellt: {entry.CreatedOn:HH:mm:ss}, " +
-                $"ContactUpdated={entry.ContactUpdated})");
-            if (entry.UpdatedFields.Count > 0)
-                Log($"      Aktualisierte Felder: {string.Join(", ", entry.UpdatedFields)}");
-            if (entry.Errors.Count > 0)
-                Log($"      Fehler: {string.Join("; ", entry.Errors)}");
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    //  Phase 4: Assertions auswerten
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
+    //  Phase 3: Assertions auswerten
+    // ================================================================
 
     private bool EvaluateAssertions(
         TestCase tc, TestContext ctx, TestCaseResult result)
@@ -940,7 +600,7 @@ public sealed class TestRunner
 
         foreach (var assertion in tc.Assertions)
         {
-            // Resolve EntitySetName to LogicalName before evaluation
+            // EntitySetName zu LogicalName auflösen vor der Auswertung
             if (!string.IsNullOrEmpty(assertion.Entity))
                 assertion.Entity = ResolveEntity(assertion.Entity);
 
@@ -952,14 +612,12 @@ public sealed class TestRunner
             Log($"    {(ar.Passed ? "OK" : "FAIL")} {assertion.Description}: {ar.Message}");
         }
 
-        result.CdhLogEntries = ctx.CdhLogs.Select(CdhLogEntry.FromEntity).ToList();
-
         return allPassed;
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  Phase 5: Cleanup
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
+    //  Phase 4: Cleanup
+    // ================================================================
 
     private void Cleanup(TestContext ctx)
     {
@@ -983,9 +641,9 @@ public sealed class TestRunner
         Log($"    Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen");
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
     //  Hilfsmethoden
-    // ════════════════════════════════════════════════════════════════
+    // ================================================================
 
     private void ApplyFields(
         Entity entity, Dictionary<string, object?> fields,
@@ -1001,7 +659,7 @@ public sealed class TestRunner
                 continue;
             }
 
-            // Web API @odata.bind Lookup-Syntax: "fieldname_target@odata.bind" = "/entitysets(guid)"
+            // Web API @odata.bind Lookup-Syntax: "feldname_target@odata.bind" = "/entitysets(guid)"
             if (key.EndsWith("@odata.bind", StringComparison.OrdinalIgnoreCase))
             {
                 var strVal = ConvertValue(value)?.ToString() ?? "";
@@ -1016,84 +674,67 @@ public sealed class TestRunner
 
             var converted = ConvertValue(value);
 
-            if (OptionSetFields.Contains(key))
+            // Metadata-basierte Typerkennung für alle Felder
+            var attrType = _entityMetadata.GetAttributeType(entity.LogicalName, key);
+            if (attrType != null)
             {
-                converted = converted switch
+                switch (attrType.Value)
                 {
-                    int i => new OptionSetValue(i),
-                    long l => new OptionSetValue((int)l),
-                    decimal d => new OptionSetValue((int)d),
-                    OptionSetValue => converted,
-                    _ => converted
-                };
-            }
-            else if (LookupFields.TryGetValue(key, out var targetEntity)
-                     && converted is string s && Guid.TryParse(s, out var guid))
-            {
-                converted = new EntityReference(targetEntity, guid);
-            }
-            else
-            {
-                // Metadata-based type detection for all other fields
-                var attrType = _entityMetadata.GetAttributeType(entity.LogicalName, key);
-                if (attrType != null)
-                {
-                    switch (attrType.Value)
-                    {
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Lookup:
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Customer:
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Owner:
-                            if (converted is string sv && Guid.TryParse(sv, out var g))
-                            {
-                                var target = _entityMetadata.GetLookupTarget(entity.LogicalName, key);
-                                if (target != null)
-                                    converted = new EntityReference(target, g);
-                            }
-                            break;
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Lookup:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Customer:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Owner:
+                        if (converted is string sv && Guid.TryParse(sv, out var g))
+                        {
+                            var target = _entityMetadata.GetLookupTarget(entity.LogicalName, key);
+                            if (target != null)
+                                converted = new EntityReference(target, g);
+                        }
+                        break;
 
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Money:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Money:
+                        converted = converted switch
+                        {
+                            decimal d => new Money(d),
+                            int i2 => new Money(i2),
+                            double d2 => new Money((decimal)d2),
+                            string ms when decimal.TryParse(ms,
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.CultureInfo.InvariantCulture, out var md)
+                                => new Money(md),
+                            _ => converted
+                        };
+                        break;
+
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Decimal:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Double:
+                        converted = converted switch
+                        {
+                            int i4 => (decimal)i4,
+                            double d3 => (decimal)d3,
+                            string ds when decimal.TryParse(ds,
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.CultureInfo.InvariantCulture, out var dd)
+                                => dd,
+                            _ => converted
+                        };
+                        break;
+
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Picklist:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.State:
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Status:
+                        if (converted is not OptionSetValue)
+                        {
                             converted = converted switch
                             {
-                                decimal d => new Money(d),
-                                int i2 => new Money(i2),
-                                double d2 => new Money((decimal)d2),
-                                string ms when decimal.TryParse(ms,
-                                    System.Globalization.NumberStyles.Any,
-                                    System.Globalization.CultureInfo.InvariantCulture, out var md)
-                                    => new Money(md),
+                                int i3 => new OptionSetValue(i3),
+                                long l => new OptionSetValue((int)l),
+                                decimal dec => new OptionSetValue((int)dec),
+                                string ps when int.TryParse(ps, out var pi)
+                                    => new OptionSetValue(pi),
                                 _ => converted
                             };
-                            break;
-
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Decimal:
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Double:
-                            converted = converted switch
-                            {
-                                int i4 => (decimal)i4,
-                                double d3 => (decimal)d3,
-                                string ds when decimal.TryParse(ds,
-                                    System.Globalization.NumberStyles.Any,
-                                    System.Globalization.CultureInfo.InvariantCulture, out var dd)
-                                    => dd,
-                                _ => converted
-                            };
-                            break;
-
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Picklist:
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.State:
-                        case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Status:
-                            if (converted is not OptionSetValue)
-                            {
-                                converted = converted switch
-                                {
-                                    int i3 => new OptionSetValue(i3),
-                                    string ps when int.TryParse(ps, out var pi)
-                                        => new OptionSetValue(pi),
-                                    _ => converted
-                                };
-                            }
-                            break;
-                    }
+                        }
+                        break;
                 }
             }
 
@@ -1102,16 +743,16 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Parses Web API @odata.bind syntax: "parentcustomerid_account@odata.bind" = "/accounts(guid)"
-    /// Returns the SDK field name, target entity, and GUID.
+    /// Parst Web API @odata.bind Syntax: "parentcustomerid_account@odata.bind" = "/accounts(guid)"
+    /// Gibt den SDK-Feldnamen, die Ziel-Entity und die GUID zurück.
     /// </summary>
     private (string FieldName, string TargetEntity, Guid Id)? ParseODataBind(string bindKey, string bindValue)
     {
-        // Extract field name: remove @odata.bind suffix
+        // Feldnamen extrahieren: @odata.bind-Suffix entfernen
         var fieldPart = bindKey.Substring(0, bindKey.Length - "@odata.bind".Length);
 
-        // Strategy: always extract target entity from the bind VALUE (most reliable)
-        // The value is like "/accounts(guid)" or "/lm_bestellunges(guid)"
+        // Strategie: Ziel-Entity immer aus dem Bind-VALUE extrahieren (am zuverlässigsten)
+        // Der Wert hat das Format "/accounts(guid)" oder "/lm_bestellunges(guid)"
         var entitySetFromValue = ExtractEntityFromBindValue(bindValue);
 
         string fieldName;
@@ -1119,21 +760,21 @@ public sealed class TestRunner
 
         if (entitySetFromValue != null)
         {
-            // Resolve EntitySetName from value to LogicalName
+            // EntitySetName aus dem Wert zu LogicalName auflösen
             targetEntity = _entityMetadata.ResolveLogicalName(entitySetFromValue);
 
-            // The field name: try to strip the target entity suffix from the field part
-            // "parentcustomerid_account" -> "parentcustomerid" (strip "_account")
-            // "lm_bestellungid" -> "lm_bestellungid" (no standard entity suffix to strip)
+            // Feldname: versuche das Ziel-Entity-Suffix vom Feldteil abzuschneiden
+            // "parentcustomerid_account" -> "parentcustomerid" ("_account" entfernen)
+            // "lm_bestellungid" -> "lm_bestellungid" (kein Standard-Entity-Suffix)
             var suffix = "_" + targetEntity;
             if (fieldPart.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                 fieldName = fieldPart.Substring(0, fieldPart.Length - suffix.Length);
             else
-                fieldName = fieldPart; // Custom entity lookup: field name IS the full field part
+                fieldName = fieldPart; // Custom Entity Lookup: Feldname IST der vollständige Feldteil
         }
         else
         {
-            // Fallback: try to split at last underscore
+            // Fallback: am letzten Unterstrich aufteilen
             var lastUnderscore = fieldPart.LastIndexOf('_');
             if (lastUnderscore > 0)
             {
@@ -1147,10 +788,10 @@ public sealed class TestRunner
             }
         }
 
-        // Resolve EntitySetName to LogicalName
+        // EntitySetName zu LogicalName auflösen
         targetEntity = _entityMetadata.ResolveLogicalName(targetEntity);
 
-        // Extract GUID from value: "/accounts(5c013fbf-...)" or "/accounts({acc1.id})"
+        // GUID aus dem Wert extrahieren: "/accounts(5c013fbf-...)"
         var match = System.Text.RegularExpressions.Regex.Match(
             bindValue, @"\(([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)");
         if (match.Success && Guid.TryParse(match.Groups[1].Value, out var id))
@@ -1163,7 +804,7 @@ public sealed class TestRunner
 
     private static string? ExtractEntityFromBindValue(string bindValue)
     {
-        // Extract entity set name from "/accounts(guid)" pattern
+        // Entity-Set-Name aus dem "/accounts(guid)"-Pattern extrahieren
         var match = System.Text.RegularExpressions.Regex.Match(bindValue, @"^/?(\w+)\(");
         return match.Success ? match.Groups[1].Value : null;
     }
@@ -1183,7 +824,7 @@ public sealed class TestRunner
             };
         }
 
-        // Ensure Int64 -> Int32 for Dataverse compatibility
+        // Int64 -> Int32 für Dataverse-Kompatibilität
         if (value is long l) return (int)l;
 
         return value;
@@ -1206,34 +847,13 @@ public sealed class TestRunner
 
             if (strVal == null) continue;
 
-            // Platzhalter auflösen: erst PlaceholderEngine (generisch), dann FGTestTool-Kompatibilität
+            // Platzhalter auflösen über die PlaceholderEngine
             strVal = _placeholderEngine.Resolve(strVal, ctx);
-
-            // FGTestTool-Kompatibilität: zusätzliche Legacy-Platzhalter
-            strVal = strVal
-                .Replace("{CONTACT_ID}", ctx.ContactId?.ToString() ?? "")
-                .Replace("{ACCOUNT_ID}", ctx.AccountId?.ToString() ?? "");
-
-            foreach (var csKvp in ctx.ContactSourceIds)
-                strVal = strVal.Replace($"{{CS:{csKvp.Key}}}", csKvp.Value.ToString());
-
-            for (int i = 0; i < ctx.BridgeRecordIds.Count; i++)
-                strVal = strVal.Replace($"{{BRIDGE:{i}}}", ctx.BridgeRecordIds[i].ToString());
 
             resolved[key] = strVal;
         }
 
         return resolved;
-    }
-
-    private static void AutoSetDateFields(Dictionary<string, object?> fields)
-    {
-        var now = DateTime.UtcNow;
-        foreach (var mapping in DateFieldMapping)
-        {
-            if (fields.ContainsKey(mapping.Key) && !fields.ContainsKey(mapping.Value))
-                fields[mapping.Value] = now;
-        }
     }
 
     private void Log(string message)

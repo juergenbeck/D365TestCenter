@@ -7,26 +7,22 @@ using Newtonsoft.Json.Linq;
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Central placeholder resolution engine. Replaces placeholders in strings and dictionaries.
-/// Generated values are stored and reusable across steps and assertions within a test case.
+/// Zentrale Platzhalter-Engine. Ersetzt Platzhalter in Strings und Dictionaries.
+/// Generierte Werte werden pro Testfall gespeichert und wiederverwendet.
 /// </summary>
 public sealed class PlaceholderEngine
 {
     private static readonly Regex GeneratedPattern = new(@"\{GENERATED:(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex RecordPattern = new(@"\{RECORD:(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex ResultPattern = new(@"\{RESULT:(\w+)\.(\w+)\}", RegexOptions.Compiled);
-    private static readonly Regex FakerPattern = new(@"\{FAKER:(\w+)\}", RegexOptions.Compiled);
-    // Web Resource format: {alias.id} for record ID, {alias.fields.fieldname} for field values
     private static readonly Regex AliasIdPattern = new(@"\{(\w+)\.id\}", RegexOptions.Compiled);
     private static readonly Regex AliasFieldPattern = new(@"\{(\w+)\.fields\.(\w+)\}", RegexOptions.Compiled);
-    private static readonly Regex CsPattern = new(@"\{CS:(\w+)\}", RegexOptions.Compiled);
-    private static readonly Regex BridgePattern = new(@"\{BRIDGE:(\d+)\}", RegexOptions.Compiled);
     private static readonly Regex RowPattern = new(@"\{ROW:(\w+)\}", RegexOptions.Compiled);
 
     private readonly Bogus.Faker _faker = new Bogus.Faker("de");
 
     /// <summary>
-    /// Resolves all placeholders in a template string using the test context.
+    /// Löst alle Platzhalter in einem Template-String auf.
     /// </summary>
     public string Resolve(string template, TestContext ctx)
     {
@@ -35,10 +31,8 @@ public sealed class PlaceholderEngine
 
         var result = template;
 
-        // Static/context placeholders
+        // Statische Platzhalter
         result = result
-            .Replace("{CONTACT_ID}", ctx.ContactId?.ToString() ?? "")
-            .Replace("{ACCOUNT_ID}", ctx.AccountId?.ToString() ?? "")
             .Replace("{TESTID}", ctx.TestId)
             .Replace("{PREFIX}", "ITT")
             .Replace("{TIMESTAMP}", DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff"))
@@ -46,27 +40,16 @@ public sealed class PlaceholderEngine
             .Replace("{GUID}", Guid.NewGuid().ToString("N").Substring(0, 8))
             .Replace("{NOW_UTC}", DateTime.UtcNow.ToString("O"));
 
-        // {CS:alias} -> ContactSource GUID
-        result = CsPattern.Replace(result, m =>
-        {
-            var alias = m.Groups[1].Value;
-            if (ctx.ContactSourceIds.TryGetValue(alias, out var csId))
-                return csId.ToString();
-            return m.Value;
-        });
-
-        // {RECORD:alias} -> Record GUID from generic registry
+        // {RECORD:alias} -> Record-GUID aus dem generischen Registry
         result = RecordPattern.Replace(result, m =>
         {
             var alias = m.Groups[1].Value;
             if (ctx.Records.TryGetValue(alias, out var record))
                 return record.Id.ToString();
-            if (ctx.ContactSourceIds.TryGetValue(alias, out var csId))
-                return csId.ToString();
             return m.Value;
         });
 
-        // {alias.fields.fieldname} -> Field value from FoundRecords (must come BEFORE {alias.id})
+        // {alias.fields.fieldname} -> Feldwert aus FoundRecords (VOR {alias.id})
         result = AliasFieldPattern.Replace(result, m =>
         {
             var alias = m.Groups[1].Value;
@@ -81,26 +64,16 @@ public sealed class PlaceholderEngine
             return m.Value;
         });
 
-        // {alias.id} -> Record GUID (Web Resource format, same as {RECORD:alias})
+        // {alias.id} -> Record-GUID (Web Resource Format)
         result = AliasIdPattern.Replace(result, m =>
         {
             var alias = m.Groups[1].Value;
             if (ctx.Records.TryGetValue(alias, out var record))
                 return record.Id.ToString();
-            if (ctx.ContactSourceIds.TryGetValue(alias, out var csId))
-                return csId.ToString();
             return m.Value;
         });
 
-        // {BRIDGE:n} -> Bridge record GUID by index
-        result = BridgePattern.Replace(result, m =>
-        {
-            if (int.TryParse(m.Groups[1].Value, out var idx) && idx < ctx.BridgeRecordIds.Count)
-                return ctx.BridgeRecordIds[idx].ToString();
-            return m.Value;
-        });
-
-        // {GENERATED:name} -> generate once, reuse thereafter (type-aware)
+        // {GENERATED:name} -> Typ-spezifische Generierung, einmal erzeugt und wiederverwendet
         result = GeneratedPattern.Replace(result, m =>
         {
             var name = m.Groups[1].Value;
@@ -112,7 +85,7 @@ public sealed class PlaceholderEngine
             return existing;
         });
 
-        // {RESULT:alias.field} -> field value from a found record
+        // {RESULT:alias.field} -> Feldwert aus einem gefundenen Record
         result = ResultPattern.Replace(result, m =>
         {
             var alias = m.Groups[1].Value;
@@ -125,10 +98,7 @@ public sealed class PlaceholderEngine
             return m.Value;
         });
 
-        // {FAKER:X} -> Bogus-generated value
-        result = FakerPattern.Replace(result, m => ResolveFakerToken(m.Groups[1].Value));
-
-        // {ROW:fieldname} -> data-driven test row value (if set on context)
+        // {ROW:fieldname} -> Wert aus der aktuellen Datenzeile (datengetriebene Tests)
         if (ctx.CurrentDataRow != null)
         {
             result = RowPattern.Replace(result, m =>
@@ -144,8 +114,7 @@ public sealed class PlaceholderEngine
     }
 
     /// <summary>
-    /// Resolves placeholders in all string values of a dictionary.
-    /// JToken strings are converted to regular strings.
+    /// Löst Platzhalter in allen String-Werten eines Dictionaries auf.
     /// </summary>
     public Dictionary<string, object?> ResolveAll(
         Dictionary<string, object?> fields, TestContext ctx)
@@ -170,9 +139,8 @@ public sealed class PlaceholderEngine
     }
 
     /// <summary>
-    /// Generates a type-aware value for {GENERATED:name} placeholders.
-    /// Known names (firstname, lastname, email, phone, company, text, guid) produce realistic data.
-    /// Unknown names produce a random 8-char hex string.
+    /// Erzeugt typ-spezifische Werte für {GENERATED:name}-Platzhalter.
+    /// Bekannte Namen erzeugen realistische Daten, unbekannte einen 8-Zeichen-Hex-String.
     /// </summary>
     private string GenerateTypedValue(string name)
     {
@@ -194,22 +162,6 @@ public sealed class PlaceholderEngine
         }
     }
 
-    private string ResolveFakerToken(string tokenName)
-    {
-        switch (tokenName)
-        {
-            case "FirstName": return _faker.Name.FirstName();
-            case "LastName": return _faker.Name.LastName();
-            case "Company": return _faker.Company.CompanyName();
-            case "Email": return _faker.Internet.Email();
-            case "Phone": return _faker.Phone.PhoneNumber("+49 ### #######");
-            case "City": return _faker.Address.City();
-            case "Street": return _faker.Address.StreetAddress();
-            case "Zip": return _faker.Address.ZipCode();
-            default: return $"{{FAKER:{tokenName}}}";
-        }
-    }
-
     private static string FormatValueForPlaceholder(object? value)
     {
         if (value == null) return "";
@@ -217,7 +169,8 @@ public sealed class PlaceholderEngine
         if (value is OptionSetValue osv) return osv.Value.ToString();
         if (value is EntityReference er) return er.Id.ToString();
         if (value is DateTime dt) return dt.ToString("O");
-        if (value is bool b) return b.ToString();
+        if (value is Money m) return m.Value.ToString();
+        if (value is bool b) return b.ToString().ToLowerInvariant();
         return value.ToString() ?? "";
     }
 }

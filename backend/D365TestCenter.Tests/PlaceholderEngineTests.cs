@@ -4,35 +4,25 @@ using Xunit;
 
 namespace D365TestCenter.Tests;
 
+/// <summary>
+/// Tests für die PlaceholderEngine.
+/// Prüft alle unterstützten Platzhalter-Typen:
+/// {TESTID}, {PREFIX}, {TIMESTAMP}, {GUID}, {NOW_UTC},
+/// {GENERATED:name}, {RECORD:alias}, {alias.id}, {alias.fields.field},
+/// {RESULT:alias.field}, {ROW:field}.
+/// </summary>
 public class PlaceholderEngineTests
 {
     private readonly PlaceholderEngine _engine = new();
 
     private static TestContext CreateContext(string testId = "TEST01")
     {
-        return new TestContext
-        {
-            TestId = testId,
-            ContactId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            AccountId = Guid.Parse("22222222-2222-2222-2222-222222222222")
-        };
+        return new TestContext { TestId = testId };
     }
 
-    [Fact]
-    public void Resolve_ContactId_ReplacesCorrectly()
-    {
-        var ctx = CreateContext();
-        var result = _engine.Resolve("id={CONTACT_ID}", ctx);
-        Assert.Equal("id=11111111-1111-1111-1111-111111111111", result);
-    }
-
-    [Fact]
-    public void Resolve_AccountId_ReplacesCorrectly()
-    {
-        var ctx = CreateContext();
-        var result = _engine.Resolve("id={ACCOUNT_ID}", ctx);
-        Assert.Equal("id=22222222-2222-2222-2222-222222222222", result);
-    }
+    // ═══════════════════════════════════════════════════════════════════
+    //  Statische Platzhalter
+    // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
     public void Resolve_TestId_ReplacesCorrectly()
@@ -68,6 +58,19 @@ public class PlaceholderEngineTests
     }
 
     [Fact]
+    public void Resolve_NowUtc_ProducesIso8601()
+    {
+        var ctx = CreateContext();
+        var result = _engine.Resolve("{NOW_UTC}", ctx);
+        Assert.Contains("T", result);
+        Assert.True(DateTimeOffset.TryParse(result, out _));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  {GENERATED:name} - generierte und wiederverwendete Werte
+    // ═══════════════════════════════════════════════════════════════════
+
+    [Fact]
     public void Resolve_Generated_SameNameReturnsSameValue()
     {
         var ctx = CreateContext();
@@ -95,24 +98,9 @@ public class PlaceholderEngineTests
         Assert.Equal(stepValue, assertionValue);
     }
 
-    [Fact]
-    public void Resolve_CsAlias_ReplacesKnownAlias()
-    {
-        var ctx = CreateContext();
-        var csId = Guid.Parse("33333333-3333-3333-3333-333333333333");
-        ctx.ContactSourceIds["pisa1"] = csId;
-
-        var result = _engine.Resolve("{CS:pisa1}", ctx);
-        Assert.Equal("33333333-3333-3333-3333-333333333333", result);
-    }
-
-    [Fact]
-    public void Resolve_CsAlias_UnknownAlias_KeepsPlaceholder()
-    {
-        var ctx = CreateContext();
-        var result = _engine.Resolve("{CS:unknown}", ctx);
-        Assert.Equal("{CS:unknown}", result);
-    }
+    // ═══════════════════════════════════════════════════════════════════
+    //  {RECORD:alias} - Record-Registry
+    // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
     public void Resolve_RecordAlias_FromRecordsRegistry()
@@ -126,15 +114,44 @@ public class PlaceholderEngineTests
     }
 
     [Fact]
-    public void Resolve_RecordAlias_FallbackToContactSourceIds()
+    public void Resolve_RecordAlias_UnknownAlias_KeepsPlaceholder()
     {
         var ctx = CreateContext();
-        var csId = Guid.Parse("55555555-5555-5555-5555-555555555555");
-        ctx.ContactSourceIds["pisa1"] = csId;
-
-        var result = _engine.Resolve("{RECORD:pisa1}", ctx);
-        Assert.Equal("55555555-5555-5555-5555-555555555555", result);
+        var result = _engine.Resolve("{RECORD:unbekannt}", ctx);
+        Assert.Equal("{RECORD:unbekannt}", result);
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  {alias.id} und {alias.fields.field} - Web-Resource-Format
+    // ═══════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Resolve_AliasId_ReplacesFromRegistry()
+    {
+        var ctx = CreateContext();
+        var id = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        ctx.Records["cs1"] = ("contact", id);
+
+        var result = _engine.Resolve("{cs1.id}", ctx);
+        Assert.Equal("11111111-1111-1111-1111-111111111111", result);
+    }
+
+    [Fact]
+    public void Resolve_AliasFields_ReplacesFromFoundRecords()
+    {
+        var ctx = CreateContext();
+        var entity = new Entity("contact", Guid.NewGuid());
+        entity["firstname"] = "MaxTest";
+        ctx.Records["cs1"] = ("contact", entity.Id);
+        ctx.FoundRecords["cs1"] = entity;
+
+        var result = _engine.Resolve("{cs1.fields.firstname}", ctx);
+        Assert.Equal("MaxTest", result);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  {RESULT:alias.field} - Feldwert aus FoundRecords
+    // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
     public void Resolve_ResultAlias_ExtractsFieldValue()
@@ -156,25 +173,9 @@ public class PlaceholderEngineTests
         Assert.Equal("{RESULT:unknown.field}", result);
     }
 
-    [Fact]
-    public void Resolve_BridgeIndex_ReplacesCorrectly()
-    {
-        var ctx = CreateContext();
-        var bridgeId = Guid.Parse("66666666-6666-6666-6666-666666666666");
-        ctx.BridgeRecordIds.Add(bridgeId);
-
-        var result = _engine.Resolve("{BRIDGE:0}", ctx);
-        Assert.Equal("66666666-6666-6666-6666-666666666666", result);
-    }
-
-    [Fact]
-    public void Resolve_Faker_ProducesNonEmptyValue()
-    {
-        var ctx = CreateContext();
-        var result = _engine.Resolve("{FAKER:FirstName}", ctx);
-        Assert.NotEmpty(result);
-        Assert.DoesNotContain("{FAKER:", result);
-    }
+    // ═══════════════════════════════════════════════════════════════════
+    //  {ROW:field} - Datengetriebene Tests
+    // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
     public void Resolve_Row_ReplacesFromDataRow()
@@ -190,6 +191,10 @@ public class PlaceholderEngineTests
         Assert.Equal("Source=4, Name=PisaTest", result);
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    //  ResolveAll - Dictionary-Auflösung
+    // ═══════════════════════════════════════════════════════════════════
+
     [Fact]
     public void ResolveAll_ReplacesAllStringValues()
     {
@@ -204,7 +209,7 @@ public class PlaceholderEngineTests
         var resolved = _engine.ResolveAll(fields, ctx);
 
         Assert.Equal("Test_TC99", resolved["markant_firstname"]);
-        Assert.Equal(1, resolved["markant_status"]); // int unchanged
+        Assert.Equal(1, resolved["markant_status"]); // int bleibt unverändert
         Assert.Equal(8, ((string)resolved["markant_externalid"]!).Length);
     }
 

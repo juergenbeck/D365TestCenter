@@ -4,105 +4,14 @@ using Xunit;
 
 namespace D365TestCenter.Tests;
 
+/// <summary>
+/// Tests für TestDataFactory.ResolveTemplateData.
+/// Die Factory delegiert an PlaceholderEngine.ResolveAll.
+/// Einzelne Platzhalter-Typen werden in PlaceholderEngineTests geprüft.
+/// </summary>
 public class TestDataFactoryTests
 {
     private readonly TestDataFactory _factory = new();
-
-    [Fact]
-    public void ResolvePlaceholders_Timestamp_ReplacesWithCurrentTime()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("Test_{TIMESTAMP}", ctx);
-
-        Assert.DoesNotContain("{TIMESTAMP}", result);
-        Assert.StartsWith("Test_", result);
-        Assert.True(result.Length > 10);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_TestId_ReplacesCorrectly()
-    {
-        var ctx = new TestContext { TestId = "TC42" };
-        var result = _factory.ResolvePlaceholders("{PREFIX}_{TESTID}", ctx);
-
-        Assert.Equal("ITT_TC42", result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_Guid_Returns8Characters()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{GUID}", ctx);
-
-        Assert.Equal(8, result.Length);
-        Assert.DoesNotContain("{", result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_Prefix_ReturnsITT()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{PREFIX}", ctx);
-
-        Assert.Equal("ITT", result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_NowUtc_ReturnsIso8601()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{NOW_UTC}", ctx);
-
-        Assert.Contains("T", result);
-        Assert.True(DateTimeOffset.TryParse(result, out _));
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_ContactId_ReplacesGuid()
-    {
-        var contactId = Guid.NewGuid();
-        var ctx = new TestContext { TestId = "TC01", ContactId = contactId };
-        var result = _factory.ResolvePlaceholders("{CONTACT_ID}", ctx);
-
-        Assert.Equal(contactId.ToString(), result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_FakerFirstName_ReturnsNonEmpty()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{FAKER:FirstName}", ctx);
-
-        Assert.DoesNotContain("{FAKER:", result);
-        Assert.NotEmpty(result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_FakerUnknown_KeepsPlaceholder()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{FAKER:UnknownToken}", ctx);
-
-        Assert.Equal("{FAKER:UnknownToken}", result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_NullTemplate_ReturnsNull()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders(null!, ctx);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_EmptyTemplate_ReturnsEmpty()
-    {
-        var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("", ctx);
-
-        Assert.Equal("", result);
-    }
 
     [Fact]
     public void ResolveTemplateData_ResolvesStringValues()
@@ -143,35 +52,74 @@ public class TestDataFactoryTests
     }
 
     [Fact]
-    public void GenerateBogusContactData_ContainsAllRequiredFields()
-    {
-        var data = _factory.GenerateBogusContactData();
-
-        Assert.True(data.ContainsKey("firstname"));
-        Assert.True(data.ContainsKey("lastname"));
-        Assert.True(data.ContainsKey("emailaddress1"));
-        Assert.True(data.ContainsKey("telephone1"));
-        Assert.True(data.ContainsKey("jobtitle"));
-        Assert.All(data.Values, v => Assert.NotNull(v));
-    }
-
-    [Fact]
-    public void GenerateBogusAccountData_ContainsName()
-    {
-        var data = _factory.GenerateBogusAccountData();
-
-        Assert.True(data.ContainsKey("name"));
-        Assert.NotNull(data["name"]);
-        Assert.NotEmpty((string)data["name"]!);
-    }
-
-    [Fact]
-    public void ResolvePlaceholders_MultiplePlaceholders_AllResolved()
+    public void ResolveTemplateData_Timestamp_IsReplaced()
     {
         var ctx = new TestContext { TestId = "TC01" };
-        var result = _factory.ResolvePlaceholders("{PREFIX}_{TESTID}_{GUID}", ctx);
+        var data = new Dictionary<string, object?>
+        {
+            ["externalId"] = "ITT_{TIMESTAMP}"
+        };
 
-        Assert.DoesNotContain("{", result);
-        Assert.StartsWith("ITT_TC01_", result);
+        var resolved = _factory.ResolveTemplateData(data, ctx);
+
+        Assert.DoesNotContain("{TIMESTAMP}", (string)resolved["externalId"]!);
+        Assert.StartsWith("ITT_", (string)resolved["externalId"]!);
+    }
+
+    [Fact]
+    public void ResolveTemplateData_Generated_ProducesConsistentValues()
+    {
+        var ctx = new TestContext { TestId = "TC01" };
+        var data = new Dictionary<string, object?>
+        {
+            ["extId"] = "{GENERATED:myExt}",
+            ["extIdCopy"] = "{GENERATED:myExt}"
+        };
+
+        var resolved = _factory.ResolveTemplateData(data, ctx);
+
+        // Beide Felder müssen denselben generierten Wert erhalten
+        Assert.Equal(resolved["extId"], resolved["extIdCopy"]);
+        Assert.NotNull(resolved["extId"]);
+    }
+
+    [Fact]
+    public void ResolveTemplateData_Guid_Produces8Chars()
+    {
+        var ctx = new TestContext { TestId = "TC01" };
+        var data = new Dictionary<string, object?>
+        {
+            ["uniqueId"] = "{GUID}"
+        };
+
+        var resolved = _factory.ResolveTemplateData(data, ctx);
+
+        Assert.Equal(8, ((string)resolved["uniqueId"]!).Length);
+    }
+
+    [Fact]
+    public void ResolveTemplateData_MultiplePlaceholders_AllResolved()
+    {
+        var ctx = new TestContext { TestId = "TC01" };
+        var data = new Dictionary<string, object?>
+        {
+            ["fullName"] = "{PREFIX}_{TESTID}_{GUID}"
+        };
+
+        var resolved = _factory.ResolveTemplateData(data, ctx);
+        var value = (string)resolved["fullName"]!;
+
+        Assert.DoesNotContain("{", value);
+        Assert.StartsWith("ITT_TC01_", value);
+    }
+
+    [Fact]
+    public void ResolveTemplateData_EmptyDict_ReturnsEmpty()
+    {
+        var ctx = new TestContext { TestId = "TC01" };
+        var resolved = _factory.ResolveTemplateData(new Dictionary<string, object?>(), ctx);
+
+        Assert.NotNull(resolved);
+        Assert.Empty(resolved);
     }
 }

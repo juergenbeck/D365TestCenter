@@ -4,6 +4,12 @@ using Xunit;
 
 namespace D365TestCenter.Tests;
 
+/// <summary>
+/// Tests für die AssertionEngine.
+/// Prüft die Operator-Auswertung über die private ApplyOperator-Methode
+/// (Signatur: TestAssertion, object?, AssertionResult).
+/// Operatoren: Equals, NotEquals, IsNull, IsNotNull, Contains, DateSetRecently.
+/// </summary>
 public class AssertionEngineTests
 {
     [Fact]
@@ -46,6 +52,21 @@ public class AssertionEngineTests
     {
         var id = Guid.NewGuid();
         var result = EvalOperator("Equals", new EntityReference("contact", id), id.ToString());
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void Equals_BothNull_Passes()
+    {
+        var result = EvalOperator("Equals", null, null);
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void Equals_MoneyValue_ComparesDecimal()
+    {
+        var money = new Money(42m);
+        var result = EvalOperator("Equals", money, "42");
         Assert.True(result.Passed);
     }
 
@@ -129,18 +150,18 @@ public class AssertionEngineTests
     [Fact]
     public void DateSetRecently_RecentDate_Passes()
     {
+        // DateSetRecently nutzt fest 120 Sekunden Toleranz
         var recent = DateTime.UtcNow.AddSeconds(-10);
         var assertion = new TestAssertion
         {
-            Target = "Contact", Field = "createdon",
-            Operator = "DateSetRecently", WithinSeconds = 120
+            Target = "Query", Field = "createdon",
+            Operator = "DateSetRecently"
         };
-        var ctx = new TestContext();
         var result = new AssertionResult();
 
         var method = typeof(AssertionEngine).GetMethod("ApplyOperator",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        method!.Invoke(null, new object?[] { assertion, recent, ctx, result });
+        method!.Invoke(null, new object?[] { assertion, recent, result });
 
         Assert.True(result.Passed);
     }
@@ -151,55 +172,14 @@ public class AssertionEngineTests
         var old = DateTime.UtcNow.AddMinutes(-10);
         var assertion = new TestAssertion
         {
-            Target = "Contact", Field = "createdon",
-            Operator = "DateSetRecently", WithinSeconds = 120
+            Target = "Query", Field = "createdon",
+            Operator = "DateSetRecently"
         };
-        var ctx = new TestContext();
         var result = new AssertionResult();
 
         var method = typeof(AssertionEngine).GetMethod("ApplyOperator",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        method!.Invoke(null, new object?[] { assertion, old, ctx, result });
-
-        Assert.False(result.Passed);
-    }
-
-    [Fact]
-    public void Unchanged_SameValue_Passes()
-    {
-        var snapshot = new Entity("contact", Guid.NewGuid());
-        snapshot["firstname"] = "Max";
-
-        var assertion = new TestAssertion
-        {
-            Target = "Contact", Field = "firstname", Operator = "Unchanged"
-        };
-        var ctx = new TestContext { CurrentContact = snapshot };
-        var result = new AssertionResult();
-
-        var method = typeof(AssertionEngine).GetMethod("ApplyOperator",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        method!.Invoke(null, new object?[] { assertion, (object)"Max", ctx, result });
-
-        Assert.True(result.Passed);
-    }
-
-    [Fact]
-    public void Unchanged_DifferentValue_Fails()
-    {
-        var snapshot = new Entity("contact", Guid.NewGuid());
-        snapshot["firstname"] = "Max";
-
-        var assertion = new TestAssertion
-        {
-            Target = "Contact", Field = "firstname", Operator = "Unchanged"
-        };
-        var ctx = new TestContext { CurrentContact = snapshot };
-        var result = new AssertionResult();
-
-        var method = typeof(AssertionEngine).GetMethod("ApplyOperator",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        method!.Invoke(null, new object?[] { assertion, (object)"Moritz", ctx, result });
+        method!.Invoke(null, new object?[] { assertion, old, result });
 
         Assert.False(result.Passed);
     }
@@ -212,33 +192,21 @@ public class AssertionEngineTests
         Assert.Contains("Unbekannter Operator", result.Message);
     }
 
-    [Fact]
-    public void Equals_BothNull_Passes()
-    {
-        var result = EvalOperator("Equals", null, null);
-        Assert.True(result.Passed);
-    }
-
-    [Fact]
-    public void Equals_MoneyValue_ComparesDecimal()
-    {
-        var money = new Money(42m);
-        var result = EvalOperator("Equals", money, "42");
-        Assert.True(result.Passed);
-    }
-
+    /// <summary>
+    /// Hilfsmethode: Ruft die private ApplyOperator-Methode per Reflection auf.
+    /// Signatur: ApplyOperator(TestAssertion, object?, AssertionResult)
+    /// </summary>
     private static AssertionResult EvalOperator(string op, object? actual, string? expected)
     {
         var assertion = new TestAssertion
         {
-            Target = "Contact", Field = "test", Operator = op, Value = expected
+            Target = "Query", Field = "test", Operator = op, Value = expected
         };
-        var ctx = new TestContext();
         var result = new AssertionResult();
 
         var method = typeof(AssertionEngine).GetMethod("ApplyOperator",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        method!.Invoke(null, new object?[] { assertion, actual, ctx, result });
+        method!.Invoke(null, new object?[] { assertion, actual, result });
 
         return result;
     }
