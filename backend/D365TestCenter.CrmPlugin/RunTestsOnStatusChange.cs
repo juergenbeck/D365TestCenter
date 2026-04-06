@@ -113,6 +113,14 @@ public sealed class RunTestsOnStatusChange : IPlugin
         if (context.PrimaryEntityName != TestRunEntity)
             return;
 
+        // Depth-Check: Verhindert Rekursion wenn das Plugin andere Plugins triggert
+        // die wiederum jbe_testrun aktualisieren
+        if (context.Depth > 2)
+        {
+            tracingService.Trace("RunTests: Depth {0} > 2, skipping", context.Depth);
+            return;
+        }
+
         var testRunId = context.PrimaryEntityId;
         var testRun = service.Retrieve(TestRunEntity, testRunId,
             new ColumnSet(FldStatus, FldFilter, FldKeepRecords, FldBatchOffset,

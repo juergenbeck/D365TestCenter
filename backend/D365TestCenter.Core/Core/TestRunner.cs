@@ -273,6 +273,7 @@ public sealed class TestRunner
                     StepDeleteGenericRecord(step, ctx);
                     break;
 
+                case "FINDRECORD":
                 case "WAITFORRECORD":
                     StepWaitForRecord(step, ctx);
                     break;
@@ -718,6 +719,28 @@ public sealed class TestRunner
                                 => dd,
                             _ => converted
                         };
+                        break;
+
+                    case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.DateTime:
+                        if (converted is string ds2)
+                        {
+                            // Versuche verschiedene DateTime-Formate
+                            if (DateTime.TryParse(ds2, System.Globalization.CultureInfo.InvariantCulture,
+                                System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtVal))
+                                converted = dtVal;
+                            else if (ds2.Contains("_") && ds2.Length >= 15)
+                            {
+                                // ITT TIMESTAMP-Format: "20260406_143000_123"
+                                var parts = ds2.Split('_');
+                                if (parts.Length >= 2 && parts[0].Length == 8 && parts[1].Length >= 6)
+                                {
+                                    var dtStr = $"{parts[0].Substring(0,4)}-{parts[0].Substring(4,2)}-{parts[0].Substring(6,2)}T{parts[1].Substring(0,2)}:{parts[1].Substring(2,2)}:{parts[1].Substring(4,2)}Z";
+                                    if (DateTime.TryParse(dtStr, System.Globalization.CultureInfo.InvariantCulture,
+                                        System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtVal2))
+                                        converted = dtVal2;
+                                }
+                            }
+                        }
                         break;
 
                     case Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Picklist:
