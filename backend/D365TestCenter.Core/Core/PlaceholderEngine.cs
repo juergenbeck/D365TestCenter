@@ -32,13 +32,18 @@ public sealed class PlaceholderEngine
         var result = template;
 
         // Statische Platzhalter
+        var now = DateTime.UtcNow;
         result = result
             .Replace("{TESTID}", ctx.TestId)
             .Replace("{PREFIX}", "ITT")
-            .Replace("{TIMESTAMP}", DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff"))
-            .Replace("{TIMESTAMP_COMPACT}", DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"))
+            .Replace("{TIMESTAMP}", now.ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_COMPACT}", now.ToString("yyyyMMddHHmmssfff"))
+            .Replace("{TIMESTAMP_MINUS_1H}", now.AddHours(-1).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_MINUS_2H}", now.AddHours(-2).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_PLUS_1H}", now.AddHours(1).ToString("yyyyMMdd_HHmmss_fff"))
             .Replace("{GUID}", Guid.NewGuid().ToString("N").Substring(0, 8))
-            .Replace("{NOW_UTC}", DateTime.UtcNow.ToString("O"));
+            .Replace("{NOW_UTC}", now.ToString("O"))
+            .Replace("{NOW_MINUS_1H}", now.AddHours(-1).ToString("O"));
 
         // {RECORD:alias} -> Record-GUID aus dem generischen Registry
         result = RecordPattern.Replace(result, m =>
