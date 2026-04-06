@@ -451,7 +451,8 @@ public sealed class TestRunner
         var request = new OrganizationRequest(apiName);
         foreach (var kvp in resolvedFields)
         {
-            request[kvp.Key] = kvp.Value;
+            if (kvp.Value == null) continue;
+            request[kvp.Key] = ConvertValue(kvp.Value);
         }
 
         _service.Execute(request);
