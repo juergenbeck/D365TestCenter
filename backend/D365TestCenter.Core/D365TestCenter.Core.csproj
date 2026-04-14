@@ -7,14 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>D365TestCenter.Core</RootNamespace>
     <AssemblyName>D365TestCenter.Core</AssemblyName>
+    <Version>5.2.0</Version>
     <Authors>Integration Test Center Team</Authors>
-    <Description>Integration Test Center — Core-Bibliothek (Modelle, TestRunner, Assertions, Platzhalter)</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <Description>Integration Test Center - Core-Bibliothek (Modelle, TestRunner, Assertions, Platzhalter)</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.*" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.*">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Bogus" Version="35.*" />
   </ItemGroup>

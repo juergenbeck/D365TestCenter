@@ -373,7 +373,14 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
             try
             {
-                var tc = JsonConvert.DeserializeObject<TestCase>(defJson);
+                // MetadataPropertyHandling.Ignore: verhindert dass Newtonsoft.Json
+                // "$type" Properties als Type-Hints behandelt und aus JObjects entfernt.
+                // Notwendig fuer das ExecuteRequest $type-System.
+                var settings = new JsonSerializerSettings
+                {
+                    MetadataPropertyHandling = MetadataPropertyHandling.Ignore
+                };
+                var tc = JsonConvert.DeserializeObject<TestCase>(defJson, settings);
                 if (tc != null)
                 {
                     tc.Id = testId ?? tc.Id;

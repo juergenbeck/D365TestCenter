@@ -240,6 +240,14 @@ public sealed class TestRunner
             var gpId = _service.Create(gpEntity);
             ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
             Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
+
+            // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
+            if (gp.Columns != null && gp.Columns.Count > 0)
+            {
+                var gpRetrieved = _service.Retrieve(gpEntityName, gpId, new ColumnSet(gp.Columns.ToArray()));
+                ctx.FoundRecords[gpAlias] = gpRetrieved;
+                Log($"    Precondition [{gpAlias}]: {gp.Columns.Count} Spalten geladen");
+            }
         }
 
         ctx.TestStartUtc = DateTime.UtcNow;
@@ -290,6 +298,14 @@ public sealed class TestRunner
                     StepAssertEnvironment(step, ctx);
                     break;
 
+                case "EXECUTEREQUEST":
+                    StepExecuteRequest(step, ctx, resolvedFields);
+                    break;
+
+                case "RETRIEVERECORD":
+                    StepRetrieveRecord(step, ctx);
+                    break;
+
                 case "WAIT":
                     var waitSecs = step.WaitSeconds ?? step.TimeoutSeconds;
                     Log($"      Warte {waitSecs}s...");
@@ -335,6 +351,14 @@ public sealed class TestRunner
         var id = _service.Create(entity);
         ctx.RegisterRecord(alias, entityName, id);
         Log($"      CreateRecord [{alias}] in '{entityName}': {id}");
+
+        // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
+        if (step.Columns != null && step.Columns.Count > 0)
+        {
+            var retrieved = _service.Retrieve(entityName, id, new ColumnSet(step.Columns.ToArray()));
+            ctx.FoundRecords[alias] = retrieved;
+            Log($"      Auto-Retrieve: {step.Columns.Count} Spalten fuer [{alias}] geladen");
+        }
     }
 
     private void StepUpdateGenericRecord(
@@ -458,6 +482,203 @@ public sealed class TestRunner
 
         _service.Execute(request);
         Log($"      CallCustomApi '{apiName}' aufgerufen");
+    }
+
+    // ================================================================
+    //  ExecuteRequest: Generische SDK-Message
+    // ================================================================
+
+    private void StepExecuteRequest(
+        TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
+    {
+        var requestName = step.RequestName
+            ?? throw new InvalidOperationException(
+                "ExecuteRequest braucht 'requestName' (z.B. \"Merge\", \"SetState\", \"Assign\").");
+
+        var request = new OrganizationRequest(requestName);
+
+        // Felder als typisierte Parameter aufloesen
+        foreach (var kvp in resolvedFields)
+        {
+            if (kvp.Value == null) continue;
+            request[kvp.Key] = ResolveTypedValue(kvp.Value, ctx);
+        }
+
+        var response = _service.Execute(request);
+        Log($"      ExecuteRequest '{requestName}' ausgefuehrt");
+        HandleExecuteRequestResponse(step, ctx, response);
+        WaitAfterExecuteRequest(step);
+    }
+
+    private void HandleExecuteRequestResponse(TestStep step, TestContext ctx, OrganizationResponse response)
+    {
+        // Response-Werte im Kontext speichern (wenn Alias gesetzt)
+        if (!string.IsNullOrEmpty(step.Alias) && response.Results.Count > 0)
+        {
+            foreach (var kvp in response.Results)
+            {
+                var strVal = kvp.Value switch
+                {
+                    EntityReference er => er.Id.ToString(),
+                    OptionSetValue osv => osv.Value.ToString(),
+                    EntityCollection ec => ec.Entities.Count.ToString(),
+                    Guid g => g.ToString(),
+                    _ => kvp.Value?.ToString() ?? ""
+                };
+                ctx.GeneratedValues[$"{step.Alias}.response.{kvp.Key}"] = strVal;
+            }
+            Log($"      Response: {response.Results.Count} Werte unter [{step.Alias}] gespeichert");
+        }
+    }
+
+    private void WaitAfterExecuteRequest(TestStep step)
+    {
+        if (step.WaitSeconds.HasValue && step.WaitSeconds.Value > 0)
+        {
+            Log($"      Warte {step.WaitSeconds.Value}s nach ExecuteRequest...");
+            Thread.Sleep(step.WaitSeconds.Value * 1000);
+        }
+    }
+
+    /// <summary>
+    /// Löst einen Feldwert auf. Wenn der Wert ein JObject mit "$type" ist,
+    /// wird der entsprechende SDK-Typ erzeugt (EntityReference, OptionSetValue, etc.).
+    /// Primitive Werte werden per ConvertValue konvertiert.
+    /// </summary>
+    private object ResolveTypedValue(object value, TestContext ctx)
+    {
+        if (value is string s) return s;
+        if (value is not JToken token) return ConvertValue(value);
+
+        // Primitive JTokens
+        switch (token.Type)
+        {
+            case JTokenType.String:
+                return _placeholderEngine.Resolve(token.Value<string>()!, ctx);
+            case JTokenType.Integer:
+                return token.Value<int>();
+            case JTokenType.Boolean:
+                return token.Value<bool>();
+            case JTokenType.Float:
+                return token.Value<decimal>();
+            case JTokenType.Null:
+                return null!;
+        }
+
+        // Typisierte Objekte: JObject mit $type
+        if (token is JObject obj && obj.ContainsKey("$type"))
+        {
+            var typeName = obj["$type"]!.Value<string>()!;
+            return typeName.ToUpperInvariant() switch
+            {
+                "ENTITYREFERENCE" => ResolveEntityReferenceParam(obj, ctx),
+                "GUID" => ResolveGuidParam(obj, ctx),
+                "GUIDARRAY" => ResolveGuidArrayParam(obj, ctx),
+                "OPTIONSETVALUE" => new OptionSetValue(obj["value"]!.Value<int>()),
+                "MONEY" => new Money(obj["value"]!.Value<decimal>()),
+                "ENTITY" => ResolveEntityParam(obj, ctx),
+                "ENTITYCOLLECTION" => ResolveEntityCollectionParam(obj, ctx),
+                _ => throw new InvalidOperationException(
+                    $"Unbekannter $type: '{typeName}'. " +
+                    $"Erlaubt: EntityReference, Guid, GuidArray, OptionSetValue, Money, Entity, EntityCollection")
+            };
+        }
+
+        return ConvertValue(token);
+    }
+
+    private EntityReference ResolveEntityReferenceParam(JObject obj, TestContext ctx)
+    {
+        var entityName = obj["entity"]!.Value<string>()!;
+        entityName = _entityMetadata.ResolveLogicalName(entityName);
+        Guid id;
+        if (obj.ContainsKey("ref"))
+        {
+            var refAlias = _placeholderEngine.Resolve(obj["ref"]!.Value<string>()!, ctx);
+            id = ctx.ResolveRecordId(refAlias);
+        }
+        else if (obj.ContainsKey("id"))
+        {
+            var idStr = _placeholderEngine.Resolve(obj["id"]!.Value<string>()!, ctx);
+            id = Guid.Parse(idStr);
+        }
+        else
+            throw new InvalidOperationException(
+                "EntityReference braucht 'ref' (Alias) oder 'id' (GUID).");
+        return new EntityReference(entityName, id);
+    }
+
+    private Guid ResolveGuidParam(JObject obj, TestContext ctx)
+    {
+        if (obj.ContainsKey("ref"))
+            return ctx.ResolveRecordId(obj["ref"]!.Value<string>()!);
+        var valStr = _placeholderEngine.Resolve(obj["value"]!.Value<string>()!, ctx);
+        return Guid.Parse(valStr);
+    }
+
+    private Guid[] ResolveGuidArrayParam(JObject obj, TestContext ctx)
+    {
+        var refs = obj["refs"] as JArray
+            ?? throw new InvalidOperationException("GuidArray braucht 'refs' (Array von Alias-Namen).");
+        return refs.Select(r => ctx.ResolveRecordId(r.Value<string>()!)).ToArray();
+    }
+
+    private Entity ResolveEntityParam(JObject obj, TestContext ctx)
+    {
+        var entityName = obj["entity"]!.Value<string>()!;
+        entityName = _entityMetadata.ResolveLogicalName(entityName);
+        var entity = new Entity(entityName);
+        if (obj.ContainsKey("fields") && obj["fields"] is JObject fieldsObj)
+        {
+            foreach (var prop in fieldsObj.Properties())
+            {
+                var val = ResolveTypedValue(prop.Value, ctx);
+                entity[prop.Name] = val;
+            }
+        }
+        return entity;
+    }
+
+    private EntityCollection ResolveEntityCollectionParam(JObject obj, TestContext ctx)
+    {
+        var collection = new EntityCollection();
+        if (obj.ContainsKey("entities") && obj["entities"] is JArray items)
+        {
+            foreach (var item in items)
+                collection.Entities.Add((Entity)ResolveTypedValue(item, ctx));
+        }
+        return collection;
+    }
+
+    // ================================================================
+    //  RetrieveRecord: Record neu laden (fuer {alias.fields.x} in Steps)
+    // ================================================================
+
+    private void StepRetrieveRecord(TestStep step, TestContext ctx)
+    {
+        var alias = step.Alias ?? step.RecordRef
+            ?? throw new InvalidOperationException(
+                "RetrieveRecord braucht 'alias' (eines bereits erstellten Records).");
+
+        // {RECORD:alias}-Wrapper entfernen falls vorhanden
+        if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
+            alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
+
+        if (!ctx.Records.TryGetValue(alias, out var record))
+            throw new InvalidOperationException(
+                $"RetrieveRecord: Alias '{alias}' nicht im Kontext gefunden. " +
+                $"Verfuegbar: [{string.Join(", ", ctx.Records.Keys)}]");
+
+        var columns = step.Columns;
+        var columnSet = (columns != null && columns.Count > 0)
+            ? new ColumnSet(columns.ToArray())
+            : new ColumnSet(true);
+
+        var retrieved = _service.Retrieve(record.EntityName, record.Id, columnSet);
+        ctx.FoundRecords[alias] = retrieved;
+
+        Log($"      RetrieveRecord [{alias}] in '{record.EntityName}': " +
+            $"{retrieved.Attributes.Count} Attribute geladen");
     }
 
     // ================================================================

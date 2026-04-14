@@ -59,14 +59,26 @@ public sealed class PlaceholderEngine
         {
             var alias = m.Groups[1].Value;
             var field = m.Groups[2].Value;
-            if (ctx.FoundRecords.TryGetValue(alias, out var entity) && entity.Contains(field))
+            if (ctx.FoundRecords.TryGetValue(alias, out var entity))
             {
-                var val = entity[field];
-                if (val is EntityReference er) return er.Id.ToString();
-                if (val is OptionSetValue osv) return osv.Value.ToString();
-                return val?.ToString() ?? "";
+                if (entity.Contains(field))
+                {
+                    var val = entity[field];
+                    if (val is EntityReference er) return er.Id.ToString();
+                    if (val is OptionSetValue osv) return osv.Value.ToString();
+                    return val?.ToString() ?? "";
+                }
+                throw new InvalidOperationException(
+                    $"Platzhalter '{m.Value}': Feld '{field}' nicht im geladenen Record '{alias}'. " +
+                    $"Geladene Felder: [{string.Join(", ", entity.Attributes.Keys)}]");
             }
-            return m.Value;
+            if (ctx.Records.ContainsKey(alias))
+                throw new InvalidOperationException(
+                    $"Platzhalter '{m.Value}' konnte nicht aufgeloest werden: " +
+                    $"Alias '{alias}' existiert in Records, aber nicht in FoundRecords. " +
+                    $"Verwende 'columns' auf der Precondition/CreateRecord oder " +
+                    $"einen 'RetrieveRecord'-Step um Feldwerte nach dem Create zu laden.");
+            return m.Value; // Alias unbekannt: Platzhalter unveraendert lassen (koennte spaeter aufgeloest werden)
         });
 
         // {alias.id} -> Record-GUID (Web Resource Format)

@@ -7,19 +7,50 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>D365TestCenter.CrmPlugin</RootNamespace>
     <AssemblyName>D365TestCenter.CrmPlugin</AssemblyName>
+    <Version>5.2.0</Version>
     <Authors>Integration Test Center Team</Authors>
-    <Description>Integration Test Center — CRM Plugin (Custom API jbe_RunIntegrationTests)</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <Description>D365 Test Center - Plugin Package (Custom API + CRUD-Trigger)</Description>
+
+    <!-- PluginPackage (NuGet): Dataverse managed Versionierung und Cache-Invalidierung -->
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+    <PackageId>jbe_D365TestCenter</PackageId>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Release\outputPackages</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.*" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.*">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\D365TestCenter.Core\D365TestCenter.Core.csproj" />
   </ItemGroup>
+
+  <!-- ProjectReference-Assemblies + Bogus ins Paket einschliessen (CrmSdk bleibt aussen) -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <!--
+    Alle ReferenceCopyLocalPaths ins Paket einschliessen, aber Microsoft.*, System.* und
+    CrmSdk DLLs ausschliessen (sind in der Sandbox verfuegbar).
+  -->
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)"
+        Condition="
+          !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Crm'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Xrm'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.IdentityModel'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Rest'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Win32'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Bcl'))
+          AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('System.'))
+          AND '%(ReferenceCopyLocalPaths.Filename)' != 'netstandard'"
+        TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

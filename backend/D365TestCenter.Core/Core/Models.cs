@@ -90,6 +90,10 @@ public sealed class GenericPrecondition
 
     [JsonProperty("waitForAsync")]
     public bool WaitForAsync { get; set; }
+
+    /// <summary>Nach dem Create diese Spalten per Retrieve laden (für {alias.fields.x}).</summary>
+    [JsonProperty("columns")]
+    public List<string>? Columns { get; set; }
 }
 
 /// <summary>
@@ -220,6 +224,10 @@ public sealed class TestStep
 
     [JsonProperty("delayMs")]
     public int? DelayMs { get; set; }
+
+    /// <summary>SDK-Message-Name für ExecuteRequest (z.B. "Merge", "SetState", "Assign").</summary>
+    [JsonProperty("requestName")]
+    public string? RequestName { get; set; }
 }
 
 /// <summary>Einzelne Assertion zur Prüfung nach der Testausführung.</summary>
