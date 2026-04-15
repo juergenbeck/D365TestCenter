@@ -27,7 +27,11 @@ namespace D365TestCenter.CrmPlugin;
 /// </summary>
 public sealed class RunTestsOnStatusChange : IPlugin
 {
-    private const int BatchSize = 5;
+    // BatchSize = 1: Jeder Test laeuft isoliert. Bei komplexen Tests (Preconditions +
+    // mehrere Steps + viele Assertions + Merge/Plugin-Ketten) kann ein einzelner Test
+    // bereits 60-90s brauchen. BatchSize > 1 riskiert 2-Min-Sandbox-Timeout ohne
+    // Fortschritt (Plugin wird abgebrochen, kein Result geschrieben, Run bleibt auf Running).
+    private const int BatchSize = 1;
 
     // ── Entity Names ─────────────────────────────────────────────
     private const string TestRunEntity = "jbe_testrun";
@@ -113,11 +117,15 @@ public sealed class RunTestsOnStatusChange : IPlugin
         if (context.PrimaryEntityName != TestRunEntity)
             return;
 
-        // Depth-Check: Verhindert Rekursion wenn das Plugin andere Plugins triggert
-        // die wiederum jbe_testrun aktualisieren
-        if (context.Depth > 2)
+        // Depth-Check: Safety-Limit gegen echte Rekursion. Dataverse-Max ist 8.
+        // WICHTIG: Die Self-Trigger-Kaskade (jeder Test updated jbe_batchoffset,
+        // was das Update-Plugin triggert) bleibt oft in derselben Pipeline und
+        // erhoeht Depth bei jedem Schritt. Bei BatchSize=1 und N Tests braucht
+        // die Kaskade bis zu N+1 Depth-Level. Guard auf 8 (Dataverse-Max) setzen
+        // damit die Kaskade nicht vorzeitig abbricht.
+        if (context.Depth > 8)
         {
-            tracingService.Trace("RunTests: Depth {0} > 2, skipping", context.Depth);
+            tracingService.Trace("RunTests: Depth {0} > 8, skipping (Dataverse-Max erreicht)", context.Depth);
             return;
         }
 
