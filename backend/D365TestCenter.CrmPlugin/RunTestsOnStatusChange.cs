@@ -27,11 +27,18 @@ namespace D365TestCenter.CrmPlugin;
 /// </summary>
 public sealed class RunTestsOnStatusChange : IPlugin
 {
-    // BatchSize = 1: Jeder Test laeuft isoliert. Bei komplexen Tests (Preconditions +
-    // mehrere Steps + viele Assertions + Merge/Plugin-Ketten) kann ein einzelner Test
-    // bereits 60-90s brauchen. BatchSize > 1 riskiert 2-Min-Sandbox-Timeout ohne
-    // Fortschritt (Plugin wird abgebrochen, kein Result geschrieben, Run bleibt auf Running).
-    private const int BatchSize = 1;
+    // BatchSize: Anzahl Tests pro Plugin-Execution (Self-Trigger-Cascade).
+    // Dataverse erlaubt max ~8 Depth-Level pro Pipeline. Auch bei Async-Steps zaehlt
+    // der Depth hoch (verifiziert auf LM DEV, Session 07). Das bedeutet:
+    //   Max Tests = BatchSize x 8
+    // BatchSize=12 -> max 96 Tests in 8 Cascade-Schritten.
+    //
+    // Risiko: Ein Batch mit 12 komplexen Tests (je 60-90s) wuerde das 2-Min-Sandbox-
+    // Timeout reissen (FB-16). In der Praxis sind die meisten Tests aber schnell (3-15s).
+    // Falls ein Batch timeout, bleibt der Run auf "Running" stehen.
+    //
+    // Faustregel: BatchSize so waehlen dass max_test_dauer * BatchSize < 100s bleibt.
+    private const int BatchSize = 12;
 
     // ── Entity Names ─────────────────────────────────────────────
     private const string TestRunEntity = "jbe_testrun";
