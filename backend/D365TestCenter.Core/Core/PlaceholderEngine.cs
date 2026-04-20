@@ -40,10 +40,42 @@ public sealed class PlaceholderEngine
             .Replace("{TIMESTAMP_COMPACT}", now.ToString("yyyyMMddHHmmssfff"))
             .Replace("{TIMESTAMP_MINUS_1H}", now.AddHours(-1).ToString("yyyyMMdd_HHmmss_fff"))
             .Replace("{TIMESTAMP_MINUS_2H}", now.AddHours(-2).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_MINUS_3H}", now.AddHours(-3).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_MINUS_30M}", now.AddMinutes(-30).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_MINUS_1D}", now.AddDays(-1).ToString("yyyyMMdd_HHmmss_fff"))
             .Replace("{TIMESTAMP_PLUS_1H}", now.AddHours(1).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_PLUS_2H}", now.AddHours(2).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_PLUS_1D}", now.AddDays(1).ToString("yyyyMMdd_HHmmss_fff"))
+            .Replace("{TIMESTAMP_ISO}", now.ToString("O"))
             .Replace("{GUID}", Guid.NewGuid().ToString("N").Substring(0, 8))
             .Replace("{NOW_UTC}", now.ToString("O"))
             .Replace("{NOW_MINUS_1H}", now.AddHours(-1).ToString("O"));
+
+        // Legacy-Aliase {CONTACT_ID} und {ACCOUNT_ID} fuer JS-Engine-Kompatibilitaet:
+        // Erster registrierter Record vom entsprechenden Typ wird genutzt.
+        // Neue Testfaelle sollten {alias.id} verwenden.
+        if (result.Contains("{CONTACT_ID}"))
+        {
+            foreach (var kv in ctx.Records)
+            {
+                if (kv.Value.EntityName.Equals("contact", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = result.Replace("{CONTACT_ID}", kv.Value.Id.ToString());
+                    break;
+                }
+            }
+        }
+        if (result.Contains("{ACCOUNT_ID}"))
+        {
+            foreach (var kv in ctx.Records)
+            {
+                if (kv.Value.EntityName.Equals("account", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = result.Replace("{ACCOUNT_ID}", kv.Value.Id.ToString());
+                    break;
+                }
+            }
+        }
 
         // {RECORD:alias} -> Record-GUID aus dem generischen Registry
         result = RecordPattern.Replace(result, m =>
@@ -167,6 +199,9 @@ public sealed class PlaceholderEngine
             case "lastname": return _faker.Name.LastName();
             case "email": return $"jbetest_{Guid.NewGuid().ToString("N").Substring(0, 8)}@example.com";
             case "phone": return _faker.Phone.PhoneNumber("+49 555 #######");
+            case "mobile": return _faker.Phone.PhoneNumber("+49 151 ########");
+            case "phone_international": return _faker.Phone.PhoneNumber("+## ### ########");
+            case "number": return _faker.Random.Number(10000, 99999).ToString();
             case "company": return $"JBE Test {_faker.Company.CompanyName()}";
             case "text": return $"JBE Test {Guid.NewGuid().ToString("N").Substring(0, 12)}";
             case "guid": return Guid.NewGuid().ToString("N").Substring(0, 8);

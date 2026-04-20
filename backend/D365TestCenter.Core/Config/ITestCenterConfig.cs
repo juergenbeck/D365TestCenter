@@ -45,6 +45,24 @@ namespace D365TestCenter.Core.Config
         /// <summary>Prefix for generated test data (e.g. "JBE Test")</summary>
         string TestDataPrefix { get; }
 
+        // ── OptionSet-Werte (publisher-spezifisch) ──────────────────
+        /// <summary>jbe_teststatus: Geplant (z.B. 105710000 für LM, 595300000 für Markant)</summary>
+        int StatusPlanned { get; }
+        /// <summary>jbe_teststatus: Wird ausgeführt</summary>
+        int StatusRunning { get; }
+        /// <summary>jbe_teststatus: Abgeschlossen</summary>
+        int StatusCompleted { get; }
+        /// <summary>jbe_teststatus: Fehlgeschlagen</summary>
+        int StatusFailed { get; }
+        /// <summary>jbe_testoutcome: Passed</summary>
+        int OutcomePassed { get; }
+        /// <summary>jbe_testoutcome: Failed</summary>
+        int OutcomeFailed { get; }
+        /// <summary>jbe_testoutcome: Error</summary>
+        int OutcomeError { get; }
+        /// <summary>jbe_testoutcome: Skipped</summary>
+        int OutcomeSkipped { get; }
+
         // ── Convenience ──────────────────────────────────────────────
         /// <summary>Whether governance is enabled (GovernanceSourceEntity is not null/empty)</summary>
         bool HasGovernance { get; }

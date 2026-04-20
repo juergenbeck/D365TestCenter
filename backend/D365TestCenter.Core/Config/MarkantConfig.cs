@@ -39,6 +39,24 @@ namespace D365TestCenter.Core.Config
         public int PollingIntervalMs => 2000;
         public int PollingTimeoutSeconds => 120;
         public string TestDataPrefix => "JBE Test";
+
+        // OptionSet-Werte fuer Markant-Umgebungen.
+        // Auf allen Markant-Umgebungen verwendet der Publisher "jbe" den
+        // OptionValuePrefix 10571 (siehe deploy-config.json:
+        // publisherOptionValuePrefix=10571). Identisch mit StandardCrmConfig.
+        //
+        // Falls eine neue Markant-Umgebung mit anderem Prefix deployed wird
+        // (z.B. 59530), diese Werte hier anpassen ODER Metadata-Lookup beim
+        // Connect einbauen (Goldene Regel 10: Dataverse fragen, nicht raten).
+        public int StatusPlanned => 105710000;
+        public int StatusRunning => 105710001;
+        public int StatusCompleted => 105710002;
+        public int StatusFailed => 105710003;
+        public int OutcomePassed => 105710000;
+        public int OutcomeFailed => 105710001;
+        public int OutcomeError => 105710002;
+        public int OutcomeSkipped => 105710003;
+
         public bool HasGovernance => true;
     }
 }

@@ -21,6 +21,27 @@ public sealed class AssertionEngine
 
         try
         {
+            // KRITISCH: Platzhalter im Value-Feld auflösen BEVOR die Operator-Prüfung läuft.
+            // Beispiel: "value": "{DUP_CONTACT.fields.markant_goldenrecordidnumber}"
+            // muss durch den PlaceholderResolver auf die tatsaechliche AutoNumber ersetzt werden,
+            // damit die Equals-Prüfung gegen den Record-Wert gelingt.
+            // Auch recordRef wird aufgelöst (könnte {RECORD:alias} enthalten).
+            if (!string.IsNullOrEmpty(assertion.Value))
+            {
+                var resolved = new PlaceholderEngine().Resolve(assertion.Value, ctx);
+                assertion = new TestAssertion
+                {
+                    Target = assertion.Target,
+                    Field = assertion.Field,
+                    Entity = assertion.Entity,
+                    RecordRef = assertion.RecordRef,
+                    Filter = assertion.Filter,
+                    Operator = assertion.Operator,
+                    Value = resolved,
+                    Description = assertion.Description
+                };
+            }
+
             var targetUpper = assertion.Target.ToUpperInvariant();
 
             if (targetUpper == "RECORD")
@@ -206,7 +227,16 @@ public sealed class AssertionEngine
                 break;
 
             case "DATESETRECENTLY":
-                EvaluateDateSetRecently(actual, 120, result);
+                // assertion.Value (falls gesetzt) als Sekunden-Toleranz parsen (Default 120s).
+                // Fix für RV-Review: expected-Wert wurde vorher ignoriert.
+                var recentSec = 120;
+                if (!string.IsNullOrWhiteSpace(assertion.Value)
+                    && int.TryParse(assertion.Value, out var parsedSec)
+                    && parsedSec > 0)
+                {
+                    recentSec = parsedSec;
+                }
+                EvaluateDateSetRecently(actual, recentSec, result);
                 break;
 
             default:

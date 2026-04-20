@@ -30,3 +30,4 @@ packages/
 # Temporary
 *.tmp
 *.bak
+publish/
