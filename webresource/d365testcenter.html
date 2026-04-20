@@ -2137,6 +2137,11 @@ const PackLoader = {
 
     // Hydrate a loaded JSON pack into the runtime format
     _hydrate(pack) {
+        // Defensive: pack kann null/undefined sein bei fehlgeschlagenem Fetch
+        if (!pack) {
+            console.warn("PackLoader._hydrate: pack ist null/undefined");
+            return { testCases: [], testRuns: [], testRunResults: [] };
+        }
         // Stringify jbe_definitionjson objects
         if (pack.testCases) {
             for (const tc of pack.testCases) {
@@ -2262,6 +2267,12 @@ const MockAPI = {
         let pack = DemoPacks[this.currentPack];
         if (!pack) pack = await PackLoader.loadPack(this.currentPack);
         if (!pack) pack = DemoPacks["standard"];
+        // Defensive: Wenn keine Packs geladen werden konnten (Offline / falsche Pfade),
+        // einen leeren Store erzeugen statt zu crashen.
+        if (!pack) {
+            console.warn("MockAPI: Keine Packs verfügbar, nutze leeren Store.");
+            pack = { testCases: [], testRuns: [], testRunResults: [] };
+        }
         DemoData = pack; // Alias aktualisieren
         this._store = {
             testcases: JSON.parse(JSON.stringify(pack.testCases || [])),
