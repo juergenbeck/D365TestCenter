@@ -4,7 +4,9 @@ namespace D365TestCenter.Core.Config
 {
     /// <summary>
     /// Configuration for Markant Dynamics 365 environment.
-    /// Includes CDH Field Governance with ContactSource and CDH-Logging entities.
+    /// Field Governance uses the Q2 namespace (seit 01.04.2026): markant_fg_* tables.
+    /// Q1-Entities (markant_cdhcontactsource, markant_cdh_logging) existieren teils
+    /// noch parallel, sind aber nicht autoritativ.
     /// </summary>
     public class MarkantConfig : ITestCenterConfig
     {
@@ -13,27 +15,39 @@ namespace D365TestCenter.Core.Config
         public string TestRunResultEntity => "jbe_testrunresult";
         public string TestStepEntity => "jbe_teststep";
 
-        public string? GovernanceSourceEntity => "markant_cdhcontactsource";
-        public string? GovernanceSourceEntitySet => "markant_cdhcontactsources";
-        public string? GovernanceLoggingEntity => "markant_cdh_loggings";
+        // Q2-Namen seit 01.04.2026 (Drift-Report Session 08, 2026-04-22)
+        public string? GovernanceSourceEntity => "markant_fg_contactsource";
+        public string? GovernanceSourceEntitySet => "markant_fg_contactsources";
+        public string? GovernanceLoggingEntity => "markant_fg_loggings";
         public string? GovernanceContactLookup => "markant_contactid";
-        public string? GovernanceSourceSystemField => "markant_sourcesystemcode";
+        public string? GovernanceSourceSystemField => "markant_fg_sourcesystemcode";
+        // ACHTUNG: Custom API wurde am 2026-04-21 geloescht. Neu-Deployment offen
+        // (CDH-20260421-001). Solange die API fehlt, schlaegt GovernanceApi-
+        // basierter Code fehl. Workaround: markant_fg_requestcode auf contact setzen.
         public string? GovernanceApiName => "markant_RunFieldGovernanceForContact";
 
+        // AutoDateField-Muster Q2: markant_<field>_modifiedon (ohne cdh_, ohne _date).
+        // Einzige Ausnahme: markant_raw_external_status_modifiedondate.
         public Dictionary<string, string>? AutoDateFields => new Dictionary<string, string>
         {
-            ["markant_firstname"] = "markant_cdh_firstname_modifiedondate",
-            ["markant_lastname"] = "markant_cdh_lastname_modifiedondate",
-            ["markant_emailaddress1"] = "markant_cdh_emailaddress1_modifiedondate",
-            ["markant_gendercode"] = "markant_cdh_gendercode_modifiedondate",
-            ["markant_jobtitle"] = "markant_cdh_markant_jobtitle_modifiedondate",
-            ["markant_telephone1"] = "markant_cdh_markant_telephone1_modifiedondate",
-            ["markant_telephone2"] = "markant_cdh_markant_telephone2_modifiedondate",
-            ["markant_mobilephone"] = "markant_cdh_markant_mobilephone_modifiedondate",
-            ["markant_middlename"] = "markant_cdh_middlename_modifiedondate",
-            ["markant_academictitle"] = "markant_cdh_academictitle_modifiedondate",
-            ["markant_parentcustomerid"] = "markant_cdh_parentcustomerid_modifiedondate",
-            ["markant_communicationlanguageid"] = "markant_cdh_communicationlanguageid_modifiedon"
+            ["markant_firstname"] = "markant_firstname_modifiedon",
+            ["markant_lastname"] = "markant_lastname_modifiedon",
+            ["markant_middlename"] = "markant_middlename_modifiedon",
+            ["markant_academictitle"] = "markant_academictitle_modifiedon",
+            ["markant_emailaddress1"] = "markant_emailaddress1_modifiedon",
+            ["markant_telephone1"] = "markant_telephone1_modifiedon",
+            ["markant_telephone2"] = "markant_telephone2_modifiedon",
+            ["markant_mobilephone"] = "markant_mobilephone_modifiedon",
+            ["markant_jobtitle"] = "markant_jobtitle_modifiedon",
+            ["markant_gender"] = "markant_gender_modifiedon",
+            ["markant_parentcustomerid"] = "markant_parentcustomerid_modifiedon",
+            ["markant_externalid"] = "markant_externalid_modifiedon",
+            ["markant_communicationlanguage"] = "markant_communicationlanguage_modifiedon",
+            ["markant_kin"] = "markant_kin_modifiedon",
+            ["markant_is_markant_employee"] = "markant_is_markant_employee_modifiedon",
+            ["markant_ismarkantemployee"] = "markant_ismarkantemployee_modifiedon",
+            ["markant_external_status_aggregation"] = "markant_external_status_aggregation_modifiedon",
+            ["markant_raw_external_status"] = "markant_raw_external_status_modifiedondate"
         };
 
         public int PollingIntervalMs => 2000;
