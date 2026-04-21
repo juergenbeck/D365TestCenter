@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{59129191-a552-4dee-b471-819aeabed679}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{aed1bfdb-ff6c-55fa-953f-7088cf6061fa}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Übersicht" languagecode="1031" />
+            <label description="Overview" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_65a6e429" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{4f7c5d89-429d-59cc-9fc8-bdaa06b2c0cf}" IsUserDefined="1">
+                  <labels>
+                    <label description="Identifikation" languagecode="1031" />
+                    <label description="Identification" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{b2ca4dc6-b91e-56c9-af41-d465d7c381a5}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Step Number" languagecode="1033" />
+                          <label description="Schritt-Nr." languagecode="1031" />
+                        </labels>
+                        <control id="jbe_stepnumber" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_stepnumber" disabled="false" />
+                      </cell>
+                      <cell id="{a0d93597-5a0a-500b-ac79-4739b6da3d01}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                          <label description="Name" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_name" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{e08e01b8-48f5-5a1d-bf78-4a03ebe434b8}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Phase" languagecode="1033" />
+                          <label description="Phase" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_phase" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_phase" disabled="false" />
+                      </cell>
+                      <cell id="{76190ec8-3bd6-5e3f-84c4-b51005ad9df3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Status" languagecode="1033" />
+                          <label description="Status" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_stepstatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_stepstatus" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="sec_445efe81" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{f15c1cd9-6d87-50ee-9fc3-6878175ea76e}" IsUserDefined="1">
+                  <labels>
+                    <label description="Aktion" languagecode="1031" />
+                    <label description="Action" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{b8e2a62d-4a62-528f-9388-1ec483c709c0}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Action" languagecode="1033" />
+                          <label description="Aktion" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_action" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_action" disabled="false" />
+                      </cell>
+                      <cell id="{1eb57b43-8481-5396-883a-f35fdac7f522}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Entity" languagecode="1033" />
+                          <label description="Entity" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_entity" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_entity" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{5234d3f4-4333-59e6-bf01-c9029dc14d36}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Alias" languagecode="1033" />
+                          <label description="Alias" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_alias" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_alias" disabled="false" />
+                      </cell>
+                      <cell id="{71814c94-9fca-5661-aa5b-8bedf667f253}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Record ID" languagecode="1033" />
+                          <label description="Record-ID" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_recordid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_recordid" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="sec_6d239a52" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{990d5622-cf0c-58d7-bdc9-50778a9c577e}" IsUserDefined="1">
+                  <labels>
+                    <label description="Link" languagecode="1031" />
+                    <label description="Link" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{54d1ae0f-d369-50ed-89af-39a0fb11afda}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Record URL" languagecode="1033" />
+                          <label description="Record-URL" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_recordurl" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_recordurl" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="sec_fcb74c0d" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{b7756bbe-9dbc-5800-b390-a71c3fb51806}" IsUserDefined="1">
+                  <labels>
+                    <label description="Fehler" languagecode="1031" />
+                    <label description="Error" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{58e7b88b-68b7-5199-9349-91137ead60c6}" colspan="1" rowspan="6">
+                        <labels>
+                          <label description="Error Message" languagecode="1033" />
+                          <label description="Fehlermeldung" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_errormessage" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_errormessage" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{a6cd4684-084e-559a-b257-ef1431b6d7f4}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Eingabedaten" languagecode="1031" />
+            <label description="Input Data" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_37e39d07" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{e042433e-8a67-569b-9c62-b7d0e4cb75e0}" IsUserDefined="1">
+                  <labels>
+                    <label description="Input" languagecode="1031" />
+                    <label description="Input" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{de2f1d92-94ba-503f-98bf-60bcc21d7e4d}" colspan="1" rowspan="28">
+                        <labels>
+                          <label description="Input Data" languagecode="1033" />
+                          <label description="Eingabedaten" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_inputdata" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_inputdata" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{3c1ee993-cd80-5c35-a61e-45579bbccdee}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Ausgabedaten" languagecode="1031" />
+            <label description="Output Data" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_788a9669" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{8547a702-9c92-51ce-83aa-041818492d8b}" IsUserDefined="1">
+                  <labels>
+                    <label description="Output" languagecode="1031" />
+                    <label description="Output" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{2f3f1c0f-3213-51d7-9631-a674ea9ba43b}" colspan="1" rowspan="28">
+                        <labels>
+                          <label description="Output Data" languagecode="1033" />
+                          <label description="Ausgabedaten" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_outputdata" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_outputdata" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{1f7e0aeb-d0ff-58cd-894f-597642f5d6a8}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Prüfung" languagecode="1031" />
+            <label description="Assertion" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_499c2184" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{7ee98a46-c6b8-5dc2-b560-3ed462dda998}" IsUserDefined="1">
+                  <labels>
+                    <label description="Prüfung" languagecode="1031" />
+                    <label description="Assertion" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{a5d36345-4657-5e1f-86e4-746561b11754}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Assertion Field" languagecode="1033" />
+                          <label description="Assertion-Feld" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_assertionfield" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_assertionfield" disabled="false" />
+                      </cell>
+                      <cell id="{16c279d5-6cd6-5ce2-a3ad-d69942d3feee}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Operator" languagecode="1033" />
+                          <label description="Operator" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_assertionoperator" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_assertionoperator" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{08832e9d-a9b0-5e81-ba7b-35c92684f9da}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Expected Value" languagecode="1033" />
+                          <label description="Soll-Wert" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_expectedvalue" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_expectedvalue" disabled="false" />
+                      </cell>
+                      <cell id="{7349c73a-a1bd-5184-906c-c8abb9d9bfca}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Actual Value" languagecode="1033" />
+                          <label description="Ist-Wert" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_actualvalue" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_actualvalue" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{c9c2a901-6178-50d9-b7f2-0989248f5b04}" celllabelposition="Top" columns="148" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{76190ec8-3bd6-5e3f-84c4-b51005ad9df3}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Status" languagecode="1033" />
+                <label description="Status" languagecode="1031" />
+              </labels>
+              <control id="jbe_stepstatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_stepstatus" disabled="false" />
+            </cell>
+            <cell id="{e08e01b8-48f5-5a1d-bf78-4a03ebe434b8}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Phase" languagecode="1033" />
+                <label description="Phase" languagecode="1031" />
+              </labels>
+              <control id="jbe_phase" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_phase" disabled="false" />
+            </cell>
+            <cell id="{b2ca4dc6-b91e-56c9-af41-d465d7c381a5}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Step Number" languagecode="1033" />
+                <label description="Schritt-Nr." languagecode="1031" />
+              </labels>
+              <control id="jbe_stepnumber" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_stepnumber" disabled="false" />
+            </cell>
+            <cell id="{0fc70e03-9996-5c6a-ab82-6521af771952}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Duration (ms)" languagecode="1033" />
+                <label description="Dauer (ms)" languagecode="1031" />
+              </labels>
+              <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{e680899b-06dc-5d11-aefd-ba8b5cde4ec8}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{07fd1652-c5e8-5046-bf4e-017cf6e3d89e}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{9cb976df-8ef5-5226-8317-da87e50c30bd}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{3e0587c1-48ae-5b83-82da-2d1236e88dbf}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <formLibraries>
+        <Library name="jbe_/forms.js" libraryUniqueId="{d365dc00-0000-0000-0001-000000000001}" />
+      </formLibraries>
+      <events>
+        <event name="onload" application="false" active="false">
+          <Handlers>
+            <Handler functionName="JBE.Forms.TestStep.onLoad" libraryName="jbe_/forms.js" handlerUniqueId="{229b1bd0-5fd6-573f-a6b0-e4107b50fc85}" enabled="true" parameters="" passExecutionContext="true" />
+          </Handlers>
+        </event>
+      </events>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1031" />
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Hauptformular für diese Entität." languagecode="1031" />
+      <Description description="Main form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

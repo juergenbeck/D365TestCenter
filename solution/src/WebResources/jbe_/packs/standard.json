@@ -1,0 +1,275 @@
+{
+  "packId": "standard",
+  "name": "Standard CRM (Sales & Service)",
+  "description": "Standardtabellen und -felder aus Dynamics 365 Sales und Service. Keine Custom-Entities erforderlich.",
+  "color": "#42a5f5",
+  "testCases": [
+    {
+      "jbe_testcaseid": "d1d2d3d4-0001-4000-8000-100000000001",
+      "jbe_testid": "STD-TC01",
+      "jbe_title": "Lead-Qualifizierung: Opportunity wird erstellt",
+      "jbe_category": 100000005,
+      "jbe_tags": "Lead,Opportunity,Sales",
+      "jbe_userstories": "PROJ-2001",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "preconditions": { "createAccount": true },
+        "steps": [
+          { "action": "CreateRecord", "entity": "lead", "alias": "lead1", "fields": { "firstname": "{GENERATED:firstname}", "lastname": "{GENERATED:lastname}", "emailaddress1": "{GENERATED:email}", "companyname": "Firma Alpha GmbH", "leadqualitycode": 1 } },
+          { "action": "UpdateRecord", "alias": "lead1", "fields": { "statuscode": 3 }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Query", "entity": "opportunity", "filter": { "originatingleadid": "{lead1.id}" }, "field": "name", "operator": "Contains", "value": "{lead1.lastname}" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0002-4000-8000-100000000002",
+      "jbe_testid": "STD-TC02",
+      "jbe_title": "Opportunity auf Won: Account-Umsatz aktualisiert",
+      "jbe_category": 100000005,
+      "jbe_tags": "Opportunity,Account,Revenue",
+      "jbe_userstories": "",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "preconditions": { "createAccount": true, "createOpportunity": true },
+        "steps": [
+          { "action": "UpdateRecord", "alias": "opp1", "fields": { "statuscode": 3, "actualvalue": 50000, "actualclosedate": "{TIMESTAMP}" }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Record:account1", "field": "revenue", "operator": "GreaterThan", "value": "0" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0003-4000-8000-100000000003",
+      "jbe_testid": "STD-TC03",
+      "jbe_title": "Case-Eskalation: High Priority Routing",
+      "jbe_category": 100000005,
+      "jbe_tags": "Case,Routing,Service",
+      "jbe_userstories": "PROJ-2002",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "steps": [
+          { "action": "CreateRecord", "entity": "incident", "alias": "case1", "fields": { "title": "Dringend: {GENERATED:text}", "prioritycode": 1, "caseorigincode": 1, "customerid_account": "{ACCOUNT_ID}" }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Record:case1", "field": "ownerid", "operator": "NotEquals", "value": "{CURRENT_USER}" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0004-4000-8000-100000000004",
+      "jbe_testid": "STD-TC04",
+      "jbe_title": "Contact-Adresse: Kaskade auf verknüpfte Cases",
+      "jbe_category": 100000005,
+      "jbe_tags": "Contact,Case,Adresse",
+      "jbe_userstories": "",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "preconditions": { "createContact": true, "createCase": true },
+        "steps": [
+          { "action": "UpdateRecord", "alias": "contact1", "fields": { "address1_city": "Berlin", "address1_postalcode": "10115" }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Query", "entity": "incident", "filter": { "primarycontactid": "{contact1.id}" }, "field": "customeraddress_city", "operator": "Equals", "value": "Berlin" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0005-4000-8000-100000000005",
+      "jbe_testid": "STD-TC05",
+      "jbe_title": "Task-Erinnerung: Workflow bei Fälligkeit",
+      "jbe_category": 100000005,
+      "jbe_tags": "Activity,Task,Workflow",
+      "jbe_userstories": "",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "steps": [
+          { "action": "CreateRecord", "entity": "task", "alias": "task1", "fields": { "subject": "Rückruf {GENERATED:lastname}", "scheduledend": "{TIMESTAMP_PLUS_1H}", "prioritycode": 2, "regardingobjectid_contact": "{CONTACT_ID}" }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Query", "entity": "activitypointer", "filter": { "regardingobjectid": "{task1.regardingobjectid}" }, "field": "statuscode", "operator": "NotEquals", "value": "5" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0006-4000-8000-100000000006",
+      "jbe_testid": "STD-TC06",
+      "jbe_title": "Account-Deduplizierung: Warnung bei gleicher Email",
+      "jbe_category": 100000006,
+      "jbe_tags": "Account,Duplikat,DQM",
+      "jbe_userstories": "",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "preconditions": { "createAccount": true },
+        "steps": [
+          { "action": "CreateRecord", "entity": "account", "alias": "acc_dup", "fields": { "name": "{account1.name}", "emailaddress1": "{account1.emailaddress1}" } }
+        ],
+        "assertions": [
+          { "target": "Query", "entity": "duplicaterecord", "filter": { "baserecordid": "{acc_dup.id}" }, "field": "duplicaterecordid", "operator": "IsNotNull" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0007-4000-8000-100000000007",
+      "jbe_testid": "STD-TC07",
+      "jbe_title": "Opportunity-Pipeline: Phase-Wechsel Validierung",
+      "jbe_category": 100000005,
+      "jbe_tags": "Opportunity,BPF,Pipeline",
+      "jbe_userstories": "PROJ-2001",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "preconditions": { "createOpportunity": true },
+        "steps": [
+          { "action": "UpdateRecord", "alias": "opp1", "fields": { "stepname": "Propose", "salesstage": 2 }, "waitForAsync": true }
+        ],
+        "assertions": [
+          { "target": "Record:opp1", "field": "salesstage", "operator": "Equals", "value": "2" },
+          { "target": "Record:opp1", "field": "stepname", "operator": "Equals", "value": "Propose" }
+        ]
+      }
+    },
+    {
+      "jbe_testcaseid": "d1d2d3d4-0008-4000-8000-100000000008",
+      "jbe_testid": "STD-TC08",
+      "jbe_title": "Case-SLA: Timer startet bei Erstellung",
+      "jbe_category": 100000005,
+      "jbe_tags": "Case,SLA,Timer,Service",
+      "jbe_userstories": "PROJ-2002",
+      "jbe_enabled": true,
+      "jbe_definitionjson": {
+        "steps": [
+          { "action": "CreateRecord", "entity": "incident", "alias": "sla_case", "fields": { "title": "SLA-Test {GENERATED:text}", "prioritycode": 2, "customerid_account": "{ACCOUNT_ID}" }, "waitForAsync": true, "maxDurationMs": 10000 }
+        ],
+        "assertions": [
+          { "target": "Record:sla_case", "field": "slainvokedid", "operator": "IsNotNull" }
+        ]
+      }
+    }
+  ],
+  "testRuns": [
+    {
+      "jbe_testrunid": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_teststatus": 100000002,
+      "jbe_passed": 7,
+      "jbe_failed": 1,
+      "jbe_total": 8,
+      "jbe_startedon": "$date:0,10,0",
+      "jbe_completedon": "$date:0,10,8",
+      "jbe_testcasefilter": "*",
+      "jbe_testsummary": "8 Tests ausgeführt. 7 bestanden, 1 fehlgeschlagen.\nFehlgeschlagen: STD-TC06 (Duplikat-Erkennung nicht aktiv)",
+      "jbe_fulllog": "[10:00:01] Testlauf gestartet, Filter: *\n[10:00:03] STD-TC01 Lead-Qualifizierung ... BESTANDEN (1.8s)\n[10:00:06] STD-TC02 Opportunity Won ... BESTANDEN (2.1s)\n[10:00:09] STD-TC03 Case-Eskalation ... BESTANDEN (1.5s)\n[10:00:12] STD-TC04 Contact-Adresse ... BESTANDEN (1.3s)\n[10:00:15] STD-TC05 Task-Erinnerung ... BESTANDEN (1.1s)\n[10:00:18] STD-TC06 Account-Deduplizierung ... FEHLGESCHLAGEN (0.9s) - Keine Duplikat-Regel aktiv\n[10:00:21] STD-TC07 Opportunity-Pipeline ... BESTANDEN (1.4s)\n[10:00:24] STD-TC08 Case-SLA ... BESTANDEN (2.3s)\n[10:08:00] Testlauf abgeschlossen: 7 Passed, 1 Failed"
+    },
+    {
+      "jbe_testrunid": "e1e2e3e4-1002-4000-8000-100000001002",
+      "jbe_teststatus": 100000002,
+      "jbe_passed": 8,
+      "jbe_failed": 0,
+      "jbe_total": 8,
+      "jbe_startedon": "$date:2,8,30",
+      "jbe_completedon": "$date:2,8,38",
+      "jbe_testcasefilter": "*",
+      "jbe_testsummary": "8 Tests ausgeführt. Alle bestanden.",
+      "jbe_fulllog": "[08:30:01] Testlauf gestartet, Filter: *\n[08:38:00] Testlauf abgeschlossen: 8 Passed, 0 Failed"
+    },
+    {
+      "jbe_testrunid": "e1e2e3e4-1003-4000-8000-100000001003",
+      "jbe_teststatus": 100000002,
+      "jbe_passed": 3,
+      "jbe_failed": 0,
+      "jbe_total": 3,
+      "jbe_startedon": "$date:4,14,0",
+      "jbe_completedon": "$date:4,14,5",
+      "jbe_testcasefilter": "story:PROJ-2001",
+      "jbe_testsummary": "3 Tests für Story PROJ-2001. Alle bestanden.",
+      "jbe_fulllog": "[14:00:01] Testlauf gestartet, Filter: story:PROJ-2001\n[14:05:00] Testlauf abgeschlossen: 3 Passed, 0 Failed"
+    }
+  ],
+  "testRunResults": [
+    { "jbe_testrunresultid": "f1f2f3f4-2001-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC01", "jbe_outcome": 100000000, "jbe_durationms": 1800, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2002-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC02", "jbe_outcome": 100000000, "jbe_durationms": 2100, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2003-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC03", "jbe_outcome": 100000000, "jbe_durationms": 1500, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2004-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC04", "jbe_outcome": 100000000, "jbe_durationms": 1300, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2005-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC05", "jbe_outcome": 100000000, "jbe_durationms": 1100, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2006-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC06", "jbe_outcome": 100000001, "jbe_durationms": 900, "jbe_errormessage": "Keine Duplikat-Erkennungsregel für Account aktiv", "jbe_assertionresults": [{ "passed": false, "actual": null }], "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2007-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC07", "jbe_outcome": 100000000, "jbe_durationms": 1400, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
+    { "jbe_testrunresultid": "f1f2f3f4-2008-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC08", "jbe_outcome": 100000000, "jbe_durationms": 2300, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" }
+  ],
+  "userStories": [
+    { "key": "PROJ-2001", "title": "Sales Pipeline Automatisierung" },
+    { "key": "PROJ-2002", "title": "Service Eskalation und SLA" }
+  ],
+  "metadata": {
+    "entities": [],
+    "attributes": {
+      "account": [
+        { "LogicalName": "accountid", "DisplayName": { "UserLocalizedLabel": { "Label": "Account ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "AccountId" },
+        { "LogicalName": "name", "DisplayName": { "UserLocalizedLabel": { "Label": "Firmenname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Name" },
+        { "LogicalName": "emailaddress1", "DisplayName": { "UserLocalizedLabel": { "Label": "E-Mail" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "EMailAddress1" },
+        { "LogicalName": "revenue", "DisplayName": { "UserLocalizedLabel": { "Label": "Jahresumsatz" } }, "AttributeType": "MoneyType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Revenue" },
+        { "LogicalName": "statecode", "DisplayName": { "UserLocalizedLabel": { "Label": "Status" } }, "AttributeType": "StateType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "StateCode" }
+      ],
+      "contact": [
+        { "LogicalName": "contactid", "DisplayName": { "UserLocalizedLabel": { "Label": "Contact ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ContactId" },
+        { "LogicalName": "firstname", "DisplayName": { "UserLocalizedLabel": { "Label": "Vorname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "Recommended" }, "IsCustomAttribute": false, "SchemaName": "FirstName" },
+        { "LogicalName": "lastname", "DisplayName": { "UserLocalizedLabel": { "Label": "Nachname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "LastName" },
+        { "LogicalName": "emailaddress1", "DisplayName": { "UserLocalizedLabel": { "Label": "E-Mail" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "EMailAddress1" },
+        { "LogicalName": "address1_city", "DisplayName": { "UserLocalizedLabel": { "Label": "Stadt" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Address1_City" },
+        { "LogicalName": "address1_postalcode", "DisplayName": { "UserLocalizedLabel": { "Label": "PLZ" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Address1_PostalCode" }
+      ],
+      "opportunity": [
+        { "LogicalName": "opportunityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Opportunity ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "OpportunityId" },
+        { "LogicalName": "name", "DisplayName": { "UserLocalizedLabel": { "Label": "Thema" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Name" },
+        { "LogicalName": "salesstage", "DisplayName": { "UserLocalizedLabel": { "Label": "Vertriebsphase" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "SalesStage" },
+        { "LogicalName": "stepname", "DisplayName": { "UserLocalizedLabel": { "Label": "Pipeline-Phase" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "StepName" },
+        { "LogicalName": "actualvalue", "DisplayName": { "UserLocalizedLabel": { "Label": "Tatsächlicher Umsatz" } }, "AttributeType": "MoneyType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "ActualValue" }
+      ],
+      "lead": [
+        { "LogicalName": "leadid", "DisplayName": { "UserLocalizedLabel": { "Label": "Lead ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "LeadId" },
+        { "LogicalName": "firstname", "DisplayName": { "UserLocalizedLabel": { "Label": "Vorname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "Recommended" }, "IsCustomAttribute": false, "SchemaName": "FirstName" },
+        { "LogicalName": "lastname", "DisplayName": { "UserLocalizedLabel": { "Label": "Nachname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "LastName" },
+        { "LogicalName": "leadqualitycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Bewertung" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "LeadQualityCode" }
+      ],
+      "incident": [
+        { "LogicalName": "incidentid", "DisplayName": { "UserLocalizedLabel": { "Label": "Case ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "IncidentId" },
+        { "LogicalName": "title", "DisplayName": { "UserLocalizedLabel": { "Label": "Titel" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Title" },
+        { "LogicalName": "prioritycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "PriorityCode" },
+        { "LogicalName": "slainvokedid", "DisplayName": { "UserLocalizedLabel": { "Label": "SLA" } }, "AttributeType": "LookupType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "SLAInvokedId" }
+      ],
+      "task": [
+        { "LogicalName": "activityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Aktivitäts-ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ActivityId" },
+        { "LogicalName": "subject", "DisplayName": { "UserLocalizedLabel": { "Label": "Betreff" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Subject" },
+        { "LogicalName": "scheduledend", "DisplayName": { "UserLocalizedLabel": { "Label": "Fällig am" } }, "AttributeType": "DateTimeType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "ScheduledEnd" },
+        { "LogicalName": "prioritycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "PriorityCode" }
+      ],
+      "activitypointer": [
+        { "LogicalName": "activityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Aktivitäts-ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ActivityId" },
+        { "LogicalName": "subject", "DisplayName": { "UserLocalizedLabel": { "Label": "Betreff" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Subject" },
+        { "LogicalName": "statuscode", "DisplayName": { "UserLocalizedLabel": { "Label": "Statusgrund" } }, "AttributeType": "StatusType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "StatusCode" }
+      ]
+    },
+    "optionsets": [
+      {
+        "Name": "lead_leadqualitycode",
+        "DisplayName": { "UserLocalizedLabel": { "Label": "Lead-Bewertung" } },
+        "OptionSetType": "Picklist",
+        "Options": [
+          { "Value": 1, "Label": { "UserLocalizedLabel": { "Label": "Heiß" } } },
+          { "Value": 2, "Label": { "UserLocalizedLabel": { "Label": "Warm" } } },
+          { "Value": 3, "Label": { "UserLocalizedLabel": { "Label": "Kalt" } } }
+        ]
+      },
+      {
+        "Name": "incident_prioritycode",
+        "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } },
+        "OptionSetType": "Picklist",
+        "Options": [
+          { "Value": 1, "Label": { "UserLocalizedLabel": { "Label": "Hoch" } } },
+          { "Value": 2, "Label": { "UserLocalizedLabel": { "Label": "Normal" } } },
+          { "Value": 3, "Label": { "UserLocalizedLabel": { "Label": "Niedrig" } } }
+        ]
+      }
+    ]
+  }
+}

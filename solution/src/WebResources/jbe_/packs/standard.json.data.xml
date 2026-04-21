@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{4976ac34-ae2f-f111-88b3-000d3a45b372}</WebResourceId>
+  <Name>jbe_/packs/standard.json</Name>
+  <DisplayName>jbe_/packs/standard.json</DisplayName>
+  <WebResourceType>3</WebResourceType>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>0</IsHidden>
+  <FileName>/WebResources/jbe_packsstandardjson4976AC34-AE2F-F111-88B3-000D3A45B372</FileName>
+</WebResource>

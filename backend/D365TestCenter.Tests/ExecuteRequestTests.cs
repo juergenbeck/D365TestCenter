@@ -7,12 +7,12 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer die Engine v5.2 Features:
+/// Tests für die Engine v5.2 Features:
 /// - ResolveTypedValue ($type-System)
 /// - RequestName auf TestStep
 /// - Columns auf GenericPrecondition
 /// - ResolveFieldValues preserviert JObjects
-/// - PlaceholderEngine: ungeloeste {alias.fields.x} Platzhalter
+/// - PlaceholderEngine: ungelöste {alias.fields.x} Platzhalter
 /// </summary>
 public class ExecuteRequestTests
 {
@@ -108,7 +108,7 @@ public class ExecuteRequestTests
     public void ResolveFieldValues_PreservesJObjects()
     {
         // Simuliere was passiert wenn Fields ein $type-Objekt enthalten:
-        // Die JSON-Deserialisierung erzeugt JObjects fuer verschachtelte Objekte.
+        // Die JSON-Deserialisierung erzeugt JObjects für verschachtelte Objekte.
         // ResolveAll (PlaceholderEngine) darf diese NICHT zu Strings konvertieren.
         var engine = new PlaceholderEngine();
         var ctx = new TestContext { TestId = "TEST01" };
@@ -123,7 +123,7 @@ public class ExecuteRequestTests
 
         var resolved = engine.ResolveAll(fields, ctx);
 
-        // JObjects muessen als JObjects erhalten bleiben
+        // JObjects müssen als JObjects erhalten bleiben
         Assert.IsType<JObject>(resolved["Target"]);
         Assert.IsType<JObject>(resolved["SubordinateId"]);
 
@@ -278,11 +278,11 @@ public class ExecuteRequestTests
         Assert.IsType<JObject>(step.Fields["UpdateContent"]);
 
         // $type im JObject: Newtonsoft kann $type als MetadataPropertyHandling interpretieren.
-        // Pruefen ob es erhalten bleibt oder ob wir es anders benennen muessen.
+        // Prüfen ob es erhalten bleibt oder ob wir es anders benennen müssen.
         var target = (JObject)step.Fields["Target"]!;
         Assert.Equal("contact", target["entity"]!.Value<string>());
         Assert.Equal("con1", target["ref"]!.Value<string>());
-        // $type pruefen (kann von Newtonsoft entfernt worden sein)
+        // $type prüfen (kann von Newtonsoft entfernt worden sein)
         var hasType = target.ContainsKey("$type");
         if (hasType)
             Assert.Equal("EntityReference", target["$type"]!.Value<string>());

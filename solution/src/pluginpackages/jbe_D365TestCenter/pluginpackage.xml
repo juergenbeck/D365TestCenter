@@ -1,0 +1,9 @@
+<pluginpackage uniquename="jbe_D365TestCenter">
+  <exportkeyversion>1</exportkeyversion>
+  <iscustomizable>1</iscustomizable>
+  <name>jbe_D365TestCenter</name>
+  <package mimetype="application/octet-stream">jbe_D365TestCenter.nupkg</package>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+  <version>5.2.0</version>
+</pluginpackage>

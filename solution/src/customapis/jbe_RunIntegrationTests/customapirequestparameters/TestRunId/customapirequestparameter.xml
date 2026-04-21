@@ -1,0 +1,13 @@
+<customapirequestparameter uniquename="TestRunId">
+  <description default="EntityReference auf jbe_testrun-Record">
+    <label description="EntityReference auf jbe_testrun-Record" languagecode="1033" />
+  </description>
+  <displayname default="Test Run ID">
+    <label description="Test Run ID" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isoptional>0</isoptional>
+  <logicalentityname>jbe_testrun</logicalentityname>
+  <name>TestRunId</name>
+  <type>5</type>
+</customapirequestparameter>

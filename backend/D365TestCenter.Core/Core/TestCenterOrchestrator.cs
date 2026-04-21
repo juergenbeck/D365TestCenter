@@ -13,7 +13,7 @@ namespace D365TestCenter.Core;
 /// Zentraler Orchestrator für Test-Läufe. Kapselt die drei Phasen:
 ///
 ///   1. Load:    TestCases aus Dataverse (jbe_testcase-Records) laden und filtern.
-///   2. Run:     TestRunner.RunAll() auf der Core-Engine ausfuehren.
+///   2. Run:     TestRunner.RunAll() auf der Core-Engine ausführen.
 ///   3. Persist: jbe_testrun-Record aktualisieren und jbe_testrunresult + jbe_teststep
 ///               Records schreiben.
 ///
@@ -111,7 +111,7 @@ public sealed class TestCenterOrchestrator
 
     /// <summary>
     /// Führt einen kompletten Testlauf aus: Legt einen TestRun-Record an,
-    /// laedt Tests, führt sie aus, schreibt Ergebnisse.
+    /// lädt Tests, führt sie aus, schreibt Ergebnisse.
     ///
     /// Wird von der CLI genutzt (neuer TestRun pro Aufruf).
     /// </summary>
@@ -315,8 +315,8 @@ public sealed class TestCenterOrchestrator
     // ════════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Laedt aktivierte TestCases aus der jbe_testcase-Entity und wendet den
-    /// Filter an. Unterstuetzte Filter-Formate (identisch zum Custom-API-Filter):
+    /// Lädt aktivierte TestCases aus der jbe_testcase-Entity und wendet den
+    /// Filter an. Unterstützte Filter-Formate (identisch zum Custom-API-Filter):
     ///
     ///   "*" oder leer     -> alle aktivierten Tests
     ///   "TC01"            -> exakt diese ID
@@ -369,7 +369,7 @@ public sealed class TestCenterOrchestrator
 
                 if (tc == null) continue;
 
-                // Metadaten aus Record uebernehmen falls im JSON fehlend.
+                // Metadaten aus Record übernehmen falls im JSON fehlend.
                 // Robust gegen Typ-Varianten (jbe_category kann String ODER OptionSet sein).
                 if (string.IsNullOrWhiteSpace(tc.Id))
                     tc.Id = SafeGetString(e, FldCaseTestId) ?? "?";

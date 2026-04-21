@@ -31,3 +31,6 @@ packages/
 *.tmp
 *.bak
 publish/
+
+# Solution export/working artifacts (regenerierbar via pac solution export/unpack)
+solution/out/

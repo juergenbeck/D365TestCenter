@@ -1,0 +1,598 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{c05ddfc6-6d1f-4607-9480-544ff8b6afef}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{af4bfc48-026e-5924-9c3a-b37d900ec6cd}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Übersicht" languagecode="1031" />
+            <label description="Overview" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_07922dbc" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{0f785f7a-059f-56b5-a7b7-cb3eb7be7da3}" IsUserDefined="1">
+                  <labels>
+                    <label description="Zuordnung" languagecode="1031" />
+                    <label description="Association" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{882388b6-89cd-5408-ae8b-115198321e39}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Test ID" languagecode="1033" />
+                          <label description="Test-ID" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_testid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testid" disabled="false" />
+                      </cell>
+                      <cell id="{676ba4b9-1955-56d9-987c-3e026283ac8a}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Outcome" languagecode="1033" />
+                          <label description="Ergebnis" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_outcome" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_outcome" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{6c390c6d-489d-5842-abfa-1fcabd2c5ffd}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Duration (ms)" languagecode="1033" />
+                          <label description="Dauer (ms)" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
+                      </cell>
+                      <cell id="{ddc49284-e00a-5d4c-a41a-a69550d7c18e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Test Run" languagecode="1033" />
+                          <label description="Testlauf" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_testrunid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="jbe_testrunid" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="sec_5a724102" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{0fd84e2f-f232-5f6f-baf9-1c818e4fc9ed}" IsUserDefined="1">
+                  <labels>
+                    <label description="Fehler" languagecode="1031" />
+                    <label description="Error" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{427c2c70-b6a5-5334-b194-c693ca9d5445}" colspan="1" rowspan="8">
+                        <labels>
+                          <label description="Error Message" languagecode="1033" />
+                          <label description="Fehlermeldung" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_errormessage" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_errormessage" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{fae7f878-cba6-5449-abcb-53a41f8c98d4}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Assertion-Ergebnisse" languagecode="1031" />
+            <label description="Assertion Results" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_3d34f04a" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{f2fd3b7a-9248-5ddd-a1f9-0d26e3994821}" IsUserDefined="1">
+                  <labels>
+                    <label description="Assertions" languagecode="1031" />
+                    <label description="Assertions" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{93485e3d-3fda-567d-a8d2-62152d1f22bc}" colspan="1" rowspan="28">
+                        <labels>
+                          <label description="Assertion Results (JSON)" languagecode="1033" />
+                          <label description="Assertion-Ergebnisse (JSON)" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_assertionresults" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_assertionresults" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{c8d0e991-2027-5b11-99b1-111b2dcf60ef}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Erzeugte Records" languagecode="1031" />
+            <label description="Tracked Records" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_f94f2346" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{880c646e-b6ae-5864-8e0e-b7bec75c9013}" IsUserDefined="1">
+                  <labels>
+                    <label description="Records" languagecode="1031" />
+                    <label description="Records" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{2f83acbf-9411-5fa8-87f5-52344d2b7956}" colspan="1" rowspan="28">
+                        <labels>
+                          <label description="Tracked Records (JSON)" languagecode="1033" />
+                          <label description="Erzeugte Records (JSON)" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_trackedrecords" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_trackedrecords" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{7aca0528-6dcd-5f74-b812-0dc9a88beebf}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Schritte" languagecode="1031" />
+            <label description="Steps" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_d6977651" showlabel="false" showbar="true" columns="1" labelwidth="115" id="{f562817e-5e85-550a-9914-69d8ce7032a4}" IsUserDefined="1">
+                  <labels>
+                    <label description="steps_subgrid" languagecode="1031" />
+                    <label description="steps_subgrid" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{86f6d88e-1b23-5837-95a8-3e6f87468e20}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="S" languagecode="1031" />
+                          <label description="S" languagecode="1033" />
+                        </labels>
+                        <control id="S" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="S" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{8a009d84-a6fb-5db1-b9ef-07f65aed7fff}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="U" languagecode="1031" />
+                          <label description="U" languagecode="1033" />
+                        </labels>
+                        <control id="U" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="U" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{98014c4d-c9cb-5fdb-96b2-6687d7823c22}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="B" languagecode="1031" />
+                          <label description="B" languagecode="1033" />
+                        </labels>
+                        <control id="B" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="B" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{41808dea-a75d-5382-a233-082cb515089e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="G" languagecode="1031" />
+                          <label description="G" languagecode="1033" />
+                        </labels>
+                        <control id="G" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="G" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{c58840f4-0d9f-548e-9e7a-30cb406e5803}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="R" languagecode="1031" />
+                          <label description="R" languagecode="1033" />
+                        </labels>
+                        <control id="R" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="R" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{1a1dad35-24c7-5279-a73b-0376ed126e38}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="I" languagecode="1031" />
+                          <label description="I" languagecode="1033" />
+                        </labels>
+                        <control id="I" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="I" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{11d06a5f-b4fd-578e-b544-e2bdfbb7b2df}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="D" languagecode="1031" />
+                          <label description="D" languagecode="1033" />
+                        </labels>
+                        <control id="D" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="D" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{76e70040-4181-58da-a1a7-173bb4e098e4}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description=":" languagecode="1031" />
+                          <label description=":" languagecode="1033" />
+                        </labels>
+                        <control id=":" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname=":" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{f76ecd85-3fca-5d38-bafc-03c2b1571d8c}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="j" languagecode="1031" />
+                          <label description="j" languagecode="1033" />
+                        </labels>
+                        <control id="j" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="j" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{ae15dd57-714f-5e3f-82bf-fa799579a596}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="b" languagecode="1031" />
+                          <label description="b" languagecode="1033" />
+                        </labels>
+                        <control id="b" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="b" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{fa8a254b-64e6-56c0-ab4d-e424f2e7fc79}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="_" languagecode="1031" />
+                          <label description="_" languagecode="1033" />
+                        </labels>
+                        <control id="_" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="_" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9ba96f80-b1f9-5ddf-8b88-ff490c13891f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="s" languagecode="1031" />
+                          <label description="s" languagecode="1033" />
+                        </labels>
+                        <control id="s" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="s" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9ba96f80-b1f9-5ddf-8b88-ff490c13891f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="s" languagecode="1031" />
+                          <label description="s" languagecode="1033" />
+                        </labels>
+                        <control id="s" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="s" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{58216a1b-b403-5d38-ba24-459f680460dd}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="p" languagecode="1031" />
+                          <label description="p" languagecode="1033" />
+                        </labels>
+                        <control id="p" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="p" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{76e70040-4181-58da-a1a7-173bb4e098e4}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description=":" languagecode="1031" />
+                          <label description=":" languagecode="1033" />
+                        </labels>
+                        <control id=":" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname=":" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{f76ecd85-3fca-5d38-bafc-03c2b1571d8c}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="j" languagecode="1031" />
+                          <label description="j" languagecode="1033" />
+                        </labels>
+                        <control id="j" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="j" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{ae15dd57-714f-5e3f-82bf-fa799579a596}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="b" languagecode="1031" />
+                          <label description="b" languagecode="1033" />
+                        </labels>
+                        <control id="b" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="b" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{fa8a254b-64e6-56c0-ab4d-e424f2e7fc79}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="_" languagecode="1031" />
+                          <label description="_" languagecode="1033" />
+                        </labels>
+                        <control id="_" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="_" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9ba96f80-b1f9-5ddf-8b88-ff490c13891f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="s" languagecode="1031" />
+                          <label description="s" languagecode="1033" />
+                        </labels>
+                        <control id="s" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="s" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{75ae5fbb-c94c-547d-b9b3-ed3ca8126b3a}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="r" languagecode="1031" />
+                          <label description="r" languagecode="1033" />
+                        </labels>
+                        <control id="r" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="r" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{092c7a94-bc2d-5d00-a53b-091d69728e0e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="u" languagecode="1031" />
+                          <label description="u" languagecode="1033" />
+                        </labels>
+                        <control id="u" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="u" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{56c1dc09-4b15-53ce-9e0b-356640832519}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="n" languagecode="1031" />
+                          <label description="n" languagecode="1033" />
+                        </labels>
+                        <control id="n" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="n" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{75ae5fbb-c94c-547d-b9b3-ed3ca8126b3a}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="r" languagecode="1031" />
+                          <label description="r" languagecode="1033" />
+                        </labels>
+                        <control id="r" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="r" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0e24147b-db3c-5902-a5ef-ebf1af3262d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="e" languagecode="1031" />
+                          <label description="e" languagecode="1033" />
+                        </labels>
+                        <control id="e" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="e" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9ba96f80-b1f9-5ddf-8b88-ff490c13891f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="s" languagecode="1031" />
+                          <label description="s" languagecode="1033" />
+                        </labels>
+                        <control id="s" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="s" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{092c7a94-bc2d-5d00-a53b-091d69728e0e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="u" languagecode="1031" />
+                          <label description="u" languagecode="1033" />
+                        </labels>
+                        <control id="u" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="u" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{c6dbcdab-8df6-5415-9363-056bf4b4465f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="l" languagecode="1031" />
+                          <label description="l" languagecode="1033" />
+                        </labels>
+                        <control id="l" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="l" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b1fdd11e-9fcd-55a2-82d6-d9733617b7c3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="t" languagecode="1031" />
+                          <label description="t" languagecode="1033" />
+                        </labels>
+                        <control id="t" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="t" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{c947f21c-591d-51d4-88bf-94334f18e0d1}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="i" languagecode="1031" />
+                          <label description="i" languagecode="1033" />
+                        </labels>
+                        <control id="i" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="i" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{290de994-b7a6-57ad-b826-b645e713437b}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="d" languagecode="1031" />
+                          <label description="d" languagecode="1033" />
+                        </labels>
+                        <control id="d" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="d" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{de0a116b-162d-521d-b4b1-81c6185b2015}" celllabelposition="Top" columns="148" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{676ba4b9-1955-56d9-987c-3e026283ac8a}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Outcome" languagecode="1033" />
+                <label description="Ergebnis" languagecode="1031" />
+              </labels>
+              <control id="jbe_outcome" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_outcome" disabled="false" />
+            </cell>
+            <cell id="{882388b6-89cd-5408-ae8b-115198321e39}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Test ID" languagecode="1033" />
+                <label description="Test-ID" languagecode="1031" />
+              </labels>
+              <control id="jbe_testid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testid" disabled="false" />
+            </cell>
+            <cell id="{6c390c6d-489d-5842-abfa-1fcabd2c5ffd}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Duration (ms)" languagecode="1033" />
+                <label description="Dauer (ms)" languagecode="1031" />
+              </labels>
+              <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
+            </cell>
+            <cell id="{ddc49284-e00a-5d4c-a41a-a69550d7c18e}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Test Run" languagecode="1033" />
+                <label description="Testlauf" languagecode="1031" />
+              </labels>
+              <control id="jbe_testrunid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="jbe_testrunid" disabled="false" />
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{f72ad5d0-97fe-5651-825c-e7e78700ba70}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{5767c899-ca00-5335-8d3c-10b6310b366a}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{26e7dcea-ae2f-5ec8-9fd4-7ea3e5600014}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{318d5bb6-ea56-59d5-ae76-97cc587373a8}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <formLibraries>
+        <Library name="jbe_/forms.js" libraryUniqueId="{d365dc00-0000-0000-0001-000000000001}" />
+      </formLibraries>
+      <events>
+        <event name="onload" application="false" active="false">
+          <Handlers>
+            <Handler functionName="JBE.Forms.TestRunResult.onLoad" libraryName="jbe_/forms.js" handlerUniqueId="{0883c180-fa0b-5996-b5fc-2ef9073bd4f5}" enabled="true" parameters="" passExecutionContext="true" />
+          </Handlers>
+        </event>
+      </events>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1031" />
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Hauptformular für diese Entität." languagecode="1031" />
+      <Description description="Main form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

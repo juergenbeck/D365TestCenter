@@ -51,9 +51,9 @@ public sealed class PlaceholderEngine
             .Replace("{NOW_UTC}", now.ToString("O"))
             .Replace("{NOW_MINUS_1H}", now.AddHours(-1).ToString("O"));
 
-        // Legacy-Aliase {CONTACT_ID} und {ACCOUNT_ID} fuer JS-Engine-Kompatibilitaet:
+        // Legacy-Aliase {CONTACT_ID} und {ACCOUNT_ID} für JS-Engine-Kompatibilitaet:
         // Erster registrierter Record vom entsprechenden Typ wird genutzt.
-        // Neue Testfaelle sollten {alias.id} verwenden.
+        // Neue Testfälle sollten {alias.id} verwenden.
         if (result.Contains("{CONTACT_ID}"))
         {
             foreach (var kv in ctx.Records)
@@ -106,11 +106,11 @@ public sealed class PlaceholderEngine
             }
             if (ctx.Records.ContainsKey(alias))
                 throw new InvalidOperationException(
-                    $"Platzhalter '{m.Value}' konnte nicht aufgeloest werden: " +
+                    $"Platzhalter '{m.Value}' konnte nicht aufgelöst werden: " +
                     $"Alias '{alias}' existiert in Records, aber nicht in FoundRecords. " +
                     $"Verwende 'columns' auf der Precondition/CreateRecord oder " +
                     $"einen 'RetrieveRecord'-Step um Feldwerte nach dem Create zu laden.");
-            return m.Value; // Alias unbekannt: Platzhalter unveraendert lassen (koennte spaeter aufgeloest werden)
+            return m.Value; // Alias unbekannt: Platzhalter unverändert lassen (könnte später aufgelöst werden)
         });
 
         // {alias.id} -> Record-GUID (Web Resource Format)

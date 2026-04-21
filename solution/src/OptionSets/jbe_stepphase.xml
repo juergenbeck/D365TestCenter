@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jbe_stepphase" localizedName="Step Phase" description="Phase of a test step." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Schrittphase" languagecode="1031" />
+    <displayname description="Step Phase" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Phase eines Testschritts." languagecode="1031" />
+    <Description description="Phase of a test step." languagecode="1033" />
+  </Descriptions>
+  <options>
+    <option value="105710000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Vorbedingung" languagecode="1031" />
+        <label description="Precondition" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Schritt" languagecode="1031" />
+        <label description="Step" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Prüfung" languagecode="1031" />
+        <label description="Assertion" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710003" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Aufräumen" languagecode="1031" />
+        <label description="Cleanup" languagecode="1033" />
+      </labels>
+    </option>
+  </options>
+</optionset>

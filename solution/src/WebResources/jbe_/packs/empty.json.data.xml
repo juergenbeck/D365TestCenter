@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{7c6d3f39-ae2f-f111-88b4-000d3a2c1b9c}</WebResourceId>
+  <Name>jbe_/packs/empty.json</Name>
+  <DisplayName>jbe_/packs/empty.json</DisplayName>
+  <WebResourceType>3</WebResourceType>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>0</IsHidden>
+  <FileName>/WebResources/jbe_packsemptyjson7C6D3F39-AE2F-F111-88B4-000D3A2C1B9C</FileName>
+</WebResource>

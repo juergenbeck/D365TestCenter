@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{0428dd93-00c4-4d07-92cb-84bef887b2fe}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="jbe_testid" select="1" icon="1" preview="1">
+        <row name="result" id="jbe_testcaseid">
+          <cell name="jbe_testid" width="110" />
+          <cell name="jbe_title" width="250" />
+          <cell name="jbe_category" width="140" />
+          <cell name="jbe_tags" width="180" />
+          <cell name="jbe_userstories" width="180" />
+          <cell name="jbe_enabled" width="80" />
+          <cell name="modifiedon" width="120" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="jbe_testcase">
+          <attribute name="jbe_testcaseid" />
+          <attribute name="jbe_testid" />
+          <attribute name="jbe_title" />
+          <attribute name="jbe_category" />
+          <attribute name="jbe_tags" />
+          <attribute name="jbe_userstories" />
+          <attribute name="jbe_enabled" />
+          <attribute name="modifiedon" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <order attribute="jbe_testid" descending="false" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Aktive Testfälle" languagecode="1031" />
+      <LocalizedName description="Active Test Cases" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

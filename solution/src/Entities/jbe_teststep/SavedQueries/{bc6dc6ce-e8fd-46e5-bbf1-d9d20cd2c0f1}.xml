@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{bc6dc6ce-e8fd-46e5-bbf1-d9d20cd2c0f1}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
+        <row name="result" id="jbe_teststepid">
+          <cell name="jbe_stepnumber" width="60" />
+          <cell name="jbe_phase" width="100" />
+          <cell name="jbe_name" width="220" />
+          <cell name="jbe_action" width="120" />
+          <cell name="jbe_stepstatus" width="100" />
+          <cell name="jbe_durationms" width="80" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="jbe_teststep">
+          <attribute name="jbe_teststepid" />
+          <attribute name="jbe_stepnumber" />
+          <attribute name="jbe_phase" />
+          <attribute name="jbe_name" />
+          <attribute name="jbe_action" />
+          <attribute name="jbe_stepstatus" />
+          <attribute name="jbe_durationms" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <order attribute="jbe_stepnumber" descending="false" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Zugeordnete Testschritte" languagecode="1031" />
+      <LocalizedName description="Associated Test Steps" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

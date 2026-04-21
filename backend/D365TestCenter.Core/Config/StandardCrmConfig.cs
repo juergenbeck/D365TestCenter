@@ -33,8 +33,10 @@ namespace D365TestCenter.Core.Config
         public int StatusFailed => 105710003;
         public int OutcomePassed => 105710000;
         public int OutcomeFailed => 105710001;
-        public int OutcomeError => 105710002;
-        public int OutcomeSkipped => 105710003;
+        // Achtung: jbe_testoutcome-OptionSet hat historisch 105710002 = Skipped.
+        // Error wurde erst in v5.4 als 105710003 ergänzt. Deshalb diese Reihenfolge.
+        public int OutcomeSkipped => 105710002;
+        public int OutcomeError => 105710003;
 
         public bool HasGovernance => false;
     }

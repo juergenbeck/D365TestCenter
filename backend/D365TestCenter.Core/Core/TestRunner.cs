@@ -357,7 +357,7 @@ public sealed class TestRunner
         {
             var retrieved = _service.Retrieve(entityName, id, new ColumnSet(step.Columns.ToArray()));
             ctx.FoundRecords[alias] = retrieved;
-            Log($"      Auto-Retrieve: {step.Columns.Count} Spalten fuer [{alias}] geladen");
+            Log($"      Auto-Retrieve: {step.Columns.Count} Spalten für [{alias}] geladen");
         }
     }
 
@@ -505,7 +505,7 @@ public sealed class TestRunner
         }
 
         var response = _service.Execute(request);
-        Log($"      ExecuteRequest '{requestName}' ausgefuehrt");
+        Log($"      ExecuteRequest '{requestName}' ausgeführt");
         HandleExecuteRequestResponse(step, ctx, response);
         WaitAfterExecuteRequest(step);
     }
@@ -651,7 +651,7 @@ public sealed class TestRunner
     }
 
     // ================================================================
-    //  RetrieveRecord: Record neu laden (fuer {alias.fields.x} in Steps)
+    //  RetrieveRecord: Record neu laden (für {alias.fields.x} in Steps)
     // ================================================================
 
     private void StepRetrieveRecord(TestStep step, TestContext ctx)

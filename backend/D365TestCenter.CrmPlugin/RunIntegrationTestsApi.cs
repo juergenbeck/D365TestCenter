@@ -11,7 +11,7 @@ namespace D365TestCenter.CrmPlugin;
 ///
 /// Browser-Einstiegspunkt für die Test-Ausführung. Der Browser legt einen
 /// jbe_testrun-Record mit Status "Geplant" und jbe_testcasefilter an, dann ruft
-/// er diese Custom API auf. Die API laedt die Tests aus der jbe_testcase-Entity
+/// er diese Custom API auf. Die API lädt die Tests aus der jbe_testcase-Entity
 /// (nicht aus einem JSON-Blob im TestRun), filtert sie, führt sie aus und
 /// schreibt jbe_testrunresult + jbe_teststep Records.
 ///

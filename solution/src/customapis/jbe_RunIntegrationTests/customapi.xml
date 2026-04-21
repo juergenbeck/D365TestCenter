@@ -1,0 +1,18 @@
+<customapi uniquename="jbe_RunIntegrationTests">
+  <allowedcustomprocessingsteptype>0</allowedcustomprocessingsteptype>
+  <bindingtype>0</bindingtype>
+  <description default="Fuehrt Integrationstest-Cases aus und schreibt die Ergebnisse">
+    <label description="Fuehrt Integrationstest-Cases aus und schreibt die Ergebnisse" languagecode="1033" />
+  </description>
+  <displayname default="Run Integration Tests">
+    <label description="Run Integration Tests" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isfunction>0</isfunction>
+  <isprivate>0</isprivate>
+  <name>Run Integration Tests</name>
+  <plugintypeid>
+    <plugintypeexportkey>4B2FD31FF28037DBDA09C62A2A3E8EAF2BA721C9AE9327C8BB81383AD0B5BDEC</plugintypeexportkey>
+  </plugintypeid>
+  <workflowsdkstepenabled>0</workflowsdkstepenabled>
+</customapi>

@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jbe_teststatus" localizedName="Test Status" description="Status of a test run." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Teststatus" languagecode="1031" />
+    <displayname description="Test Status" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Status eines Testlaufs." languagecode="1031" />
+    <Description description="Status of a test run." languagecode="1033" />
+  </Descriptions>
+  <options>
+    <option value="105710000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Ausstehend" languagecode="1031" />
+        <label description="Pending" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Läuft" languagecode="1031" />
+        <label description="Running" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Abgeschlossen" languagecode="1031" />
+        <label description="Completed" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710003" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Fehler" languagecode="1031" />
+        <label description="Error" languagecode="1033" />
+      </labels>
+    </option>
+  </options>
+</optionset>

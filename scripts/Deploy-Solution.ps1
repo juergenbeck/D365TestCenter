@@ -192,7 +192,7 @@ function Add-ToSolution([string]$ComponentType, [string]$ComponentId) {
     try {
         Invoke-RestMethod -Method Post -Uri "$baseUrl/AddSolutionComponent" -Headers $headers -Body $body | Out-Null
     } catch {
-        Write-Host "    Warnung: AddSolutionComponent fehlgeschlagen fuer $ComponentType/$ComponentId" -ForegroundColor Yellow
+        Write-Host "    Warnung: AddSolutionComponent fehlgeschlagen für $ComponentType/$ComponentId" -ForegroundColor Yellow
     }
 }
 
@@ -276,7 +276,7 @@ if ($existingSol.value.Count -gt 0) {
     $solBody = @{
         uniquename                = $solutionName
         friendlyname              = "Integration Test Center"
-        description               = "Generische Integrations-Testplattform fuer Dynamics 365"
+        description               = "Generische Integrations-Testplattform für Dynamics 365"
         version                   = "1.0.0.0"
         "publisherid@odata.bind"  = "/publishers($publisherId)"
     } | ConvertTo-Json -Depth 5
@@ -322,7 +322,7 @@ $optionSets = @(
         Options = @(
             (New-OptionItem ($ovBase + 0) "Bestanden" "Passed"),
             (New-OptionItem ($ovBase + 1) "Fehlgeschlagen" "Failed"),
-            (New-OptionItem ($ovBase + 2) "Uebersprungen" "Skipped")
+            (New-OptionItem ($ovBase + 2) "Übersprungen" "Skipped")
         )
     },
     @{
@@ -362,7 +362,7 @@ $optionSets = @(
         Options = @(
             (New-OptionItem ($ovBase + 0) "Erfolgreich" "Success"),
             (New-OptionItem ($ovBase + 1) "Fehlgeschlagen" "Failed"),
-            (New-OptionItem ($ovBase + 2) "Uebersprungen" "Skipped")
+            (New-OptionItem ($ovBase + 2) "Übersprungen" "Skipped")
         )
     }
 )
@@ -749,7 +749,7 @@ New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
     SchemaName    = "jbe_TestId"
     DisplayName   = New-Label "Test ID" "Test ID"
-    Description   = New-Label "Test-ID des ausgefuehrten Testfalls" "Test ID of the executed test case"
+    Description   = New-Label "Test-ID des ausgeführten Testfalls" "Test ID of the executed test case"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 50
     FormatName    = @{ Value = "Text" }
@@ -796,7 +796,7 @@ New-Attribute "jbe_testrunresult" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
     SchemaName    = "jbe_TrackedRecords"
     DisplayName   = New-Label "Erzeugte Records (JSON)" "Tracked Records (JSON)"
-    Description   = New-Label "JSON-Array der von diesem Test erzeugten Dataverse-Records fuer spaeteres Cleanup" "JSON array of Dataverse records created by this test for later cleanup"
+    Description   = New-Label "JSON-Array der von diesem Test erzeugten Dataverse-Records für späteres Cleanup" "JSON array of Dataverse records created by this test for later cleanup"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"

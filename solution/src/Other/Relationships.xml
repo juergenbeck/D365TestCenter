@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="business_unit_jbe_testcase" />
+  <EntityRelationship Name="business_unit_jbe_testrun" />
+  <EntityRelationship Name="business_unit_jbe_testrunresult" />
+  <EntityRelationship Name="business_unit_jbe_teststep" />
+  <EntityRelationship Name="jbe_testrunresult_testrun" />
+  <EntityRelationship Name="jbe_teststep_testrunresult" />
+  <EntityRelationship Name="lk_jbe_testcase_createdby" />
+  <EntityRelationship Name="lk_jbe_testcase_modifiedby" />
+  <EntityRelationship Name="lk_jbe_testrun_createdby" />
+  <EntityRelationship Name="lk_jbe_testrun_modifiedby" />
+  <EntityRelationship Name="lk_jbe_testrunresult_createdby" />
+  <EntityRelationship Name="lk_jbe_testrunresult_modifiedby" />
+  <EntityRelationship Name="lk_jbe_teststep_createdby" />
+  <EntityRelationship Name="lk_jbe_teststep_modifiedby" />
+  <EntityRelationship Name="owner_jbe_testcase" />
+  <EntityRelationship Name="owner_jbe_testrun" />
+  <EntityRelationship Name="owner_jbe_testrunresult" />
+  <EntityRelationship Name="owner_jbe_teststep" />
+  <EntityRelationship Name="team_jbe_testcase" />
+  <EntityRelationship Name="team_jbe_testrun" />
+  <EntityRelationship Name="team_jbe_testrunresult" />
+  <EntityRelationship Name="team_jbe_teststep" />
+  <EntityRelationship Name="user_jbe_testcase" />
+  <EntityRelationship Name="user_jbe_testrun" />
+  <EntityRelationship Name="user_jbe_testrunresult" />
+  <EntityRelationship Name="user_jbe_teststep" />
+</EntityRelationships>

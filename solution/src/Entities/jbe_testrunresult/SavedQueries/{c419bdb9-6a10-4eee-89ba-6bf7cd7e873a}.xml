@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <isquickfindquery>1</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{c419bdb9-6a10-4eee-89ba-6bf7cd7e873a}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
+        <row name="result" id="jbe_testrunresultid">
+          <cell name="jbe_testid" width="100" />
+          <cell name="jbe_outcome" width="100" />
+          <cell name="jbe_durationms" width="90" />
+          <cell name="jbe_errormessage" width="300" />
+          <cell name="jbe_testrunid" width="200" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>4</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="jbe_testrunresult">
+          <attribute name="jbe_testrunresultid" />
+          <attribute name="jbe_testid" />
+          <attribute name="jbe_outcome" />
+          <attribute name="jbe_durationms" />
+          <attribute name="jbe_errormessage" />
+          <attribute name="jbe_testrunid" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+            <filter type="or">
+              <condition attribute="jbe_testid" operator="like" value="{0}" />
+              <condition attribute="jbe_name" operator="like" value="{0}" />
+              <condition attribute="jbe_errormessage" operator="like" value="{0}" />
+            </filter>
+          </filter>
+          <order attribute="createdon" descending="true" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Schnellsuche Aktive Testergebnisse" languagecode="1031" />
+      <LocalizedName description="Quick Find Active Test Run Results" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

@@ -25,7 +25,7 @@ namespace D365TestCenter.Cli;
 ///   status - Zeigt die letzten Test-Runs an.
 ///
 /// Authentifizierung:
-///   Primaer: --token (Bearer-Token, z.B. von einem TokenVault-Wrapper übergeben).
+///   Primär: --token (Bearer-Token, z.B. von einem TokenVault-Wrapper übergeben).
 ///   Alternativ: --client-id + --client-secret + --tenant-id (Service Principal).
 ///   Optional: --interactive (Browser-Login für Dev/Test).
 /// </summary>

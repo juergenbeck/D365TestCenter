@@ -100,4 +100,4 @@ foreach ($tc in $testCases) {
 
 # --- Zusammenfassung ---
 Write-Host ""
-Write-Host "Fertig: $created erstellt, $skipped uebersprungen, $errors Fehler (von $totalCount gesamt)"
+Write-Host "Fertig: $created erstellt, $skipped übersprungen, $errors Fehler (von $totalCount gesamt)"

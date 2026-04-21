@@ -14,7 +14,7 @@
     - Update:  Nur Package-Content aktualisieren. Steps bleiben unveraendert.
 
 .PARAMETER Headers
-    Authentifizierte Headers fuer Dataverse Web API (Authorization Bearer etc.).
+    Authentifizierte Headers für Dataverse Web API (Authorization Bearer etc.).
 
 .PARAMETER BaseUrl
     Dataverse Base-URL inkl. api/data/v9.2
@@ -23,7 +23,7 @@
     Install (default Install) oder Update.
 
 .PARAMETER SolutionName
-    Solution-Name fuer AddSolutionComponent. Default: D365TestCenter.
+    Solution-Name für AddSolutionComponent. Default: D365TestCenter.
 
 .EXAMPLE
     . ./TokenVault.ps1
@@ -82,14 +82,14 @@ function Invoke-DataverseApi {
 
 $packageDir = Join-Path $PSScriptRoot '..\backend\bin\Release\outputPackages'
 if (-not (Test-Path $packageDir)) {
-    throw "Package-Verzeichnis nicht gefunden: $packageDir. Vorher 'dotnet build -c Release' ausfuehren."
+    throw "Package-Verzeichnis nicht gefunden: $packageDir. Vorher 'dotnet build -c Release' ausführen."
 }
 
 $packageFile = Get-ChildItem -Path $packageDir -Filter 'jbe_D365TestCenter.*.nupkg' |
 Sort-Object LastWriteTime -Descending | Select-Object -First 1
 
 if (-not $packageFile) {
-    throw "Kein PluginPackage gefunden in $packageDir. Vorher 'dotnet build -c Release' ausfuehren."
+    throw "Kein PluginPackage gefunden in $packageDir. Vorher 'dotnet build -c Release' ausführen."
 }
 
 $packageVersion = [regex]::Match($packageFile.Name, 'jbe_D365TestCenter\.(.+)\.nupkg').Groups[1].Value
