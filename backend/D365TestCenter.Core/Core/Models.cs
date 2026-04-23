@@ -389,6 +389,15 @@ public sealed class StepResult
 
     [JsonProperty("durationMs")]
     public long DurationMs { get; set; }
+
+    /// <summary>
+    /// Phase-Kennung (OptionSet-Wert aus jbe_stepphase: 105710000 Precondition,
+    /// 105710001 Execution, 105710002 Assertion, 105710003 Cleanup).
+    /// 0 = nicht gesetzt; der Orchestrator fällt dann auf Execution zurück
+    /// (Backward-Compat zu bestehenden Aufrufern).
+    /// </summary>
+    [JsonProperty("phase")]
+    public int Phase { get; set; }
 }
 
 /// <summary>Ergebnis einer einzelnen Assertion.</summary>

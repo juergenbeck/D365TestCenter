@@ -532,13 +532,17 @@ public sealed class TestCenterOrchestrator
         {
             try
             {
+                // Phase aus dem StepResult nehmen; 0 (default) faellt auf
+                // PhaseExecution zurueck fuer Backward-Compat mit Aufrufern,
+                // die die Phase-Property noch nicht setzen.
+                var phaseValue = stepResult.Phase > 0 ? stepResult.Phase : PhaseExecution;
                 _service.Create(new Entity(_config.TestStepEntity)
                 {
                     [FldStepNumber] = stepResult.StepNumber,
                     [FldStepAction] = Truncate(stepResult.Description, 500),
                     [FldStepDuration] = (int)stepResult.DurationMs,
                     [FldStepError] = Truncate(stepResult.Message ?? "", 4000),
-                    [FldStepPhase] = new OptionSetValue(PhaseExecution),
+                    [FldStepPhase] = new OptionSetValue(phaseValue),
                     [FldStepStatus] = new OptionSetValue(stepResult.Success ? _config.OutcomePassed : _config.OutcomeFailed),
                     [FldStepRunResult] = resultRef
                 });

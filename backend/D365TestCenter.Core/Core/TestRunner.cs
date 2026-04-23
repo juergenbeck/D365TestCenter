@@ -19,6 +19,13 @@ public sealed class TestRunner
     private readonly AssertionEngine _assertionEngine;
     private readonly StringBuilder _log;
 
+    // Phase-Konstanten passend zum OptionSet jbe_stepphase (jbe_-Publisher).
+    // Ident zu den Werten im TestCenterOrchestrator; dupliziert statt
+    // geteilt, um die Modell-Ebene unabhaengig vom Orchestrator zu halten.
+    private const int PhasePrecondition = 105710000;
+    private const int PhaseExecution    = 105710001;
+    private const int PhaseCleanup      = 105710003;
+
     /// <summary>
     /// Wird nach jedem Testfall aufgerufen (index, total, result).
     /// Ermöglicht Fortschritts-Updates im TestRun-Record.
@@ -177,7 +184,7 @@ public sealed class TestRunner
         try
         {
             Log("  Phase 1: Setup (Preconditions)...");
-            ctx = SetupPreconditions(tc);
+            ctx = SetupPreconditions(tc, tcResult);
             ctx.CurrentDataRow = dataRow;
 
             Log("  Phase 2: Teststeps ausführen...");
@@ -202,7 +209,7 @@ public sealed class TestRunner
                 try
                 {
                     Log("  Phase 4: Cleanup...");
-                    Cleanup(ctx);
+                    Cleanup(ctx, tcResult);
                 }
                 catch (Exception ex)
                 {
@@ -222,31 +229,63 @@ public sealed class TestRunner
     //  Phase 1: Setup (Preconditions)
     // ================================================================
 
-    private TestContext SetupPreconditions(TestCase tc)
+    private TestContext SetupPreconditions(TestCase tc, TestCaseResult tcResult)
     {
         var ctx = new TestContext { TestStartUtc = DateTime.UtcNow, TestId = tc.Id };
 
-        // Generische Preconditions (Array-Format: [{entity, alias, fields}])
+        // Generische Preconditions (Array-Format: [{entity, alias, fields}]).
+        // Pro Precondition wird ein StepResult mit Phase=Precondition erzeugt,
+        // damit der Steps-Tab in der UI die Vorbedingungen anzeigt.
+        // Nummerierung 1..N schneidet nicht mit Execution-Steps (dort original
+        // StepNumber aus dem JSON) und nicht mit Assertions (dort 1000+aIdx).
+        int preIdx = 0;
         foreach (var gp in tc.Preconditions)
         {
-            var gpFields = ResolveFieldValues(
-                _dataFactory.ResolveTemplateData(gp.Fields, ctx), ctx);
-
-            var gpEntityName = ResolveEntity(gp.Entity);
-            var gpEntity = new Entity(gpEntityName);
-            ApplyFields(gpEntity, gpFields);
-
+            preIdx++;
             var gpAlias = gp.Alias ?? $"pre_{tc.Preconditions.IndexOf(gp)}";
-            var gpId = _service.Create(gpEntity);
-            ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
-            Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
+            var gpEntityName = ResolveEntity(gp.Entity);
 
-            // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
-            if (gp.Columns != null && gp.Columns.Count > 0)
+            var preResult = new StepResult
             {
-                var gpRetrieved = _service.Retrieve(gpEntityName, gpId, new ColumnSet(gp.Columns.ToArray()));
-                ctx.FoundRecords[gpAlias] = gpRetrieved;
-                Log($"    Precondition [{gpAlias}]: {gp.Columns.Count} Spalten geladen");
+                StepNumber = preIdx,
+                Phase = PhasePrecondition,
+                Description = $"Precondition [{gpAlias}] in '{gpEntityName}'"
+            };
+            var preSw = Stopwatch.StartNew();
+
+            try
+            {
+                var gpFields = ResolveFieldValues(
+                    _dataFactory.ResolveTemplateData(gp.Fields, ctx), ctx);
+
+                var gpEntity = new Entity(gpEntityName);
+                ApplyFields(gpEntity, gpFields);
+
+                var gpId = _service.Create(gpEntity);
+                ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
+                Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
+
+                // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
+                if (gp.Columns != null && gp.Columns.Count > 0)
+                {
+                    var gpRetrieved = _service.Retrieve(gpEntityName, gpId, new ColumnSet(gp.Columns.ToArray()));
+                    ctx.FoundRecords[gpAlias] = gpRetrieved;
+                    Log($"    Precondition [{gpAlias}]: {gp.Columns.Count} Spalten geladen");
+                }
+
+                preResult.Success = true;
+            }
+            catch (Exception ex)
+            {
+                preResult.Success = false;
+                preResult.Message = ex.Message;
+                throw; // Fehler hier beendet das gesamte Test-Setup
+            }
+            finally
+            {
+                preSw.Stop();
+                preResult.DurationMs = preSw.ElapsedMilliseconds;
+                tcResult.StepResults.Add(preResult);
             }
         }
 
@@ -270,6 +309,7 @@ public sealed class TestRunner
             var stepResult = new StepResult
             {
                 StepNumber = step.StepNumber,
+                Phase = PhaseExecution,
                 Description = string.IsNullOrEmpty(step.Description)
                     ? step.Action
                     : $"{step.Action}: {step.Description}"
@@ -871,10 +911,24 @@ public sealed class TestRunner
     //  Phase 4: Cleanup
     // ================================================================
 
-    private void Cleanup(TestContext ctx)
+    private void Cleanup(TestContext ctx, TestCaseResult tcResult)
     {
         var toDelete = ctx.CreatedEntities.AsEnumerable().Reverse().ToList();
+        if (toDelete.Count == 0) return;
+
+        // 1 StepResult pro Test-Cleanup-Phase (nicht pro Record), damit der
+        // Steps-Tab die Cleanup-Zusammenfassung als eine Zeile zeigt statt
+        // einer potentiell langen Liste von Delete-Eintraegen.
+        var cleanupResult = new StepResult
+        {
+            StepNumber = 9000,
+            Phase = PhaseCleanup,
+            Description = "Cleanup"
+        };
+        var sw = Stopwatch.StartNew();
+
         int deleted = 0, failed = 0;
+        var firstError = "";
 
         foreach (var item in toDelete)
         {
@@ -886,11 +940,19 @@ public sealed class TestRunner
             catch (Exception ex)
             {
                 failed++;
+                if (string.IsNullOrEmpty(firstError)) firstError = $"{item.EntityName} {item.Id}: {ex.Message}";
                 Log($"    Löschen fehlgeschlagen: {item.EntityName} {item.Id} -- {ex.Message}");
             }
         }
 
+        sw.Stop();
         Log($"    Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen");
+
+        cleanupResult.Description = $"Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen";
+        cleanupResult.Success = failed == 0;
+        cleanupResult.Message = failed > 0 ? firstError : null;
+        cleanupResult.DurationMs = sw.ElapsedMilliseconds;
+        tcResult.StepResults.Add(cleanupResult);
     }
 
     // ================================================================

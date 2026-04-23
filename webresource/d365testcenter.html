@@ -5854,7 +5854,7 @@ window._copyJiraReport = async function(testId) {
         try {
             steps = await API.getMany("jbe_teststeps",
                 `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'` +
-                `&$orderby=jbe_stepnumber asc&$select=jbe_action,jbe_entity,jbe_alias,jbe_phase,jbe_stepstatus,jbe_durationms,jbe_inputdata`);
+                `&$orderby=jbe_phase asc,jbe_stepnumber asc&$select=jbe_action,jbe_entity,jbe_alias,jbe_phase,jbe_stepstatus,jbe_durationms,jbe_inputdata`);
         } catch {}
     }
 
@@ -6016,7 +6016,7 @@ async function _renderLiveDetail(runId, testId) {
         } else {
             try {
                 steps = await API.getMany("jbe_teststeps",
-                    `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'&$orderby=jbe_stepnumber asc` +
+                    `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'&$orderby=jbe_phase asc,jbe_stepnumber asc` +
                     `&$select=jbe_teststepid,jbe_stepnumber,jbe_phase,jbe_action,jbe_entity,jbe_alias,jbe_durationms,jbe_stepstatus,jbe_errormessage,jbe_inputdata,jbe_outputdata,jbe_assertionfield,jbe_expectedvalue,jbe_actualvalue,jbe_recordid,jbe_recordurl`);
                 _detailStepsCache[result.jbe_testrunresultid] = steps;
             } catch { /* Steps might not exist yet */ }
