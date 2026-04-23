@@ -225,7 +225,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
             trace.Trace("Loaded {0} test cases, starting batch 0-{1}", testCases.Count, Math.Min(BatchSize, testCases.Count));
 
-            RunBatch(service, trace, testRunId, testCases, 0);
+            var keepRecords = testRun.GetAttributeValue<bool>(FldKeepRecords);
+            RunBatch(service, trace, testRunId, testCases, 0, keepRecords);
         }
         catch (Exception ex)
         {
@@ -255,7 +256,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
             }
 
             trace.Trace("Continuing batch from offset {0}, total {1}", offset, testCases.Count);
-            RunBatch(service, trace, testRunId, testCases, offset);
+            var keepRecords = testRun.GetAttributeValue<bool>(FldKeepRecords);
+            RunBatch(service, trace, testRunId, testCases, offset, keepRecords);
         }
         catch (Exception ex)
         {
@@ -270,10 +272,10 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
     private void RunBatch(
         IOrganizationService service, ITracingService trace,
-        Guid testRunId, List<TestCase> allTests, int offset)
+        Guid testRunId, List<TestCase> allTests, int offset, bool keepRecords)
     {
         var batch = allTests.Skip(offset).Take(BatchSize).ToList();
-        var runner = new TestRunner(service);
+        var runner = new TestRunner(service) { KeepRecords = keepRecords };
         var result = runner.RunAll(batch);
 
         // Write result records

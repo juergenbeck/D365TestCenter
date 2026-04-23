@@ -235,7 +235,7 @@ public sealed class TestCenterOrchestrator
         // Run für die Browser-Live-View unbegrenzt auf "Wird ausgeführt" hängen.
         try
         {
-            return ExecuteAndPersistInternal(testRunId, cases);
+            return ExecuteAndPersistInternal(testRunId, cases, keepRecords);
         }
         catch (Exception ex)
         {
@@ -255,9 +255,9 @@ public sealed class TestCenterOrchestrator
         }
     }
 
-    private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases)
+    private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases, bool keepRecords)
     {
-        var runner = new TestRunner(_service);
+        var runner = new TestRunner(_service) { KeepRecords = keepRecords };
         var progressCount = 0;
 
         runner.OnTestCompleted += (index, total, tcResult) =>

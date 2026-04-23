@@ -27,6 +27,13 @@ public sealed class TestRunner
     private const int PhaseCleanup      = 105710003;
 
     /// <summary>
+    /// Wenn true, werden die in Preconditions und Steps angelegten Records
+    /// nach dem Testlauf nicht gelöscht. Default false (Cleanup lief historisch
+    /// immer). Wird vom Orchestrator aus jbe_testrun.jbe_keeprecords gesetzt.
+    /// </summary>
+    public bool KeepRecords { get; set; }
+
+    /// <summary>
     /// Wird nach jedem Testfall aufgerufen (index, total, result).
     /// Ermöglicht Fortschritts-Updates im TestRun-Record.
     /// </summary>
@@ -926,6 +933,20 @@ public sealed class TestRunner
             Description = "Cleanup"
         };
         var sw = Stopwatch.StartNew();
+
+        // KeepRecords=true: Testdaten bewusst behalten. Cleanup-StepResult
+        // trotzdem schreiben, damit die Phase im Steps-Tab sichtbar bleibt
+        // und dokumentiert ist warum nichts geloescht wurde.
+        if (KeepRecords)
+        {
+            sw.Stop();
+            Log($"    Cleanup übersprungen (keeprecords=true, {toDelete.Count} Records behalten)");
+            cleanupResult.Description = $"Cleanup übersprungen: {toDelete.Count} Records behalten (keeprecords=true)";
+            cleanupResult.Success = true;
+            cleanupResult.DurationMs = sw.ElapsedMilliseconds;
+            tcResult.StepResults.Add(cleanupResult);
+            return;
+        }
 
         int deleted = 0, failed = 0;
         var firstError = "";
