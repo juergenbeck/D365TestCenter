@@ -170,7 +170,10 @@ if ($Mode -eq 'Update') {
     Write-Host ""
     Write-Host "=== Mode: Update (Steps auf neuen PluginType umhaengen) ==="
 
-    $stepsUri = "$BaseUrl/sdkmessageprocessingsteps?" + '$filter=contains(name,' + "'D365TestCenter.RunTestsOnStatusChange'" + ')'
+    # $select explizit setzen (inkl. _plugintypeid_value), sonst liefert
+    # Dataverse die Lookup-Annotation nicht, und der Property-Zugriff in
+    # PowerShell 7 wirft "property cannot be found on this object".
+    $stepsUri = "$BaseUrl/sdkmessageprocessingsteps?" + '$filter=contains(name,' + "'D365TestCenter.RunTestsOnStatusChange'" + ')&$select=sdkmessageprocessingstepid,name,_plugintypeid_value'
     $existingSteps = (Invoke-DataverseApi -Uri $stepsUri).value
     Write-Host "Found $($existingSteps.Count) existing steps"
 
@@ -188,7 +191,7 @@ if ($Mode -eq 'Update') {
 
     # Custom API auf neuen Type umhaengen
     if ($customApiTypeId) {
-        $apisUri = "$BaseUrl/customapis?" + '$filter=uniquename eq ' + "'jbe_RunIntegrationTests'"
+        $apisUri = "$BaseUrl/customapis?" + '$filter=uniquename eq ' + "'jbe_RunIntegrationTests'" + '&$select=customapiid,uniquename,_plugintypeid_value'
         $apis = (Invoke-DataverseApi -Uri $apisUri).value
         if ($apis.Count -gt 0 -and $apis[0]._plugintypeid_value -ne $customApiTypeId) {
             Write-Host "  Custom API jbe_RunIntegrationTests: updating PluginType binding..."
@@ -272,7 +275,7 @@ Write-Host "PreImage registered on Update step"
 
 # 5.5 Custom API Check/Create
 if ($customApiTypeId) {
-    $apisUri = "$BaseUrl/customapis?" + '$filter=uniquename eq ' + "'jbe_RunIntegrationTests'"
+    $apisUri = "$BaseUrl/customapis?" + '$filter=uniquename eq ' + "'jbe_RunIntegrationTests'" + '&$select=customapiid,uniquename,_plugintypeid_value'
     $apis = (Invoke-DataverseApi -Uri $apisUri).value
     if ($apis.Count -eq 0) {
         Write-Host "Custom API jbe_RunIntegrationTests nicht vorhanden - muss separat angelegt werden (Deploy-ProSolution.ps1)"
