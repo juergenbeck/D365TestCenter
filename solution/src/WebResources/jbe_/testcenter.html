@@ -5854,7 +5854,7 @@ window._copyJiraReport = async function(testId) {
         try {
             steps = await API.getMany("jbe_teststeps",
                 `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'` +
-                `&$orderby=jbe_stepnumber asc&$select=jbe_action,jbe_entity,jbe_alias,jbe_phase,jbe_stepstatus,jbe_durationms,jbe_inputdata`);
+                `&$orderby=jbe_stepnumber asc&$select=jbe_action,jbe_entity,jbe_alias,jbe_stepstatus,jbe_durationms,jbe_inputdata`);
         } catch {}
     }
 
@@ -6017,7 +6017,7 @@ async function _renderLiveDetail(runId, testId) {
             try {
                 steps = await API.getMany("jbe_teststeps",
                     `$filter=_jbe_testrunresultid_value eq '${result.jbe_testrunresultid}'&$orderby=jbe_stepnumber asc` +
-                    `&$select=jbe_teststepid,jbe_stepnumber,jbe_phase,jbe_action,jbe_entity,jbe_alias,jbe_durationms,jbe_stepstatus,jbe_errormessage,jbe_inputdata,jbe_outputdata,jbe_assertionfield,jbe_expectedvalue,jbe_actualvalue,jbe_recordid,jbe_recordurl`);
+                    `&$select=jbe_teststepid,jbe_stepnumber,jbe_action,jbe_entity,jbe_alias,jbe_durationms,jbe_stepstatus,jbe_errormessage,jbe_inputdata,jbe_outputdata,jbe_assertionfield,jbe_expectedvalue,jbe_actualvalue,jbe_recordid,jbe_recordurl`);
                 _detailStepsCache[result.jbe_testrunresultid] = steps;
             } catch { /* Steps might not exist yet */ }
         }
@@ -6036,8 +6036,19 @@ async function _renderLiveDetail(runId, testId) {
         } catch {}
     }
 
-    const phaseNames = { 105710000: "Precondition", 105710001: "Step", 105710002: "Assertion", 105710003: "Cleanup" };
-    const phaseColors = { "Precondition": "#42a5f5", "Step": "#4caf50", "Assertion": "#ff9800", "Cleanup": "#6c6c88", "Governance": "#ab47bc" };
+    // ADR-0004: keine Phasen mehr. Fuer die Summary-Darstellung leiten wir eine
+    // Pseudo-Kategorie aus jbe_action ab. Setup = Create/Update/Delete/Retrieve/Wait-Record-Artiges,
+    // Schritt = ExecuteRequest/Wait/CallCustomApi, Pruefung = Assert, Aufraeumen = Cleanup.
+    function stepCategory(action) {
+        if (!action) return "Sonstige";
+        const a = String(action).toLowerCase();
+        if (a === "assert" || a === "assertenvironment") return "Pruefung";
+        if (a === "cleanup") return "Aufraeumen";
+        if (a === "createrecord" || a === "updaterecord" || a === "deleterecord"
+            || a === "retrieverecord" || a === "waitforrecord" || a === "waitforfieldvalue") return "Setup";
+        return "Schritt";
+    }
+    const phaseColors = { "Setup": "#42a5f5", "Schritt": "#4caf50", "Pruefung": "#ff9800", "Aufraeumen": "#6c6c88", "Governance": "#ab47bc", "Sonstige": "#6c6c88" };
 
     // Prüfen ob Governance-Steps vorhanden
     let hasGovernance = false;
@@ -6053,7 +6064,7 @@ async function _renderLiveDetail(runId, testId) {
     // Phase-Summary berechnen
     const phaseSummary = {};
     for (const s of steps) {
-        const pName = phaseNames[s.jbe_phase] || "Sonstige";
+        const pName = stepCategory(s.jbe_action);
         if (!phaseSummary[pName]) phaseSummary[pName] = { total: 0, ok: 0, dur: 0 };
         phaseSummary[pName].total++;
         if (s.jbe_stepstatus === 105710000) phaseSummary[pName].ok++;
@@ -6196,7 +6207,7 @@ async function _renderLiveDetail(runId, testId) {
         let currentPhase = null;
         let segDur = 0;
         for (const s of steps) {
-            const pName = phaseNames[s.jbe_phase] || "Sonstige";
+            const pName = stepCategory(s.jbe_action);
             if (pName !== currentPhase) {
                 if (currentPhase) phaseSegments.push({ phase: currentPhase, dur: segDur });
                 currentPhase = pName;
@@ -6237,7 +6248,7 @@ async function _renderLiveDetail(runId, testId) {
         // Gruppierte Step-Liste
         const grouped = {};
         for (const s of steps) {
-            const pName = phaseNames[s.jbe_phase] || "Sonstige";
+            const pName = stepCategory(s.jbe_action);
             if (!grouped[pName]) grouped[pName] = [];
             grouped[pName].push(s);
         }
@@ -6267,7 +6278,7 @@ async function _renderLiveDetail(runId, testId) {
                 html += `<div class="step-row step-row-expandable" onclick="_toggleStepExpand(this)">`;
                 html += `<span class="step-icon ${iconCls}">${iconChar}</span>`;
                 html += `<span style="color:var(--text-muted);font-size:11px;width:24px">#${s.jbe_stepnumber || ""}</span>`;
-                html += `<span class="step-action">${escapeHtml(s.jbe_action) || phaseNames[s.jbe_phase] || "?"}</span>`;
+                html += `<span class="step-action">${escapeHtml(s.jbe_action) || stepCategory(s.jbe_action)}</span>`;
                 html += `<span class="step-entity">${escapeHtml(entityDisplay)}${aliasDisplay}</span>`;
                 if (s.jbe_recordurl && s.jbe_recordid) {
                     html += `<a href="${escapeHtml(s.jbe_recordurl)}" target="_blank" title="Open created/updated record in CRM" style="color:var(--accent-blue);font-size:11px;text-decoration:none;margin-left:4px" onclick="event.stopPropagation()">&#x1F517;</a>`;

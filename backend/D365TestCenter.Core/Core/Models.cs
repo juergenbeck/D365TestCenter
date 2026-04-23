@@ -31,7 +31,14 @@ public sealed class TestSuiteDefinition
     public List<TestCase> TestCases { get; set; } = new();
 }
 
-/// <summary>Einzelner Testfall innerhalb einer Suite.</summary>
+/// <summary>
+/// Einzelner Testfall innerhalb einer Suite.
+/// Seit ADR-0004 (2026-04-23): Ein Test ist eine einzige geordnete Liste
+/// von Actions. Es gibt kein getrenntes Preconditions- oder Assertions-
+/// Array mehr — alles ist ein Step. Die JSON-Reihenfolge ist die
+/// Ausfuehrungsreihenfolge. Assert ist ein Step-Action-Typ wie jeder
+/// andere.
+/// </summary>
 public sealed class TestCase
 {
     [JsonProperty("id")]
@@ -52,15 +59,8 @@ public sealed class TestCase
     [JsonProperty("enabled")]
     public bool Enabled { get; set; } = true;
 
-    [JsonProperty("preconditions")]
-    [JsonConverter(typeof(PreconditionsConverter))]
-    public List<GenericPrecondition> Preconditions { get; set; } = new();
-
     [JsonProperty("steps")]
     public List<TestStep> Steps { get; set; } = new();
-
-    [JsonProperty("assertions")]
-    public List<TestAssertion> Assertions { get; set; } = new();
 
     // ── Datengetriebene Tests ─────────────────────────────────
 
@@ -74,51 +74,6 @@ public sealed class TestCase
 
     [JsonProperty("sharedContext")]
     public string? SharedContext { get; set; }
-}
-
-/// <summary>Generische Precondition: {entity, alias, fields}.</summary>
-public sealed class GenericPrecondition
-{
-    [JsonProperty("entity")]
-    public string Entity { get; set; } = "";
-
-    [JsonProperty("alias")]
-    public string? Alias { get; set; }
-
-    [JsonProperty("fields")]
-    public Dictionary<string, object?> Fields { get; set; } = new();
-
-    [JsonProperty("waitForAsync")]
-    public bool WaitForAsync { get; set; }
-
-    /// <summary>Nach dem Create diese Spalten per Retrieve laden (für {alias.fields.x}).</summary>
-    [JsonProperty("columns")]
-    public List<string>? Columns { get; set; }
-}
-
-/// <summary>
-/// JsonConverter: akzeptiert preconditions als Array [{entity,alias,fields}] (generisch)
-/// oder als leeres Objekt {} (Abwärtskompatibilität).
-/// </summary>
-public sealed class PreconditionsConverter : JsonConverter<List<GenericPrecondition>>
-{
-    public override List<GenericPrecondition>? ReadJson(JsonReader reader, Type objectType,
-        List<GenericPrecondition>? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        var token = JToken.Load(reader);
-
-        if (token.Type == JTokenType.Array)
-            return token.ToObject<List<GenericPrecondition>>(serializer)
-                ?? new List<GenericPrecondition>();
-
-        // Leeres Objekt {} oder unbekanntes Format: keine Preconditions
-        return new List<GenericPrecondition>();
-    }
-
-    public override void WriteJson(JsonWriter writer, List<GenericPrecondition>? value, JsonSerializer serializer)
-    {
-        serializer.Serialize(writer, value);
-    }
 }
 
 /// <summary>
@@ -172,7 +127,23 @@ public sealed class FilterCondition
     public object? Value { get; set; }
 }
 
-/// <summary>Einzelner Testschritt.</summary>
+/// <summary>
+/// Einzelner Testschritt. Seit ADR-0004 umfasst TestStep alle Action-Typen
+/// inklusive Assert. Die Properties sind so gewaehlt, dass sie je nach
+/// Action-Typ andere Teilmengen benutzen:
+///
+///  - CreateRecord:      entity + alias + fields (+ columns)
+///  - UpdateRecord:      alias|recordRef + fields
+///  - DeleteRecord:      alias|recordRef
+///  - Wait:              waitSeconds
+///  - ExecuteRequest:    requestName + fields + waitSeconds
+///  - CallCustomApi:     entity (=ApiName) + fields
+///  - WaitForRecord:     entity + filter + alias (+ columns, timeoutSeconds)
+///  - WaitForFieldValue: alias + fields (Feldname) + expectedValue
+///  - RetrieveRecord:    alias (+ columns)
+///  - AssertEnvironment: filter
+///  - Assert:            target + field + operator + value + recordRef|entity+filter
+/// </summary>
 public sealed class TestStep
 {
     [JsonProperty("stepNumber")]
@@ -182,8 +153,9 @@ public sealed class TestStep
     public string Description { get; set; } = "";
 
     /// <summary>
-    /// CreateRecord, UpdateRecord, DeleteRecord, WaitForRecord,
-    /// WaitForFieldValue, CallCustomApi, AssertEnvironment, Wait.
+    /// Action-Typ. Gueltige Werte: CreateRecord, UpdateRecord, DeleteRecord,
+    /// Wait, ExecuteRequest, CallCustomApi, RetrieveRecord, WaitForRecord,
+    /// WaitForFieldValue, AssertEnvironment, Assert.
     /// </summary>
     [JsonProperty("action")]
     public string Action { get; set; } = "";
@@ -228,38 +200,49 @@ public sealed class TestStep
     /// <summary>SDK-Message-Name für ExecuteRequest (z.B. "Merge", "SetState", "Assign").</summary>
     [JsonProperty("requestName")]
     public string? RequestName { get; set; }
-}
 
-/// <summary>Einzelne Assertion zur Prüfung nach der Testausführung.</summary>
-public sealed class TestAssertion
-{
-    /// <summary>
-    /// "Record" (per recordRef), "Query" (per entity+filter).
-    /// </summary>
+    // ── Assert-spezifische Properties ─────────────────────────
+
+    /// <summary>Assert: Record, Query, Contact, Account, ContactSource, MembershipSource, BridgeRecord, Logging.</summary>
     [JsonProperty("target")]
-    public string Target { get; set; } = "Query";
+    public string? Target { get; set; }
 
+    /// <summary>Assert: zu pruefendes Feld auf dem Ziel-Record.</summary>
     [JsonProperty("field")]
-    public string Field { get; set; } = "";
+    public string? Field { get; set; }
 
-    [JsonProperty("entity")]
-    public string? Entity { get; set; }
-
-    [JsonProperty("recordRef")]
-    public string? RecordRef { get; set; }
-
-    [JsonProperty("filter")]
-    [JsonConverter(typeof(FilterListConverter))]
-    public List<FilterCondition>? Filter { get; set; }
-
-    /// <summary>Equals, NotEquals, IsNull, IsNotNull, Contains, DateSetRecently, Changed, Exists, RecordCount.</summary>
+    /// <summary>Assert: Equals, NotEquals, IsNull, IsNotNull, Contains, Exists, NotExists, DateSetRecently, RecordCount.</summary>
     [JsonProperty("operator")]
-    public string Operator { get; set; } = "Equals";
+    public string? Operator { get; set; }
 
+    /// <summary>Assert: erwarteter Wert als String (Platzhalter erlaubt).</summary>
     [JsonProperty("value")]
     public string? Value { get; set; }
 
-    [JsonProperty("description")]
+    /// <summary>
+    /// Fehlerverhalten fuer diesen Step. "continue" = Exception wird nur
+    /// geloggt, Test laeuft weiter. "stop" = Test wird abgebrochen (Outcome=Error).
+    /// Default ist action-abhaengig: "continue" fuer Assert, "stop" fuer alle
+    /// anderen Actions.
+    /// </summary>
+    [JsonProperty("onError")]
+    public string? OnError { get; set; }
+}
+
+/// <summary>
+/// Interne Datenstruktur fuer AssertionEngine. Ein Assert-Step wird zur
+/// Ausfuehrung in ein TestAssertion-Objekt uebersetzt, dann evaluiert, und
+/// das Ergebnis wieder in den StepResult zurueckgemappt.
+/// </summary>
+public sealed class TestAssertion
+{
+    public string Target { get; set; } = "Query";
+    public string Field { get; set; } = "";
+    public string? Entity { get; set; }
+    public string? RecordRef { get; set; }
+    public List<FilterCondition>? Filter { get; set; }
+    public string Operator { get; set; } = "Equals";
+    public string? Value { get; set; }
     public string? Description { get; set; }
 }
 
@@ -347,7 +330,10 @@ public sealed class TestRunResult
     public string FullLog { get; set; } = "";
 }
 
-/// <summary>Ergebnis eines einzelnen Testfalls.</summary>
+/// <summary>
+/// Ergebnis eines einzelnen Testfalls. Seit ADR-0004 gibt es keine separate
+/// Assertions-Liste mehr; Assert-Steps sind in StepResults enthalten.
+/// </summary>
 public sealed class TestCaseResult
 {
     [JsonProperty("testId")]
@@ -365,18 +351,23 @@ public sealed class TestCaseResult
     [JsonProperty("durationMs")]
     public long DurationMs { get; set; }
 
-    [JsonProperty("assertions")]
-    public List<AssertionResult> Assertions { get; set; } = new();
-
     [JsonProperty("stepResults")]
     public List<StepResult> StepResults { get; set; } = new();
 }
 
-/// <summary>Ergebnis eines einzelnen Testschritts.</summary>
+/// <summary>
+/// Ergebnis eines einzelnen Testschritts. Universelle Struktur fuer alle
+/// Action-Typen (CreateRecord/UpdateRecord/Assert/...); Persistenz-Ebene
+/// schreibt pro StepResult einen jbe_teststep-Record.
+/// </summary>
 public sealed class StepResult
 {
     [JsonProperty("stepNumber")]
     public int StepNumber { get; set; }
+
+    /// <summary>Action-Typ aus dem TestStep (CreateRecord, Assert, ...).</summary>
+    [JsonProperty("action")]
+    public string Action { get; set; } = "";
 
     [JsonProperty("description")]
     public string Description { get; set; } = "";
@@ -390,32 +381,52 @@ public sealed class StepResult
     [JsonProperty("durationMs")]
     public long DurationMs { get; set; }
 
-    /// <summary>
-    /// Phase-Kennung (OptionSet-Wert aus jbe_stepphase: 105710000 Precondition,
-    /// 105710001 Execution, 105710002 Assertion, 105710003 Cleanup).
-    /// 0 = nicht gesetzt; der Orchestrator fällt dann auf Execution zurück
-    /// (Backward-Compat zu bestehenden Aufrufern).
-    /// </summary>
-    [JsonProperty("phase")]
-    public int Phase { get; set; }
-}
+    // ── Kontext zur angefassten Entity (bei Create/Update/Delete/Retrieve/Assert-Record) ──
 
-/// <summary>Ergebnis einer einzelnen Assertion.</summary>
-public sealed class AssertionResult
-{
-    [JsonProperty("description")]
-    public string Description { get; set; } = "";
+    [JsonProperty("entity")]
+    public string? Entity { get; set; }
 
-    [JsonProperty("passed")]
-    public bool Passed { get; set; }
+    [JsonProperty("alias")]
+    public string? Alias { get; set; }
 
-    [JsonProperty("message")]
-    public string Message { get; set; } = "";
+    [JsonProperty("recordId")]
+    public Guid? RecordId { get; set; }
 
+    // ── Assert-spezifisch ────────────────────────────────────
+
+    /// <summary>Name des geprueften Feldes (nur bei Assert).</summary>
+    [JsonProperty("assertField")]
+    public string? AssertField { get; set; }
+
+    /// <summary>Erwarteter Wert in Anzeigeform (nur bei Assert).</summary>
     [JsonProperty("expectedDisplay")]
     public string? ExpectedDisplay { get; set; }
 
+    /// <summary>Tatsaechlicher Wert in Anzeigeform (nur bei Assert).</summary>
     [JsonProperty("actualDisplay")]
+    public string? ActualDisplay { get; set; }
+
+    // ── Debug / Transparenz ─────────────────────────────────
+
+    /// <summary>Eingabe-Payload als JSON (optional, fuer Replay/Debug).</summary>
+    [JsonProperty("inputData")]
+    public string? InputData { get; set; }
+
+    /// <summary>Ausgabe-Payload als JSON (optional, z.B. ExecuteRequest-Response).</summary>
+    [JsonProperty("outputData")]
+    public string? OutputData { get; set; }
+}
+
+/// <summary>
+/// Internes Rueckgabe-Objekt des AssertionEngine. Wird vom TestRunner
+/// nach einem Assert-Step in einen StepResult uebertragen.
+/// </summary>
+public sealed class AssertionResult
+{
+    public string Description { get; set; } = "";
+    public bool Passed { get; set; }
+    public string Message { get; set; } = "";
+    public string? ExpectedDisplay { get; set; }
     public string? ActualDisplay { get; set; }
 }
 

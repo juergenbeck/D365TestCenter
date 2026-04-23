@@ -1,7 +1,7 @@
 {
   "packId": "empty",
   "name": "Leere Vorlage",
-  "description": "Leere Umgebung zum Erstellen eigener Testfälle und Demo-Daten.",
+  "description": "Leere Umgebung zum Erstellen eigener Testfaelle und Demo-Daten.",
   "color": "#78909c",
   "testCases": [
     {
@@ -13,13 +13,10 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createAccount": true, "createContact": true },
         "steps": [
-          { "action": "CreateRecord", "entity": "account", "alias": "acc1", "fields": { "name": "Testfirma GmbH" } },
-          { "action": "Wait", "waitSeconds": 3 }
-        ],
-        "assertions": [
-          { "target": "Record:acc1", "field": "name", "operator": "Equals", "value": "Testfirma GmbH" }
+          { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "acc1", "fields": { "name": "Testfirma GmbH" } },
+          { "stepNumber": 2, "action": "Wait", "waitSeconds": 3 },
+          { "stepNumber": 3, "action": "Assert", "target": "Record", "recordRef": "{RECORD:acc1}", "field": "name", "operator": "Equals", "value": "Testfirma GmbH", "onError": "continue", "description": "Account-Name gesetzt" }
         ]
       }
     }

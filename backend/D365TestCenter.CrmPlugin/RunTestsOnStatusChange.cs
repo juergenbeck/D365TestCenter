@@ -67,7 +67,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldResultAssertions = "jbe_assertionresults";
     private const string FldResultTestRun = "jbe_testrunid";
 
-    // ── TestStep Fields ──────────────────────────────────────────
+    // ── TestStep Fields (ADR-0004: kein Phase-Feld mehr) ─────────
     private const string FldStepNumber = "jbe_stepnumber";
     private const string FldStepAction = "jbe_action";
     private const string FldStepAssertionField = "jbe_assertionfield";
@@ -75,9 +75,13 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldStepActual = "jbe_actualvalue";
     private const string FldStepDuration = "jbe_durationms";
     private const string FldStepError = "jbe_errormessage";
-    private const string FldStepPhase = "jbe_phase";
     private const string FldStepStatus = "jbe_stepstatus";
     private const string FldStepRunResult = "jbe_testrunresultid";
+    private const string FldStepAlias = "jbe_alias";
+    private const string FldStepEntity = "jbe_entity";
+    private const string FldStepRecordId = "jbe_recordid";
+    private const string FldStepInputData = "jbe_inputdata";
+    private const string FldStepOutputData = "jbe_outputdata";
 
     // ── TestCase Fields ──────────────────────────────────────────
     private const string FldTcTestId = "jbe_testid";
@@ -97,9 +101,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const int OutcomeError = 105710002;
     private const int OutcomeSkipped = 105710003;
 
-    // ── Step Phase/Status OptionSet ──────────────────────────────
-    private const int PhaseExecution = 105710001;
-    private const int PhaseAssertion = 105710002;
+    // ── Step Status OptionSet (ADR-0004: Phase entfaellt) ────────
     private const int StepPassed = 105710000;
     private const int StepFailed = 105710001;
 
@@ -490,50 +492,74 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
         foreach (var tcResult in result.Results)
         {
+            // jbe_assertionresults aus den Assert-StepResults generieren
+            // (Kompat fuer UI-Code der den JSON-Blob parst).
+            string assertionsJson = "[]";
+            try
+            {
+                var assertSteps = tcResult.StepResults
+                    .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
+                    .Select(s => new
+                    {
+                        description = s.Description,
+                        passed = s.Success,
+                        message = s.Message,
+                        expectedDisplay = s.ExpectedDisplay,
+                        actualDisplay = s.ActualDisplay
+                    })
+                    .ToList();
+                assertionsJson = JsonConvert.SerializeObject(assertSteps, JsonSettings);
+            }
+            catch { /* fallback: leer */ }
+
             var resultRecord = new Entity(TestRunResultEntity)
             {
                 [FldResultTestId] = tcResult.TestId,
                 [FldResultOutcome] = new OptionSetValue(MapOutcome(tcResult.Outcome)),
                 [FldResultDuration] = (int)tcResult.DurationMs,
                 [FldResultError] = Truncate(tcResult.ErrorMessage, 4000),
-                [FldResultAssertions] = Truncate(
-                    JsonConvert.SerializeObject(tcResult.Assertions, JsonSettings), 100000),
+                [FldResultAssertions] = Truncate(assertionsJson, 100000),
                 [FldResultTestRun] = testRunRef
             };
 
             var resultId = service.Create(resultRecord);
             var resultRef = new EntityReference(TestRunResultEntity, resultId);
 
+            // ADR-0004: einheitliche Persistenz-Schleife, ein jbe_teststep
+            // pro StepResult.
             foreach (var stepResult in tcResult.StepResults)
             {
-                service.Create(new Entity(TestStepEntity)
+                try
                 {
-                    [FldStepNumber] = stepResult.StepNumber,
-                    [FldStepAction] = Truncate(stepResult.Description, 500),
-                    [FldStepDuration] = (int)stepResult.DurationMs,
-                    [FldStepError] = Truncate(stepResult.Message, 4000),
-                    [FldStepPhase] = new OptionSetValue(PhaseExecution),
-                    [FldStepStatus] = new OptionSetValue(stepResult.Success ? StepPassed : StepFailed),
-                    [FldStepRunResult] = resultRef
-                });
-            }
-
-            int aIdx = 0;
-            foreach (var assertion in tcResult.Assertions)
-            {
-                aIdx++;
-                service.Create(new Entity(TestStepEntity)
-                {
-                    [FldStepNumber] = 1000 + aIdx,
-                    [FldStepAction] = "Assertion",
-                    [FldStepAssertionField] = Truncate(assertion.Description, 500),
-                    [FldStepExpected] = Truncate(assertion.ExpectedDisplay, 4000),
-                    [FldStepActual] = Truncate(assertion.ActualDisplay, 4000),
-                    [FldStepError] = Truncate(assertion.Message, 4000),
-                    [FldStepPhase] = new OptionSetValue(PhaseAssertion),
-                    [FldStepStatus] = new OptionSetValue(assertion.Passed ? StepPassed : StepFailed),
-                    [FldStepRunResult] = resultRef
-                });
+                    var step = new Entity(TestStepEntity)
+                    {
+                        [FldStepNumber] = stepResult.StepNumber,
+                        [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
+                        [FldStepDuration] = (int)stepResult.DurationMs,
+                        [FldStepError] = Truncate(stepResult.Message, 4000),
+                        [FldStepStatus] = new OptionSetValue(stepResult.Success ? StepPassed : StepFailed),
+                        [FldStepRunResult] = resultRef
+                    };
+                    if (!string.IsNullOrEmpty(stepResult.Alias))
+                        step[FldStepAlias] = Truncate(stepResult.Alias, 100);
+                    if (!string.IsNullOrEmpty(stepResult.Entity))
+                        step[FldStepEntity] = Truncate(stepResult.Entity, 100);
+                    if (stepResult.RecordId.HasValue)
+                        step[FldStepRecordId] = stepResult.RecordId.Value.ToString();
+                    if (!string.IsNullOrEmpty(stepResult.AssertField))
+                        step[FldStepAssertionField] = Truncate(stepResult.AssertField, 500);
+                    if (!string.IsNullOrEmpty(stepResult.ExpectedDisplay))
+                        step[FldStepExpected] = Truncate(stepResult.ExpectedDisplay, 4000);
+                    if (!string.IsNullOrEmpty(stepResult.ActualDisplay))
+                        step[FldStepActual] = Truncate(stepResult.ActualDisplay, 4000);
+                    if (!string.IsNullOrEmpty(stepResult.InputData))
+                        step[FldStepInputData] = Truncate(stepResult.InputData, 100000);
+                    if (!string.IsNullOrEmpty(stepResult.OutputData))
+                        step[FldStepOutputData] = Truncate(stepResult.OutputData, 100000);
+                    service.Create(step);
+                }
+                catch { /* non-critical: ein Fehler bei einem Step-Log soll den
+                           Test-Run nicht abbrechen. */ }
             }
         }
 

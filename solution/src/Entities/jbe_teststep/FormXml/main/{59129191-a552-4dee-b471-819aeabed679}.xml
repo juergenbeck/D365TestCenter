@@ -38,13 +38,6 @@
                       </cell>
                     </row>
                     <row>
-                      <cell id="{e08e01b8-48f5-5a1d-bf78-4a03ebe434b8}" colspan="1" rowspan="1">
-                        <labels>
-                          <label description="Phase" languagecode="1033" />
-                          <label description="Phase" languagecode="1031" />
-                        </labels>
-                        <control id="jbe_phase" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_phase" disabled="false" />
-                      </cell>
                       <cell id="{76190ec8-3bd6-5e3f-84c4-b51005ad9df3}" colspan="1" rowspan="1">
                         <labels>
                           <label description="Status" languagecode="1033" />
@@ -253,13 +246,6 @@
                 <label description="Status" languagecode="1031" />
               </labels>
               <control id="jbe_stepstatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_stepstatus" disabled="false" />
-            </cell>
-            <cell id="{e08e01b8-48f5-5a1d-bf78-4a03ebe434b8}" colspan="1" rowspan="1">
-              <labels>
-                <label description="Phase" languagecode="1033" />
-                <label description="Phase" languagecode="1031" />
-              </labels>
-              <control id="jbe_phase" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_phase" disabled="false" />
             </cell>
             <cell id="{b2ca4dc6-b91e-56c9-af41-d465d7c381a5}" colspan="1" rowspan="1">
               <labels>

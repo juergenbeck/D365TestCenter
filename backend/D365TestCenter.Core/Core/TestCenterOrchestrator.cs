@@ -59,7 +59,8 @@ public sealed class TestCenterOrchestrator
     private const string FldResultAssertions = "jbe_assertionresults";
     private const string FldResultTestRun = "jbe_testrunid";
 
-    // Felder des jbe_teststep-Records
+    // Felder des jbe_teststep-Records (ADR-0004: kein Phase-Feld mehr,
+    // der Action-Typ steht im String-Feld jbe_action).
     private const string FldStepNumber = "jbe_stepnumber";
     private const string FldStepAction = "jbe_action";
     private const string FldStepDuration = "jbe_durationms";
@@ -67,21 +68,13 @@ public sealed class TestCenterOrchestrator
     private const string FldStepAssertionField = "jbe_assertionfield";
     private const string FldStepExpected = "jbe_expectedvalue";
     private const string FldStepActual = "jbe_actualvalue";
-    // Das Feld heißt "jbe_phase" (Entity-Attribut), das dahinterliegende OptionSet
-    // heißt "jbe_stepphase". Bis Session 09 wurde hier fälschlich der OptionSet-
-    // Name als Feldname verwendet. Folge: jedes Create scheiterte still (try/catch
-    // in WriteSingleResultRecord) und der Steps-Tab war im Browser immer leer.
-    private const string FldStepPhase = "jbe_phase";
     private const string FldStepStatus = "jbe_stepstatus";
     private const string FldStepRunResult = "jbe_testrunresultid";
-
-    // Step-Phase-Werte (aus OptionSet jbe_stepphase, jbe_-Publisher-Prefix 10571)
-    // Bis Session 09 standen hier 1 und 2 mit einem Kommentar "werden gemappt" —
-    // das Mapping fehlte aber, das Create schlug auf ungültigem OptionSet-Value an.
-    private const int PhasePrecondition = 105710000;
-    private const int PhaseExecution    = 105710001;
-    private const int PhaseAssertion    = 105710002;
-    private const int PhaseCleanup      = 105710003;
+    private const string FldStepAlias = "jbe_alias";
+    private const string FldStepEntity = "jbe_entity";
+    private const string FldStepRecordId = "jbe_recordid";
+    private const string FldStepInputData = "jbe_inputdata";
+    private const string FldStepOutputData = "jbe_outputdata";
 
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
@@ -516,59 +509,62 @@ public sealed class TestCenterOrchestrator
             [FldResultTestRun] = testRunRef
         };
 
-        // AssertionResults als JSON (falls Feld existiert)
+        // AssertionResults als JSON (aus den Assert-StepResults gefiltert,
+        // Kompat fuer UI-Code der jbe_assertionresults parst).
         try
         {
+            var assertSteps = tcResult.StepResults
+                .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
+                .Select(s => new
+                {
+                    description = s.Description,
+                    passed = s.Success,
+                    message = s.Message,
+                    expectedDisplay = s.ExpectedDisplay,
+                    actualDisplay = s.ActualDisplay
+                })
+                .ToList();
             resultRecord[FldResultAssertions] = Truncate(
-                JsonConvert.SerializeObject(tcResult.Assertions, JsonSettings), 100000);
+                JsonConvert.SerializeObject(assertSteps, JsonSettings), 100000);
         }
         catch { /* Feld existiert vielleicht nicht auf allen Umgebungen */ }
 
         var resultId = _service.Create(resultRecord);
         var resultRef = new EntityReference(_config.TestRunResultEntity, resultId);
 
-        // Step-Records: Execution-Phase
+        // ADR-0004: eine einheitliche Persistenz-Schleife. Jeder StepResult
+        // wird zu genau einem jbe_teststep-Record. Action-Typ im String-Feld
+        // jbe_action, keine Phase-OptionSet mehr.
         foreach (var stepResult in tcResult.StepResults)
         {
             try
             {
-                // Phase aus dem StepResult nehmen; 0 (default) faellt auf
-                // PhaseExecution zurueck fuer Backward-Compat mit Aufrufern,
-                // die die Phase-Property noch nicht setzen.
-                var phaseValue = stepResult.Phase > 0 ? stepResult.Phase : PhaseExecution;
-                _service.Create(new Entity(_config.TestStepEntity)
+                var step = new Entity(_config.TestStepEntity)
                 {
                     [FldStepNumber] = stepResult.StepNumber,
-                    [FldStepAction] = Truncate(stepResult.Description, 500),
+                    [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
                     [FldStepDuration] = (int)stepResult.DurationMs,
                     [FldStepError] = Truncate(stepResult.Message ?? "", 4000),
-                    [FldStepPhase] = new OptionSetValue(phaseValue),
                     [FldStepStatus] = new OptionSetValue(stepResult.Success ? _config.OutcomePassed : _config.OutcomeFailed),
                     [FldStepRunResult] = resultRef
-                });
-            }
-            catch { /* non-critical */ }
-        }
-
-        // Step-Records: Assertions
-        int aIdx = 0;
-        foreach (var assertion in tcResult.Assertions)
-        {
-            aIdx++;
-            try
-            {
-                _service.Create(new Entity(_config.TestStepEntity)
-                {
-                    [FldStepNumber] = 1000 + aIdx,
-                    [FldStepAction] = "Assertion",
-                    [FldStepAssertionField] = Truncate(assertion.Description, 500),
-                    [FldStepExpected] = Truncate(assertion.ExpectedDisplay ?? "", 4000),
-                    [FldStepActual] = Truncate(assertion.ActualDisplay ?? "", 4000),
-                    [FldStepError] = Truncate(assertion.Message ?? "", 4000),
-                    [FldStepPhase] = new OptionSetValue(PhaseAssertion),
-                    [FldStepStatus] = new OptionSetValue(assertion.Passed ? _config.OutcomePassed : _config.OutcomeFailed),
-                    [FldStepRunResult] = resultRef
-                });
+                };
+                if (!string.IsNullOrEmpty(stepResult.Alias))
+                    step[FldStepAlias] = Truncate(stepResult.Alias, 100);
+                if (!string.IsNullOrEmpty(stepResult.Entity))
+                    step[FldStepEntity] = Truncate(stepResult.Entity, 100);
+                if (stepResult.RecordId.HasValue)
+                    step[FldStepRecordId] = stepResult.RecordId.Value.ToString();
+                if (!string.IsNullOrEmpty(stepResult.AssertField))
+                    step[FldStepAssertionField] = Truncate(stepResult.AssertField, 500);
+                if (!string.IsNullOrEmpty(stepResult.ExpectedDisplay))
+                    step[FldStepExpected] = Truncate(stepResult.ExpectedDisplay, 4000);
+                if (!string.IsNullOrEmpty(stepResult.ActualDisplay))
+                    step[FldStepActual] = Truncate(stepResult.ActualDisplay, 4000);
+                if (!string.IsNullOrEmpty(stepResult.InputData))
+                    step[FldStepInputData] = Truncate(stepResult.InputData, 100000);
+                if (!string.IsNullOrEmpty(stepResult.OutputData))
+                    step[FldStepOutputData] = Truncate(stepResult.OutputData, 100000);
+                _service.Create(step);
             }
             catch { /* non-critical */ }
         }
@@ -609,7 +605,7 @@ public sealed class TestCenterOrchestrator
                 _ => "[?]"
             };
             sb.AppendLine($"{icon} {tc.TestId}: {tc.Title} ({tc.DurationMs}ms)");
-            if (!tc.Assertions.All(a => a.Passed) && !string.IsNullOrEmpty(tc.ErrorMessage))
+            if (tc.Outcome != TestOutcome.Passed && !string.IsNullOrEmpty(tc.ErrorMessage))
                 sb.AppendLine($"  -> {Truncate(tc.ErrorMessage ?? "", 200)}");
         }
         if (result.Results.Count > 50)

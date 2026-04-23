@@ -5,9 +5,9 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests für die JSON-Deserialisierung der Testfall-Modelle.
-/// Prüft alle aktuellen Klassen: TestSuiteDefinition, TestCase, TestStep,
-/// TestAssertion, GenericPrecondition, PreconditionsConverter, FilterListConverter.
+/// Tests fuer die JSON-Deserialisierung der Testfall-Modelle.
+/// ADR-0004: Preconditions und Assertions als separate JSON-Arrays entfallen —
+/// alles ist ein Step.
 /// </summary>
 public class ModelsJsonTests
 {
@@ -45,10 +45,32 @@ public class ModelsJsonTests
         Assert.True(tc.Enabled);
         Assert.NotNull(tc.Steps);
         Assert.Empty(tc.Steps);
-        Assert.NotNull(tc.Assertions);
-        Assert.Empty(tc.Assertions);
-        Assert.NotNull(tc.Preconditions);
-        Assert.Empty(tc.Preconditions);
+        Assert.NotNull(tc.Tags);
+        Assert.Empty(tc.Tags);
+    }
+
+    [Fact]
+    public void TestCase_Deserializes_WithStepsOnly()
+    {
+        // ADR-0004: JSON hat nur ein "steps"-Array, kein preconditions/assertions.
+        const string json = """
+        {
+            "id": "TC01",
+            "title": "CRUD-Test",
+            "steps": [
+                { "stepNumber": 1, "action": "CreateRecord", "entity": "contact", "alias": "c1", "fields": { "firstname": "Max" } },
+                { "stepNumber": 2, "action": "Assert", "target": "Record", "recordRef": "{RECORD:c1}", "field": "firstname", "operator": "Equals", "value": "Max" }
+            ]
+        }
+        """;
+
+        var tc = JsonConvert.DeserializeObject<TestCase>(json);
+
+        Assert.NotNull(tc);
+        Assert.Equal("TC01", tc!.Id);
+        Assert.Equal(2, tc.Steps.Count);
+        Assert.Equal("CreateRecord", tc.Steps[0].Action);
+        Assert.Equal("Assert", tc.Steps[1].Action);
     }
 
     [Fact]
@@ -75,41 +97,35 @@ public class ModelsJsonTests
     }
 
     [Fact]
-    public void TestAssertion_Deserializes_AllFields()
+    public void TestStep_Assert_DeserializesAllFields()
     {
-        // Prüft die aktuellen Felder: target, field, operator, value, entity, recordRef, filter
+        // ADR-0004: Assert ist eine Step-Action. Target/Field/Operator/Value/OnError
+        // stehen direkt auf TestStep.
         const string json = """
         {
+            "stepNumber": 5,
+            "action": "Assert",
             "target": "Record",
+            "recordRef": "{RECORD:c1}",
             "field": "firstname",
             "operator": "Equals",
             "value": "Max",
-            "recordRef": "cs1",
-            "description": "Vorname geprüft"
+            "description": "Vorname gesetzt",
+            "onError": "continue"
         }
         """;
 
-        var assertion = JsonConvert.DeserializeObject<TestAssertion>(json);
+        var step = JsonConvert.DeserializeObject<TestStep>(json);
 
-        Assert.NotNull(assertion);
-        Assert.Equal("Record", assertion!.Target);
-        Assert.Equal("firstname", assertion.Field);
-        Assert.Equal("Equals", assertion.Operator);
-        Assert.Equal("Max", assertion.Value);
-        Assert.Equal("cs1", assertion.RecordRef);
-        Assert.Equal("Vorname geprüft", assertion.Description);
-    }
-
-    [Fact]
-    public void TestAssertion_Defaults_AreCorrect()
-    {
-        var a = new TestAssertion();
-
-        Assert.Equal("Query", a.Target);
-        Assert.Equal("Equals", a.Operator);
-        Assert.Equal("", a.Field);
-        Assert.Null(a.Value);
-        Assert.Null(a.Filter);
+        Assert.NotNull(step);
+        Assert.Equal("Assert", step!.Action);
+        Assert.Equal("Record", step.Target);
+        Assert.Equal("{RECORD:c1}", step.RecordRef);
+        Assert.Equal("firstname", step.Field);
+        Assert.Equal("Equals", step.Operator);
+        Assert.Equal("Max", step.Value);
+        Assert.Equal("continue", step.OnError);
+        Assert.Equal("Vorname gesetzt", step.Description);
     }
 
     [Fact]
@@ -150,106 +166,34 @@ public class ModelsJsonTests
         Assert.Contains("\"Failed\"", json);
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  GenericPrecondition-Tests
-    // ═══════════════════════════════════════════════════════════════════
-
     [Fact]
-    public void GenericPrecondition_Deserializes_FromJson()
+    public void StepResult_HasAllRelevantFields()
     {
-        const string json = """
+        // Neue StepResult-Struktur ab ADR-0004: universelle Form fuer alle
+        // Action-Typen, ohne Phase-Property.
+        var sr = new StepResult
         {
-            "entity": "contact",
-            "alias": "c1",
-            "fields": { "firstname": "Max", "lastname": "Muster" },
-            "waitForAsync": true
-        }
-        """;
+            StepNumber = 1,
+            Action = "CreateRecord",
+            Description = "Create contact",
+            Success = true,
+            DurationMs = 50,
+            Alias = "c1",
+            Entity = "contact",
+            RecordId = Guid.NewGuid()
+        };
 
-        var pre = JsonConvert.DeserializeObject<GenericPrecondition>(json);
+        var json = JsonConvert.SerializeObject(sr);
+        var back = JsonConvert.DeserializeObject<StepResult>(json);
 
-        Assert.NotNull(pre);
-        Assert.Equal("contact", pre!.Entity);
-        Assert.Equal("c1", pre.Alias);
-        Assert.Equal(2, pre.Fields.Count);
-        Assert.True(pre.WaitForAsync);
-    }
-
-    [Fact]
-    public void GenericPrecondition_Defaults_AreCorrect()
-    {
-        var pre = new GenericPrecondition();
-
-        Assert.Equal("", pre.Entity);
-        Assert.Null(pre.Alias);
-        Assert.NotNull(pre.Fields);
-        Assert.Empty(pre.Fields);
-        Assert.False(pre.WaitForAsync);
+        Assert.NotNull(back);
+        Assert.Equal("CreateRecord", back!.Action);
+        Assert.Equal("c1", back.Alias);
+        Assert.Equal(sr.RecordId, back.RecordId);
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    //  PreconditionsConverter-Tests
-    // ═══════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public void PreconditionsConverter_Array_DeserializesCorrectly()
-    {
-        const string json = """
-        {
-            "id": "TC01",
-            "title": "Test",
-            "preconditions": [
-                { "entity": "contact", "alias": "c1", "fields": { "firstname": "Max" } },
-                { "entity": "account", "alias": "a1", "fields": { "name": "Firma" } }
-            ]
-        }
-        """;
-
-        var tc = JsonConvert.DeserializeObject<TestCase>(json);
-
-        Assert.NotNull(tc);
-        Assert.Equal(2, tc!.Preconditions.Count);
-        Assert.Equal("contact", tc.Preconditions[0].Entity);
-        Assert.Equal("account", tc.Preconditions[1].Entity);
-    }
-
-    [Fact]
-    public void PreconditionsConverter_EmptyObject_ReturnsEmptyList()
-    {
-        // Abwärtskompatibilität: leeres Objekt {} ergibt leere Liste
-        const string json = """
-        {
-            "id": "TC01",
-            "title": "Test",
-            "preconditions": {}
-        }
-        """;
-
-        var tc = JsonConvert.DeserializeObject<TestCase>(json);
-
-        Assert.NotNull(tc);
-        Assert.Empty(tc!.Preconditions);
-    }
-
-    [Fact]
-    public void PreconditionsConverter_EmptyArray_ReturnsEmptyList()
-    {
-        const string json = """
-        {
-            "id": "TC01",
-            "title": "Test",
-            "preconditions": []
-        }
-        """;
-
-        var tc = JsonConvert.DeserializeObject<TestCase>(json);
-
-        Assert.NotNull(tc);
-        Assert.Empty(tc!.Preconditions);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  FilterListConverter-Tests
+    //  FilterListConverter-Tests (wird auf TestStep.Filter angewendet)
     // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
@@ -258,22 +202,21 @@ public class ModelsJsonTests
         // Kurzform: {"field": "value"} wird zu FilterCondition mit operator "eq"
         const string json = """
         {
-            "target": "Query",
-            "field": "firstname",
-            "operator": "Equals",
+            "stepNumber": 1,
+            "action": "WaitForRecord",
             "entity": "contact",
             "filter": { "lastname": "Muster", "city": "Berlin" }
         }
         """;
 
-        var assertion = JsonConvert.DeserializeObject<TestAssertion>(json);
+        var step = JsonConvert.DeserializeObject<TestStep>(json);
 
-        Assert.NotNull(assertion);
-        Assert.NotNull(assertion!.Filter);
-        Assert.Equal(2, assertion.Filter!.Count);
-        Assert.Equal("lastname", assertion.Filter[0].Field);
-        Assert.Equal("eq", assertion.Filter[0].Operator);
-        Assert.Equal("Muster", assertion.Filter[0].Value?.ToString());
+        Assert.NotNull(step);
+        Assert.NotNull(step!.Filter);
+        Assert.Equal(2, step.Filter!.Count);
+        Assert.Equal("lastname", step.Filter[0].Field);
+        Assert.Equal("eq", step.Filter[0].Operator);
+        Assert.Equal("Muster", step.Filter[0].Value?.ToString());
     }
 
     [Fact]
@@ -282,9 +225,8 @@ public class ModelsJsonTests
         // Langform: Array mit expliziten FilterConditions
         const string json = """
         {
-            "target": "Query",
-            "field": "firstname",
-            "operator": "Equals",
+            "stepNumber": 1,
+            "action": "WaitForRecord",
             "entity": "contact",
             "filter": [
                 { "field": "lastname", "operator": "eq", "value": "Muster" },
@@ -293,34 +235,13 @@ public class ModelsJsonTests
         }
         """;
 
-        var assertion = JsonConvert.DeserializeObject<TestAssertion>(json);
-
-        Assert.NotNull(assertion);
-        Assert.NotNull(assertion!.Filter);
-        Assert.Equal(2, assertion.Filter!.Count);
-        Assert.Equal("lastname", assertion.Filter[0].Field);
-        Assert.Equal("statecode", assertion.Filter[1].Field);
-    }
-
-    [Fact]
-    public void FilterListConverter_OnStep_DeserializesCorrectly()
-    {
-        // FilterListConverter wird auch auf TestStep.Filter verwendet
-        const string json = """
-        {
-            "stepNumber": 1,
-            "action": "WaitForRecord",
-            "entity": "contact",
-            "filter": { "lastname": "Test" }
-        }
-        """;
-
         var step = JsonConvert.DeserializeObject<TestStep>(json);
 
         Assert.NotNull(step);
         Assert.NotNull(step!.Filter);
-        Assert.Single(step.Filter!);
+        Assert.Equal(2, step.Filter!.Count);
         Assert.Equal("lastname", step.Filter[0].Field);
+        Assert.Equal("statecode", step.Filter[1].Field);
     }
 
     // ═══════════════════════════════════════════════════════════════════

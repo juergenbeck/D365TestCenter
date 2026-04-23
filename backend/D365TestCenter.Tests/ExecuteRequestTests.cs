@@ -63,10 +63,14 @@ public class ExecuteRequestTests
     }
 
     [Fact]
-    public void GenericPrecondition_Columns_DeserializesFromJson()
+    public void TestStep_Columns_DeserializesFromJson()
     {
+        // ADR-0004: "columns" wird auf einem CreateRecord-Step ausgewertet
+        // (vormals Precondition). Auto-Retrieve nach dem Create.
         const string json = """
         {
+            "stepNumber": 1,
+            "action": "CreateRecord",
             "entity": "contacts",
             "alias": "con1",
             "fields": { "firstname": "Test" },
@@ -74,30 +78,32 @@ public class ExecuteRequestTests
         }
         """;
 
-        var pre = JsonConvert.DeserializeObject<GenericPrecondition>(json);
+        var step = JsonConvert.DeserializeObject<TestStep>(json);
 
-        Assert.NotNull(pre);
-        Assert.NotNull(pre!.Columns);
-        Assert.Equal(2, pre.Columns!.Count);
-        Assert.Equal("markant_goldenrecordidnumber", pre.Columns[0]);
-        Assert.Equal("contactid", pre.Columns[1]);
+        Assert.NotNull(step);
+        Assert.NotNull(step!.Columns);
+        Assert.Equal(2, step.Columns!.Count);
+        Assert.Equal("markant_goldenrecordidnumber", step.Columns[0]);
+        Assert.Equal("contactid", step.Columns[1]);
     }
 
     [Fact]
-    public void GenericPrecondition_Columns_NullWhenNotSet()
+    public void TestStep_Columns_NullWhenNotSet()
     {
         const string json = """
         {
+            "stepNumber": 1,
+            "action": "CreateRecord",
             "entity": "accounts",
             "alias": "acc1",
             "fields": { "name": "Test" }
         }
         """;
 
-        var pre = JsonConvert.DeserializeObject<GenericPrecondition>(json);
+        var step = JsonConvert.DeserializeObject<TestStep>(json);
 
-        Assert.NotNull(pre);
-        Assert.Null(pre!.Columns);
+        Assert.NotNull(step);
+        Assert.Null(step!.Columns);
     }
 
     // ================================================================
@@ -228,17 +234,17 @@ public class ExecuteRequestTests
     [Fact]
     public void FullMergeTestCase_Deserializes_Correctly()
     {
+        // ADR-0004-Format: alles in einer Steps-Liste, inklusive Setup und Assert.
         const string json = """
         {
-            "testId": "MGR06",
+            "id": "MGR06",
             "title": "Merge ohne Golden Record",
-            "preconditions": [
-                { "entity": "accounts", "alias": "acc1", "fields": { "name": "Test" } },
-                { "entity": "contacts", "alias": "con1", "fields": { "firstname": "A" }, "columns": ["contactid"] },
-                { "entity": "contacts", "alias": "con2", "fields": { "firstname": "B" } }
-            ],
             "steps": [
+                { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "acc1", "fields": { "name": "Test" } },
+                { "stepNumber": 2, "action": "CreateRecord", "entity": "contacts", "alias": "con1", "fields": { "firstname": "A" }, "columns": ["contactid"] },
+                { "stepNumber": 3, "action": "CreateRecord", "entity": "contacts", "alias": "con2", "fields": { "firstname": "B" } },
                 {
+                    "stepNumber": 4,
                     "action": "ExecuteRequest",
                     "requestName": "Merge",
                     "fields": {
@@ -248,10 +254,8 @@ public class ExecuteRequestTests
                         "PerformParentingChecks": false
                     },
                     "waitSeconds": 5
-                }
-            ],
-            "assertions": [
-                { "target": "Query", "entity": "contacts", "filter": [{"field":"contactid","operator":"eq","value":"{RECORD:con1}"}], "field": "statecode", "operator": "Equals", "value": "0" }
+                },
+                { "stepNumber": 5, "action": "Assert", "target": "Query", "entity": "contacts", "filter": [{"field":"contactid","operator":"eq","value":"{RECORD:con1}"}], "field": "statecode", "operator": "Equals", "value": "0" }
             ]
         }
         """;
@@ -259,36 +263,39 @@ public class ExecuteRequestTests
         var tc = JsonConvert.DeserializeObject<TestCase>(json);
 
         Assert.NotNull(tc);
-        // Preconditions
-        Assert.Equal(3, tc!.Preconditions.Count);
-        Assert.NotNull(tc.Preconditions[1].Columns);
-        Assert.Single(tc.Preconditions[1].Columns!);
-        Assert.Null(tc.Preconditions[2].Columns);
+        Assert.Equal(5, tc!.Steps.Count);
 
-        // Step
-        Assert.Single(tc.Steps);
-        var step = tc.Steps[0];
-        Assert.Equal("ExecuteRequest", step.Action);
-        Assert.Equal("Merge", step.RequestName);
-        Assert.Equal(5, step.WaitSeconds);
+        // Setup-Steps (ehemals Preconditions)
+        Assert.Equal("CreateRecord", tc.Steps[0].Action);
+        Assert.Equal("acc1", tc.Steps[0].Alias);
+        Assert.NotNull(tc.Steps[1].Columns);
+        Assert.Single(tc.Steps[1].Columns!);
+        Assert.Null(tc.Steps[2].Columns);
+
+        // ExecuteRequest-Step
+        var mergeStep = tc.Steps[3];
+        Assert.Equal("ExecuteRequest", mergeStep.Action);
+        Assert.Equal("Merge", mergeStep.RequestName);
+        Assert.Equal(5, mergeStep.WaitSeconds);
 
         // Fields enthalten JObjects (nicht Strings!)
-        Assert.IsType<JObject>(step.Fields["Target"]);
-        Assert.IsType<JObject>(step.Fields["SubordinateId"]);
-        Assert.IsType<JObject>(step.Fields["UpdateContent"]);
+        Assert.IsType<JObject>(mergeStep.Fields["Target"]);
+        Assert.IsType<JObject>(mergeStep.Fields["SubordinateId"]);
+        Assert.IsType<JObject>(mergeStep.Fields["UpdateContent"]);
 
-        // $type im JObject: Newtonsoft kann $type als MetadataPropertyHandling interpretieren.
-        // Prüfen ob es erhalten bleibt oder ob wir es anders benennen müssen.
-        var target = (JObject)step.Fields["Target"]!;
+        // $type im JObject
+        var target = (JObject)mergeStep.Fields["Target"]!;
         Assert.Equal("contact", target["entity"]!.Value<string>());
         Assert.Equal("con1", target["ref"]!.Value<string>());
-        // $type prüfen (kann von Newtonsoft entfernt worden sein)
         var hasType = target.ContainsKey("$type");
         if (hasType)
             Assert.Equal("EntityReference", target["$type"]!.Value<string>());
 
-        // Assertions
-        Assert.Single(tc.Assertions);
-        Assert.Equal("Equals", tc.Assertions[0].Operator);
+        // Assert-Step
+        var assertStep = tc.Steps[4];
+        Assert.Equal("Assert", assertStep.Action);
+        Assert.Equal("Query", assertStep.Target);
+        Assert.Equal("Equals", assertStep.Operator);
+        Assert.Equal("statecode", assertStep.Field);
     }
 }

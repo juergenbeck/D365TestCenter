@@ -19,17 +19,10 @@ public sealed class TestRunner
     private readonly AssertionEngine _assertionEngine;
     private readonly StringBuilder _log;
 
-    // Phase-Konstanten passend zum OptionSet jbe_stepphase (jbe_-Publisher).
-    // Ident zu den Werten im TestCenterOrchestrator; dupliziert statt
-    // geteilt, um die Modell-Ebene unabhaengig vom Orchestrator zu halten.
-    private const int PhasePrecondition = 105710000;
-    private const int PhaseExecution    = 105710001;
-    private const int PhaseCleanup      = 105710003;
-
     /// <summary>
-    /// Wenn true, werden die in Preconditions und Steps angelegten Records
-    /// nach dem Testlauf nicht gelöscht. Default false (Cleanup lief historisch
-    /// immer). Wird vom Orchestrator aus jbe_testrun.jbe_keeprecords gesetzt.
+    /// Wenn true, werden die in Steps angelegten Records nach dem Testlauf
+    /// nicht gelöscht. Default false (Cleanup lief historisch immer).
+    /// Wird vom Orchestrator aus jbe_testrun.jbe_keeprecords gesetzt.
     /// </summary>
     public bool KeepRecords { get; set; }
 
@@ -160,9 +153,7 @@ public sealed class TestRunner
                         Category = tc.Category,
                         Tags = tc.Tags,
                         Enabled = tc.Enabled,
-                        Preconditions = tc.Preconditions,
                         Steps = tc.Steps,
-                        Assertions = tc.Assertions,
                         DependsOn = tc.DependsOn,
                         SharedContext = tc.SharedContext
                     };
@@ -190,18 +181,22 @@ public sealed class TestRunner
 
         try
         {
-            Log("  Phase 1: Setup (Preconditions)...");
-            ctx = SetupPreconditions(tc, tcResult);
+            ctx = new TestContext { TestStartUtc = DateTime.UtcNow, TestId = tc.Id };
             ctx.CurrentDataRow = dataRow;
 
-            Log("  Phase 2: Teststeps ausführen...");
+            Log("  Teststeps ausführen...");
             ExecuteSteps(tc, ctx, tcResult);
 
-            Log("  Phase 3: Assertions prüfen...");
-            var allPassed = EvaluateAssertions(tc, ctx, tcResult);
-
-            tcResult.Outcome = allPassed ? TestOutcome.Passed : TestOutcome.Failed;
-            Log($"  -> {(allPassed ? "BESTANDEN" : "FEHLGESCHLAGEN")}");
+            // Outcome-Bestimmung (ADR-0004):
+            //  - Exception in einem Step mit OnError="stop" (Default fuer Non-Assert)
+            //    fuehrt zu Outcome=Error (catch-Zweig unten).
+            //  - Kein Step hat Success=false → Passed.
+            //  - Mindestens ein Step hat Success=false → Failed. Das umfasst:
+            //    Assert-Failure (OnError=continue per Default) und Non-Assert-
+            //    Step-Failure mit explizitem OnError=continue.
+            var anyFailed = tcResult.StepResults.Any(s => !s.Success);
+            tcResult.Outcome = anyFailed ? TestOutcome.Failed : TestOutcome.Passed;
+            Log($"  -> {(anyFailed ? "FEHLGESCHLAGEN" : "BESTANDEN")}");
         }
         catch (Exception ex)
         {
@@ -215,7 +210,7 @@ public sealed class TestRunner
             {
                 try
                 {
-                    Log("  Phase 4: Cleanup...");
+                    Log("  Cleanup...");
                     Cleanup(ctx, tcResult);
                 }
                 catch (Exception ex)
@@ -235,75 +230,17 @@ public sealed class TestRunner
     // ================================================================
     //  Phase 1: Setup (Preconditions)
     // ================================================================
-
-    private TestContext SetupPreconditions(TestCase tc, TestCaseResult tcResult)
-    {
-        var ctx = new TestContext { TestStartUtc = DateTime.UtcNow, TestId = tc.Id };
-
-        // Generische Preconditions (Array-Format: [{entity, alias, fields}]).
-        // Pro Precondition wird ein StepResult mit Phase=Precondition erzeugt,
-        // damit der Steps-Tab in der UI die Vorbedingungen anzeigt.
-        // Nummerierung 1..N schneidet nicht mit Execution-Steps (dort original
-        // StepNumber aus dem JSON) und nicht mit Assertions (dort 1000+aIdx).
-        int preIdx = 0;
-        foreach (var gp in tc.Preconditions)
-        {
-            preIdx++;
-            var gpAlias = gp.Alias ?? $"pre_{tc.Preconditions.IndexOf(gp)}";
-            var gpEntityName = ResolveEntity(gp.Entity);
-
-            var preResult = new StepResult
-            {
-                StepNumber = preIdx,
-                Phase = PhasePrecondition,
-                Description = $"Precondition [{gpAlias}] in '{gpEntityName}'"
-            };
-            var preSw = Stopwatch.StartNew();
-
-            try
-            {
-                var gpFields = ResolveFieldValues(
-                    _dataFactory.ResolveTemplateData(gp.Fields, ctx), ctx);
-
-                var gpEntity = new Entity(gpEntityName);
-                ApplyFields(gpEntity, gpFields);
-
-                var gpId = _service.Create(gpEntity);
-                ctx.RegisterRecord(gpAlias, gpEntityName, gpId);
-                Log($"    Precondition [{gpAlias}] in '{gpEntityName}' erstellt: {gpId}");
-
-                // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
-                if (gp.Columns != null && gp.Columns.Count > 0)
-                {
-                    var gpRetrieved = _service.Retrieve(gpEntityName, gpId, new ColumnSet(gp.Columns.ToArray()));
-                    ctx.FoundRecords[gpAlias] = gpRetrieved;
-                    Log($"    Precondition [{gpAlias}]: {gp.Columns.Count} Spalten geladen");
-                }
-
-                preResult.Success = true;
-            }
-            catch (Exception ex)
-            {
-                preResult.Success = false;
-                preResult.Message = ex.Message;
-                throw; // Fehler hier beendet das gesamte Test-Setup
-            }
-            finally
-            {
-                preSw.Stop();
-                preResult.DurationMs = preSw.ElapsedMilliseconds;
-                tcResult.StepResults.Add(preResult);
-            }
-        }
-
-        ctx.TestStartUtc = DateTime.UtcNow;
-        return ctx;
-    }
-
-    // ================================================================
-    //  Phase 2: Steps ausführen
+    //  Teststeps ausführen (einheitliche Liste ab ADR-0004)
     // ================================================================
 
+    /// <summary>
+    /// Ausfuehrung aller Steps in JSON-Reihenfolge. Pro Step wird ein
+    /// StepResult angehaengt (Erfolg oder Fehler). Fehlerverhalten:
+    /// onError="stop" (Default fuer Non-Assert) wirft weiter und beendet
+    /// den Test mit Outcome=Error. onError="continue" (Default fuer Assert,
+    /// override sonst) schluckt die Exception — Test laeuft weiter und ist
+    /// am Ende Failed, wenn mindestens ein Step nicht Success=true war.
+    /// </summary>
     private void ExecuteSteps(TestCase tc, TestContext ctx, TestCaseResult tcResult)
     {
         foreach (var step in tc.Steps)
@@ -316,10 +253,12 @@ public sealed class TestRunner
             var stepResult = new StepResult
             {
                 StepNumber = step.StepNumber,
-                Phase = PhaseExecution,
+                Action = step.Action,
+                Alias = step.Alias,
+                Entity = step.Entity,
                 Description = string.IsNullOrEmpty(step.Description)
                     ? step.Action
-                    : $"{step.Action}: {step.Description}"
+                    : step.Description
             };
             var stepSw = Stopwatch.StartNew();
 
@@ -367,6 +306,10 @@ public sealed class TestRunner
                         StepRetrieveRecord(step, ctx);
                         break;
 
+                    case "ASSERT":
+                        StepAssert(step, ctx, stepResult);
+                        break;
+
                     case "WAIT":
                         var waitSecs = step.WaitSeconds ?? step.TimeoutSeconds;
                         Log($"      Warte {waitSecs}s...");
@@ -384,13 +327,40 @@ public sealed class TestRunner
                             $"Unbekannte Step-Action: {step.Action}");
                 }
 
-                stepResult.Success = true;
+                // Wenn der Assert-Handler stepResult.Success bereits gesetzt hat
+                // (Fail-Case), nicht ueberschreiben.
+                if (!step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase))
+                {
+                    stepResult.Success = true;
+                }
+
+                // Enrich mit RecordId aus ctx (falls Alias bekannt wurde)
+                if (!string.IsNullOrEmpty(stepResult.Alias) && ctx.Records.TryGetValue(stepResult.Alias, out var rec))
+                {
+                    stepResult.RecordId = rec.Id;
+                    if (string.IsNullOrEmpty(stepResult.Entity))
+                        stepResult.Entity = rec.EntityName;
+                }
             }
             catch (Exception ex)
             {
                 stepResult.Success = false;
                 stepResult.Message = ex.Message;
-                throw; // Fehler weiterwerfen, ExecuteSingleTest markiert als Error
+
+                // OnError: Default per Action-Typ
+                //  - Assert: "continue" (Failure ist normales Ergebnis)
+                //  - Alle anderen: "stop" (Exception beendet den Test als Error)
+                var onError = step.OnError?.ToLowerInvariant();
+                var defaultStop = !step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase);
+                var shouldStop = onError switch
+                {
+                    "continue" => false,
+                    "stop" => true,
+                    _ => defaultStop
+                };
+
+                if (shouldStop) throw;
+                Log($"      Fehler (onError=continue): {ex.Message}");
             }
             finally
             {
@@ -399,6 +369,48 @@ public sealed class TestRunner
                 tcResult.StepResults.Add(stepResult);
             }
         }
+    }
+
+    // ================================================================
+    //  Assert als Action (ADR-0004)
+    // ================================================================
+
+    private void StepAssert(TestStep step, TestContext ctx, StepResult stepResult)
+    {
+        // TestStep → internes TestAssertion-Objekt fuer die AssertionEngine.
+        // Entity ist im JSON typischerweise als EntitySetName (Plural, Web-API-Form)
+        // angegeben, z.B. "markant_fg_contactsources". Die AssertionEngine arbeitet
+        // mit QueryExpression/IOrganizationService und braucht den LogicalName
+        // (Singular). Deshalb hier auf LogicalName ummapppen.
+        var resolvedEntity = string.IsNullOrEmpty(step.Entity)
+            ? step.Entity
+            : ResolveEntity(step.Entity);
+
+        var assertion = new TestAssertion
+        {
+            Target = step.Target ?? "Query",
+            Field = step.Field ?? "",
+            Entity = resolvedEntity,
+            RecordRef = step.RecordRef,
+            Filter = step.Filter,
+            Operator = step.Operator ?? "Equals",
+            Value = step.Value,
+            Description = step.Description
+        };
+
+        var assertResult = _assertionEngine.Evaluate(assertion, ctx, _service);
+
+        // Ergebnis in StepResult uebertragen
+        stepResult.Success = assertResult.Passed;
+        stepResult.Message = assertResult.Message;
+        stepResult.AssertField = assertion.Field;
+        stepResult.ExpectedDisplay = assertResult.ExpectedDisplay;
+        stepResult.ActualDisplay = assertResult.ActualDisplay;
+        if (!string.IsNullOrEmpty(assertion.Description))
+            stepResult.Description = assertion.Description;
+
+        var icon = assertResult.Passed ? "(OK)" : "(FAIL)";
+        Log($"      Assert {icon} {assertion.Field} {assertion.Operator} {assertion.Value}");
     }
 
     // ================================================================
@@ -889,33 +901,7 @@ public sealed class TestRunner
     }
 
     // ================================================================
-    //  Phase 3: Assertions auswerten
-    // ================================================================
-
-    private bool EvaluateAssertions(
-        TestCase tc, TestContext ctx, TestCaseResult result)
-    {
-        bool allPassed = true;
-
-        foreach (var assertion in tc.Assertions)
-        {
-            // EntitySetName zu LogicalName auflösen vor der Auswertung
-            if (!string.IsNullOrEmpty(assertion.Entity))
-                assertion.Entity = ResolveEntity(assertion.Entity);
-
-            var ar = _assertionEngine.Evaluate(assertion, ctx, _service);
-            result.Assertions.Add(ar);
-
-            if (!ar.Passed) allPassed = false;
-
-            Log($"    {(ar.Passed ? "OK" : "FAIL")} {assertion.Description}: {ar.Message}");
-        }
-
-        return allPassed;
-    }
-
-    // ================================================================
-    //  Phase 4: Cleanup
+    //  Cleanup
     // ================================================================
 
     private void Cleanup(TestContext ctx, TestCaseResult tcResult)
@@ -929,14 +915,14 @@ public sealed class TestRunner
         var cleanupResult = new StepResult
         {
             StepNumber = 9000,
-            Phase = PhaseCleanup,
+            Action = "Cleanup",
             Description = "Cleanup"
         };
         var sw = Stopwatch.StartNew();
 
         // KeepRecords=true: Testdaten bewusst behalten. Cleanup-StepResult
-        // trotzdem schreiben, damit die Phase im Steps-Tab sichtbar bleibt
-        // und dokumentiert ist warum nichts geloescht wurde.
+        // trotzdem schreiben, damit die Cleanup-Zeile im Steps-Tab sichtbar
+        // bleibt und dokumentiert, warum nichts geloescht wurde.
         if (KeepRecords)
         {
             sw.Stop();

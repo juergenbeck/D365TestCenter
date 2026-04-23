@@ -11,7 +11,6 @@
       <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
         <row name="result" id="jbe_teststepid">
           <cell name="jbe_stepnumber" width="60" />
-          <cell name="jbe_phase" width="100" />
           <cell name="jbe_name" width="220" />
           <cell name="jbe_action" width="120" />
           <cell name="jbe_stepstatus" width="100" />
@@ -25,7 +24,6 @@
         <entity name="jbe_teststep">
           <attribute name="jbe_teststepid" />
           <attribute name="jbe_stepnumber" />
-          <attribute name="jbe_phase" />
           <attribute name="jbe_name" />
           <attribute name="jbe_action" />
           <attribute name="jbe_stepstatus" />
