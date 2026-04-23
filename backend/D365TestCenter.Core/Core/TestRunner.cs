@@ -181,7 +181,7 @@ public sealed class TestRunner
             ctx.CurrentDataRow = dataRow;
 
             Log("  Phase 2: Teststeps ausführen...");
-            ExecuteSteps(tc, ctx);
+            ExecuteSteps(tc, ctx, tcResult);
 
             Log("  Phase 3: Assertions prüfen...");
             var allPassed = EvaluateAssertions(tc, ctx, tcResult);
@@ -258,69 +258,98 @@ public sealed class TestRunner
     //  Phase 2: Steps ausführen
     // ================================================================
 
-    private void ExecuteSteps(TestCase tc, TestContext ctx)
+    private void ExecuteSteps(TestCase tc, TestContext ctx, TestCaseResult tcResult)
     {
         foreach (var step in tc.Steps)
         {
             Log($"    Step {step.StepNumber}: {step.Description} [{step.Action}]");
 
-            var resolvedFields = ResolveFieldValues(
-                _dataFactory.ResolveTemplateData(step.Fields, ctx), ctx);
-
-            switch (step.Action.ToUpperInvariant())
+            // StepResult erzeugen bevor die Action läuft, damit auch bei Fehler
+            // ein Eintrag in tcResult.StepResults landet. Der Orchestrator
+            // persistiert diese Liste pro Step als jbe_teststep-Record.
+            var stepResult = new StepResult
             {
-                case "CREATERECORD":
-                    StepCreateGenericRecord(step, ctx, resolvedFields);
-                    break;
+                StepNumber = step.StepNumber,
+                Description = string.IsNullOrEmpty(step.Description)
+                    ? step.Action
+                    : $"{step.Action}: {step.Description}"
+            };
+            var stepSw = Stopwatch.StartNew();
 
-                case "UPDATERECORD":
-                    StepUpdateGenericRecord(step, ctx, resolvedFields);
-                    break;
+            try
+            {
+                var resolvedFields = ResolveFieldValues(
+                    _dataFactory.ResolveTemplateData(step.Fields, ctx), ctx);
 
-                case "DELETERECORD":
-                    StepDeleteGenericRecord(step, ctx);
-                    break;
+                switch (step.Action.ToUpperInvariant())
+                {
+                    case "CREATERECORD":
+                        StepCreateGenericRecord(step, ctx, resolvedFields);
+                        break;
 
-                case "FINDRECORD":
-                case "WAITFORRECORD":
-                    StepWaitForRecord(step, ctx);
-                    break;
+                    case "UPDATERECORD":
+                        StepUpdateGenericRecord(step, ctx, resolvedFields);
+                        break;
 
-                case "WAITFORFIELDVALUE":
-                    StepWaitForFieldValue(step, ctx);
-                    break;
+                    case "DELETERECORD":
+                        StepDeleteGenericRecord(step, ctx);
+                        break;
 
-                case "CALLCUSTOMAPI":
-                    StepCallCustomApi(step, ctx, resolvedFields);
-                    break;
+                    case "FINDRECORD":
+                    case "WAITFORRECORD":
+                        StepWaitForRecord(step, ctx);
+                        break;
 
-                case "ASSERTENVIRONMENT":
-                    StepAssertEnvironment(step, ctx);
-                    break;
+                    case "WAITFORFIELDVALUE":
+                        StepWaitForFieldValue(step, ctx);
+                        break;
 
-                case "EXECUTEREQUEST":
-                    StepExecuteRequest(step, ctx, resolvedFields);
-                    break;
+                    case "CALLCUSTOMAPI":
+                        StepCallCustomApi(step, ctx, resolvedFields);
+                        break;
 
-                case "RETRIEVERECORD":
-                    StepRetrieveRecord(step, ctx);
-                    break;
+                    case "ASSERTENVIRONMENT":
+                        StepAssertEnvironment(step, ctx);
+                        break;
 
-                case "WAIT":
-                    var waitSecs = step.WaitSeconds ?? step.TimeoutSeconds;
-                    Log($"      Warte {waitSecs}s...");
-                    Thread.Sleep(waitSecs * 1000);
-                    break;
+                    case "EXECUTEREQUEST":
+                        StepExecuteRequest(step, ctx, resolvedFields);
+                        break;
 
-                case "DELAY":
-                    var delayMs = step.DelayMs ?? 500;
-                    Log($"      Delay {delayMs}ms...");
-                    Thread.Sleep(delayMs);
-                    break;
+                    case "RETRIEVERECORD":
+                        StepRetrieveRecord(step, ctx);
+                        break;
 
-                default:
-                    throw new InvalidOperationException(
-                        $"Unbekannte Step-Action: {step.Action}");
+                    case "WAIT":
+                        var waitSecs = step.WaitSeconds ?? step.TimeoutSeconds;
+                        Log($"      Warte {waitSecs}s...");
+                        Thread.Sleep(waitSecs * 1000);
+                        break;
+
+                    case "DELAY":
+                        var delayMs = step.DelayMs ?? 500;
+                        Log($"      Delay {delayMs}ms...");
+                        Thread.Sleep(delayMs);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException(
+                            $"Unbekannte Step-Action: {step.Action}");
+                }
+
+                stepResult.Success = true;
+            }
+            catch (Exception ex)
+            {
+                stepResult.Success = false;
+                stepResult.Message = ex.Message;
+                throw; // Fehler weiterwerfen, ExecuteSingleTest markiert als Error
+            }
+            finally
+            {
+                stepSw.Stop();
+                stepResult.DurationMs = stepSw.ElapsedMilliseconds;
+                tcResult.StepResults.Add(stepResult);
             }
         }
     }

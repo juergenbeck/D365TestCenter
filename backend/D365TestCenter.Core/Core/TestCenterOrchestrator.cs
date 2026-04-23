@@ -67,13 +67,21 @@ public sealed class TestCenterOrchestrator
     private const string FldStepAssertionField = "jbe_assertionfield";
     private const string FldStepExpected = "jbe_expectedvalue";
     private const string FldStepActual = "jbe_actualvalue";
-    private const string FldStepPhase = "jbe_stepphase";
+    // Das Feld heißt "jbe_phase" (Entity-Attribut), das dahinterliegende OptionSet
+    // heißt "jbe_stepphase". Bis Session 09 wurde hier fälschlich der OptionSet-
+    // Name als Feldname verwendet. Folge: jedes Create scheiterte still (try/catch
+    // in WriteSingleResultRecord) und der Steps-Tab war im Browser immer leer.
+    private const string FldStepPhase = "jbe_phase";
     private const string FldStepStatus = "jbe_stepstatus";
     private const string FldStepRunResult = "jbe_testrunresultid";
 
-    // Step-Phase-Werte (publisher-unabhängig, werden gemappt)
-    private const int PhaseExecution = 1;
-    private const int PhaseAssertion = 2;
+    // Step-Phase-Werte (aus OptionSet jbe_stepphase, jbe_-Publisher-Prefix 10571)
+    // Bis Session 09 standen hier 1 und 2 mit einem Kommentar "werden gemappt" —
+    // das Mapping fehlte aber, das Create schlug auf ungültigem OptionSet-Value an.
+    private const int PhasePrecondition = 105710000;
+    private const int PhaseExecution    = 105710001;
+    private const int PhaseAssertion    = 105710002;
+    private const int PhaseCleanup      = 105710003;
 
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
