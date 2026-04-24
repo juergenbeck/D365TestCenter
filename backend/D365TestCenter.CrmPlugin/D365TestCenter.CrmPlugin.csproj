@@ -34,6 +34,18 @@
   </PropertyGroup>
 
   <!--
+    Kopiert das frisch gebaute NuGet-Paket automatisch nach solution/src/pluginpackages/,
+    damit `pac solution pack` immer den aktuellen Plugin-Code einschliesst.
+    Hintergrund: FB-26 (stale nupkg in solution/src nach Backend-Rebuild).
+  -->
+  <Target Name="CopyNupkgToSolutionSrc" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(Version).nupkg"
+          DestinationFiles="$(MSBuildThisFileDirectory)..\..\solution\src\pluginpackages\jbe_D365TestCenter\package\jbe_D365TestCenter.nupkg"
+          SkipUnchangedFiles="false" />
+    <Message Text="Copied $(PackageId).$(Version).nupkg to solution/src/pluginpackages/jbe_D365TestCenter/package/" Importance="high" />
+  </Target>
+
+  <!--
     Alle ReferenceCopyLocalPaths ins Paket einschliessen, aber Microsoft.*, System.* und
     CrmSdk DLLs ausschliessen (sind in der Sandbox verfuegbar).
   -->

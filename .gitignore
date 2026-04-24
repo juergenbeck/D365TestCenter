@@ -5,6 +5,10 @@ obj/
 *.pdb
 *.exe
 *.nupkg
+# Exception: the nupkg in solution/src/pluginpackages/ is a versioned solution
+# artifact (see FB-26 in Workspace). It is auto-synced from backend/bin by the
+# CrmPlugin.csproj post-build target.
+!solution/src/pluginpackages/**/*.nupkg
 
 # IDE
 .vs/
