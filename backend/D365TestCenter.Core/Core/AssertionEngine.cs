@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json.Linq;
@@ -7,7 +8,9 @@ namespace D365TestCenter.Core;
 /// <summary>
 /// Wertet Assertions gegen Dataverse-Records aus.
 /// Targets: "Record" (per recordRef/alias), "Query" (per entity+filter).
-/// Operatoren: Equals, NotEquals, IsNull, IsNotNull, Contains, DateSetRecently, RecordCount.
+/// Feldbasierte Operatoren: Equals, NotEquals, IsNull, IsNotNull, Contains,
+/// StartsWith, EndsWith, GreaterThan, LessThan, DateSetRecently.
+/// Query-only-Operatoren: Exists, NotExists, RecordCount.
 /// </summary>
 public sealed class AssertionEngine
 {
@@ -226,6 +229,28 @@ public sealed class AssertionEngine
                     assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
                 break;
 
+            case "STARTSWITH":
+                var startsActual = ExtractString(actual) ?? "";
+                result.Passed = startsActual.StartsWith(
+                    assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
+                break;
+
+            case "ENDSWITH":
+                var endsActual = ExtractString(actual) ?? "";
+                result.Passed = endsActual.EndsWith(
+                    assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
+                break;
+
+            case "GREATERTHAN":
+                result.Passed = TryCompareOrdered(actual, assertion.Value, out var gtCmp)
+                    && gtCmp > 0;
+                break;
+
+            case "LESSTHAN":
+                result.Passed = TryCompareOrdered(actual, assertion.Value, out var ltCmp)
+                    && ltCmp < 0;
+                break;
+
             case "DATESETRECENTLY":
                 // assertion.Value (falls gesetzt) als Sekunden-Toleranz parsen (Default 120s).
                 // Fix für RV-Review: expected-Wert wurde vorher ignoriert.
@@ -282,6 +307,71 @@ public sealed class AssertionEngine
     // ---------------------------------------------------------------
     //  Hilfsmethoden
     // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Geordneter Vergleich für GreaterThan/LessThan. Versucht nacheinander:
+    /// decimal (invariant), DateTime (RoundtripKind, invariant), dann String
+    /// (Ordinal, case-insensitive). Liefert false wenn beide Werte null oder
+    /// der Actualwert nicht extrahierbar ist. -1 actual&lt;expected, 0 gleich,
+    /// +1 actual&gt;expected.
+    /// </summary>
+    private static bool TryCompareOrdered(object? actual, string? expected, out int comparison)
+    {
+        comparison = 0;
+        if (actual == null || expected == null) return false;
+
+        // Money/OptionSetValue/int direkt behandeln (kein Umweg über ExtractString-String-Format).
+        decimal? actualNum = actual switch
+        {
+            Money m => m.Value,
+            OptionSetValue osv => osv.Value,
+            int i => i,
+            long l => l,
+            decimal d => d,
+            double dbl => (decimal)dbl,
+            float f => (decimal)f,
+            _ => null
+        };
+
+        if (actualNum.HasValue
+            && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var expectedNum))
+        {
+            comparison = actualNum.Value.CompareTo(expectedNum);
+            return true;
+        }
+
+        if (actual is DateTime actualDt
+            && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expectedDt))
+        {
+            var au = actualDt.Kind == DateTimeKind.Utc ? actualDt : actualDt.ToUniversalTime();
+            var eu = expectedDt.Kind == DateTimeKind.Utc ? expectedDt : expectedDt.ToUniversalTime();
+            comparison = au.CompareTo(eu);
+            return true;
+        }
+
+        var actualStr = ExtractString(actual);
+        if (actualStr == null) return false;
+
+        // String-Fallback: erst Zahl, dann DateTime, dann Text.
+        if (decimal.TryParse(actualStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var a)
+            && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var e))
+        {
+            comparison = a.CompareTo(e);
+            return true;
+        }
+
+        if (DateTime.TryParse(actualStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ad)
+            && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ed))
+        {
+            var au = ad.Kind == DateTimeKind.Utc ? ad : ad.ToUniversalTime();
+            var eu = ed.Kind == DateTimeKind.Utc ? ed : ed.ToUniversalTime();
+            comparison = au.CompareTo(eu);
+            return true;
+        }
+
+        comparison = string.Compare(actualStr, expected, StringComparison.OrdinalIgnoreCase);
+        return true;
+    }
 
     private static bool CompareValues(object? actual, string? expected)
     {

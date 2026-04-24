@@ -8,7 +8,8 @@ namespace D365TestCenter.Tests;
 /// Tests für die AssertionEngine.
 /// Prüft die Operator-Auswertung über die private ApplyOperator-Methode
 /// (Signatur: TestAssertion, object?, AssertionResult).
-/// Operatoren: Equals, NotEquals, IsNull, IsNotNull, Contains, DateSetRecently.
+/// Operatoren: Equals, NotEquals, IsNull, IsNotNull, Contains, StartsWith,
+/// EndsWith, GreaterThan, LessThan, DateSetRecently.
 /// </summary>
 public class AssertionEngineTests
 {
@@ -145,6 +146,126 @@ public class AssertionEngineTests
     {
         var result = EvalOperator("Contains", "Max Mustermann", "Schulze");
         Assert.False(result.Passed);
+    }
+
+    // ---------- StartsWith / EndsWith ----------
+
+    [Fact]
+    public void StartsWith_Prefix_Passes()
+    {
+        var result = EvalOperator("StartsWith", "JBE Test GmbH", "JBE");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void StartsWith_CaseInsensitive_Passes()
+    {
+        var result = EvalOperator("StartsWith", "JBE Test GmbH", "jbe");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void StartsWith_WrongPrefix_Fails()
+    {
+        var result = EvalOperator("StartsWith", "JBE Test GmbH", "Test");
+        Assert.False(result.Passed);
+    }
+
+    [Fact]
+    public void EndsWith_Suffix_Passes()
+    {
+        var result = EvalOperator("EndsWith", "user@example.com", "@example.com");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void EndsWith_CaseInsensitive_Passes()
+    {
+        var result = EvalOperator("EndsWith", "USER@EXAMPLE.COM", "@example.com");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void EndsWith_WrongSuffix_Fails()
+    {
+        var result = EvalOperator("EndsWith", "user@example.com", "@contoso.com");
+        Assert.False(result.Passed);
+    }
+
+    // ---------- GreaterThan / LessThan ----------
+
+    [Fact]
+    public void GreaterThan_IntegerValues_Passes()
+    {
+        var result = EvalOperator("GreaterThan", 42, "10");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void GreaterThan_IntegerEqual_Fails()
+    {
+        var result = EvalOperator("GreaterThan", 42, "42");
+        Assert.False(result.Passed);
+    }
+
+    [Fact]
+    public void GreaterThan_Money_ComparesDecimal()
+    {
+        var result = EvalOperator("GreaterThan", new Money(100.50m), "99.99");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void GreaterThan_OptionSet_ComparesInt()
+    {
+        var result = EvalOperator("GreaterThan", new OptionSetValue(105710002), "105710000");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void GreaterThan_DateTime_RecentGreaterThanOld_Passes()
+    {
+        var recent = DateTime.UtcNow;
+        var old = DateTime.UtcNow.AddDays(-7).ToString("O");
+        var result = EvalOperator("GreaterThan", recent, old);
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void GreaterThan_NullActual_Fails()
+    {
+        var result = EvalOperator("GreaterThan", null, "10");
+        Assert.False(result.Passed);
+    }
+
+    [Fact]
+    public void LessThan_IntegerValues_Passes()
+    {
+        var result = EvalOperator("LessThan", 5, "10");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void LessThan_IntegerEqual_Fails()
+    {
+        var result = EvalOperator("LessThan", 10, "10");
+        Assert.False(result.Passed);
+    }
+
+    [Fact]
+    public void LessThan_StringFallback_Alphabetic_Passes()
+    {
+        var result = EvalOperator("LessThan", "apple", "banana");
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
+    public void LessThan_DateTime_OldLessThanRecent_Passes()
+    {
+        var old = DateTime.UtcNow.AddDays(-7);
+        var recent = DateTime.UtcNow.ToString("O");
+        var result = EvalOperator("LessThan", old, recent);
+        Assert.True(result.Passed);
     }
 
     [Fact]
