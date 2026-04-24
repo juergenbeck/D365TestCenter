@@ -119,7 +119,7 @@ Dokumentation:
 
 Siehe [05-assertions.md](05-assertions.md#description--warum-sie-wichtig-ist).
 
-## Regel 7: Precondition-Vollstaendigkeit
+## Regel 7: Precondition-Vollständigkeit
 
 Ein Test muss **alle notwendigen Vorbedingungen explizit** anlegen.
 
@@ -131,9 +131,9 @@ Ein Test muss **alle notwendigen Vorbedingungen explizit** anlegen.
 **Nicht verlassen auf:** "ist bestimmt schon in der Umgebung da". Solche
 Tests laufen nur auf EINER Umgebung grün und sind damit wertlos.
 
-**Konsequenz:** Der Test ist idempotent und eigenstaendig. Bei
+**Konsequenz:** Der Test ist idempotent und eigenständig. Bei
 `keeprecords=false` räumt er sich selbst auf. Wenn du einen Test jeden
-Tag 5x laufen lassen kannst ohne dass er Datenmüll hinterlaesst, ist er
+Tag 5x laufen lassen kannst ohne dass er Datenmüll hinterlässt, ist er
 sauber.
 
 ## Regel 8: Assertions am Ende, nicht dazwischen
@@ -224,5 +224,5 @@ fängt nichts davon ab.
 | 4 | Symmetrie bei umgekehrten Szenarien |
 | 5 | Record-Alias konsequent |
 | 6 | `description` auf jeder Assertion |
-| 7 | Preconditions vollstaendig und explizit |
+| 7 | Preconditions vollständig und explizit |
 | 8 | Zwischen-Asserts erlaubt, aber sparsam einsetzen |

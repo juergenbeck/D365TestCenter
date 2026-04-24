@@ -16,20 +16,20 @@ folge den Verzweigungen.
                   v                       v
             Infra-Problem          Status normal erreicht?
             (Plugin-Queue          (Geplant -> Running ->
-             haengt, Auth-          Abgeschlossen)
+             hängt, Auth-          Abgeschlossen)
              Fehler, Sandbox       
-             erschoepft)                  |
+             erschöpft)                  |
                                           v
                   +-------------------------------------+
                   |    jbe_teststatus nach dem Run      |
                   +-+----------+--------------+---------+
                     |          |              |
-                Abgeschl.     Fehlge-      Wird noch ausgefuehrt
+                Abgeschl.     Fehlge-      Wird noch ausgeführt
                     |        schlagen      (F5, warten)
                     v          |
                                                            
           +--------------------+       
-          | Ueberhaupt          |
+          | Überhaupt          |
           | Ergebnisse (result- |
           | Sub-Grid leer)?     |
           +-+----------+--------+
@@ -77,7 +77,7 @@ folge den Verzweigungen.
                   |
                   v
   +-----------------------------------------+
-  | Lies Erwartet vs Tatsaechlich           |
+  | Lies Erwartet vs Tatsächlich           |
   +-----+-----------------------------------+
         |
         v
@@ -123,7 +123,7 @@ folge den Verzweigungen.
   |    fehlgeschlagen                         |
   | WaitForFieldValue Timeout?                |
   |  - Plugin läuft nicht oder Wert anders.  |
-  |    Timeout erhoehen oder Erwartung neu.   |
+  |    Timeout erhöhen oder Erwartung neu.   |
   +-------+-----------------------------------+
           |
           v
@@ -159,12 +159,12 @@ folge den Verzweigungen.
 
 ```
 [ ] Testrun-Status = Abgeschlossen  (sonst warten / Infra-Problem)
-[ ] Ergebnis-Sub-Grid hat Eintraege (sonst Filter/Enabled)
+[ ] Ergebnis-Sub-Grid hat Einträge (sonst Filter/Enabled)
 [ ] outcome des fehlgeschlagenen Ergebnisses ist:
     [ ] Failed  -> siehe Assert-Detail im Steps-Tab
     [ ] Error   -> Error-Message im Step
     [ ] Skipped -> JSON validieren
-[ ] Erwartung vs Realitaet abgeglichen
+[ ] Erwartung vs Realität abgeglichen
 [ ] Fix eingespielt (Testfall oder Code)
 [ ] Zweiter Run: OK?
 ```
@@ -178,5 +178,5 @@ Wenn nichts hilft, zwei Gegenproben:
    fragen.
 
 2. **Den fehlgeschlagenen Test auf einer anderen Umgebung laufen
-   lassen** (falls verfuegbar). Wenn dort grün: umgebungs-spezifisches
+   lassen** (falls verfügbar). Wenn dort grün: umgebungs-spezifisches
    Problem.

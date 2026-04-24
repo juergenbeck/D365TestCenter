@@ -43,7 +43,7 @@ und am Ende prüfen, ob das Gesamtsystem das erwartete Ergebnis liefert.
    +------------------------+              |                         |
    | jbe_testrun oeffnen    |<-------------| Status: "Abgeschlossen" |
    | -> passed/failed/total |              | jbe_testrunresult +     |
-   | -> Steps-Tab ansehen   |              | jbe_teststep gefuellt   |
+   | -> Steps-Tab ansehen   |              | jbe_teststep gefüllt   |
    +------------------------+              +-------------------------+
 ```
 
@@ -75,7 +75,7 @@ Details: [02-entity-modell.md](02-entity-modell.md).
   Assertion — alles ist eine "Action" in einer Liste. Reihenfolge im JSON
   ist Ausführungsreihenfolge.
 
-## Typische Anwendungsfaelle
+## Typische Anwendungsfälle
 
 - "Wenn ich einen Lead qualifiziere, werden Contact und Opportunity
   angelegt?" (siehe Quickstart QS-03)

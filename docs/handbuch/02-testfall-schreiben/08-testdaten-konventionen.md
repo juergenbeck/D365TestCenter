@@ -50,7 +50,7 @@ verwendest, ist das Prefix automatisch gesetzt.
 ```
 
 **Warum `example.com`?** Die Domain ist per RFC 2606 für Dokumentations-
-zwecke reserviert. Es gibt dort keine echten Postfaecher. Ein Testdaten-
+zwecke reserviert. Es gibt dort keine echten Postfächer. Ein Testdaten-
 Konflikt mit einem echten Kunden ist ausgeschlossen.
 
 **Alternative: `.invalid`-Domain** (z.B. `pruef.invalid`). Auch RFC-sicher
@@ -72,7 +72,7 @@ und oft für Test-Daten verwendet. Beide funktionieren.
 
 Die Vorwahl `555` ist in US-Film- und TV-Konventionen als "nicht echt"
 etabliert. In Deutschland funktioniert auch `+49 555 xxx` oder
-`555-XXXX` (Duplizitaet ausgeschlossen).
+`555-XXXX` (Duplizität ausgeschlossen).
 
 ## Eindeutigkeit mit {TIMESTAMP}
 
@@ -151,7 +151,7 @@ Ausnahmen:
 Umlaute sind erlaubt und sogar gut (Encoding-Tests!). Aber:
 
 ```json
-"name": "Test \"mit\" Anfuehrungszeichen"     // JSON-Escape noetig
+"name": "Test \"mit\" Anführungszeichen"     // JSON-Escape noetig
 "name": "Test mit\nUmbruch"                   // geht, aber selten sinnvoll
 ```
 

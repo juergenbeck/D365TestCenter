@@ -68,7 +68,7 @@ docs/handbuch/
 
 ## Konventionen in diesem Handbuch
 
-- **JSON-Beispiele** sind immer vollstaendig und lauffähig, es sei denn
+- **JSON-Beispiele** sind immer vollständig und lauffähig, es sei denn
   der Kontext sagt anders ("Snippet").
 - **ASCII-Grafiken** zeigen typische UI-Ansichten in Dynamics. Die Box-
   Zeichen `+ - |` dienen zur Orientierung, ersetzen keinen Screenshot.

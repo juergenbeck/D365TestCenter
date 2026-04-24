@@ -42,7 +42,7 @@ Siehe [../02-testfall-schreiben/04-lookup-und-binding.md](../02-testfall-schreib
 ## 3. Umlaute werden zu Fragezeichen oder ae/oe/ue
 
 **Symptom:** Du schreibst `"name": "Müller"` ins JSON, der Record hat
-aber `"name": "M?ller"` oder `"name": "Mueller"`.
+aber `"name": "M?ller"` oder `"name": "Müller"`.
 
 **Ursache:** Das Feld `jbe_definitionjson` hat eine UTF-8-Codierung im
 Browser gesendet, irgendwo aber ist ein Zwischenschritt mit falscher
@@ -53,7 +53,7 @@ Codierung.
 - Text direkt im Browser-Formular eintippen (nicht pasten aus einem
   cp1252-Tool).
 - Oder: aus VS Code (UTF-8 default) kopieren.
-- Prüfe `$PSVersionTable.PSVersion`: wenn PowerShell < 7.4, laesst sich
+- Prüfe `$PSVersionTable.PSVersion`: wenn PowerShell < 7.4, lässt sich
   das Problem durch explizites `-ContentType "application/json; charset=utf-8"`
   lösen — betrifft dich aber nur wenn du PS-Skripte für das Anlegen
   verwendest.
@@ -83,10 +83,10 @@ Der Assert sagt aber:
 
 ```
 Erwartet:     Anna
-Tatsaechlich: null
+Tatsächlich: null
 ```
 
-**Ursache:** Bei `target: Record` verlaesst sich die Engine oft auf den
+**Ursache:** Bei `target: Record` verlässt sich die Engine oft auf den
 Cache vom letzten `CreateRecord`. Wenn dazwischen ein Plugin das Feld
 geändert hat, sieht der Record-Assert den alten Cache.
 
@@ -118,7 +118,7 @@ asynchrone Plugins.
   "timeoutSeconds": 30 }
 ```
 
-Das Polling wartet **so lange wie noetig** aber nicht laenger.
+Das Polling wartet **so lange wie noetig** aber nicht länger.
 
 Siehe [../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue](../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue).
 
@@ -131,13 +131,13 @@ Siehe [../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue](../02-
 **Fix:**
 
 1. Feld aus der App kopieren.
-2. In VS Code / JSONLint einfuegen.
+2. In VS Code / JSONLint einfügen.
 3. Typische Fehler:
    - Fehlende Kommas zwischen Array-Elementen
    - Einfache statt doppelte Anführungszeichen (`'foo'` -> `"foo"`)
    - Trailing Comma nach letztem Element (`[1,2,]` -> `[1,2]`)
    - Kommentare `//` oder `/* */` (JSON kennt keine)
-   - Escaping fehlt: `"text mit \"Anfuehrungszeichen\""`
+   - Escaping fehlt: `"text mit \"Anführungszeichen\""`
 
 ## 8. "enabled = false" und der Test läuft nicht
 
@@ -207,14 +207,14 @@ anfängt: `STD-01`, `STD-02`, `STD-01-v2`, ...
 - Der Record war bereits weg (Cascade hat ihn entfernt).
 - Permissions.
 
-**Fix:** Meistens ignorieren. Der Cleanup-Fehler beeintraechtigt dein
+**Fix:** Meistens ignorieren. Der Cleanup-Fehler beeinträchtigt dein
 Test-Ergebnis nicht. Wenn dich die Record-Leichen stören: einzeln im
 Browser löschen, oder den Projekt-Owner bitten die Cleanup-Logik
 anzupassen.
 
 ## Für Infrastruktur-Probleme
 
-Wenn du hier nichts findest und der Fehler mysterioes ist — insbesondere
+Wenn du hier nichts findest und der Fehler mysteriös ist — insbesondere
 bei wiederholten Sandbox-Timeouts oder "Plugin nicht gefunden" —
 Projekt-Owner kontaktieren. Diese Klasse von Fehlern ist nichts was
 Test-Autoren reparieren können.

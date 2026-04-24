@@ -60,7 +60,7 @@ Klick eine Zeile an um das Step-Detail zu öffnen:
 |  |  Feld         websiteurl                               |   |
 |  |  Operator     Equals                                   |   |
 |  |  Erwartet     https://example.com                      |   |
-|  |  Tatsaechlich https://example.de                       |   |
+|  |  Tatsächlich https://example.de                       |   |
 |  +--------------------------------------------------------+   |
 |                                                               |
 |  Fehlermeldung                                                |
@@ -150,7 +150,7 @@ Ein erfahrener Leser überfliegt den Step-Tab so:
 | `Wait` | exakt der eingestellte Wert |
 | `WaitForFieldValue` | variable; so lange das Polling dauert |
 
-**Ausreisser**: ein `CreateRecord` von 5000ms deutet auf ein langsames
+**Ausreißer**: ein `CreateRecord` von 5000ms deutet auf ein langsames
 Plugin hin. Ein `Assert` mit 500ms auf Netzwerk-Probleme.
 
 ## Eigene Sicht / eigene View

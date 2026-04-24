@@ -6,13 +6,13 @@ wichtigsten Felder kennst, verstehst du jeden Testlauf.
 ```
             jbe_testcase (N Records)
               |
-              | "ausgewaehlt durch Filter"
+              | "ausgewählt durch Filter"
               v
            jbe_testrun (1 Record pro Lauf)
               |
               | 1 : N
               v
-         jbe_testrunresult (1 Record pro ausgewaehlten Testcase)
+         jbe_testrunresult (1 Record pro ausgewählten Testcase)
               |
               | 1 : N
               v
@@ -21,7 +21,7 @@ wichtigsten Felder kennst, verstehst du jeden Testlauf.
 
 ## jbe_testcase — die Testfall-Definition
 
-Enthaelt die komplette Beschreibung eines Testfalls im JSON-Format. Du
+Enthält die komplette Beschreibung eines Testfalls im JSON-Format. Du
 schreibst den Test einmal, und er liegt von da an dauerhaft in dieser
 Entity. Gleichnamige Test-IDs pro Umgebung sind nicht erlaubt.
 
@@ -51,11 +51,11 @@ die Ausführung automatisch.
 |---|---|---|
 | `jbe_name` | String (Primary) | Beschreibung, z.B. `"Regression 24.04 nachmittags"`. |
 | `jbe_testcasefilter` | String | Welche Tests laufen sollen. Siehe unten. |
-| `jbe_teststatus` | OptionSet | `Geplant` (105710000), `Wird ausgefuehrt` (105710001), `Abgeschlossen` (105710002), `Fehlgeschlagen` (105710003). |
-| `jbe_keeprecords` | Two Options | `Ja` behaelt Testdaten, `Nein` räumt am Ende auf. |
+| `jbe_teststatus` | OptionSet | `Geplant` (105710000), `Wird ausgeführt` (105710001), `Abgeschlossen` (105710002), `Fehlgeschlagen` (105710003). |
+| `jbe_keeprecords` | Two Options | `Ja` behält Testdaten, `Nein` räumt am Ende auf. |
 | `jbe_passed` / `jbe_failed` / `jbe_total` | Integer | Werden vom Plugin gesetzt. |
 | `jbe_testsummary` | Mehrzeilentext | Kurzer Ergebnis-Text. |
-| `jbe_fulllog` | Mehrzeilentext | Vollstaendiger Log des Laufs. |
+| `jbe_fulllog` | Mehrzeilentext | Vollständiger Log des Laufs. |
 | `jbe_startedon` / `modifiedon` | DateTime | Zeitstempel. |
 
 **Der Filter `jbe_testcasefilter`** steuert welche `jbe_testcase`-Records

@@ -1,6 +1,6 @@
 # Testfall in der App anlegen
 
-Einen neuen Testfall (`jbe_testcase`-Record) erstellen, JSON einfuegen,
+Einen neuen Testfall (`jbe_testcase`-Record) erstellen, JSON einfügen,
 speichern. Der komplette Vorgang dauert 2 Minuten.
 
 ## Vorbereitung: JSON fertig haben
@@ -8,7 +8,7 @@ speichern. Der komplette Vorgang dauert 2 Minuten.
 Schreibe dein JSON zuerst **außerhalb** der App, z.B. in VS Code. Gründe:
 
 - Syntax-Highlighting erkennt Fehler (fehlende Kommas, Tippfehler)
-- Du kannst es zwischenspeichern und später nochmal einfuegen
+- Du kannst es zwischenspeichern und später nochmal einfügen
 - Die Textbox in D365 hat kein Auto-Format
 
 Als Vorlage: [Rezepte](../02-testfall-schreiben/07-rezepte.md).

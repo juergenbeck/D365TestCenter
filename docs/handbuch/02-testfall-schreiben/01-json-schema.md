@@ -4,7 +4,7 @@ Alles was du in das Feld `jbe_definitionjson` schreibst, muss diesem
 Schema folgen. Dieses Dokument ist der Referenz-Überblick. Für einzelne
 Actions siehe [02-actions-referenz.md](02-actions-referenz.md).
 
-## Grundgeruest
+## Grundgerüst
 
 ```json
 {
@@ -120,12 +120,12 @@ Frühere Versionen verwendeten getrennte Arrays `preconditions`, `steps`,
 Alle Records auf den Umgebungen sind schon migriert. Neue Tests schreibst
 du direkt im neuen Schema.
 
-## JSON-Validitaet prüfen
+## JSON-Validität prüfen
 
 Das `jbe_definitionjson`-Feld nimmt jeden Text an — auch kaputtes JSON.
 Der Test läuft dann aber als `Skipped` mit einem Parse-Fehler.
 
-Empfehlung: **JSON vor dem Einfuegen in VS Code oder einem Online-
+Empfehlung: **JSON vor dem Einfügen in VS Code oder einem Online-
 Validator prüfen.** Typische Fehler:
 
 - Fehlende Kommas zwischen Step-Objekten
@@ -134,5 +134,5 @@ Validator prüfen.** Typische Fehler:
 - Umlaute ohne UTF-8 (Umlaute sind erlaubt, aber die Codierung muss UTF-8
   sein — das macht der Browser automatisch)
 
-Als Plausibilitaetscheck reicht oft: kopiere das JSON in VS Code, speichere
+Als Plausibilitätscheck reicht oft: kopiere das JSON in VS Code, speichere
 als `.json` — VS Code markiert Syntaxfehler sofort rot.

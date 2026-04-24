@@ -17,7 +17,7 @@ erst einmal mehr Luft. Aber intern arbeitet er in Batches:
 - Nach dem Limit startet der nächste Batch automatisch
 
 **Was das für dich bedeutet:** Einzelne Tests sollten unter **90 Sekunden**
-bleiben. Darüber hinaus wirst du unzuverlaessig: mal läuft's, mal
+bleiben. Darüber hinaus wirst du unzuverlässig: mal läuft's, mal
 Timeout.
 
 ## Typische Zeitfresser
@@ -32,7 +32,7 @@ Timeout.
 wenn das Plugin meist schon nach 3 Sekunden fertig ist.
 
 **Besser:** `WaitForFieldValue` mit großzügigem Timeout. Wartet so
-lange wie noetig, aber nicht laenger.
+lange wie noetig, aber nicht länger.
 
 ### 2. `WaitForRecord` mit großem Timeout ohne Prüfung
 
@@ -102,7 +102,7 @@ Dataverse hat Limits gegen Überlast:
 - `HTTP 429 Too Many Requests` bei Verletzung
 
 Das Test Center hat automatische Retries mit Backoff. Du siehst das nur
-an laengeren Laufzeiten. Wenn du mehrere riesige Testruns parallel
+an längeren Laufzeiten. Wenn du mehrere riesige Testruns parallel
 startest, kann's dich treffen.
 
 ## Tipps zum Optimieren
@@ -110,7 +110,7 @@ startest, kann's dich treffen.
 ### Nutze `columns` sparsam
 
 Jedes Feld in `columns` wird vom Server frisch gelesen. Je mehr Felder,
-desto laenger der Create-Step. Für typische Tests reicht 0-2 Felder.
+desto länger der Create-Step. Für typische Tests reicht 0-2 Felder.
 
 ### `RetrieveRecord` nur wenn noetig
 
@@ -154,6 +154,6 @@ Vor dem Committen eines neuen Tests:
 [ ] Test läuft < 90 Sekunden?
 [ ] Wait-Schritte notwendig (nicht dekorativ)?
 [ ] WaitForFieldValue/WaitForRecord mit sinnvollem Timeout?
-[ ] columns-Liste enthaelt nur was du wirklich brauchst?
+[ ] columns-Liste enthält nur was du wirklich brauchst?
 [ ] Der Test kann 10 Mal hintereinander ohne Kollision laufen?
 ```

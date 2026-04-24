@@ -68,14 +68,14 @@ Beide Platzhalter geben "JBE Test" + Zufallsteil.
 
 ```
 Assert target=Query, operator=RecordCount, value=1
-Tatsaechlich: 3
+Tatsächlich: 3
 ```
 
 -> Deine Query trifft auch Records die **andere Testläufe** gerade
 haben. Filter enger machen:
 
 ```json
-// Frueher (findet zu viel):
+// Früher (findet zu viel):
 "filter": [ { "field": "emailaddress1", "operator": "contains", "value": "test" } ]
 
 // Besser (eindeutig pro Lauf):
@@ -153,7 +153,7 @@ für reine Datentyp-Felder (OptionSet, Bool, Integer) sind kein Problem.
 Nach dem Schreiben eines Tests:
 
 ```
-[ ] Primary-Name-Feld enthaelt {TIMESTAMP}
+[ ] Primary-Name-Feld enthält {TIMESTAMP}
 [ ] E-Mail-Adressen enthalten {TIMESTAMP} oder {GENERATED:email}
 [ ] Filter-Queries nutzen eindeutige Werte (alias.id, Pattern mit TIMESTAMP)
 [ ] Kein hart-codierter Name (wie "Test Anna") für Records die Alternate

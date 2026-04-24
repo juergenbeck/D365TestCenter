@@ -239,7 +239,7 @@ weißt du direkt: "Merge-Plugin hat die Deaktivierung nicht durchgeführt".
 ```json
 "description": "Sub-Contact ist nach Merge deaktiviert"
 "description": "Website wurde korrekt vom Plugin gesetzt"
-"description": "Neue Follow-up-Task an die Opportunity gehaengt"
+"description": "Neue Follow-up-Task an die Opportunity gehängt"
 ```
 
 **Schlechter Stil:**

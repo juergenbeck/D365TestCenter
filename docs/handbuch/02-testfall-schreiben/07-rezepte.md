@@ -1,6 +1,6 @@
 # Rezepte: Vorlagen für typische Szenarien
 
-Vollstaendige JSON-Templates für häufige Test-Muster. Kopiere, passe an,
+Vollständige JSON-Templates für häufige Test-Muster. Kopiere, passe an,
 fertig. Jedes Rezept ist ausführbar wie es steht (ersetze nur die
 Test-ID wenn du mehrere Varianten brauchst).
 
@@ -257,7 +257,7 @@ Subordinate prüfen.
 
     { "stepNumber": 7, "action": "Assert", "target": "Record", "recordRef": "{RECORD:survivor}",
       "field": "emailaddress1", "operator": "Contains", "value": "anna.meier",
-      "description": "Survivor behaelt seine E-Mail", "onError": "continue" }
+      "description": "Survivor behält seine E-Mail", "onError": "continue" }
   ]
 }
 ```
@@ -336,7 +336,7 @@ oder Invoice-Nummer). Du willst sie prüfen oder in weiteren Steps nutzen.
 
     { "stepNumber": 5, "action": "Assert", "target": "Record", "recordRef": "{RECORD:lead}",
       "field": "description", "operator": "Contains", "value": "Anfrage mit AutoNumber",
-      "description": "Platzhalter aus columns aufgeloest",
+      "description": "Platzhalter aus columns aufgelöst",
       "onError": "continue" }
   ]
 }

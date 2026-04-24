@@ -20,7 +20,7 @@ Fehlerbilder besser einordnen.
    |                        |                        |                   |
    |                        |<---- UI aktualisiert --| 4. Status         |
    |                        |                        |    "Wird aus-     |
-   |                        |                        |    gefuehrt"      |
+   |                        |                        |    geführt"      |
    |                        |                        |                   |
    |                        |                        | 5. Testcases      |
    |                        |                        |    nach Filter    |
@@ -29,7 +29,7 @@ Fehlerbilder besser einordnen.
    |                        |                        | 6. Pro Testcase:  |
    |                        |                        |    - JSON parsen  |
    |                        |                        |    - Steps        |
-   |                        |                        |      ausfuehren   |
+   |                        |                        |      ausführen   |
    |                        |                        |    - Ergebnis     |
    |                        |                        |      schreiben    |
    |                        |                        |                   |
@@ -118,11 +118,11 @@ effekte die etwas auf dem Record verändert haben.
 
 Dynamics hat keinen WebSocket-Live-Feed für Records. Die UI hat aber
 einen **Auto-Refresh** auf Detail-Seiten, der alle ca. 2-3 Sekunden den
-Record neu laedt. Darum siehst du den Zähler `1/5 bestanden` langsam
+Record neu lädt. Darum siehst du den Zähler `1/5 bestanden` langsam
 wachsen.
 
 Wenn du manuell **F5** druckst, fällt das Auto-Refresh kurz aus. Nicht
-schlimm, aber dein Wohlfuehl-Moment "jetzt bin ich bei 3/5" kann damit
+schlimm, aber dein Wohlfühl-Moment "jetzt bin ich bei 3/5" kann damit
 kurz verschwinden.
 
 ## Wo logge ich mit?

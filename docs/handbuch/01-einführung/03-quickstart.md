@@ -1,7 +1,7 @@
 # Quickstart — 5 Beispiele in 15 Minuten
 
-Fuenf progressiv aufgebaute Beispiele, die dich durch die wichtigsten
-Features führen. Am Ende des Kapitels hast du fuenf laufende Tests und
+Fünf progressiv aufgebaute Beispiele, die dich durch die wichtigsten
+Features führen. Am Ende des Kapitels hast du fünf laufende Tests und
 alle Kern-Patterns gesehen.
 
 **Vorbereitung:** Öffne die Model-Driven-App **D365 Test Center** in
@@ -122,7 +122,7 @@ Nach 5-10 Sekunden:
 Klick den Ergebnis-Datensatz an und öffne den **Steps-Tab**:
 
 ```
-Testschritte  (3 Eintraege + Cleanup)
+Testschritte  (3 Einträge + Cleanup)
 +----+--------------+-------+-------------+----------------------+
 | #  | Action       | Alias | Ergebnis    | Detail               |
 +----+--------------+-------+-------------+----------------------+
@@ -183,7 +183,7 @@ Records im Dataverse-Graph verbinden.
       "stepNumber": 3,
       "action": "UpdateRecord",
       "alias":  "con",
-      "fields": { "jobtitle": "Leiter Qualitaet" }
+      "fields": { "jobtitle": "Leiter Qualität" }
     },
     {
       "stepNumber": 4,
@@ -192,7 +192,7 @@ Records im Dataverse-Graph verbinden.
       "recordRef": "{RECORD:con}",
       "field":     "jobtitle",
       "operator":  "Equals",
-      "value":     "Leiter Qualitaet",
+      "value":     "Leiter Qualität",
       "description": "Jobtitle korrekt gespeichert",
       "onError":   "continue"
     },
@@ -207,7 +207,7 @@ Records im Dataverse-Graph verbinden.
       "field":     "_parentcustomerid_value",
       "operator":  "Equals",
       "value":     "{acc.id}",
-      "description": "Contact haengt am richtigen Account",
+      "description": "Contact hängt am richtigen Account",
       "onError":   "continue"
     }
   ]

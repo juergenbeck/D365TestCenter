@@ -75,7 +75,7 @@ Klick **Speichern**. Die App bleibt auf der Detailseite. Der Lauf wurde
 angestoßen, das CRUD-Trigger-Plugin `RunTestsOnStatusChange` ist aktiv
 geworden und arbeitet den Lauf im Hintergrund ab.
 
-**Keine explizite "Start"-Schaltflaeche.** Das Speichern ist der Start.
+**Keine explizite "Start"-Schaltfläche.** Das Speichern ist der Start.
 
 ## Schritt 4: Zuschauen
 
@@ -87,7 +87,7 @@ Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
 |                                                         |
 |  Name           Regression 24.04                        |
 |  Testcase-Filter QS-*                                   |
-|  Test-Status    [ Wird ausgefuehrt           v ]        |
+|  Test-Status    [ Wird ausgeführt           v ]        |
 |  Records behalten [ ] nein                              |
 |                                                         |
 |  Bestanden      2                                       |
@@ -121,7 +121,7 @@ Richtlinien:
 
 - **Ein einzelner Test** typisch 5-60 Sekunden, je nach Steps und
   `waitSeconds`.
-- **Merge-Tests** mit 45s-Waits dauern entsprechend laenger.
+- **Merge-Tests** mit 45s-Waits dauern entsprechend länger.
 - **Batch mit N Tests** läuft **sequenziell** (nicht parallel).
 
 **Sandbox-Timeout:** D365 Plugins haben eine 2-Minuten-Grenze pro Sync-
@@ -134,7 +134,7 @@ jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen
 Gibt es **nicht**. Einmal gestartet läuft der Lauf durch. Du kannst aber
 den Testrun-Record löschen, während er läuft — das beendet nicht das
 Plugin im Hintergrund, aber der Record ist weg und du siehst kein Ergebnis
-mehr. Nur für Notfaelle.
+mehr. Nur für Notfälle.
 
 ## Mehrere Testläufe gleichzeitig
 

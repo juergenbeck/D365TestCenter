@@ -28,7 +28,7 @@ ob/wie viele Records mit bestimmten Kriterien existieren).
 
 ## Async Plugin
 
-Ein Plugin das nach dem Trigger-Event verzoegert läuft (nicht sofort
+Ein Plugin das nach dem Trigger-Event verzögert läuft (nicht sofort
 synchron). Braucht nicht in der 2-Min-Sandbox-Grenze zu bleiben.
 Seine Seiten-Effekte (erstellte Records, gesetzte Felder) sind erst
 nach einer kleinen Zeitspanne sichtbar. Deshalb `WaitForFieldValue` /
@@ -78,7 +78,7 @@ Der `jbe_testcasefilter`-Wert am `jbe_testrun`: bestimmt welche
 
 ## Full-Log
 
-Der Text im Feld `jbe_fulllog` des `jbe_testrun`: vollstaendiges Plugin-
+Der Text im Feld `jbe_fulllog` des `jbe_testrun`: vollständiges Plugin-
 Protokoll des Laufs. Für tiefere Analysen nützlich.
 
 ## LogicalName
@@ -156,7 +156,7 @@ gespeichert. JSON-Definition im Feld `jbe_definitionjson`.
 
 ## Testrun
 
-Ein konkreter Testlauf. `jbe_testrun`-Record. Enthaelt Filter, Status,
+Ein konkreter Testlauf. `jbe_testrun`-Record. Enthält Filter, Status,
 Zusammenfassung. Wird durch Status-Setzen auf "Geplant" gestartet.
 
 ## Testrunresult
@@ -166,7 +166,7 @@ mit Outcome und ggf. Fehlermeldung.
 
 ## Teststep
 
-Detail-Record pro Action. Enthaelt Schrittnummer, Dauer, Ergebnis,
+Detail-Record pro Action. Enthält Schrittnummer, Dauer, Ergebnis,
 ggf. Assertion-Details.
 
 ## Throttling

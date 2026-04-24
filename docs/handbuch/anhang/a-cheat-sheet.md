@@ -3,7 +3,7 @@
 Die 20 häufigsten Patterns auf einer Seite. Copy & Paste in deinen
 Testfall, anpassen, fertig.
 
-## Grundgeruest
+## Grundgerüst
 
 ```json
 {

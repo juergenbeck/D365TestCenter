@@ -17,7 +17,7 @@ innerhalb eines Runs. Hier sind die wichtigen Debug-Infos.
 |  +----------------------------------------------------+  |
 |  | Assert fehlgeschlagen: Task ist nach Delete weg    |  |
 |  | Erwartet: NotExists                                |  |
-|  | Tatsaechlich: 1 Record gefunden                    |  |
+|  | Tatsächlich: 1 Record gefunden                    |  |
 |  +----------------------------------------------------+  |
 |                                                          |
 |  [> Testschritte (4)]                                    |
@@ -44,7 +44,7 @@ variiert je nach Outcome:
 ```
 Assert fehlgeschlagen: <deine description>
 Erwartet:     <Wert>
-Tatsaechlich: <Wert>
+Tatsächlich: <Wert>
 ```
 
 oder für Multi-Failure:
@@ -109,7 +109,7 @@ ist dein eigentlicher Debug-Punkt. Siehe
 ### Muster 1: Failed mit klarer Fehlermeldung
 
 `Fehlermeldung` sagt direkt was nicht stimmt. Geh zum Step-Detail des
-fehlgeschlagenen Asserts, schau dir `Erwartet` und `Tatsaechlich` an.
+fehlgeschlagenen Asserts, schau dir `Erwartet` und `Tatsächlich` an.
 
 **Typische Ursachen:**
 
@@ -150,7 +150,7 @@ Kommt vor wenn dein Test zu wenig prüft. Jede `Assert` die nicht
 fehlschlägt, ist "OK" — auch wenn die Umgebung gar nicht in dem Zustand
 ist den du dir vorgestellt hast.
 
-**Lösung:** mehr Asserts hinzufuegen. Besonders Negativ-Erwartungen
+**Lösung:** mehr Asserts hinzufügen. Besonders Negativ-Erwartungen
 (`IsNull`, `NotExists`, `!= alter Wert`). Siehe
 [../02-testfall-schreiben/06-coverage-regeln.md](../02-testfall-schreiben/06-coverage-regeln.md).
 

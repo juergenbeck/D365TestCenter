@@ -16,7 +16,7 @@ Test-Autor nicht):
 
 ## In diesem Handbuch
 
-Siehe das [README](../README.md) für die vollstaendige Navigation.
+Siehe das [README](../README.md) für die vollständige Navigation.
 
 ## Externe Ressourcen
 
@@ -48,4 +48,4 @@ Siehe das [README](../README.md) für die vollstaendige Navigation.
 
 Fragen, unklare Stellen, fehlende Rezepte: **Projekt-Owner** ist der
 Ansprechpartner. Das Handbuch wird iterativ ausgebaut — Feedback mit
-konkreten Anwendungsfaellen hilft am meisten.
+konkreten Anwendungsfällen hilft am meisten.

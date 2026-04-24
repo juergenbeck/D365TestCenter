@@ -1,6 +1,6 @@
 # Actions-Referenz
 
-Vollstaendige Liste aller Actions, ihrer Pflicht- und Optional-Felder,
+Vollständige Liste aller Actions, ihrer Pflicht- und Optional-Felder,
 typische Fallen, und wofür sie da sind.
 
 ## Übersicht
@@ -45,7 +45,7 @@ Legt einen neuen Record an.
 - Lookup-Felder brauchen `@odata.bind`-Syntax — siehe
   [04-lookup-und-binding.md](04-lookup-und-binding.md).
 - `columns` ist nützlich für Felder die du nicht setzt, aber im Test
-  brauchst: z.B. `"columns": ["accountnumber"]` laedt die nach dem Create
+  brauchst: z.B. `"columns": ["accountnumber"]` lädt die nach dem Create
   erzeugte AutoNumber, und du kommst per `{acc.fields.accountnumber}` an
   den Wert.
 - Der Record wird automatisch im Record-Tracker registriert und am Ende
@@ -88,7 +88,7 @@ nochmal gelöscht).
 
 ## RetrieveRecord
 
-Laedt einen Record neu. Sinnvoll wenn der Record durch ein Plugin
+Lädt einen Record neu. Sinnvoll wenn der Record durch ein Plugin
 modifiziert wurde und du im nächsten Step die neuen Werte brauchst.
 
 ```json
@@ -122,7 +122,7 @@ Feste Wartezeit.
 | `waitSeconds` | ja | Wartezeit in Sekunden. |
 
 **Nimm es nur wenn du musst.** `WaitForFieldValue` und `WaitForRecord`
-sind fast immer die bessere Wahl, weil sie nicht laenger warten als
+sind fast immer die bessere Wahl, weil sie nicht länger warten als
 noetig und bei Timeouts klar scheitern.
 
 ## WaitForRecord
@@ -226,7 +226,7 @@ Ruft eine Microsoft SDK-Message auf. Nicht für Custom APIs — dafür ist
 - `SetState` — statecode/statuscode ändern (einfacher als Update)
 - `AddPrivilegesRole`, `RetrieveUserSettings`, ...
 
-Die vollstaendige Liste steht in der Microsoft-Dokumentation unter
+Die vollständige Liste steht in der Microsoft-Dokumentation unter
 "Organization Service Messages".
 
 ## ExecuteAction

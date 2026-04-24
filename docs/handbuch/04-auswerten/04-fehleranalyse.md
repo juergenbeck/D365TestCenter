@@ -25,7 +25,7 @@ Diese drei sind sehr unterschiedliche Bugs. Verwechsle sie nicht.
 Pro rote Zeile:
 
 - Lies die `description` — was war die Erwartung fachlich?
-- Lies `Erwartet` und `Tatsaechlich`.
+- Lies `Erwartet` und `Tatsächlich`.
 
 ### Schritt 2: Erwartet vs Tatsächlich — vier typische Muster
 
@@ -33,7 +33,7 @@ Pro rote Zeile:
 
 ```
 Erwartet:     1
-Tatsaechlich: null (oder 0, oder der Default-Wert)
+Tatsächlich: null (oder 0, oder der Default-Wert)
 ```
 
 Der Wert sollte vom Plugin gesetzt worden sein, war aber noch nicht.
@@ -43,7 +43,7 @@ Lösung: `WaitForFieldValue` einbauen, Timeout erhöhen.
 
 ```
 Erwartet:     288260001
-Tatsaechlich: 288260003
+Tatsächlich: 288260003
 ```
 
 Das Plugin setzt jetzt einen anderen Wert als der Test annimmt. Im Code
@@ -53,19 +53,19 @@ wurde etwas geändert, der Test wurde nicht nachgezogen.
 
 ```
 Erwartet:     5000
-Tatsaechlich: 5000.0000
+Tatsächlich: 5000.0000
 ```
 
 Money-Felder kommen als Decimal-Strings zurück. Im Test:
 `"value": "5000.0000"` oder `"value": "5000.00"` — je nachdem was
 Dataverse gerade zurückgibt. Tipp: erst manuell ohne Assert laufen
-lassen, `Tatsaechlich` auslesen, im Test nachtragen.
+lassen, `Tatsächlich` auslesen, im Test nachtragen.
 
 **Muster D: Lookup-Format**
 
 ```
 Erwartet:     {RECORD:acc}  -> GUID
-Tatsaechlich: null
+Tatsächlich: null
 ```
 
 Du vergleichst vermutlich `parentcustomerid` als Record-Assert. Im
@@ -79,7 +79,7 @@ den Test mit `jbe_keeprecords: true` nochmal laufen. Danach kannst du
 die Records direkt im Browser anschauen und vergleichen.
 
 Shortcut: Im Steps-Tab beim CreateRecord-Step ist die GUID mit einem
-Klick-Link verfuegbar. Öffnen, nachschauen.
+Klick-Link verfügbar. Öffnen, nachschauen.
 
 ## Error — eine Action ist geworfen
 
@@ -161,7 +161,7 @@ JSON-Parse-Fehler: line 15, col 3: unexpected token
 ```
 
 Testfall öffnen, JSON rauskopieren, in VS Code validieren. Typische
-Suender:
+Sünder:
 
 - Fehlendes Komma nach einem Step-Objekt
 - Einfache statt doppelte Anführungszeichen
@@ -189,17 +189,17 @@ für den strukturierten Ablauf.
 ## Wann es NICHT am Test liegt
 
 Manchmal ist der Test vollkommen OK und das Problem ist eine Umgebungs-
-Instabilitaet:
+Instabilität:
 
 - **Ein anderer User hat Records auf der DEV-Umgebung beeinflusst.**
   Typisch: Bug in einem Business-Plugin, der durch parallele Arbeit
   ausgelöst wurde.
 - **Die Umgebung hat Hiccups.** Dataverse hatte kurze Outages, das
   CRUD-Trigger-Plugin hängt. Erneut laufen lassen hilft.
-- **Sandbox-Resource-Limit.** Plugin-Sandbox-Pool war erschoepft. Warte
+- **Sandbox-Resource-Limit.** Plugin-Sandbox-Pool war erschöpft. Warte
   1-2 Minuten, erneut starten.
 
-**Erster Sanity-Check** bei allen mysterioesen Fehlern: den Test **zum
+**Erster Sanity-Check** bei allen mysteriösen Fehlern: den Test **zum
 zweiten Mal** laufen lassen, und **einen bekanntermaßen grünen Test
 gegenprüfen**. Wenn auch der rot ist, liegt es nicht an deinem Code.
 
@@ -216,10 +216,10 @@ gegenprüfen**. Wenn auch der rot ist, liegt es nicht an deinem Code.
 |     Error   -> zu Step 5                           |
 |     Skipped -> JSON validieren                     |
 |                                                    |
-|  3. (entfaellt, nur Gliederung)                    |
+|  3. (entfällt, nur Gliederung)                    |
 |                                                    |
 |  4. Welcher Assert?                                |
-|     Erwartet vs Tatsaechlich abgleichen            |
+|     Erwartet vs Tatsächlich abgleichen            |
 |     Timing? Veraltet? Format?                      |
 |                                                    |
 |  5. Welche Action?                                 |

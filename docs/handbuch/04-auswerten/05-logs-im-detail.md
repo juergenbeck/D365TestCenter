@@ -92,7 +92,7 @@ ideal — einige Optionen:
   Dort ist es lesbar.
 - **Bearbeiten-Button oben rechts am Feld** öffnet einen Vollbild-
   Dialog.
-- **Per Tipp bei der Lektuere:** `[ERROR]` oder `[WARN]` im Editor
+- **Per Tipp bei der Lektüre:** `[ERROR]` oder `[WARN]` im Editor
   suchen, damit du schnell zu kritischen Stellen springst.
 
 ## Step-Level Logs
@@ -103,7 +103,7 @@ Pro Step gibt es separat:
 - `jbe_teststep.jbe_errormessage` — nur gefüllt bei `Fehler`-Steps
 - `jbe_teststep.jbe_inputdata` — das JSON mit dem der Step gestartet
   wurde (mit aufgelösten Platzhaltern)
-- `jbe_teststep.jbe_outputdata` — die Server-Antwort in Auszuegen
+- `jbe_teststep.jbe_outputdata` — die Server-Antwort in Auszügen
 
 ## Browser DevTools
 
