@@ -1,6 +1,6 @@
 # Testdaten-Kollisionen
 
-Zwei Tests laufen gleichzeitig (oder derselbe Test zweimal), und pl&ouml;tzlich
+Zwei Tests laufen gleichzeitig (oder derselbe Test zweimal), und plötzlich
 scheitern beide. Die Ursache ist meist: **die Testdaten sind nicht
 eindeutig**.
 
@@ -11,7 +11,7 @@ Dataverse hat Constraints die Eindeutigkeit erzwingen:
 - **Alternate Keys** (z.B. `emailaddress1` auf `contact` kann alternate
   key sein) — zwei Records mit demselben Wert gehen nicht.
 - **Business-Plugins** die aktiv Duplicate-Detection machen (DQS,
-  Merge-Plugins, etc.) — blockieren einen Create wenn ein Aehnlicher
+  Merge-Plugins, etc.) — blockieren einen Create wenn ein Ähnlicher
   existiert.
 - **Eindeutige AutoNumber-Felder** die nicht explizit gesetzt werden —
   kein Kollisionsproblem, aber nicht-deterministisch.
@@ -30,7 +30,7 @@ einbauen — am besten das Primary-Name-Feld:
 ```
 
 `{TIMESTAMP}` wird pro `CreateRecord`-Aufruf einzigartig (Genauigkeit
-Sekunden, in der Praxis reicht das fuer alle parallelen Szenarien).
+Sekunden, in der Praxis reicht das für alle parallelen Szenarien).
 
 ## Symptome wenn Testdaten nicht eindeutig sind
 
@@ -71,7 +71,7 @@ Assert target=Query, operator=RecordCount, value=1
 Tatsaechlich: 3
 ```
 
--> Deine Query trifft auch Records die **andere Testlaeufe** gerade
+-> Deine Query trifft auch Records die **andere Testläufe** gerade
 haben. Filter enger machen:
 
 ```json
@@ -87,13 +87,13 @@ haben. Filter enger machen:
 
 Wenn `{TIMESTAMP}` nicht eindeutig genug ist und mehrere parallele Runs
 den gleichen Wert treffen, versucht der Cleanup den gleichen Record
-zweimal zu loeschen — was manchmal in 404 endet.
+zweimal zu löschen — was manchmal in 404 endet.
 
--> Aktuelle `{TIMESTAMP}` ist nicht das Problem; sie enthaelt die
+-> Aktuelle `{TIMESTAMP}` ist nicht das Problem; sie enthält die
 Sekunde. Solange Tests nicht exakt im selben Sekundenbereich starten,
 ist alles gut.
 
-## Parallele Testlaeufe
+## Parallele Testläufe
 
 Mehrere Runs gleichzeitig starten:
 
@@ -116,12 +116,12 @@ Testdaten noch da. Der zweite Run legt neue an mit anderer
 `{TIMESTAMP}` — kein Problem.
 
 Fall 2: **Erster Run Cleanup fehlgeschlagen.** Records hinterlassen.
-Naechster Run laeuft mit neuer `{TIMESTAMP}` -> keine Kollision. Der
-Muell bleibt aber, muesst manuell aufraeumen.
+Nächster Run läuft mit neuer `{TIMESTAMP}` -> keine Kollision. Der
+Müll bleibt aber, müsst manuell aufräumen.
 
 Fall 3: **Beide Runs exakt parallel gestartet.** `{TIMESTAMP}` kann
 bei extrem schnellen Abfolgen auf die selbe Sekunde fallen. Unwahr-
-scheinlich, aber moeglich.
+scheinlich, aber möglich.
 
 Workaround: zusaetzlich noch `{GENERATED:guid}` kombinieren:
 
@@ -146,7 +146,7 @@ Manchmal braucht man bestimmte Festwerte (z.B. ein OptionSet):
 ```
 
 Wichtig: **Primary-Name und Lookups immer eindeutig machen**. Festwerte
-fuer reine Datentyp-Felder (OptionSet, Bool, Integer) sind kein Problem.
+für reine Datentyp-Felder (OptionSet, Bool, Integer) sind kein Problem.
 
 ## Sanity-Check deines Tests
 
@@ -156,7 +156,7 @@ Nach dem Schreiben eines Tests:
 [ ] Primary-Name-Feld enthaelt {TIMESTAMP}
 [ ] E-Mail-Adressen enthalten {TIMESTAMP} oder {GENERATED:email}
 [ ] Filter-Queries nutzen eindeutige Werte (alias.id, Pattern mit TIMESTAMP)
-[ ] Kein hart-codierter Name (wie "Test Anna") fuer Records die Alternate
+[ ] Kein hart-codierter Name (wie "Test Anna") für Records die Alternate
     Keys oder Duplicate-Detection triggern
 ```
 
@@ -164,7 +164,7 @@ Wenn das OK ist, kann der Test parallel mit anderen laufen.
 
 ## Diagnose: "Ist meine Testdaten-Kollision das Problem?"
 
-Wenn dein Test mal laeuft, mal nicht:
+Wenn dein Test mal läuft, mal nicht:
 
 1. `jbe_keeprecords: true` setzen.
 2. Run einmal starten.

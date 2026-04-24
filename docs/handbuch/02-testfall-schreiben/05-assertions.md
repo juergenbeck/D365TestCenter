@@ -1,7 +1,7 @@
 # Assertions im Detail
 
-Assertions sind der Kern jedes Tests: sie pruefen ob der erwartete Zustand
-erreicht wurde. Dieses Dokument erklaert alle Varianten von
+Assertions sind der Kern jedes Tests: sie prüfen ob der erwartete Zustand
+erreicht wurde. Dieses Dokument erklärt alle Varianten von
 `Assert`-Actions, ihre Operatoren und typische Muster.
 
 ## Grundform
@@ -20,7 +20,7 @@ erreicht wurde. Dieses Dokument erklaert alle Varianten von
 
 ## Zwei Targets: Record vs Query
 
-**`target: "Record"`** — prueft ein Feld eines bekannten Records.
+**`target: "Record"`** — prüft ein Feld eines bekannten Records.
 
 ```json
 { "action": "Assert",
@@ -36,7 +36,7 @@ erreicht wurde. Dieses Dokument erklaert alle Varianten von
 - Braucht einen Alias oder eine GUID in `recordRef`.
 - Funktioniert nur wenn der Record existiert.
 
-**`target: "Query"`** — fuehrt eine Query aus und prueft das Ergebnis.
+**`target: "Query"`** — führt eine Query aus und prüft das Ergebnis.
 
 ```json
 { "action": "Assert",
@@ -53,7 +53,7 @@ erreicht wurde. Dieses Dokument erklaert alle Varianten von
 
 - Flexibler: findet Records anhand beliebiger Kriterien.
 - Funktioniert auch wenn der Record indirekt erzeugt wurde (Plugin, async).
-- Pflicht fuer `Exists`, `NotExists`, `RecordCount`.
+- Pflicht für `Exists`, `NotExists`, `RecordCount`.
 
 **Entscheidungs-Regel:**
 
@@ -61,14 +61,14 @@ erreicht wurde. Dieses Dokument erklaert alle Varianten von
 |---|---|
 | Record wurde per `CreateRecord` / `WaitForRecord` unter Alias registriert | `target: "Record"` |
 | Record wurde durch ein Plugin erzeugt, du kennst die GUID nicht | `target: "Query"` |
-| Du willst pruefen dass etwas NICHT existiert | `target: "Query"` mit `NotExists` |
-| Du willst die Anzahl pruefen | `target: "Query"` mit `RecordCount` |
+| Du willst prüfen dass etwas NICHT existiert | `target: "Query"` mit `NotExists` |
+| Du willst die Anzahl prüfen | `target: "Query"` mit `RecordCount` |
 
 ## Operatoren im Detail
 
 ### String-Operatoren
 
-| Operator | Erklaerung | Beispiel |
+| Operator | Erklärung | Beispiel |
 |---|---|---|
 | `Equals` | Exakt gleich | `"operator": "Equals", "value": "Anna"` |
 | `NotEquals` | Ungleich | `"operator": "NotEquals", "value": ""` |
@@ -80,11 +80,11 @@ Alle Vergleiche sind case-sensitive.
 
 ### Numerische Operatoren
 
-| Operator | Erklaerung |
+| Operator | Erklärung |
 |---|---|
-| `Equals` | Gleich (auch fuer Zahlen) |
+| `Equals` | Gleich (auch für Zahlen) |
 | `NotEquals` | Ungleich |
-| `GreaterThan` | Groesser als |
+| `GreaterThan` | Größer als |
 | `LessThan` | Kleiner als |
 
 Beispiel:
@@ -98,9 +98,9 @@ Beispiel:
 }
 ```
 
-### Null-Pruefungen
+### Null-Prüfungen
 
-| Operator | Erklaerung |
+| Operator | Erklärung |
 |---|---|
 | `IsNull` | Feld ist leer / null |
 | `IsNotNull` | Feld hat irgendeinen Wert |
@@ -110,7 +110,7 @@ Beispiel:
   "target": "Record", "recordRef": "{RECORD:con}",
   "field":  "jobtitle",
   "operator": "IsNull",
-  "description": "Jobtitle wurde geloescht"
+  "description": "Jobtitle wurde gelöscht"
 }
 ```
 
@@ -118,11 +118,11 @@ Beispiel:
 
 ### Existenz-Operatoren (nur mit `target: Query`)
 
-| Operator | Erklaerung |
+| Operator | Erklärung |
 |---|---|
 | `Exists` | Query liefert mindestens 1 Record |
 | `NotExists` | Query liefert 0 Records |
-| `RecordCount` | Genaue Anzahl pruefen, `value` ist die Zahl |
+| `RecordCount` | Genaue Anzahl prüfen, `value` ist die Zahl |
 
 Beispiele:
 
@@ -145,7 +145,7 @@ Beispiele:
 
 ### Datum-Operatoren
 
-| Operator | Erklaerung |
+| Operator | Erklärung |
 |---|---|
 | `DateSetRecently` | Feld wurde in den letzten X Sekunden gesetzt, `value` ist die Sekundenzahl |
 
@@ -176,8 +176,8 @@ Der `filter` ist ein Array aus Bedingungen. Alle werden **AND** verknuepft:
 |---|---|
 | `eq` | gleich |
 | `ne` | ungleich |
-| `gt` | groesser als |
-| `ge` | groesser oder gleich |
+| `gt` | größer als |
+| `ge` | größer oder gleich |
 | `lt` | kleiner als |
 | `le` | kleiner oder gleich |
 
@@ -216,7 +216,7 @@ Wichtig: im Filter nimmst du den LogicalName **ohne** `_` und **ohne**
 { "field": "_parentcustomerid_value", "operator": "eq", "value": "{acc.id}" }
 ```
 
-Die Engine uebersetzt automatisch.
+Die Engine übersetzt automatisch.
 
 ## recordRef-Varianten
 
@@ -229,10 +229,10 @@ Die Engine uebersetzt automatisch.
 ## description — warum sie wichtig ist
 
 Jede Assert sollte eine `description` haben. Im Steps-Tab und im
-`jbe_errormessage` taucht sie auf, wenn die Assert fehlschlaegt. Ohne
-description weisst du hinterher nur "irgendein Assert auf `markant_x` ist
+`jbe_errormessage` taucht sie auf, wenn die Assert fehlschlägt. Ohne
+description weißt du hinterher nur "irgendein Assert auf `markant_x` ist
 gescheitert, erwartet war `1`, bekommen habe ich `0`". Mit description
-weisst du direkt: "Merge-Plugin hat die Deaktivierung nicht durchgefuehrt".
+weißt du direkt: "Merge-Plugin hat die Deaktivierung nicht durchgeführt".
 
 **Guter Stil:**
 
@@ -252,9 +252,9 @@ weisst du direkt: "Merge-Plugin hat die Deaktivierung nicht durchgefuehrt".
 
 ## onError — Default ist "continue"
 
-Fuer Asserts ist `onError` automatisch `continue`: wenn eine Assert
-fehlschlaegt, laufen die naechsten trotzdem. Am Ende ist der Test
-`Failed`, aber du hast **alle** Pruefungen gesehen.
+Für Asserts ist `onError` automatisch `continue`: wenn eine Assert
+fehlschlägt, laufen die nächsten trotzdem. Am Ende ist der Test
+`Failed`, aber du hast **alle** Prüfungen gesehen.
 
 Wenn du willst dass der Test beim ersten Assert-Fehlschlag abbricht:
 
@@ -266,7 +266,7 @@ Das ist selten sinnvoll. Meistens willst du alle Failures auf einen Blick.
 
 ## Beispiele typischer Muster
 
-### Pruefen dass ein Create zu korrektem Zustand fuehrt
+### Prüfen dass ein Create zu korrektem Zustand führt
 
 ```json
 { "action": "CreateRecord", "entity": "leads", "alias": "lead1",
@@ -282,7 +282,7 @@ Das ist selten sinnvoll. Meistens willst du alle Failures auf einen Blick.
   "description": "Subject korrekt gespeichert", "onError": "continue" }
 ```
 
-### Pruefen dass ein Update eine Plugin-Kette ausloest
+### Prüfen dass ein Update eine Plugin-Kette auslöst
 
 ```json
 { "action": "UpdateRecord", "alias": "opp",
@@ -298,7 +298,7 @@ Das ist selten sinnvoll. Meistens willst du alle Failures auf einen Blick.
   "onError": "continue" }
 ```
 
-### Pruefen dass eine Action negative Seiteneffekte hat
+### Prüfen dass eine Action negative Seiteneffekte hat
 
 ```json
 { "action": "ExecuteRequest", "requestName": "Merge",

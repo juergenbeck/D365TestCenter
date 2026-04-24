@@ -1,7 +1,7 @@
 # JSON-Schema eines Testfalls
 
 Alles was du in das Feld `jbe_definitionjson` schreibst, muss diesem
-Schema folgen. Dieses Dokument ist der Referenz-Ueberblick. Fuer einzelne
+Schema folgen. Dieses Dokument ist der Referenz-Überblick. Für einzelne
 Actions siehe [02-actions-referenz.md](02-actions-referenz.md).
 
 ## Grundgeruest
@@ -9,7 +9,7 @@ Actions siehe [02-actions-referenz.md](02-actions-referenz.md).
 ```json
 {
   "testId":      "MY-01",
-  "title":       "Kurzer aussagekraeftiger Titel",
+  "title":       "Kurzer aussagekräftiger Titel",
   "description": "Optionaler Langtext",
   "category":    "Optional",
   "tags":        ["optional", "array"],
@@ -26,19 +26,19 @@ Actions siehe [02-actions-referenz.md](02-actions-referenz.md).
 
 | Feld | Typ | Pflicht | Bedeutung |
 |---|---|:---:|---|
-| `testId` | String | **ja** | Eindeutige Test-ID. Muss mit dem `jbe_testid` des Records uebereinstimmen. Empfohlen: Praefix + Nummer, z.B. `QS-01`, `MGR-04`. |
-| `title` | String | **ja** | Kurzer aussagekraeftiger Titel. Wird in Reports angezeigt. |
+| `testId` | String | **ja** | Eindeutige Test-ID. Muss mit dem `jbe_testid` des Records übereinstimmen. Empfohlen: Präfix + Nummer, z.B. `QS-01`, `MGR-04`. |
+| `title` | String | **ja** | Kurzer aussagekräftiger Titel. Wird in Reports angezeigt. |
 | `description` | String | nein | Langtext mit Hintergrund, Motivation, Edge-Cases. |
 | `category` | String | nein | Freie Kategorisierung, z.B. `"CRUD"`, `"Merge"`, `"Integration"`. Per Filter ansprechbar (`category:CRUD`). |
 | `tags` | String-Array | nein | Mehrere Tags. Per Filter ansprechbar (`tag:smoke`). |
 | `userStories` | String | nein | Ticket-Referenzen, z.B. `"DYN-1234 DYN-5678"`. Nur Dokumentation. |
-| `enabled` | Boolean | nein | Default `true`. Wenn `false`: Testcase wird beim Run uebersprungen. |
+| `enabled` | Boolean | nein | Default `true`. Wenn `false`: Testcase wird beim Run übersprungen. |
 | `steps` | Array | **ja** | Geordnete Liste von Actions. Mindestens 1. |
 
 ## Der steps-Array
 
 Das ist das eigentliche Programm des Tests. Jeder Eintrag ist eine
-Action. Die JSON-Reihenfolge ist die Ausfuehrungsreihenfolge.
+Action. Die JSON-Reihenfolge ist die Ausführungsreihenfolge.
 
 **Pflichtfelder jeder Step-Struktur:**
 
@@ -51,20 +51,20 @@ Action. Die JSON-Reihenfolge ist die Ausfuehrungsreihenfolge.
 
 | Feld | Typ | Bedeutung |
 |---|---|---|
-| `description` | String | Kommentar fuer den Log, oft hilfreich fuer Debugging. |
+| `description` | String | Kommentar für den Log, oft hilfreich für Debugging. |
 | `onError` | String | `"continue"` oder `"stop"`. Steuert Fehlerverhalten je Step. |
 
-**Was `action`-abhaengig dazukommt:** variiert. Siehe
+**Was `action`-abhängig dazukommt:** variiert. Siehe
 [Actions-Referenz](02-actions-referenz.md).
 
 ## Fehlerverhalten (`onError`)
 
 | Action | Default | Bedeutung |
 |---|---|---|
-| `Assert` | `continue` | Wenn der Assert fehlschlaegt, laeuft der Test weiter. Am Ende ist das `jbe_testrunresult.jbe_outcome = Failed`. |
+| `Assert` | `continue` | Wenn der Assert fehlschlägt, läuft der Test weiter. Am Ende ist das `jbe_testrunresult.jbe_outcome = Failed`. |
 | Alle anderen | `stop` | Wenn die Action wirft (z.B. 404), bricht der Test ab. `jbe_outcome = Error`. |
 
-Du kannst das per Step ueberschreiben:
+Du kannst das per Step überschreiben:
 
 ```json
 { "action": "UpdateRecord", "alias": "acc",
@@ -72,12 +72,12 @@ Du kannst das per Step ueberschreiben:
   "onError": "continue" }
 ```
 
-Bedeutet: wenn das Update fehlschlaegt, Test laeuft trotzdem weiter.
+Bedeutet: wenn das Update fehlschlägt, Test läuft trotzdem weiter.
 Sinnvoll z.B. wenn das Update optional ist.
 
 ## Reihenfolge und Nummerierung
 
-- `stepNumber` **muss fortlaufend** sein: 1, 2, 3, ... — keine Luecken,
+- `stepNumber` **muss fortlaufend** sein: 1, 2, 3, ... — keine Lücken,
   keine Dopplungen. Die Engine sortiert aber danach, nicht nach
   JSON-Reihenfolge.
 - Konvention: fange mit 1 an, inkrementiere um 1.
@@ -105,9 +105,9 @@ Sinnvoll z.B. wenn das Update optional ist.
 }
 ```
 
-## Was NICHT mehr gueltig ist (Legacy)
+## Was NICHT mehr gültig ist (Legacy)
 
-Fruehere Versionen verwendeten getrennte Arrays `preconditions`, `steps`,
+Frühere Versionen verwendeten getrennte Arrays `preconditions`, `steps`,
 `assertions`. Seit ADR-0004 gibt es nur noch die einheitliche
 `steps`-Liste. Wenn du auf alte Testcases triffst, gilt folgendes Mapping:
 
@@ -120,16 +120,16 @@ Fruehere Versionen verwendeten getrennte Arrays `preconditions`, `steps`,
 Alle Records auf den Umgebungen sind schon migriert. Neue Tests schreibst
 du direkt im neuen Schema.
 
-## JSON-Validitaet pruefen
+## JSON-Validitaet prüfen
 
 Das `jbe_definitionjson`-Feld nimmt jeden Text an — auch kaputtes JSON.
-Der Test laeuft dann aber als `Skipped` mit einem Parse-Fehler.
+Der Test läuft dann aber als `Skipped` mit einem Parse-Fehler.
 
 Empfehlung: **JSON vor dem Einfuegen in VS Code oder einem Online-
-Validator pruefen.** Typische Fehler:
+Validator prüfen.** Typische Fehler:
 
 - Fehlende Kommas zwischen Step-Objekten
-- Einfache statt doppelte Anfuehrungszeichen
+- Einfache statt doppelte Anführungszeichen
 - Kommentare `//` oder `/* */` (JSON kennt keine Kommentare)
 - Umlaute ohne UTF-8 (Umlaute sind erlaubt, aber die Codierung muss UTF-8
   sein — das macht der Browser automatisch)

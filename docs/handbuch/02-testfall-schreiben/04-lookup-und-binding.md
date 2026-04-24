@@ -2,7 +2,7 @@
 
 Lookup-Felder sind die Verbindungen zwischen Records: Contact zu Account,
 Opportunity zu Account, Task zu beliebiger Regarding-Entity. Sie werden
-in Dataverse nicht als GUID direkt gesetzt, sondern ueber eine spezielle
+in Dataverse nicht als GUID direkt gesetzt, sondern über eine spezielle
 URL-Syntax: **`@odata.bind`**.
 
 ## Das Grundmuster
@@ -42,11 +42,11 @@ parentcustomerid_account@odata.bind   <-- key
 | `<lookupfeldname>` | Der **LogicalName** des Lookup-Attributs (z.B. `parentcustomerid`, `regardingobjectid`). |
 | `<zielentity>` | Der **LogicalName** der Zielentity (Singular!) — `account`, `contact`, `opportunity`. |
 | `<zielentityplural>` | Der **EntitySetName** der Zielentity (Plural!) — `accounts`, `contacts`, `opportunities`. |
-| `<guid>` | GUID ohne Anfuehrungszeichen, ohne `guid'...'`-Wrapping. |
+| `<guid>` | GUID ohne Anführungszeichen, ohne `guid'...'`-Wrapping. |
 
 ## Typische Beispiele
 
-### Contact an Account haengen
+### Contact an Account hängen
 
 ```json
 "parentcustomerid_account@odata.bind": "/accounts({acc.id})"
@@ -91,7 +91,7 @@ Zielentity-Teil entfallen — ist aber immer explizit erlaubt:
 **Faustregel:** im Zweifel **immer den Zielentity-Suffix angeben**. Das
 funktioniert immer und ist eindeutig.
 
-## Was NICHT geht — die haeufigen Fehler
+## Was NICHT geht — die häufigen Fehler
 
 ### FALSCH: Lookup ohne @odata.bind
 
@@ -108,9 +108,9 @@ Dataverse akzeptiert beim Create/Update **nur** den `@odata.bind`-Weg.
 "parentcustomerid_account@odata.bind": "/account({acc.id})"    <-- FEHLER
 ```
 
-Muss `/accounts(...)` heissen — Plural/EntitySetName.
+Muss `/accounts(...)` heißen — Plural/EntitySetName.
 
-### FALSCH: GUID in Anfuehrungszeichen
+### FALSCH: GUID in Anführungszeichen
 
 ```json
 "parentcustomerid_account@odata.bind": "/accounts(guid'...'))"   <-- FEHLER
@@ -132,9 +132,9 @@ Beim **Lesen** (Filter in Assertions, WaitForRecord etc.) ist das anders!
 ```
 
 **Im Filter verwendest du den LogicalName** (ohne `_` und ohne `_value`).
-Die Engine uebersetzt intern.
+Die Engine übersetzt intern.
 
-## Uebersicht: Lookup in verschiedenen Kontexten
+## Übersicht: Lookup in verschiedenen Kontexten
 
 | Kontext | Format |
 |---|---|
@@ -153,7 +153,7 @@ beim Lesen im Filter den LogicalName, beim Auslesen eines Feldwerts das
 Wenn ein Lookup polymorph ist (kann auf mehrere Entities zeigen), **musst**
 du den Suffix geben. Die wichtigsten Polymorphen:
 
-| Lookup | Moegliche Ziele | Suffixe |
+| Lookup | Mögliche Ziele | Suffixe |
 |---|---|---|
 | `customerid` (auf opportunity, quote, salesorder, invoice) | account, contact | `customerid_account`, `customerid_contact` |
 | `parentcustomerid` (auf contact) | account, contact | `parentcustomerid_account`, `parentcustomerid_contact` |
@@ -162,7 +162,7 @@ du den Suffix geben. Die wichtigsten Polymorphen:
 
 ## Owner setzen (Assign)
 
-Fuer `ownerid` nimmst du meist `ExecuteRequest` mit `AssignRequest`,
+Für `ownerid` nimmst du meist `ExecuteRequest` mit `AssignRequest`,
 statt es direkt im Create zu setzen. Das ist der Microsoft-empfohlene
 Weg und funktioniert mit Privilege-Checks:
 
@@ -178,7 +178,7 @@ Weg und funktioniert mit Privilege-Checks:
 
 ## Lookup auf einen vorher per WaitForRecord gefundenen Record
 
-Wenn du nicht weisst ob der Record schon existiert:
+Wenn du nicht weißt ob der Record schon existiert:
 
 ```json
 { "stepNumber": 3, "action": "WaitForRecord",
@@ -194,5 +194,5 @@ Wenn du nicht weisst ob der Record schon existiert:
 }
 ```
 
-Erst Record finden und unter Alias `deal` registrieren, dann im naechsten
+Erst Record finden und unter Alias `deal` registrieren, dann im nächsten
 Step per `{deal.id}` referenzieren.

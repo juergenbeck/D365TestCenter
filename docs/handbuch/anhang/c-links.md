@@ -5,7 +5,7 @@
 **Architektur und Interna** (optional zum Lesen — du brauchst sie als
 Test-Autor nicht):
 
-- [`docs/00_architektur-uebersicht.md`](../../00_architektur-uebersicht.md) — Ueberblick der Komponenten
+- [`docs/00_architektur-uebersicht.md`](../../00_architektur-uebersicht.md) — Überblick der Komponenten
 - [`docs/01_architektur-spezifikation.md`](../../01_architektur-spezifikation.md) — Tiefe Architektur-Spec
 - [`docs/02_datenmodell.md`](../../02_datenmodell.md) — Entities im Detail
 - [`docs/03_api-referenz.md`](../../03_api-referenz.md) — API-Referenz der Core-Engine
@@ -16,7 +16,7 @@ Test-Autor nicht):
 
 ## In diesem Handbuch
 
-Siehe das [README](../README.md) fuer die vollstaendige Navigation.
+Siehe das [README](../README.md) für die vollstaendige Navigation.
 
 ## Externe Ressourcen
 

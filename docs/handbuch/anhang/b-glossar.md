@@ -11,7 +11,7 @@ Objekt im `steps`-Array.
 
 ## Alias
 
-Ein frei gewaehlter Name, der einen per `CreateRecord` (oder
+Ein frei gewählter Name, der einen per `CreateRecord` (oder
 `WaitForRecord`) angelegten Record identifiziert. Wird per `{alias.id}`,
 `{RECORD:alias}` oder direkt in `alias`-Feldern referenziert.
 
@@ -22,13 +22,13 @@ Format: `"<lookupname>_<zielentity>@odata.bind": "/<zielentityplural>(<guid>)"`.
 
 ## Assert
 
-Eine Action die prueft. Zwei Varianten: `target: "Record"` (prueft ein
-Feld eines bekannten Records) und `target: "Query"` (prueft per Abfrage
+Eine Action die prüft. Zwei Varianten: `target: "Record"` (prüft ein
+Feld eines bekannten Records) und `target: "Query"` (prüft per Abfrage
 ob/wie viele Records mit bestimmten Kriterien existieren).
 
 ## Async Plugin
 
-Ein Plugin das nach dem Trigger-Event verzoegert laeuft (nicht sofort
+Ein Plugin das nach dem Trigger-Event verzoegert läuft (nicht sofort
 synchron). Braucht nicht in der 2-Min-Sandbox-Grenze zu bleiben.
 Seine Seiten-Effekte (erstellte Records, gesetzte Felder) sind erst
 nach einer kleinen Zeitspanne sichtbar. Deshalb `WaitForFieldValue` /
@@ -37,20 +37,20 @@ nach einer kleinen Zeitspanne sichtbar. Deshalb `WaitForFieldValue` /
 ## Batch
 
 Das Test Center verarbeitet einen Testrun in Batches zu ~12 Testcases.
-Jeder Batch laeuft in einem eigenen Plugin-Aufruf (2-Min-Grenze). Nach
-dem Batch startet automatisch der naechste.
+Jeder Batch läuft in einem eigenen Plugin-Aufruf (2-Min-Grenze). Nach
+dem Batch startet automatisch der nächste.
 
 ## Cleanup
 
-Automatische Loeschung der waehrend des Tests per `CreateRecord`
-angelegten Records. Laeuft am Testcase-Ende, in umgekehrter
+Automatische Löschung der während des Tests per `CreateRecord`
+angelegten Records. Läuft am Testcase-Ende, in umgekehrter
 Reihenfolge. Ausgeschaltet per `jbe_keeprecords: true` am Testrun.
 
 ## CRUD-Trigger
 
 Das Plugin `RunTestsOnStatusChange`, das auf Create/Update von
 `jbe_testrun` registriert ist. Wenn das Feld `jbe_teststatus` auf
-`Geplant` steht, feuert das Plugin und startet die Testausfuehrung.
+`Geplant` steht, feuert das Plugin und startet die Testausführung.
 
 ## Custom Action
 
@@ -67,19 +67,19 @@ Center verwendet den **Plural** im `entity`-Feld.
 
 Outcome eines Testcases: alle Actions liefen durch, aber mindestens
 eine Assert ergab einen unerwarteten Wert. Unterschied zu Error: Error
-heisst "Action hat geworfen", Failed heisst "Logik war anders als
+heißt "Action hat geworfen", Failed heißt "Logik war anders als
 erwartet".
 
 ## Filter
 
 Der `jbe_testcasefilter`-Wert am `jbe_testrun`: bestimmt welche
-`jbe_testcase`-Records ausgefuehrt werden. Varianten: `*`, `QS-01`,
+`jbe_testcase`-Records ausgeführt werden. Varianten: `*`, `QS-01`,
 `QS-*`, `tag:smoke`, `category:Integration`, komma-getrennte Liste.
 
 ## Full-Log
 
 Der Text im Feld `jbe_fulllog` des `jbe_testrun`: vollstaendiges Plugin-
-Protokoll des Laufs. Fuer tiefere Analysen nuetzlich.
+Protokoll des Laufs. Für tiefere Analysen nützlich.
 
 ## LogicalName
 
@@ -98,8 +98,8 @@ Syntax. Beim Lesen im Filter: der LogicalName (z.B.
 
 Step-Property die bestimmt was passiert wenn die Action einen Fehler
 wirft. Werte: `"stop"` (Test bricht ab, Outcome Error) oder
-`"continue"` (Test laeuft weiter). Default fuer `Assert`: `continue`.
-Default fuer alle anderen: `stop`.
+`"continue"` (Test läuft weiter). Default für `Assert`: `continue`.
+Default für alle anderen: `stop`.
 
 ## OptionSet
 
@@ -109,7 +109,7 @@ Integer-Codes, Labels sind lokalisiert. Beispiel: `statecode` auf
 
 ## Platzhalter
 
-Dynamische Referenzen in Feldwerten, werden zur Laufzeit aufgeloest.
+Dynamische Referenzen in Feldwerten, werden zur Laufzeit aufgelöst.
 Typen: `{TIMESTAMP}`, `{GENERATED:...}`, `{alias.id}`, `{alias.fields.xxx}`,
 `{RECORD:alias}`.
 
@@ -121,7 +121,7 @@ Tabelle.
 ## Record-Tracker
 
 Interne Liste der Engine mit allen per `CreateRecord` angelegten
-Records. Wird fuer den Cleanup verwendet.
+Records. Wird für den Cleanup verwendet.
 
 ## Skipped
 
@@ -136,15 +136,15 @@ bekommt 9000.
 
 ## Step-Tab
 
-Die Sub-Grid auf einem `jbe_testrunresult` mit allen ausgefuehrten
+Die Sub-Grid auf einem `jbe_testrunresult` mit allen ausgeführten
 `jbe_teststep`-Records. Dein wichtigstes Debug-Werkzeug.
 
 ## Sub-Grid
 
 Eine Tabelle auf einem Formular, die zugeordnete Records anzeigt. In
-der Model-Driven-App klicken auf einen Record darin oeffnet den Detail.
+der Model-Driven-App klicken auf einen Record darin öffnet den Detail.
 
-## Target (fuer Assert)
+## Target (für Assert)
 
 Unterscheidet wie ein Assert Daten holt: `"Record"` (aus einem bekannten
 Alias), `"Query"` (per Abfrage mit Filter).
@@ -171,7 +171,7 @@ ggf. Assertion-Details.
 
 ## Throttling
 
-Rate-Limiting von Dataverse gegen Ueberlast (HTTP 429). Das Test Center
+Rate-Limiting von Dataverse gegen Überlast (HTTP 429). Das Test Center
 hat automatische Retries. Bei sehr vielen parallelen Runs kann's
 trotzdem spuerbar werden.
 
@@ -183,5 +183,5 @@ Varianten: `{TIMESTAMP_MINUS_1H}`, `{TIMESTAMP_PLUS_1H}`.
 ## Trigger (in Dataverse)
 
 Ein Ereignis (Create/Update/Delete) das ein Plugin startet. Der CRUD-
-Trigger-Plugin des Test Centers reagiert auf Aenderungen am
+Trigger-Plugin des Test Centers reagiert auf Änderungen am
 `jbe_teststatus`-Feld.

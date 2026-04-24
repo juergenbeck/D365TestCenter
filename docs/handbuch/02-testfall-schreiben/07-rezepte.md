@@ -1,12 +1,12 @@
-# Rezepte: Vorlagen fuer typische Szenarien
+# Rezepte: Vorlagen für typische Szenarien
 
-Vollstaendige JSON-Templates fuer haeufige Test-Muster. Kopiere, passe an,
-fertig. Jedes Rezept ist ausfuehrbar wie es steht (ersetze nur die
+Vollstaendige JSON-Templates für häufige Test-Muster. Kopiere, passe an,
+fertig. Jedes Rezept ist ausführbar wie es steht (ersetze nur die
 Test-ID wenn du mehrere Varianten brauchst).
 
-## Rezept A: Standard-CRUD (Account anlegen und pruefen)
+## Rezept A: Standard-CRUD (Account anlegen und prüfen)
 
-**Wofuer:** einfacher Smoke-Test, als erstes Beispiel in einer neuen
+**Wofür:** einfacher Smoke-Test, als erstes Beispiel in einer neuen
 Entity-Suite.
 
 ```json
@@ -39,13 +39,13 @@ Entity-Suite.
 
 ## Rezept B: Parent-Child-Beziehung (Account + Contact)
 
-**Wofuer:** Tests die einen Lookup zwischen zwei Entities setzen muessen.
+**Wofür:** Tests die einen Lookup zwischen zwei Entities setzen müssen.
 Zeigt das @odata.bind-Pattern.
 
 ```json
 {
   "testId": "REZ-B-01",
-  "title":  "Contact an Account haengen und auslesen",
+  "title":  "Contact an Account hängen und auslesen",
   "enabled": true,
   "steps": [
     { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "acc",
@@ -77,8 +77,8 @@ Zeigt das @odata.bind-Pattern.
 
 ## Rezept C: Custom Action aufrufen (QualifyLead)
 
-**Wofuer:** Tests die eine Microsoft-SDK-Message ausloesen und Folge-Records
-pruefen.
+**Wofür:** Tests die eine Microsoft-SDK-Message auslösen und Folge-Records
+prüfen.
 
 ```json
 {
@@ -124,9 +124,9 @@ pruefen.
 }
 ```
 
-## Rezept D: Async Plugin-Kette (Opportunity schliessen)
+## Rezept D: Async Plugin-Kette (Opportunity schließen)
 
-**Wofuer:** Tests die auf ein Plugin warten muessen, das asynchron
+**Wofür:** Tests die auf ein Plugin warten müssen, das asynchron
 Seiten-Effekte erzeugt.
 
 ```json
@@ -178,18 +178,18 @@ Seiten-Effekte erzeugt.
 
 ## Rezept E: Delete mit Negativ-Assert
 
-**Wofuer:** Tests die Loeschen pruefen.
+**Wofür:** Tests die Löschen prüfen.
 
 ```json
 {
   "testId": "REZ-E-01",
-  "title":  "Task loeschen und Abwesenheit bestaetigen",
+  "title":  "Task löschen und Abwesenheit bestätigen",
   "enabled": true,
   "steps": [
     { "stepNumber": 1, "action": "CreateRecord", "entity": "tasks", "alias": "tsk",
       "fields": {
         "subject":     "JBE Test Task {TIMESTAMP}",
-        "description": "Wird gleich geloescht"
+        "description": "Wird gleich gelöscht"
       }
     },
 
@@ -210,8 +210,8 @@ Seiten-Effekte erzeugt.
 
 ## Rezept F: Merge mit Seiten-Effekt
 
-**Wofuer:** Zwei Records zusammenfuehren und sowohl Survivor als auch
-Subordinate pruefen.
+**Wofür:** Zwei Records zusammenführen und sowohl Survivor als auch
+Subordinate prüfen.
 
 ```json
 {
@@ -264,7 +264,7 @@ Subordinate pruefen.
 
 ## Rezept G: WaitForRecord — auf von Plugin erzeugten Record warten
 
-**Wofuer:** Ein Plugin erzeugt einen Folgerecord, du weisst nicht die GUID,
+**Wofür:** Ein Plugin erzeugt einen Folgerecord, du weißt nicht die GUID,
 musst aber darauf zugreifen.
 
 ```json
@@ -304,8 +304,8 @@ musst aber darauf zugreifen.
 
 ## Rezept H: Test mit AutoNumber-Read via columns
 
-**Wofuer:** Dynamics generiert eine AutoNumber beim Create (z.B. Lead-
-oder Invoice-Nummer). Du willst sie pruefen oder in weiteren Steps nutzen.
+**Wofür:** Dynamics generiert eine AutoNumber beim Create (z.B. Lead-
+oder Invoice-Nummer). Du willst sie prüfen oder in weiteren Steps nutzen.
 
 ```json
 {
@@ -344,6 +344,6 @@ oder Invoice-Nummer). Du willst sie pruefen oder in weiteren Steps nutzen.
 
 ---
 
-Diese Rezepte decken ca. 80% aller Tests. Fuer spezielle Dinge schau in
+Diese Rezepte decken ca. 80% aller Tests. Für spezielle Dinge schau in
 der [Actions-Referenz](02-actions-referenz.md) oder
 [Assertions-Dokumentation](05-assertions.md).

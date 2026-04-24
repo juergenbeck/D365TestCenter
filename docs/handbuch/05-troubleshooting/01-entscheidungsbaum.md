@@ -38,7 +38,7 @@ folge den Verzweigungen.
             |          |
             v          v
   Filter leer?   Ergebnisse vorhanden
-  - Filter pruefen     |
+  - Filter prüfen     |
   - enabled=true?      v
                 +-----------------------+
                 | Alle Ergebnisse       |
@@ -54,7 +54,7 @@ folge den Verzweigungen.
 
 ## Bei mindestens einem Nicht-Bestanden
 
-Oeffne das betroffene `jbe_testrunresult` und schau auf `jbe_outcome`:
+Öffne das betroffene `jbe_testrunresult` und schau auf `jbe_outcome`:
 
 ```
                 +-----------------------------------+
@@ -122,7 +122,7 @@ Oeffne das betroffene `jbe_testrunresult` und schau auf `jbe_outcome`:
   |  - Tippfehler oder vorheriger Create ist  |
   |    fehlgeschlagen                         |
   | WaitForFieldValue Timeout?                |
-  |  - Plugin laeuft nicht oder Wert anders.  |
+  |  - Plugin läuft nicht oder Wert anders.  |
   |    Timeout erhoehen oder Erwartung neu.   |
   +-------+-----------------------------------+
           |
@@ -148,7 +148,7 @@ Oeffne das betroffene `jbe_testrunresult` und schau auf `jbe_outcome`:
   | JSON aus dem Feld kopieren                |
   | -> VS Code / JSONLint                     |
   | -> Fehler fixen                           |
-  | -> Zurueckkopieren, speichern             |
+  | -> Zurückkopieren, speichern             |
   +-------+-----------------------------------+
           |
           v
@@ -173,10 +173,10 @@ Oeffne das betroffene `jbe_testrunresult` und schau auf `jbe_outcome`:
 
 Wenn nichts hilft, zwei Gegenproben:
 
-1. **Einen bekannten gruenen Test auf derselben Umgebung starten.** Wenn
+1. **Einen bekannten grünen Test auf derselben Umgebung starten.** Wenn
    der auch rot wird: Infra-Problem, kein Test-Problem. Projekt-Owner
    fragen.
 
 2. **Den fehlgeschlagenen Test auf einer anderen Umgebung laufen
-   lassen** (falls verfuegbar). Wenn dort gruen: umgebungs-spezifisches
+   lassen** (falls verfuegbar). Wenn dort grün: umgebungs-spezifisches
    Problem.

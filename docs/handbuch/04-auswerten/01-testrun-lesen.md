@@ -1,12 +1,12 @@
 # TestRun lesen
 
-Der `jbe_testrun`-Record ist dein Ueberblick: wurde der Lauf sauber
+Der `jbe_testrun`-Record ist dein Überblick: wurde der Lauf sauber
 abgeschlossen, wie viele Tests sind durchgelaufen, wie viele sind
 fehlgeschlagen.
 
 ## Die Standardansicht
 
-Nach Abschluss eines Runs oeffnest du den Record:
+Nach Abschluss eines Runs öffnest du den Record:
 
 ```
 +-- Testlauf: Regression 24.04 -----------------------------+
@@ -16,7 +16,7 @@ Nach Abschluss eines Runs oeffnest du den Record:
 |  Test-Status       [ Abgeschlossen          v ]           |
 |  Records behalten  [ ] nein                               |
 |  Gestartet         24.04.2026 11:45:32                    |
-|  Geaendert         24.04.2026 11:47:58                    |
+|  Geändert         24.04.2026 11:47:58                    |
 |                                                           |
 |  Bestanden          4                                     |
 |  Fehlgeschlagen     1                                     |
@@ -32,7 +32,7 @@ Nach Abschluss eines Runs oeffnest du den Record:
 |  | [OK]  QS-02: Contact an Account (3.4s)               | |
 |  | [OK]  QS-03: Lead qualifizieren (5.1s)               | |
 |  | [OK]  QS-04: Opportunity gewinnen (8.2s)             | |
-|  | [FAIL] QS-05: Task loeschen (1.8s)                   | |
+|  | [FAIL] QS-05: Task löschen (1.8s)                   | |
 |  +------------------------------------------------------+ |
 |                                                           |
 |  [> Zugeordnete Testergebnisse (5)]                       |
@@ -52,7 +52,7 @@ Nach Abschluss eines Runs oeffnest du den Record:
 | Status | Bedeutung | Was jetzt? |
 |---|---|---|
 | Geplant | Trigger gesetzt, Plugin noch nicht angelaufen | 1 Minute warten, F5 |
-| Wird ausgefuehrt | Plugin laeuft gerade | F5 druecken, zuschauen |
+| Wird ausgeführt | Plugin läuft gerade | F5 drücken, zuschauen |
 | Abgeschlossen | Lauf ist fertig (Passed oder Failed Tests inklusive) | Ergebnisse auswerten |
 | Fehlgeschlagen | **Technischer** Abbruch: Plugin-Exception, Sandbox-Timeout, Parser-Fehler | Full-Log lesen, Projekt-Owner fragen |
 
@@ -61,7 +61,7 @@ normal durchgelaufen, aber 3 Tests waren inhaltlich nicht OK". Das ist
 ein gesunder Zustand — keine technische Panne.
 
 `Test-Status = Fehlgeschlagen` dagegen bedeutet "der Lauf selbst ist
-abgebrochen, ich weiss nicht einmal wie viele Tests geschafft haben".
+abgebrochen, ich weiß nicht einmal wie viele Tests geschafft haben".
 Das sollte nicht passieren und deutet auf Infrastruktur-Probleme.
 
 ## Die Kennzahlen
@@ -77,14 +77,14 @@ Gesamt         5
   Skipped.
 - **Gesamt**: Summe. Muss = Anzahl Testcases im Filter sein.
 
-Pruefe: Erwartete Anzahl = Gesamt? Wenn dein Filter `QS-*` trifft aber
+Prüfe: Erwartete Anzahl = Gesamt? Wenn dein Filter `QS-*` trifft aber
 nur 3 Testcases existieren, steht hier `Gesamt = 3`. Wenn dein Filter
-keinen Treffer hat: `Gesamt = 0` (Lauf laeuft trotzdem durch, nur ohne
+keinen Treffer hat: `Gesamt = 0` (Lauf läuft trotzdem durch, nur ohne
 Tests).
 
 ## Test-Zusammenfassung (Feld `jbe_testsummary`)
 
-Kurzer Plaintext-Ueberblick pro Testcase. Beispiel:
+Kurzer Plaintext-Überblick pro Testcase. Beispiel:
 
 ```
 4/5 bestanden, 1 fehlgeschlagen
@@ -92,10 +92,10 @@ Batch 1-5 von 5:
   Dieser Batch: 4/5 bestanden
   Gesamt bisher: 4/5
 [OK]  QS-01: Account: Create, Update, Verify (1234ms)
-[OK]  QS-02: Contact an Account haengen (3456ms)
+[OK]  QS-02: Contact an Account hängen (3456ms)
 [OK]  QS-03: Lead qualifizieren (5123ms)
 [OK]  QS-04: Opportunity gewinnen (8234ms)
-[FAIL] QS-05: Task loeschen (1789ms)
+[FAIL] QS-05: Task löschen (1789ms)
 ```
 
 Jede Zeile:
@@ -104,13 +104,13 @@ Jede Zeile:
 - Test-ID, Doppelpunkt, Titel
 - Laufzeit in Klammern
 
-Bei groesseren Runs steht hier auch der Batching-Status mit drin — welche
-Batches sind abgearbeitet, welcher laeuft gerade.
+Bei größeren Runs steht hier auch der Batching-Status mit drin — welche
+Batches sind abgearbeitet, welcher läuft gerade.
 
 ## Full-Log (Feld `jbe_fulllog`)
 
-Ausfuehrlicher Plaintext-Log, der waehrend des Runs gesammelt wurde. Hier
-steht z.B. wenn die Engine versucht hat einen Record zu loeschen und
+Ausführlicher Plaintext-Log, der während des Runs gesammelt wurde. Hier
+steht z.B. wenn die Engine versucht hat einen Record zu löschen und
 fehlgeschlagen ist, oder wenn das Parsen eines JSONs gehakt hat. Siehe
 [05-logs-im-detail.md](05-logs-im-detail.md).
 
@@ -136,8 +136,8 @@ Lauf:
 +-------------------------------------------------------+
 ```
 
-**Klick auf eine fehlgeschlagene Zeile** oeffnet den Detail-Record mit
-Step-Tab und Fehlermeldung — das ist dein naechster Anlaufpunkt. Siehe
+**Klick auf eine fehlgeschlagene Zeile** öffnet den Detail-Record mit
+Step-Tab und Fehlermeldung — das ist dein nächster Anlaufpunkt. Siehe
 [02-testrunresult-detail.md](02-testrunresult-detail.md).
 
 ## Tipps zur Tabellen-Ansicht
@@ -146,7 +146,7 @@ Die Zugeordnete-Liste ist eine ganz normale Dynamics-Sub-Grid. Du kannst:
 
 - Nach **Ergebnis** sortieren (Bestanden / Fehlgeschlagen / Error)
 - Per Spalten-Filter nur die **Fehlgeschlagenen** anzeigen
-- Per Doppelklick einen Ergebnis-Record oeffnen
+- Per Doppelklick einen Ergebnis-Record öffnen
 
-Fuer grosse Runs (>20 Ergebnisse) empfehlen sich diese Filter um nur auf
+Für große Runs (>20 Ergebnisse) empfehlen sich diese Filter um nur auf
 die Probleme zu schauen.

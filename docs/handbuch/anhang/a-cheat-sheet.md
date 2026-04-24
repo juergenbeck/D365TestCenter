@@ -1,6 +1,6 @@
 # Cheat Sheet
 
-Die 20 haeufigsten Patterns auf einer Seite. Copy & Paste in deinen
+Die 20 häufigsten Patterns auf einer Seite. Copy & Paste in deinen
 Testfall, anpassen, fertig.
 
 ## Grundgeruest
@@ -35,7 +35,7 @@ Testfall, anpassen, fertig.
   } }
 ```
 
-## Feld aendern
+## Feld ändern
 
 ```json
 { "stepNumber": 3, "action": "UpdateRecord", "alias": "con",
@@ -128,7 +128,7 @@ Testfall, anpassen, fertig.
 { "stepNumber": 3, "action": "Wait", "waitSeconds": 3 }
 ```
 
-## Record loeschen
+## Record löschen
 
 ```json
 { "stepNumber": 6, "action": "DeleteRecord", "alias": "tsk" }
@@ -181,7 +181,7 @@ Testfall, anpassen, fertig.
   "waitSeconds": 5 }
 ```
 
-## Assign (Owner aendern)
+## Assign (Owner ändern)
 
 ```json
 { "stepNumber": 3, "action": "ExecuteRequest",

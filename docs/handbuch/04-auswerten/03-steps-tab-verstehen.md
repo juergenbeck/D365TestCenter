@@ -32,7 +32,7 @@ deswegen am Ende.
 
 | Spalte | Technischer Feldname | Bedeutung |
 |---|---|---|
-| **#** | `jbe_stepnumber` | Aus dem JSON uebernommen |
+| **#** | `jbe_stepnumber` | Aus dem JSON übernommen |
 | **Action** | `jbe_action` | `CreateRecord`, `Assert`, ... |
 | **Alias** | `jbe_alias` | Aus dem JSON, wenn gesetzt |
 | **Entity** | `jbe_entity` | Ziel-Entity der Action |
@@ -43,7 +43,7 @@ deswegen am Ende.
 
 ## Ein Step im Detail
 
-Klick eine Zeile an um das Step-Detail zu oeffnen:
+Klick eine Zeile an um das Step-Detail zu öffnen:
 
 ```
 +-- Testschritt: Assert #5 -------------------------------------+
@@ -84,31 +84,31 @@ Klick eine Zeile an um das Step-Detail zu oeffnen:
 
 ## Die Assertion-Details
 
-Nur bei `Assert`-Steps gefuellt:
+Nur bei `Assert`-Steps gefüllt:
 
-- **Feld** (`jbe_assertionfield`) — was wurde geprueft
+- **Feld** (`jbe_assertionfield`) — was wurde geprüft
 - **Operator** (`jbe_assertionoperator`) — welche Vergleichslogik
 - **Erwartet** (`jbe_expectedvalue`) — was sollte drinstehen
-- **Tatsaechlich** (`jbe_actualvalue`) — was war's wirklich
+- **Tatsächlich** (`jbe_actualvalue`) — was war's wirklich
 
-Die Differenz zwischen **Erwartet** und **Tatsaechlich** ist deine
+Die Differenz zwischen **Erwartet** und **Tatsächlich** ist deine
 wichtigste Debug-Information.
 
 ## Die Record-Referenz (`jbe_recordid`)
 
-Bei CreateRecord / UpdateRecord-Steps oft gefuellt: die GUID des
+Bei CreateRecord / UpdateRecord-Steps oft gefüllt: die GUID des
 erzeugten/bearbeiteten Records, plus ein klickbarer Link.
 
-**Super nuetzlich mit `jbe_keeprecords: true`:** du kannst direkt in
-den tatsaechlichen Record springen, den der Test erzeugt hat, und ihn
+**Super nützlich mit `jbe_keeprecords: true`:** du kannst direkt in
+den tatsächlichen Record springen, den der Test erzeugt hat, und ihn
 dir anschauen.
 
 ## Input- und Output-Daten
 
 - **Input-Daten** (`jbe_inputdata`) — das Roh-JSON das diese Action
-  ausgeloest hat (mit aufgeloesten Platzhaltern).
+  ausgelöst hat (mit aufgelösten Platzhaltern).
 - **Output-Daten** (`jbe_outputdata`) — die Antwort vom Server (bei
-  Bedarf gekuerzt).
+  Bedarf gekürzt).
 
 Die meisten Tests brauchen diese Felder nie. Bei tief verschachtelten
 Problemen (Custom-Action-Aufrufe mit ungewoehnlichen Parametern) helfen
@@ -118,20 +118,20 @@ sie beim Debuggen.
 
 Die Engine schreibt:
 
-| Status | Was es heisst |
+| Status | Was es heißt |
 |---|---|
-| **Erfolg** | Action erfolgreich durchgelaufen. Bei Assert: Pruefung bestanden |
-| **Fehler** | Action hat einen Fehler geworfen. Bei Assert: Pruefung nicht bestanden |
-| **Uebersprungen** | Der Step wurde nicht ausgefuehrt (z.B. nach vorherigem Abbruch mit `onError=stop`) |
+| **Erfolg** | Action erfolgreich durchgelaufen. Bei Assert: Prüfung bestanden |
+| **Fehler** | Action hat einen Fehler geworfen. Bei Assert: Prüfung nicht bestanden |
+| **Übersprungen** | Der Step wurde nicht ausgeführt (z.B. nach vorherigem Abbruch mit `onError=stop`) |
 
-## Den Test ueber den Step-Tab "lesen"
+## Den Test über den Step-Tab "lesen"
 
-Ein erfahrener Leser ueberfliegt den Step-Tab so:
+Ein erfahrener Leser überfliegt den Step-Tab so:
 
 1. **Alle Steps auf Erfolg?** Super, Test ist sauber.
 2. **Welcher Step hat gekippt?** — oft gibt es nur einen Assert-Fehler,
    alle anderen sind OK.
-3. **Was war Erwartet vs Tatsaechlich?** — hier kommt die Diagnose her.
+3. **Was war Erwartet vs Tatsächlich?** — hier kommt die Diagnose her.
 4. **Dauerte der Step ungewoehnlich lange?** — Hinweis auf Timing-
    Probleme.
 

@@ -21,13 +21,13 @@ Diese drei sind sehr unterschiedliche Bugs. Verwechsle sie nicht.
 
 ### Schritt 1: Welcher Assert?
 
-Oeffne den Steps-Tab, sortiere oder filtere auf `jbe_stepstatus = Fehler`.
+Öffne den Steps-Tab, sortiere oder filtere auf `jbe_stepstatus = Fehler`.
 Pro rote Zeile:
 
 - Lies die `description` — was war die Erwartung fachlich?
 - Lies `Erwartet` und `Tatsaechlich`.
 
-### Schritt 2: Erwartet vs Tatsaechlich — vier typische Muster
+### Schritt 2: Erwartet vs Tatsächlich — vier typische Muster
 
 **Muster A: Timing**
 
@@ -37,7 +37,7 @@ Tatsaechlich: null (oder 0, oder der Default-Wert)
 ```
 
 Der Wert sollte vom Plugin gesetzt worden sein, war aber noch nicht.
-Loesung: `WaitForFieldValue` einbauen, Timeout erhoehen.
+Lösung: `WaitForFieldValue` einbauen, Timeout erhöhen.
 
 **Muster B: Test-Erwartung veraltet**
 
@@ -47,7 +47,7 @@ Tatsaechlich: 288260003
 ```
 
 Das Plugin setzt jetzt einen anderen Wert als der Test annimmt. Im Code
-wurde etwas geaendert, der Test wurde nicht nachgezogen.
+wurde etwas geändert, der Test wurde nicht nachgezogen.
 
 **Muster C: Typ-/Format-Fehler**
 
@@ -56,9 +56,9 @@ Erwartet:     5000
 Tatsaechlich: 5000.0000
 ```
 
-Money-Felder kommen als Decimal-Strings zurueck. Im Test:
+Money-Felder kommen als Decimal-Strings zurück. Im Test:
 `"value": "5000.0000"` oder `"value": "5000.00"` — je nachdem was
-Dataverse gerade zurueckgibt. Tipp: erst manuell ohne Assert laufen
+Dataverse gerade zurückgibt. Tipp: erst manuell ohne Assert laufen
 lassen, `Tatsaechlich` auslesen, im Test nachtragen.
 
 **Muster D: Lookup-Format**
@@ -72,25 +72,25 @@ Du vergleichst vermutlich `parentcustomerid` als Record-Assert. Im
 `target: Record` funktioniert das aber anders als im Filter. Umstellen
 auf `target: Query` und im Filter `parentcustomerid eq <guid>`.
 
-### Schritt 3: Die Daten pruefen
+### Schritt 3: Die Daten prüfen
 
-Wenn du unsicher bist was im Dataverse tatsaechlich drin steht: lass
+Wenn du unsicher bist was im Dataverse tatsächlich drin steht: lass
 den Test mit `jbe_keeprecords: true` nochmal laufen. Danach kannst du
 die Records direkt im Browser anschauen und vergleichen.
 
 Shortcut: Im Steps-Tab beim CreateRecord-Step ist die GUID mit einem
-Klick-Link verfuegbar. Oeffnen, nachschauen.
+Klick-Link verfuegbar. Öffnen, nachschauen.
 
 ## Error — eine Action ist geworfen
 
 ### Schritt 1: Welche Action war's?
 
 Im Steps-Tab: die **erste** rote Zeile mit Status `Fehler`. Alles danach
-ist "Uebersprungen".
+ist "Übersprungen".
 
 ### Schritt 2: Die Fehlermeldung lesen
 
-Die `jbe_errormessage` des Steps ist dein Schluessel. Haeufige Muster:
+Die `jbe_errormessage` des Steps ist dein Schlüssel. Häufige Muster:
 
 **HTTP 400 Bad Request:**
 
@@ -98,7 +98,7 @@ Die `jbe_errormessage` des Steps ist dein Schluessel. Haeufige Muster:
 HTTP 400: attribute 'someunknown' does not exist on type accounts.
 ```
 
--> Tippfehler im `fields`-Objekt. Attribute-Name pruefen.
+-> Tippfehler im `fields`-Objekt. Attribute-Name prüfen.
 
 **HTTP 400 bei Lookup:**
 
@@ -115,7 +115,7 @@ HTTP 400: expected guid format.
 HTTP 403: Principal user does not have the required permission.
 ```
 
--> Dein Service-User hat nicht die noetigen Privilegien fuer die Entity.
+-> Dein Service-User hat nicht die noetigen Privilegien für die Entity.
 Projekt-Owner fragen.
 
 **Plugin-Exception:**
@@ -145,7 +145,7 @@ Erwartet war 1.
 ```
 
 -> Das Plugin hat das Feld in der Wartezeit nicht gesetzt. Entweder:
-Timeout erhoehen, oder Plugin ist gerade kaputt.
+Timeout erhöhen, oder Plugin ist gerade kaputt.
 
 ### Schritt 3: Fix einspielen und erneut laufen lassen
 
@@ -160,23 +160,23 @@ Testrun herumbiegen — ein neuer Run ist ein neuer Audit-Eintrag.
 JSON-Parse-Fehler: line 15, col 3: unexpected token
 ```
 
-Testfall oeffnen, JSON rauskopieren, in VS Code validieren. Typische
+Testfall öffnen, JSON rauskopieren, in VS Code validieren. Typische
 Suender:
 
 - Fehlendes Komma nach einem Step-Objekt
-- Einfache statt doppelte Anfuehrungszeichen
+- Einfache statt doppelte Anführungszeichen
 - Trailing Comma nach letztem Array-Element
 - Kommentare `//` (nicht erlaubt in JSON)
 
 ### Ursache 2: enabled = false
 
 Wenn der Testfall-Record `jbe_enabled = nein` hat, wird er vom Run
-uebersprungen. Bei Filter `*` ohne Hit auf einen Test mit `jbe_enabled`=
+übersprungen. Bei Filter `*` ohne Hit auf einen Test mit `jbe_enabled`=
 `ja` landet `Gesamt = 0` — dann existiert gar kein Result-Record.
 
 ### Ursache 3: Pflichtfelder fehlen
 
-Wenn dein JSON z.B. `testId` nicht enthaelt, parsed der Testcase zwar
+Wenn dein JSON z.B. `testId` nicht enthält, parsed der Testcase zwar
 als JSON, aber die Engine kann nichts damit anfangen. Ergebnis: Skipped
 mit entsprechender Meldung.
 
@@ -184,7 +184,7 @@ mit entsprechender Meldung.
 
 Siehe
 [../05-troubleshooting/01-entscheidungsbaum.md](../05-troubleshooting/01-entscheidungsbaum.md)
-fuer den strukturierten Ablauf.
+für den strukturierten Ablauf.
 
 ## Wann es NICHT am Test liegt
 
@@ -193,15 +193,15 @@ Instabilitaet:
 
 - **Ein anderer User hat Records auf der DEV-Umgebung beeinflusst.**
   Typisch: Bug in einem Business-Plugin, der durch parallele Arbeit
-  ausgeloest wurde.
+  ausgelöst wurde.
 - **Die Umgebung hat Hiccups.** Dataverse hatte kurze Outages, das
-  CRUD-Trigger-Plugin haengt. Erneut laufen lassen hilft.
+  CRUD-Trigger-Plugin hängt. Erneut laufen lassen hilft.
 - **Sandbox-Resource-Limit.** Plugin-Sandbox-Pool war erschoepft. Warte
   1-2 Minuten, erneut starten.
 
 **Erster Sanity-Check** bei allen mysterioesen Fehlern: den Test **zum
-zweiten Mal** laufen lassen, und **einen bekanntermaßen gruenen Test
-gegenpruefen**. Wenn auch der rot ist, liegt es nicht an deinem Code.
+zweiten Mal** laufen lassen, und **einen bekanntermaßen grünen Test
+gegenprüfen**. Wenn auch der rot ist, liegt es nicht an deinem Code.
 
 ## Kleine Checkliste als Anker
 
@@ -227,8 +227,8 @@ gegenpruefen**. Wenn auch der rot ist, liegt es nicht an deinem Code.
 |     JSON-Syntax im Step-Input?                     |
 |     Plugin-Exception?                              |
 |                                                    |
-|  6. Als letzter Schritt: gegen-pruefen auf         |
-|     einem bekannten gruenen Test                   |
+|  6. Als letzter Schritt: gegen-prüfen auf         |
+|     einem bekannten grünen Test                   |
 |                                                    |
 +----------------------------------------------------+
 ```

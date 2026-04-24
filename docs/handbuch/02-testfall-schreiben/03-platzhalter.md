@@ -2,39 +2,39 @@
 
 Platzhalter sind die dynamischen Elemente in deinen Testdaten. Sie werden
 zur Laufzeit durch echte Werte ersetzt — Record-IDs, Zeitstempel, generierte
-Namen. Ohne Platzhalter koenntest du nur statische Tests schreiben.
+Namen. Ohne Platzhalter könntest du nur statische Tests schreiben.
 
-## Uebersicht
+## Übersicht
 
-| Platzhalter | Loest auf zu |
+| Platzhalter | Löst auf zu |
 |---|---|
 | `{TIMESTAMP}` | Aktueller ISO-Timestamp |
 | `{TIMESTAMP_MINUS_1H}` | Timestamp vor 1 Stunde |
 | `{TIMESTAMP_PLUS_1H}` | Timestamp in 1 Stunde |
 | `{alias.id}` | GUID eines per Alias registrierten Records |
 | `{alias.fields.xxx}` | Feldwert eines Alias-Records |
-| `{RECORD:alias}` | Ebenfalls GUID, aber fuer `recordRef` und Filter-Werte |
+| `{RECORD:alias}` | Ebenfalls GUID, aber für `recordRef` und Filter-Werte |
 | `{GENERATED:firstname}` | Zufallsname mit "JBE Test"-Prefix |
 | `{GENERATED:lastname}` | Zufallsname |
 | `{GENERATED:email}` | Zufallsmail @example.com |
 | `{GENERATED:phone}` | Testnummer `555-xxxx` |
 | `{GENERATED:mobile}` | Testnummer `555-xxxx` |
-| `{GENERATED:company}` | Zufaelliger Firmenname |
+| `{GENERATED:company}` | Zufälliger Firmenname |
 | `{GENERATED:text}` | Zufallstext |
 | `{GENERATED:guid}` | Neue GUID |
 
 ## TIMESTAMP
 
-Der Klassiker fuer eindeutige Testdaten.
+Der Klassiker für eindeutige Testdaten.
 
 ```json
 "name": "JBE Test Account {TIMESTAMP}"
 ```
 
-Loest sich z.B. zu `JBE Test Account 2026-04-24T11:45:32Z` auf.
+Löst sich z.B. zu `JBE Test Account 2026-04-24T11:45:32Z` auf.
 
-**Warum ueberhaupt?** Wenn mehrere Testlaeufe parallel laufen (oder du
-denselben Test mehrfach ausfuehrst), kollidieren sonst z.B.
+**Warum überhaupt?** Wenn mehrere Testläufe parallel laufen (oder du
+denselben Test mehrfach ausführst), kollidieren sonst z.B.
 AutoNumber-freie Felder oder E-Mail-Uniqueness-Constraints. `{TIMESTAMP}`
 macht jeden Testlauf-Datensatz eindeutig.
 
@@ -44,13 +44,13 @@ macht jeden Testlauf-Datensatz eindeutig.
 "emailaddress1": "jbe_test_{TIMESTAMP}@example.com"
 ```
 
-Loest sich z.B. zu `jbe_test_2026-04-24T11:45:32Z@example.com`.
+Löst sich z.B. zu `jbe_test_2026-04-24T11:45:32Z@example.com`.
 
 **Varianten:**
 
 - `{TIMESTAMP}` — jetzt
-- `{TIMESTAMP_MINUS_1H}` — vor 1 Stunde, nuetzlich fuer LUW-Tests wenn man
-  "aeltere" Quellen simuliert
+- `{TIMESTAMP_MINUS_1H}` — vor 1 Stunde, nützlich für LUW-Tests wenn man
+  "ältere" Quellen simuliert
 - `{TIMESTAMP_PLUS_1H}` — in 1 Stunde
 
 Alle liefern ISO-8601-UTC-Timestamps (`2026-04-24T11:45:32Z`).
@@ -75,10 +75,10 @@ Nach einem `CreateRecord` kannst du auf den angelegten Record zugreifen:
 
 `{acc.id}` wird zur GUID des vorher angelegten Accounts.
 
-### Zwei Schreibweisen fuer die GUID
+### Zwei Schreibweisen für die GUID
 
 ```json
-"value": "{acc.id}"           // klassisch, funktioniert ueberall
+"value": "{acc.id}"           // klassisch, funktioniert überall
 "value": "{RECORD:acc}"       // Alternative, gleicher Effekt
 ```
 
@@ -97,7 +97,7 @@ Wenn du ein Feld eines vorher angelegten Records brauchst:
 Das liefert den Wert des `emailaddress1`-Felds aus dem Alias `con`.
 
 **Voraussetzung:** das Feld muss beim `CreateRecord` entweder mitgegeben
-oder per `columns` zurueckgelesen worden sein:
+oder per `columns` zurückgelesen worden sein:
 
 ```json
 { "action": "CreateRecord", "entity": "contacts", "alias": "con",
@@ -110,7 +110,7 @@ Danach ist `{con.fields.contactnumber}` die Server-generierte AutoNumber.
 
 ## GENERATED-Platzhalter
 
-Fuer realistisch wirkende, aber als Test erkennbare Testdaten.
+Für realistisch wirkende, aber als Test erkennbare Testdaten.
 
 | Platzhalter | Beispielwert |
 |---|---|
@@ -123,7 +123,7 @@ Fuer realistisch wirkende, aber als Test erkennbare Testdaten.
 | `{GENERATED:text}` | `Lorem ipsum dolor sit amet, ...` |
 | `{GENERATED:guid}` | `3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3` |
 
-**Wichtig:** `{GENERATED:firstname}` haengt automatisch "JBE Test" vor.
+**Wichtig:** `{GENERATED:firstname}` hängt automatisch "JBE Test" vor.
 Das ist Absicht — die Konvention macht Testdaten im Dataverse sofort als
 Test erkennbar.
 
@@ -147,7 +147,7 @@ mobilephone:    "555-9183"
 description:    "Erzeugt von Test {alias_if_exists} am 2026-04-24T11:45:32Z"
 ```
 
-Wenn ein Platzhalter nicht aufgeloest werden kann (z.B. `{alias_if_exists}`
+Wenn ein Platzhalter nicht aufgelöst werden kann (z.B. `{alias_if_exists}`
 ist ein Tippfehler), bleibt er **woertlich** im String stehen.
 
 ## Platzhalter in Filtern
@@ -165,21 +165,21 @@ Platzhalter:
 ## Was NICHT geht
 
 - **Arithmetik**: `{acc.id + 1}` — nicht unterstuetzt.
-- **Faellt zurueck auf alten Wert**: wenn du den Record zwischendurch
-  aenderst, zeigt `{alias.fields.x}` den Wert zum Zeitpunkt des letzten
+- **Fällt zurück auf alten Wert**: wenn du den Record zwischendurch
+  änderst, zeigt `{alias.fields.x}` den Wert zum Zeitpunkt des letzten
   `CreateRecord` / `RetrieveRecord`, nicht den aktuellen DB-Stand.
-  Fuer aktuelle Werte: `RetrieveRecord` einschieben.
+  Für aktuelle Werte: `RetrieveRecord` einschieben.
 - **Verschachtelte Platzhalter**: `{alias.{name_var}.id}` — nicht
   unterstuetzt.
 - **In Zahlen-Feldern**: `"numberofemployees": "{TIMESTAMP_SECONDS}"` geht
   nicht, weil das Feld eine echte Zahl erwartet, und Platzhalter produzieren
-  Strings. Workaround: hardcode die Zahl oder nutze `columns` fuer
+  Strings. Workaround: hardcode die Zahl oder nutze `columns` für
   dynamische Werte.
 
 ## Cheatsheet
 
 ```
-+--- Platzhalter-Kurzuebersicht ----------------------------+
++--- Platzhalter-Kurzübersicht ----------------------------+
 |                                                           |
 |  {TIMESTAMP}             -> 2026-04-24T11:45:32Z          |
 |  {TIMESTAMP_MINUS_1H}    -> 2026-04-24T10:45:32Z          |

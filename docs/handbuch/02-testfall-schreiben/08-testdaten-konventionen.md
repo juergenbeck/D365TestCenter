@@ -1,8 +1,8 @@
 # Testdaten-Konventionen
 
 Testdaten sollen sofort als Testdaten erkennbar sein, nicht mit echten
-Daten kollidieren und beim Cleanup eindeutig gefunden werden koennen.
-Diese Konventionen machen das moeglich — und sie sind nicht verhandelbar,
+Daten kollidieren und beim Cleanup eindeutig gefunden werden können.
+Diese Konventionen machen das möglich — und sie sind nicht verhandelbar,
 sondern durch `{GENERATED:*}`-Platzhalter bereits vorgegeben.
 
 ## Die 4 Grundregeln
@@ -10,18 +10,18 @@ sondern durch `{GENERATED:*}`-Platzhalter bereits vorgegeben.
 1. **Prefix "JBE Test"** in allen generierten Namen und Titeln
 2. **`example.com` / `pruef.invalid`** in allen E-Mail-Adressen und URLs
 3. **`555-xxxx`** in allen Telefonnummern
-4. **`{TIMESTAMP}`** in mindestens einem Feld pro Record (fuer Eindeutigkeit)
+4. **`{TIMESTAMP}`** in mindestens einem Feld pro Record (für Eindeutigkeit)
 
 ## Prefix "JBE Test"
 
-Jeder vom Test erzeugte Record traegt das Prefix **"JBE Test"** im
+Jeder vom Test erzeugte Record trägt das Prefix **"JBE Test"** im
 Primary-Name-Feld:
 
 ```json
 "fields": { "name": "JBE Test Firma {TIMESTAMP}" }
 ```
 
-Das bedeutet fuer jede Entity:
+Das bedeutet für jede Entity:
 
 | Entity | Feld | Beispiel |
 |---|---|---|
@@ -31,14 +31,14 @@ Das bedeutet fuer jede Entity:
 | opportunities | `name` | `JBE Test Deal 2026-...` |
 | tasks | `subject` | `JBE Test Follow-up 2026-...` |
 
-**`{GENERATED:firstname}` und `{GENERATED:lastname}`** haengen das Prefix
+**`{GENERATED:firstname}` und `{GENERATED:lastname}`** hängen das Prefix
 automatisch vor. `{GENERATED:company}` ebenfalls. Wenn du diese Platzhalter
 verwendest, ist das Prefix automatisch gesetzt.
 
 **Warum?** 
 
 - Dein DevOps-Team kann jederzeit Testdaten finden: `name contains "JBE Test"`.
-- Falls ein Test schiefgeht und Records uebrig bleiben, sind sie
+- Falls ein Test schiefgeht und Records übrig bleiben, sind sie
   identifizierbar.
 - Nutzer in DEV sehen sofort, dass das Testdaten sind und nicht echte.
 
@@ -49,17 +49,17 @@ verwendest, ist das Prefix automatisch gesetzt.
 // -> anna.meier8273@example.com
 ```
 
-**Warum `example.com`?** Die Domain ist per RFC 2606 fuer Dokumentations-
+**Warum `example.com`?** Die Domain ist per RFC 2606 für Dokumentations-
 zwecke reserviert. Es gibt dort keine echten Postfaecher. Ein Testdaten-
 Konflikt mit einem echten Kunden ist ausgeschlossen.
 
 **Alternative: `.invalid`-Domain** (z.B. `pruef.invalid`). Auch RFC-sicher
-und oft fuer Test-Daten verwendet. Beide funktionieren.
+und oft für Test-Daten verwendet. Beide funktionieren.
 
 **Niemals verwenden:**
 
-- `.com`, `.de`, `.org` ohne `example` / `test`: koennte echte Domain sein.
-- `gmail.com`, `gmx.de`, `outlook.com`: Adressen koennten echt sein.
+- `.com`, `.de`, `.org` ohne `example` / `test`: könnte echte Domain sein.
+- `gmail.com`, `gmx.de`, `outlook.com`: Adressen könnten echt sein.
 - Firmen-interne Domains wie `juerg@eigenefirma.de`: darf nicht in
   Testdaten auftauchen.
 
@@ -95,17 +95,17 @@ er erzeugt wurde.
 - **Kein Prefix:** schwer zu unterscheiden von echten Records. Cleanup
   manuell problematisch. Risiko in PROD.
 - **Echte E-Mail-Domain:** bei Plugin-Tests die E-Mails versenden kann
-  tatsaechlich eine Mail an den Empfaenger gehen. Ungut.
+  tatsächlich eine Mail an den Empfänger gehen. Ungut.
 - **Echte Telefonnummer:** einige D365-Customizations wirken auf
   Telefonfeld (z.B. Dial-Out-Plugins).
 - **Fehlender TIMESTAMP:** Tests kollidieren bei parallelen Runs.
 
-## Fuer projektspezifische Test-IDs: eigene Konventionen
+## Für projektspezifische Test-IDs: eigene Konventionen
 
 Wenn dein Projekt mehrere Testsuiten hat, konventionell sind kurze
-Praefixe:
+Präfixe:
 
-| Praefix | Bedeutung |
+| Präfix | Bedeutung |
 |---|---|
 | `QS-*` | Quickstart (Einstiegstests) |
 | `STD-*` | Standard-CRUD-Tests |
@@ -113,20 +113,20 @@ Praefixe:
 | `REZ-*` | Rezepte aus diesem Handbuch |
 | `MTC-*` | Merge-Test-Cases (projektspezifisch Markant) |
 
-Die Praefixe helfen beim Filtern (`category:STD*` oder `STD*` als
+Die Präfixe helfen beim Filtern (`category:STD*` oder `STD*` als
 Filter-Value im Testrun).
 
 ## Record-Cleanup — verlass dich auf's Framework
 
-Das Test Center raeumt nach jedem Lauf automatisch auf (Record-Tracker
-sammelt alle `CreateRecord`-Ergebnisse, loescht sie am Ende in umgekehrter
+Das Test Center räumt nach jedem Lauf automatisch auf (Record-Tracker
+sammelt alle `CreateRecord`-Ergebnisse, löscht sie am Ende in umgekehrter
 Reihenfolge). Du brauchst keinen eigenen Cleanup-Step.
 
 Ausnahmen:
 
 - `jbe_keeprecords: true` am Testrun: Daten bleiben zum Debuggen.
 - Plugin-erzeugte Records die nicht im Tracker landen: werden nicht
-  geloescht. Das ist aus Sicht des Tests OK, weil sie meist
+  gelöscht. Das ist aus Sicht des Tests OK, weil sie meist
   `keeprecords=true` auf dem Folge-Owner haben oder eigene Cleanup-Logik.
 
 ## Anti-Patterns
@@ -171,7 +171,7 @@ wird wenn er in drei Monaten den Test debuggt.
 |  Eindeutigkeit: {TIMESTAMP} in name oder       |
 |                 subject                        |
 |                                                |
-|  Praefixe:      QS- STD- E2E- REZ-             |
+|  Präfixe:      QS- STD- E2E- REZ-             |
 |                                                |
 |  Cleanup:       automatisch (Record-Tracker)   |
 |                                                |

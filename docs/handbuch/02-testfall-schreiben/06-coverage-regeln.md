@@ -1,19 +1,19 @@
 # Coverage-Regeln: Wie viele Asserts sind genug?
 
 Ein Test mit zwei Asserts ist nicht automatisch schlechter als einer mit
-zehn — aber oft uebersieht man wichtige Erwartungen. Dieses Dokument
-beschreibt Regeln und Heuristiken, damit deine Tests das pruefen was sie
-pruefen sollen.
+zehn — aber oft übersieht man wichtige Erwartungen. Dieses Dokument
+beschreibt Regeln und Heuristiken, damit deine Tests das prüfen was sie
+prüfen sollen.
 
-## Regel 1: Leitfrage — was wuerde ich manuell pruefen?
+## Regel 1: Leitfrage — was würde ich manuell prüfen?
 
 Bevor du Asserts schreibst, frag dich: **"Wenn ich diesen Test manuell im
-Browser ausfuehren wuerde — was wuerde ich mir danach alles ansehen, bevor
+Browser ausführen würde — was würde ich mir danach alles ansehen, bevor
 ich ihn als bestanden abzeichne?"**
 
-Jede Sichtpruefung ist eine Assertion.
+Jede Sichtprüfung ist eine Assertion.
 
-Beispiel fuer "Lead qualifizieren":
+Beispiel für "Lead qualifizieren":
 
 - Der Lead ist deaktiviert (statecode=1). -> Assert
 - Im Dashboard ist ein neuer Contact. -> Assert
@@ -30,19 +30,19 @@ die letzten drei "wirken auch so OK" wirken. Tu das nicht.
 | Operation | Mindest-Asserts |
 |---|---|
 | `CreateRecord` | 2-3: (a) Record existiert, (b) wichtigste Felder korrekt |
-| `UpdateRecord` | 1 pro geaendertem Feld + 1 fuer Felder die NICHT geaendert werden sollen |
+| `UpdateRecord` | 1 pro geändertem Feld + 1 für Felder die NICHT geändert werden sollen |
 | `DeleteRecord` | 1: Record existiert nicht mehr (`NotExists`) |
 | Status-Change | 2: statecode + statuscode jeweils mit neuem Wert |
 | `ExecuteRequest` (Plugin-Kette) | 1 pro erwartetem Side-Effect + 1 pro nicht erwarteten |
 
-"Wichtigste Felder" heisst nicht alle Felder — nur die, die fachlich
-bedeutsam sind. Bei einem Contact-Create fuer einen Invoicing-Test wuerde
-ich `firstname`, `lastname`, `emailaddress1`, `parentcustomerid` pruefen,
+"Wichtigste Felder" heißt nicht alle Felder — nur die, die fachlich
+bedeutsam sind. Bei einem Contact-Create für einen Invoicing-Test würde
+ich `firstname`, `lastname`, `emailaddress1`, `parentcustomerid` prüfen,
 aber nicht `telephone2` oder `middlename`.
 
 ## Regel 3: Positive UND negative Erwartungen
 
-Pruefe nicht nur was **passieren soll**, sondern auch was **nicht** passieren
+Prüfe nicht nur was **passieren soll**, sondern auch was **nicht** passieren
 soll. Das ist der Unterschied zwischen "Test ist nicht explodiert" und
 "Feature funktioniert wie erwartet".
 
@@ -72,29 +72,29 @@ soll. Das ist der Unterschied zwischen "Test ist nicht explodiert" und
   "description": "Duplikat wurde deaktiviert", "onError": "continue" }
 ```
 
-Der zweite Test faengt Bugs, die der erste uebersieht: z.B. wenn das
-Plugin die Golden-Record-ID kopiert aber nicht die Originaldaten aufraeumt,
+Der zweite Test fängt Bugs, die der erste übersieht: z.B. wenn das
+Plugin die Golden-Record-ID kopiert aber nicht die Originaldaten aufräumt,
 oder wenn das Duplikat nicht wirklich deaktiviert wurde sondern nur "so
 wirkt".
 
 ## Regel 4: Symmetrie bei umgekehrten Szenarien
 
-Wenn Test B die Umkehrung von Test A ist, **muessen die Asserts strukturell
+Wenn Test B die Umkehrung von Test A ist, **müssen die Asserts strukturell
 identisch sein** — nur mit vertauschten Rollen.
 
 Beispiel:
 
 - **MGR-04A**: Duplikat wird Master (7 Asserts am Survivor, 4 am Subordinate)
 - **MGR-04B**: Master bleibt Master (muss auch 7 am Survivor, 4 am
-  Subordinate pruefen — mit vertauschter Perspektive)
+  Subordinate prüfen — mit vertauschter Perspektive)
 
 Asymmetrische Coverage zwischen Szenario und Umkehrung ist ein Test-
-Design-Bug. Der Grund: vertauschte Rollen koennten unterschiedliche Bugs
-haben. Nur wenn beide Seiten gleich stark geprueft werden, weisst du, dass
+Design-Bug. Der Grund: vertauschte Rollen könnten unterschiedliche Bugs
+haben. Nur wenn beide Seiten gleich stark geprüft werden, weißt du, dass
 die Symmetrie wirklich gilt.
 
-**Als Review-Pattern:** Zaehle die Asserts beider Tests. Unterschied > 1
-ist verdaechtig.
+**Als Review-Pattern:** Zähle die Asserts beider Tests. Unterschied > 1
+ist verdächtig.
 
 ## Regel 5: Record-Alias konsequent nutzen
 
@@ -105,7 +105,7 @@ Wenn ein Record einen Alias hat:
 - Platzhalter wie `{alias.id}` in Lookup-Bindings und Filtern
 
 **Nicht vermischen:** mal Alias, mal hart-codierte GUID, mal Query-Filter
-auf Primary Name. Das macht den Test unleserlich und fehleranfaellig.
+auf Primary Name. Das macht den Test unleserlich und fehleranfällig.
 
 ## Regel 6: description auf jeder Assertion
 
@@ -114,7 +114,7 @@ Dokumentation:
 
 - Wer den Test liest versteht sofort **warum** die Assertion existiert.
 - Im Fehlerfall steht die description im Report.
-- Bei Test-Failure weiss man sofort welche fachliche Erwartung verletzt
+- Bei Test-Failure weiß man sofort welche fachliche Erwartung verletzt
   wurde.
 
 Siehe [05-assertions.md](05-assertions.md#description--warum-sie-wichtig-ist).
@@ -129,17 +129,17 @@ Ein Test muss **alle notwendigen Vorbedingungen explizit** anlegen.
 - Alle Feld-Vorbedingungen die das Szenario voraussetzt
 
 **Nicht verlassen auf:** "ist bestimmt schon in der Umgebung da". Solche
-Tests laufen nur auf EINER Umgebung gruen und sind damit wertlos.
+Tests laufen nur auf EINER Umgebung grün und sind damit wertlos.
 
 **Konsequenz:** Der Test ist idempotent und eigenstaendig. Bei
-`keeprecords=false` raeumt er sich selbst auf. Wenn du einen Test jeden
-Tag 5x laufen lassen kannst ohne dass er Datenmuell hinterlaesst, ist er
+`keeprecords=false` räumt er sich selbst auf. Wenn du einen Test jeden
+Tag 5x laufen lassen kannst ohne dass er Datenmüll hinterlaesst, ist er
 sauber.
 
 ## Regel 8: Assertions am Ende, nicht dazwischen
 
-Streng genommen ist das optional — Asserts koennen ueberall stehen. Aber
-als Konvention und fuer Lesbarkeit:
+Streng genommen ist das optional — Asserts können überall stehen. Aber
+als Konvention und für Lesbarkeit:
 
 ```
 CreateRecord acc
@@ -166,7 +166,7 @@ Assert ...
 ```
 
 **Ausnahme: Zwischen-Asserts** sind legitim wenn du einen komplexen
-mehrstufigen Flow testest und zwischendurch pruefen willst, dass ein
+mehrstufigen Flow testest und zwischendurch prüfen willst, dass ein
 Zwischenzustand stimmt bevor du weitermachst:
 
 ```
@@ -178,11 +178,11 @@ Assert created_opp.estimatedvalue == 50000
 ```
 
 Hier ist der Zwischen-Assert nicht nur Doku — er ist die Voraussetzung
-dass der naechste Step funktioniert. Wenn der Lead nicht qualifiziert
+dass der nächste Step funktioniert. Wenn der Lead nicht qualifiziert
 wurde, gibt es keine Opportunity, und das Update wirft einen Fehler. Der
-Zwischen-Assert macht klar wo es wirklich haengt.
+Zwischen-Assert macht klar wo es wirklich hängt.
 
-## Anti-Pattern: Der "Smoke-Test" der nichts pruefe
+## Anti-Pattern: Der "Smoke-Test" der nichts prüfe
 
 ```json
 { "testId": "STD-01",
@@ -194,10 +194,10 @@ Zwischen-Assert macht klar wo es wirklich haengt.
 }
 ```
 
-Dieser Test prueft nur "Create schlaegt nicht fehl". Aber was wenn der
+Dieser Test prüft nur "Create schlägt nicht fehl". Aber was wenn der
 Account mit falschem OwnerTeam angelegt wird? Was wenn ein Plugin die
-Name aendert? Was wenn der statecode anders ist als erwartet? Der Test
-faengt nichts davon ab.
+Name ändert? Was wenn der statecode anders ist als erwartet? Der Test
+fängt nichts davon ab.
 
 **Besser — selbst der einfachste Smoke-Test hat mindestens 2 Asserts:**
 
@@ -218,7 +218,7 @@ faengt nichts davon ab.
 
 | Regel | Erinnerung |
 |---|---|
-| 1 | Was wuerde ich manuell pruefen? |
+| 1 | Was würde ich manuell prüfen? |
 | 2 | 2-3 Asserts pro Operation als Minimum |
 | 3 | Positive UND negative Erwartungen |
 | 4 | Symmetrie bei umgekehrten Szenarien |

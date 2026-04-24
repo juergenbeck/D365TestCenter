@@ -1,12 +1,12 @@
-# Haeufige Fehler
+# Häufige Fehler
 
 Die Top-Liste der wiederkehrenden Probleme. Jeder Eintrag hat Symptom,
 Ursache, Fix, und ein verwandtes Kapitel im Handbuch.
 
-## 1. "Unbekannte Step-Action: Assert" oder aehnlich
+## 1. "Unbekannte Step-Action: Assert" oder ähnlich
 
 **Symptom:** Test scheitert sofort in Step 1 oder 2 mit einer Meldung
-ueber "Unbekannte Action".
+über "Unbekannte Action".
 
 **Ursache:** Platform-Problem. Der auf der Umgebung installierte Plugin-
 Code ist zu alt und kennt die Action nicht. Nicht dein Fehler.
@@ -53,9 +53,9 @@ Codierung.
 - Text direkt im Browser-Formular eintippen (nicht pasten aus einem
   cp1252-Tool).
 - Oder: aus VS Code (UTF-8 default) kopieren.
-- Pruefe `$PSVersionTable.PSVersion`: wenn PowerShell < 7.4, laesst sich
+- Prüfe `$PSVersionTable.PSVersion`: wenn PowerShell < 7.4, laesst sich
   das Problem durch explizites `-ContentType "application/json; charset=utf-8"`
-  loesen — betrifft dich aber nur wenn du PS-Skripte fuer das Anlegen
+  lösen — betrifft dich aber nur wenn du PS-Skripte für das Anlegen
   verwendest.
 
 ## 4. "Alias 'xxx' existiert nicht"
@@ -70,10 +70,10 @@ erfolgreich registriert.
 **Ursache 1:** Tippfehler im Alias.
 
 **Ursache 2:** Der Create-Step, der den Alias vergibt, ist vorher selbst
-gescheitert (oft sichtbar als Error in einer frueheren Step).
+gescheitert (oft sichtbar als Error in einer früheren Step).
 
-**Fix:** Alias-Schreibweisen im JSON ueberall vergleichen (case-
-sensitive!). Die frueheren Steps auf rotes Ergebnis pruefen — bei Error
+**Fix:** Alias-Schreibweisen im JSON überall vergleichen (case-
+sensitive!). Die früheren Steps auf rotes Ergebnis prüfen — bei Error
 ist `con` nie angelegt worden.
 
 ## 5. `Assert` mit `target: Record` liefert `null`, obwohl Feld gesetzt ist
@@ -88,7 +88,7 @@ Tatsaechlich: null
 
 **Ursache:** Bei `target: Record` verlaesst sich die Engine oft auf den
 Cache vom letzten `CreateRecord`. Wenn dazwischen ein Plugin das Feld
-geaendert hat, sieht der Record-Assert den alten Cache.
+geändert hat, sieht der Record-Assert den alten Cache.
 
 **Fix:** 
 
@@ -105,9 +105,9 @@ geaendert hat, sieht der Record-Assert den alten Cache.
 ## 6. `Wait` von 3 Sekunden reicht nicht, aber 30 sind zu viel
 
 **Symptom:** Test funktioniert manchmal, manchmal nicht. Mit 3s `Wait`
-schlaegt er haeufig fehl, mit 30s wird er super langsam.
+schlägt er häufig fehl, mit 30s wird er super langsam.
 
-**Ursache:** Blindes `Wait` ist nicht das richtige Werkzeug fuer
+**Ursache:** Blindes `Wait` ist nicht das richtige Werkzeug für
 asynchrone Plugins.
 
 **Fix:** Umstellen auf `WaitForFieldValue`:
@@ -134,12 +134,12 @@ Siehe [../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue](../02-
 2. In VS Code / JSONLint einfuegen.
 3. Typische Fehler:
    - Fehlende Kommas zwischen Array-Elementen
-   - Einfache statt doppelte Anfuehrungszeichen (`'foo'` -> `"foo"`)
+   - Einfache statt doppelte Anführungszeichen (`'foo'` -> `"foo"`)
    - Trailing Comma nach letztem Element (`[1,2,]` -> `[1,2]`)
    - Kommentare `//` oder `/* */` (JSON kennt keine)
    - Escaping fehlt: `"text mit \"Anfuehrungszeichen\""`
 
-## 8. "enabled = false" und der Test laeuft nicht
+## 8. "enabled = false" und der Test läuft nicht
 
 **Symptom:** Dein Filter trifft den Test, aber er taucht im Testrun-
 Ergebnis nicht auf. `Gesamt` ist kleiner als erwartet.
@@ -159,8 +159,8 @@ Step 4: Assert (target: Record): recordRef '...' konnte nicht geladen werden.
 HTTP 404: Record not found.
 ```
 
-**Ursache:** Du hast den Record vorher geloescht und versuchst jetzt auf
-ihn zu assertieren. `target: Record` kann geloeschte Records nicht lesen.
+**Ursache:** Du hast den Record vorher gelöscht und versuchst jetzt auf
+ihn zu assertieren. `target: Record` kann gelöschte Records nicht lesen.
 
 **Fix:** Umstellen auf `target: Query` mit `operator: NotExists`:
 
@@ -171,13 +171,13 @@ ihn zu assertieren. `target: Record` kann geloeschte Records nicht lesen.
   "description": "Task ist weg", "onError": "continue" }
 ```
 
-## 10. Assert ist "gruen" obwohl der Test falsch ist
+## 10. Assert ist "grün" obwohl der Test falsch ist
 
-**Symptom:** Der Test ist `Passed`, aber du weisst aus dem Browser dass
+**Symptom:** Der Test ist `Passed`, aber du weißt aus dem Browser dass
 das Verhalten kaputt ist.
 
-**Ursache:** Test-Coverage ist zu duenn. Alle Asserts "zufaellig" OK,
-weil sie das Nicht-funktionierende gar nicht pruefen.
+**Ursache:** Test-Coverage ist zu dünn. Alle Asserts "zufällig" OK,
+weil sie das Nicht-funktionierende gar nicht prüfen.
 
 **Fix:** Mehr Asserts, besonders **negative Erwartungen** (`IsNull`,
 `NotExists`, `!= alter Wert`). Siehe
@@ -185,14 +185,14 @@ weil sie das Nicht-funktionierende gar nicht pruefen.
 
 ## 11. Filter findet zu viele Treffer
 
-**Symptom:** Du hast Filter `STD-01` gemeint, aber der Run laeuft mit
+**Symptom:** Du hast Filter `STD-01` gemeint, aber der Run läuft mit
 20 Tests.
 
-**Ursache:** Filter-Matching ist **Praefix-basiert** bei Wildcards.
+**Ursache:** Filter-Matching ist **Präfix-basiert** bei Wildcards.
 `STD-01` matcht exakt `STD-01`. `STD-*` matcht alles was mit `STD-`
-anfaengt: `STD-01`, `STD-02`, `STD-01-v2`, ...
+anfängt: `STD-01`, `STD-02`, `STD-01-v2`, ...
 
-**Fix:** Pruefe den Filter genau. Fuer exakte Mehrfach-Treffer:
+**Fix:** Prüfe den Filter genau. Für exakte Mehrfach-Treffer:
 `STD-01,STD-02` (Komma-getrennt).
 
 ## 12. Cleanup-Step ist rot
@@ -200,7 +200,7 @@ anfaengt: `STD-01`, `STD-02`, `STD-01-v2`, ...
 **Symptom:** Dein Test ist Passed, aber Step 9000 (Cleanup) zeigt
 "Fehler".
 
-**Ursache:** Ein Record konnte nicht geloescht werden. Oft weil:
+**Ursache:** Ein Record konnte nicht gelöscht werden. Oft weil:
 
 - Ein Plugin hat Reject auf Delete (z.B. Merge-Plugin bei
   deaktiviertem Duplicate-Record).
@@ -208,13 +208,13 @@ anfaengt: `STD-01`, `STD-02`, `STD-01-v2`, ...
 - Permissions.
 
 **Fix:** Meistens ignorieren. Der Cleanup-Fehler beeintraechtigt dein
-Test-Ergebnis nicht. Wenn dich die Record-Leichen stoeren: einzeln im
-Browser loeschen, oder den Projekt-Owner bitten die Cleanup-Logik
+Test-Ergebnis nicht. Wenn dich die Record-Leichen stören: einzeln im
+Browser löschen, oder den Projekt-Owner bitten die Cleanup-Logik
 anzupassen.
 
-## Fuer Infrastruktur-Probleme
+## Für Infrastruktur-Probleme
 
 Wenn du hier nichts findest und der Fehler mysterioes ist — insbesondere
 bei wiederholten Sandbox-Timeouts oder "Plugin nicht gefunden" —
 Projekt-Owner kontaktieren. Diese Klasse von Fehlern ist nichts was
-Test-Autoren reparieren koennen.
+Test-Autoren reparieren können.

@@ -1,16 +1,16 @@
 # Quickstart — 5 Beispiele in 15 Minuten
 
 Fuenf progressiv aufgebaute Beispiele, die dich durch die wichtigsten
-Features fuehren. Am Ende des Kapitels hast du fuenf laufende Tests und
+Features führen. Am Ende des Kapitels hast du fuenf laufende Tests und
 alle Kern-Patterns gesehen.
 
-**Vorbereitung:** Oeffne die Model-Driven-App **D365 Test Center** in
+**Vorbereitung:** Öffne die Model-Driven-App **D365 Test Center** in
 deinem Browser. Du brauchst Schreibrechte auf `jbe_testcase` und
 `jbe_testrun`.
 
 ## QS-01 — Account anlegen und Website setzen
 
-**Ziel:** Einen Account erzeugen, die Website setzen, pruefen dass sie
+**Ziel:** Einen Account erzeugen, die Website setzen, prüfen dass sie
 korrekt gespeichert wurde. Drei Actions, das minimale Skelett.
 
 **Was du lernst:**
@@ -23,7 +23,7 @@ korrekt gespeichert wurde. Drei Actions, das minimale Skelett.
 
 ### Schritt 1: Testfall anlegen
 
-Navigiere in der App zu **Testfaelle** und klick auf **+ Neu**:
+Navigiere in der App zu **Testfälle** und klick auf **+ Neu**:
 
 ```
 +-- Neuer Testfall: jbe_testcase -----------------------------------+
@@ -68,15 +68,15 @@ Navigiere in der App zu **Testfaelle** und klick auf **+ Neu**:
 |  | }                                                           |  |
 |  +-------------------------------------------------------------+  |
 |                                                                   |
-|  [Speichern]  [Speichern & Schliessen]                            |
+|  [Speichern]  [Speichern & Schließen]                            |
 +-------------------------------------------------------------------+
 ```
 
-Klick auf **Speichern & Schliessen**.
+Klick auf **Speichern & Schließen**.
 
 ### Schritt 2: Testlauf starten
 
-Navigiere zu **Testlaeufe** und klick auf **+ Neu**:
+Navigiere zu **Testläufe** und klick auf **+ Neu**:
 
 ```
 +-- Neuer Testlauf: jbe_testrun ------------------------------------+
@@ -86,14 +86,14 @@ Navigiere zu **Testlaeufe** und klick auf **+ Neu**:
 |  Test-Status        [ Geplant                v ]                  |
 |  Records behalten   [ ] nein                                      |
 |                                                                   |
-|  [Speichern]  [Speichern & Schliessen]                            |
+|  [Speichern]  [Speichern & Schließen]                            |
 +-------------------------------------------------------------------+
 ```
 
 Sobald du **Speichern** klickst, startet der Run. Warte ein paar Sekunden
-und druecke auf **Aktualisieren** (Refresh im Browser oder F5).
+und drücke auf **Aktualisieren** (Refresh im Browser oder F5).
 
-### Schritt 3: Ergebnis pruefen
+### Schritt 3: Ergebnis prüfen
 
 Nach 5-10 Sekunden:
 
@@ -119,7 +119,7 @@ Nach 5-10 Sekunden:
 +-------------------------------------------------------------------+
 ```
 
-Klick den Ergebnis-Datensatz an und oeffne den **Steps-Tab**:
+Klick den Ergebnis-Datensatz an und öffne den **Steps-Tab**:
 
 ```
 Testschritte  (3 Eintraege + Cleanup)
@@ -136,7 +136,7 @@ Testschritte  (3 Eintraege + Cleanup)
 +----+--------------+-------+-------------+----------------------+
 ```
 
-Gratulation — dein erster Test laeuft.
+Gratulation — dein erster Test läuft.
 
 ---
 
@@ -149,7 +149,7 @@ Records im Dataverse-Graph verbinden.
 
 - **Lookup-Binding** mit `@odata.bind` (so machst du Parent-Child)
 - Mehrere Aliase im selben Test
-- `Assert` mit `target: "Query"` statt `Record` (fuer Query-basierte Pruefung)
+- `Assert` mit `target: "Query"` statt `Record` (für Query-basierte Prüfung)
 - Generierte Testdaten mit `{GENERATED:...}`
 
 ### Testfall-JSON
@@ -221,8 +221,8 @@ Records im Dataverse-Graph verbinden.
   Schema: `lookupname_zielentity@odata.bind` -> `/zielentityPlural(GUID)`.
   Mehr dazu in [04-lookup-und-binding.md](../02-testfall-schreiben/04-lookup-und-binding.md).
 
-- `{acc.id}` loest sich nach dem ersten Step in die GUID des
-  angelegten Accounts auf. `{con.id}` analog fuer den Contact.
+- `{acc.id}` löst sich nach dem ersten Step in die GUID des
+  angelegten Accounts auf. `{con.id}` analog für den Contact.
 
 - `{GENERATED:firstname}` wird zu einem Zufallsnamen mit "JBE Test"-Prefix,
   damit die Testdaten erkennbar sind und nicht mit echten Daten kollidieren.
@@ -246,7 +246,7 @@ Nach dem Speichern und einem Run-Start erwartest du:
 ## QS-03 — Lead qualifizieren (Custom Action)
 
 **Ziel:** Einen Lead anlegen, per `QualifyLead`-Action qualifizieren, und
-pruefen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
+prüfen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 (Contact, Opportunity) entstanden sind.
 
 **Was du lernst:**
@@ -342,11 +342,11 @@ pruefen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 
 **Was hier besonders ist:**
 
-- `ExecuteRequest` ist die generische Bruecke zu jeder SDK-Message. Der
+- `ExecuteRequest` ist die generische Brücke zu jeder SDK-Message. Der
   `requestName` ist der exakte Message-Name aus dem Dynamics-SDK
   (`QualifyLead`, `Merge`, `WinOpportunity`, `SetProcess`, ...).
 
-- Die `fields` des `ExecuteRequest` sind die Parameter der Message. Fuer
+- Die `fields` des `ExecuteRequest` sind die Parameter der Message. Für
   alles was nicht ein simpler String oder Boolean ist, brauchst du das
   `$type`-Objekt:
 
@@ -361,8 +361,8 @@ pruefen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
   Center wartet 3 Sekunden, bevor die Asserts loslaufen. Eleganter ist
   `WaitForFieldValue` oder `WaitForRecord` — siehe QS-04.
 
-- **`Status: 3`** ist der OptionSetValue fuer "Qualified". Die Werte sind
-  entity-spezifisch; fuer `lead` sind `3=Qualified`, `4=Disqualified`.
+- **`Status: 3`** ist der OptionSetValue für "Qualified". Die Werte sind
+  entity-spezifisch; für `lead` sind `3=Qualified`, `4=Disqualified`.
 
 ### Erwartetes Steps-Tab
 
@@ -382,13 +382,13 @@ pruefen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 
 ## QS-04 — Async Plugin: WaitForFieldValue
 
-**Ziel:** Eine Opportunity schliessen (`WinOpportunity`), das triggert
+**Ziel:** Eine Opportunity schließen (`WinOpportunity`), das triggert
 ein Folge-Plugin das `actualrevenue` setzt. Wir warten gezielt auf den
 Feldwert statt blind Sekunden zu verbrennen.
 
 **Was du lernst:**
 
-- `WaitForFieldValue` — intelligenter Ersatz fuer `waitSeconds`
+- `WaitForFieldValue` — intelligenter Ersatz für `waitSeconds`
 - Timeout-Strategie
 - Wann `Wait` sinnvoll ist und wann nicht
 
@@ -434,7 +434,7 @@ Feldwert statt blind Sekunden zu verbrennen.
         },
         "Status": { "$type": "OptionSetValue", "value": 3 }
       },
-      "description": "Opportunity mit Status 3 = Won schliessen"
+      "description": "Opportunity mit Status 3 = Won schließen"
     },
     {
       "stepNumber":    4,
@@ -474,15 +474,15 @@ Feldwert statt blind Sekunden zu verbrennen.
 
 - **`WaitForFieldValue`** pollt den Record jede ~500 ms bis das Feld den
   erwarteten Wert hat, oder bis der Timeout abgelaufen ist. Wenn der
-  Timeout zuschlaegt, bricht der Test mit `Error` ab (es sei denn du
+  Timeout zuschlägt, bricht der Test mit `Error` ab (es sei denn du
   setzt `"onError": "continue"`).
 
 - **Vergleich `Wait` vs `WaitForFieldValue`:**
 
   | Szenario | Nimm |
   |---|---|
-  | Du weisst dass es genau X Sekunden dauert | `Wait` |
-  | Du weisst nicht wie lange, aber kennst ein Feld das sich aendern muss | `WaitForFieldValue` |
+  | Du weißt dass es genau X Sekunden dauert | `Wait` |
+  | Du weißt nicht wie lange, aber kennst ein Feld das sich ändern muss | `WaitForFieldValue` |
   | Das Plugin erstellt einen komplett neuen Record | `WaitForRecord` |
 
 - **`OpportunityClose`** wird innerhalb des `WinOpportunity`-Calls als
@@ -491,9 +491,9 @@ Feldwert statt blind Sekunden zu verbrennen.
 
 ---
 
-## QS-05 — Record loeschen und Negativ-Assert
+## QS-05 — Record löschen und Negativ-Assert
 
-**Ziel:** Einen Task anlegen, loeschen, pruefen dass er wirklich weg ist.
+**Ziel:** Einen Task anlegen, löschen, prüfen dass er wirklich weg ist.
 Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
 
 **Was du lernst:**
@@ -507,7 +507,7 @@ Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
 ```json
 {
   "testId": "QS-05",
-  "title": "Task anlegen, loeschen, Abwesenheit pruefen",
+  "title": "Task anlegen, löschen, Abwesenheit prüfen",
   "enabled": true,
   "steps": [
     {
@@ -517,7 +517,7 @@ Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
       "alias":  "tsk",
       "fields": {
         "subject":     "JBE Test Aufgabe {TIMESTAMP}",
-        "description": "Wird gleich wieder geloescht"
+        "description": "Wird gleich wieder gelöscht"
       }
     },
     {
@@ -556,13 +556,13 @@ Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
 **Warum nicht einfach `Record`-Assert nach dem Delete?** Weil der Record
 weg ist — ein `target: "Record"` kann ihn nicht mehr laden. `target:
 "Query"` mit `NotExists` ist der richtige Weg: das Test Center macht eine
-Abfrage und pruefte dass sie 0 Treffer liefert.
+Abfrage und prüfte dass sie 0 Treffer liefert.
 
 **Negativ-Erwartungen sind genauso wichtig wie positive.** Wenn du nur
-pruefst dass etwas passiert ist, kannst du nicht unterscheiden zwischen
-"das Feature funktioniert" und "ein anderes Plugin hat das zufaellig auch
+prüfst dass etwas passiert ist, kannst du nicht unterscheiden zwischen
+"das Feature funktioniert" und "ein anderes Plugin hat das zufällig auch
 gemacht". Mit einer Negativ-Assert im gleichen Test (`NotExists`,
-`IsNull`, `!= alter Wert`) schliesst du solche Falsch-Positiven aus.
+`IsNull`, `!= alter Wert`) schließt du solche Falsch-Positiven aus.
 
 ---
 

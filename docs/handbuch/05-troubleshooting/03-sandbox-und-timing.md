@@ -1,7 +1,7 @@
 # Sandbox-Limits und Timing
 
 Dynamics-Plugins laufen in einer Sandbox mit harten Grenzen. Wer lange
-Tests schreibt, rennt frueher oder spaeter in diese Grenzen. Hier die
+Tests schreibt, rennt früher oder später in diese Grenzen. Hier die
 wichtigsten.
 
 ## Die 2-Minuten-Grenze
@@ -9,15 +9,15 @@ wichtigsten.
 **Jeder synchrone Plugin-Aufruf darf maximal 2 Minuten laufen.** Danach
 bricht die Sandbox den Aufruf ab.
 
-Der Test Center CRUD-Trigger laeuft **asynchron**, hat damit technisch
+Der Test Center CRUD-Trigger läuft **asynchron**, hat damit technisch
 erst einmal mehr Luft. Aber intern arbeitet er in Batches:
 
 - Ein Batch = ca. **12 Testcases**
-- Jeder Batch laeuft wieder **innerhalb eines 2-Min-Limits**
-- Nach dem Limit startet der naechste Batch automatisch
+- Jeder Batch läuft wieder **innerhalb eines 2-Min-Limits**
+- Nach dem Limit startet der nächste Batch automatisch
 
-**Was das fuer dich bedeutet:** Einzelne Tests sollten unter **90 Sekunden**
-bleiben. Darueber hinaus wirst du unzuverlaessig: mal laeuft's, mal
+**Was das für dich bedeutet:** Einzelne Tests sollten unter **90 Sekunden**
+bleiben. Darüber hinaus wirst du unzuverlaessig: mal läuft's, mal
 Timeout.
 
 ## Typische Zeitfresser
@@ -28,13 +28,13 @@ Timeout.
 { "action": "Wait", "waitSeconds": 60 }
 ```
 
-60 Sekunden nur fuer "Plugin-Chain abwarten". Das ist Verschwendung,
+60 Sekunden nur für "Plugin-Chain abwarten". Das ist Verschwendung,
 wenn das Plugin meist schon nach 3 Sekunden fertig ist.
 
-**Besser:** `WaitForFieldValue` mit grosszuegigem Timeout. Wartet so
+**Besser:** `WaitForFieldValue` mit großzügigem Timeout. Wartet so
 lange wie noetig, aber nicht laenger.
 
-### 2. `WaitForRecord` mit grossem Timeout ohne Pruefung
+### 2. `WaitForRecord` mit großem Timeout ohne Prüfung
 
 ```json
 { "action": "WaitForRecord", "entity": "tasks",
@@ -50,14 +50,14 @@ braucht, reichen 15-20s Timeout — mit Puffer.
 
 ### 3. Sehr viele Records in einem Test
 
-Wenn ein Test 50 `CreateRecord`-Steps hat, dauert er allein dafuer
+Wenn ein Test 50 `CreateRecord`-Steps hat, dauert er allein dafür
 schon 15+ Sekunden. Plus jede Action triggert Plugins, die eigene
 Laufzeiten haben.
 
-**Besser:** Testfaelle thematisch splitten. Ein Test fuer eine
+**Besser:** Testfälle thematisch splitten. Ein Test für eine
 fachliche Frage, nicht 50 Patterns auf einmal.
 
-## Richtlinien fuer Testgroesse
+## Richtlinien für Testgröße
 
 | Test-Typ | Richtwert |
 |---|---|
@@ -84,18 +84,18 @@ Typische Ursachen:
 
 Der Run arbeitet in Batches zu ~12 Tests. **Jeder Batch hat 2 Minuten
 insgesamt**, nicht pro Test. Wenn ein Test 80 Sekunden braucht, bleiben
-40 Sekunden fuer 11 andere Tests.
+40 Sekunden für 11 andere Tests.
 
 **Deshalb:** vermeide sehr lange Tests im gleichen Batch mit vielen
-anderen. Wenn du weisst dass ein Test 60 Sekunden braucht:
+anderen. Wenn du weißt dass ein Test 60 Sekunden braucht:
 
 - Tagge ihn `slow`
-- Starte separaten Run fuer `tag:slow` — dann ist er alleine im Batch
-- Oder markiere einen eigenen Filter-Praefix z.B. `SLOW-*`
+- Starte separaten Run für `tag:slow` — dann ist er alleine im Batch
+- Oder markiere einen eigenen Filter-Präfix z.B. `SLOW-*`
 
 ## Throttling durch Dataverse
 
-Dataverse hat Limits gegen Ueberlast:
+Dataverse hat Limits gegen Überlast:
 
 - Max 6000 API-Calls pro 5-Min-Fenster pro Service-User
 - Max 52 gleichzeitige Calls pro User
@@ -110,7 +110,7 @@ startest, kann's dich treffen.
 ### Nutze `columns` sparsam
 
 Jedes Feld in `columns` wird vom Server frisch gelesen. Je mehr Felder,
-desto laenger der Create-Step. Fuer typische Tests reicht 0-2 Felder.
+desto laenger der Create-Step. Für typische Tests reicht 0-2 Felder.
 
 ### `RetrieveRecord` nur wenn noetig
 
@@ -119,39 +119,39 @@ liest, ist das Retrieve redundant.
 
 ### Mehrere `Assert` nach einer Action batchen
 
-Wenn alle Asserts denselben Record pruefen, kannst du `target: Record`
-nutzen. Das ist billiger als mehrere `target: Query` (jede waere eine
+Wenn alle Asserts denselben Record prüfen, kannst du `target: Record`
+nutzen. Das ist billiger als mehrere `target: Query` (jede wäre eine
 eigene Dataverse-Abfrage).
 
 ### Wait-Step-Zeiten realistisch halten
 
 ```json
-// Viel zu konservativ (120s fuer eine Plugin-Chain die 5s braucht):
+// Viel zu konservativ (120s für eine Plugin-Chain die 5s braucht):
 { "action": "Wait", "waitSeconds": 120 }
 
 // Realistisch (mit 20% Puffer):
 { "action": "Wait", "waitSeconds": 6 }
 ```
 
-Wenn du das Timing nicht kennst: Erst mal grosszuegig schaetzen, den
+Wenn du das Timing nicht kennst: Erst mal großzügig schaetzen, den
 Test 3x laufen lassen, dann das Maximum + 20% einstellen.
 
-## Kann ich einen Test asynchron starten und spaeter pruefen?
+## Kann ich einen Test asynchron starten und später prüfen?
 
 Nein, der Lauf ist pro Testrun ein Block. Alternative:
 
 - Ein Test legt einen Record an, der ein langes Plugin triggert
   (`keeprecords: true`).
-- Ein **zweiter Test**, spaeter gestartet, prueft den Zustand.
+- Ein **zweiter Test**, später gestartet, prüft den Zustand.
 
 Zwei getrennte `jbe_testrun`-Records.
 
-## Ueberpruefung deiner Tests
+## Überprüfung deiner Tests
 
 Vor dem Committen eines neuen Tests:
 
 ```
-[ ] Test laeuft < 90 Sekunden?
+[ ] Test läuft < 90 Sekunden?
 [ ] Wait-Schritte notwendig (nicht dekorativ)?
 [ ] WaitForFieldValue/WaitForRecord mit sinnvollem Timeout?
 [ ] columns-Liste enthaelt nur was du wirklich brauchst?
