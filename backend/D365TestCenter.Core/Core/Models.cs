@@ -203,7 +203,11 @@ public sealed class TestStep
 
     // ── Assert-spezifische Properties ─────────────────────────
 
-    /// <summary>Assert: Record, Query, Contact, Account, ContactSource, MembershipSource, BridgeRecord, Logging.</summary>
+    /// <summary>
+    /// Kontext-abhaengig (Action bestimmt die Semantik):
+    ///  - Assert: Record, Query, Contact, Account, ContactSource, MembershipSource, BridgeRecord, Logging.
+    ///  - SetEnvironmentVariable: effective (Default), currentValue, defaultValue.
+    /// </summary>
     [JsonProperty("target")]
     public string? Target { get; set; }
 
@@ -227,6 +231,44 @@ public sealed class TestStep
     /// </summary>
     [JsonProperty("onError")]
     public string? OnError { get; set; }
+
+    // ── EnvironmentVariable-Actions (SetEnvironmentVariable, RetrieveEnvironmentVariable) ──
+
+    /// <summary>schemaname der environmentvariabledefinition (env-unabhaengig).</summary>
+    [JsonProperty("schemaName")]
+    public string? SchemaName { get; set; }
+
+    /// <summary>
+    /// RetrieveEnvironmentVariable: "effective" (Default), "currentValue", "defaultValue".
+    /// Analog zum Retrieve-Pfad: Plugins lesen effective.
+    /// </summary>
+    [JsonProperty("source")]
+    public string? Source { get; set; }
+}
+
+/// <summary>
+/// Snapshot eines EnvironmentVariable-Zustands fuer Auto-Restore im Cleanup.
+/// Wird von SetEnvironmentVariable erzeugt wenn alias gesetzt ist.
+/// </summary>
+public sealed class EnvVarSnapshot
+{
+    public string SchemaName { get; set; } = "";
+    public Guid DefinitionId { get; set; }
+
+    /// <summary>"currentValue" oder "defaultValue" (zur Laufzeit resolved).</summary>
+    public string ResolvedTarget { get; set; } = "";
+
+    /// <summary>Existierte der Value-Record vor dem Set? Nur relevant bei ResolvedTarget=currentValue.</summary>
+    public bool ValueRecordExistedBefore { get; set; }
+
+    /// <summary>ID des Value-Records (bei ResolvedTarget=currentValue, nach dem Set gesetzt).</summary>
+    public Guid? ValueRecordId { get; set; }
+
+    /// <summary>Der Wert vor dem Set (bei ResolvedTarget=currentValue und ValueRecordExistedBefore=true).</summary>
+    public string? OriginalValue { get; set; }
+
+    /// <summary>Der DefaultValue vor dem Set (bei ResolvedTarget=defaultValue).</summary>
+    public string? OriginalDefaultValue { get; set; }
 }
 
 /// <summary>
@@ -273,6 +315,9 @@ public sealed class TestContext
 
     /// <summary>Alle erstellten Entity-IDs für Cleanup nach dem Test.</summary>
     public List<(string EntityName, Guid Id)> CreatedEntities { get; set; } = new List<(string, Guid)>();
+
+    /// <summary>Snapshots fuer EnvironmentVariable-Auto-Restore im Cleanup.</summary>
+    public List<EnvVarSnapshot> EnvVarSnapshots { get; set; } = new List<EnvVarSnapshot>();
 
     /// <summary>Sucht eine Record-ID über das Records-Registry.</summary>
     public Guid ResolveRecordId(string alias)

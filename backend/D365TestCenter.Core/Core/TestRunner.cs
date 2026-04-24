@@ -306,6 +306,14 @@ public sealed class TestRunner
                         StepRetrieveRecord(step, ctx);
                         break;
 
+                    case "SETENVIRONMENTVARIABLE":
+                        StepSetEnvironmentVariable(step, ctx);
+                        break;
+
+                    case "RETRIEVEENVIRONMENTVARIABLE":
+                        StepRetrieveEnvironmentVariable(step, ctx);
+                        break;
+
                     case "ASSERT":
                         StepAssert(step, ctx, stepResult);
                         break;
@@ -770,6 +778,185 @@ public sealed class TestRunner
     }
 
     // ================================================================
+    //  EnvironmentVariable-Actions (Set / Retrieve)
+    //  Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md
+    // ================================================================
+
+    private void StepSetEnvironmentVariable(TestStep step, TestContext ctx)
+    {
+        var schemaName = step.SchemaName
+            ?? throw new InvalidOperationException(
+                "SetEnvironmentVariable braucht 'schemaName'.");
+        var value = step.Value
+            ?? throw new InvalidOperationException(
+                "SetEnvironmentVariable braucht 'value'.");
+        var targetRaw = (step.Target ?? "effective").Trim();
+        var targetUpper = targetRaw.ToUpperInvariant();
+
+        var definition = RetrieveEnvVarDefinition(schemaName);
+        var valueRecord = RetrieveEnvVarValueRecord(definition.Id);
+
+        // Resolve target
+        string resolvedTarget = targetUpper switch
+        {
+            "EFFECTIVE" => valueRecord != null ? "currentValue" : "defaultValue",
+            "CURRENTVALUE" => "currentValue",
+            "DEFAULTVALUE" => "defaultValue",
+            _ => throw new InvalidOperationException(
+                $"SetEnvironmentVariable: Unbekanntes target '{step.Target}'. " +
+                "Erlaubt: effective, currentValue, defaultValue.")
+        };
+
+        // Snapshot fuer Auto-Restore (nur bei alias)
+        EnvVarSnapshot? snap = null;
+        if (!string.IsNullOrEmpty(step.Alias))
+        {
+            snap = new EnvVarSnapshot
+            {
+                SchemaName = schemaName,
+                DefinitionId = definition.Id,
+                ResolvedTarget = resolvedTarget,
+                ValueRecordExistedBefore = valueRecord != null,
+                ValueRecordId = valueRecord?.Id,
+                OriginalValue = valueRecord?.GetAttributeValue<string>("value"),
+                OriginalDefaultValue = resolvedTarget == "defaultValue"
+                    ? definition.GetAttributeValue<string>("defaultvalue")
+                    : null
+            };
+            ctx.EnvVarSnapshots.Add(snap);
+        }
+
+        // Schreiben
+        if (resolvedTarget == "currentValue")
+        {
+            if (valueRecord != null)
+            {
+                var upd = new Entity("environmentvariablevalue", valueRecord.Id);
+                upd["value"] = value;
+                _service.Update(upd);
+            }
+            else
+            {
+                var create = new Entity("environmentvariablevalue");
+                create["environmentvariabledefinitionid"] =
+                    new EntityReference("environmentvariabledefinition", definition.Id);
+                create["value"] = value;
+                create["schemaname"] = schemaName;
+                var newId = _service.Create(create);
+                if (snap != null) snap.ValueRecordId = newId;
+            }
+        }
+        else
+        {
+            // defaultValue: PATCH auf Definition. Erzeugt Unmanaged Active Layer
+            // auf Managed-Envs (in Dataverse normal, kein Warn-Case).
+            var upd = new Entity("environmentvariabledefinition", definition.Id);
+            upd["defaultvalue"] = value;
+            _service.Update(upd);
+        }
+
+        Log($"      SetEnvironmentVariable [{schemaName}] target={resolvedTarget} value='{value}'" +
+            (snap != null ? " (Snapshot fuer Auto-Restore erzeugt)" : ""));
+    }
+
+    private void StepRetrieveEnvironmentVariable(TestStep step, TestContext ctx)
+    {
+        var schemaName = step.SchemaName
+            ?? throw new InvalidOperationException(
+                "RetrieveEnvironmentVariable braucht 'schemaName'.");
+        var alias = step.Alias
+            ?? throw new InvalidOperationException(
+                "RetrieveEnvironmentVariable braucht 'alias'.");
+        var sourceRaw = (step.Source ?? "effective").Trim();
+        var sourceUpper = sourceRaw.ToUpperInvariant();
+
+        var definition = RetrieveEnvVarDefinition(schemaName);
+        var valueRecord = RetrieveEnvVarValueRecord(definition.Id);
+
+        string? resolvedValue;
+        string resolvedSource;
+
+        switch (sourceUpper)
+        {
+            case "EFFECTIVE":
+                if (valueRecord != null)
+                {
+                    resolvedValue = valueRecord.GetAttributeValue<string>("value");
+                    resolvedSource = "currentValue";
+                }
+                else
+                {
+                    resolvedValue = definition.GetAttributeValue<string>("defaultvalue");
+                    resolvedSource = "defaultValue";
+                }
+                break;
+
+            case "CURRENTVALUE":
+                resolvedValue = valueRecord?.GetAttributeValue<string>("value");
+                resolvedSource = "currentValue";
+                break;
+
+            case "DEFAULTVALUE":
+                resolvedValue = definition.GetAttributeValue<string>("defaultvalue");
+                resolvedSource = "defaultValue";
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"RetrieveEnvironmentVariable: Unbekanntes source '{step.Source}'. " +
+                    "Erlaubt: effective, currentValue, defaultValue.");
+        }
+
+        // Virtuelles Entity ins FoundRecords-Registry legen damit
+        // {alias.fields.value} als Platzhalter aufloesbar ist.
+        var virt = new Entity("environmentvariablevalue");
+        if (valueRecord != null) virt.Id = valueRecord.Id;
+        virt["value"] = resolvedValue;
+        virt["schemaname"] = schemaName;
+        virt["resolvedsource"] = resolvedSource;
+        ctx.FoundRecords[alias] = virt;
+
+        Log($"      RetrieveEnvironmentVariable [{schemaName}] source={resolvedSource} " +
+            $"value='{resolvedValue ?? "<null>"}' -> alias '{alias}'");
+    }
+
+    /// <summary>
+    /// Holt die environmentvariabledefinition per schemaname. Wirft wenn nicht gefunden.
+    /// </summary>
+    private Entity RetrieveEnvVarDefinition(string schemaName)
+    {
+        var query = new QueryExpression("environmentvariabledefinition")
+        {
+            TopCount = 1,
+            ColumnSet = new ColumnSet("environmentvariabledefinitionid", "schemaname",
+                "displayname", "defaultvalue", "type")
+        };
+        query.Criteria.AddCondition("schemaname", ConditionOperator.Equal, schemaName);
+        var results = _service.RetrieveMultiple(query);
+        if (results.Entities.Count == 0)
+        {
+            throw new InvalidOperationException(
+                $"Environment variable definition '{schemaName}' nicht gefunden in dieser Umgebung.");
+        }
+        return results.Entities[0];
+    }
+
+    /// <summary>
+    /// Holt den environmentvariablevalue-Record per Definition-Lookup. Null wenn nicht vorhanden.
+    /// </summary>
+    private Entity? RetrieveEnvVarValueRecord(Guid definitionId)
+    {
+        var query = new QueryExpression("environmentvariablevalue")
+        {
+            TopCount = 1,
+            ColumnSet = new ColumnSet("environmentvariablevalueid", "value", "schemaname")
+        };
+        query.Criteria.AddCondition("environmentvariabledefinitionid", ConditionOperator.Equal, definitionId);
+        var results = _service.RetrieveMultiple(query);
+        return results.Entities.Count > 0 ? results.Entities[0] : null;
+    }
+
+    // ================================================================
     //  Pre-Flight-Diagnostics
     // ================================================================
 
@@ -907,7 +1094,9 @@ public sealed class TestRunner
     private void Cleanup(TestContext ctx, TestCaseResult tcResult)
     {
         var toDelete = ctx.CreatedEntities.AsEnumerable().Reverse().ToList();
-        if (toDelete.Count == 0) return;
+        var envSnapshots = ctx.EnvVarSnapshots.AsEnumerable().Reverse().ToList();
+
+        if (toDelete.Count == 0 && envSnapshots.Count == 0) return;
 
         // 1 StepResult pro Test-Cleanup-Phase (nicht pro Record), damit der
         // Steps-Tab die Cleanup-Zusammenfassung als eine Zeile zeigt statt
@@ -926,12 +1115,34 @@ public sealed class TestRunner
         if (KeepRecords)
         {
             sw.Stop();
-            Log($"    Cleanup übersprungen (keeprecords=true, {toDelete.Count} Records behalten)");
-            cleanupResult.Description = $"Cleanup übersprungen: {toDelete.Count} Records behalten (keeprecords=true)";
+            Log($"    Cleanup übersprungen (keeprecords=true, {toDelete.Count} Records behalten, " +
+                $"{envSnapshots.Count} EnvVar-Snapshots nicht restored)");
+            cleanupResult.Description = $"Cleanup übersprungen: {toDelete.Count} Records + " +
+                $"{envSnapshots.Count} EnvVar-Snapshots behalten (keeprecords=true)";
             cleanupResult.Success = true;
             cleanupResult.DurationMs = sw.ElapsedMilliseconds;
             tcResult.StepResults.Add(cleanupResult);
             return;
+        }
+
+        // EnvVar-Restore ZUERST (damit selbst bei Record-Delete-Fehlern die
+        // Umgebung wieder sauber ist und nachfolgende Tests nicht kippen).
+        int envRestored = 0, envFailed = 0;
+        var firstEnvError = "";
+        foreach (var snap in envSnapshots)
+        {
+            try
+            {
+                RestoreEnvVarSnapshot(snap);
+                envRestored++;
+            }
+            catch (Exception ex)
+            {
+                envFailed++;
+                if (string.IsNullOrEmpty(firstEnvError))
+                    firstEnvError = $"EnvVar {snap.SchemaName}: {ex.Message}";
+                Log($"    EnvVar-Restore fehlgeschlagen: {snap.SchemaName} -- {ex.Message}");
+            }
         }
 
         int deleted = 0, failed = 0;
@@ -953,13 +1164,60 @@ public sealed class TestRunner
         }
 
         sw.Stop();
-        Log($"    Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen");
+        Log($"    Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen" +
+            (envSnapshots.Count > 0 ? $", {envRestored} EnvVars restored, {envFailed} EnvVar-Fehler" : ""));
 
-        cleanupResult.Description = $"Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen";
-        cleanupResult.Success = failed == 0;
-        cleanupResult.Message = failed > 0 ? firstError : null;
+        cleanupResult.Description = $"Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen" +
+            (envSnapshots.Count > 0 ? $", {envRestored}/{envSnapshots.Count} EnvVars restored" : "");
+        cleanupResult.Success = failed == 0 && envFailed == 0;
+        cleanupResult.Message = (failed > 0) ? firstError
+            : (envFailed > 0) ? firstEnvError : null;
         cleanupResult.DurationMs = sw.ElapsedMilliseconds;
         tcResult.StepResults.Add(cleanupResult);
+    }
+
+    /// <summary>
+    /// Stellt den Vor-Set-Zustand einer EnvironmentVariable wieder her.
+    /// Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md Abschnitt 6.1.
+    /// </summary>
+    private void RestoreEnvVarSnapshot(EnvVarSnapshot snap)
+    {
+        if (snap.ResolvedTarget == "currentValue")
+        {
+            if (snap.ValueRecordExistedBefore)
+            {
+                // Wert auf Original zurueckschreiben
+                if (!snap.ValueRecordId.HasValue)
+                    throw new InvalidOperationException(
+                        $"Snapshot {snap.SchemaName}: ValueRecordId fehlt trotz ValueRecordExistedBefore.");
+                var upd = new Entity("environmentvariablevalue", snap.ValueRecordId.Value);
+                upd["value"] = snap.OriginalValue;
+                _service.Update(upd);
+            }
+            else
+            {
+                // Neu erstellten Value-Record wieder loeschen
+                if (snap.ValueRecordId.HasValue)
+                    _service.Delete("environmentvariablevalue", snap.ValueRecordId.Value);
+            }
+        }
+        else if (snap.ResolvedTarget == "defaultValue")
+        {
+            // DefaultValue auf Original zurueckschreiben. Der Unmanaged Active
+            // Layer auf der Definition bleibt bestehen, enthaelt aber jetzt
+            // wieder den Wert des darunter liegenden Managed-Layers (neutralisiert).
+            // Wer den Layer komplett abraeumen will: RemoveActiveCustomization
+            // mit LogicalName=environmentvariabledefinition + Id, aber nicht Teil
+            // des Auto-Cleanups (Nebenwirkungen bei Parallel-Aenderungen).
+            var upd = new Entity("environmentvariabledefinition", snap.DefinitionId);
+            upd["defaultvalue"] = snap.OriginalDefaultValue;
+            _service.Update(upd);
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"EnvVarSnapshot mit unbekanntem ResolvedTarget '{snap.ResolvedTarget}' kann nicht restored werden.");
+        }
     }
 
     // ================================================================
