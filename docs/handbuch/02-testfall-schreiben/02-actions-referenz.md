@@ -69,7 +69,7 @@ Aktualisiert einen bereits vorhandenen Record.
 | `fields` | ja | Die zu ändernden Felder. |
 
 **Alternative ohne Alias:** `recordRef` mit direkter GUID oder `{RECORD:...}`.
-Selten noetig, meist arbeitet man mit Aliasen.
+Selten nötig, meist arbeitet man mit Aliasen.
 
 ## DeleteRecord
 
@@ -105,7 +105,7 @@ modifiziert wurde und du im nächsten Step die neuen Werte brauchst.
 
 **Wann brauchst du das?** Wenn `{alias.fields.xyz}` in einem späteren
 Step einen aktuellen Wert liefern muss, der sich nach dem Create geändert
-hat. Für reine Asserts ist `RetrieveRecord` nicht noetig — die
+hat. Für reine Asserts ist `RetrieveRecord` nicht nötig — die
 Assertion-Engine liest frisch aus der DB.
 
 ## Wait
@@ -123,7 +123,7 @@ Feste Wartezeit.
 
 **Nimm es nur wenn du musst.** `WaitForFieldValue` und `WaitForRecord`
 sind fast immer die bessere Wahl, weil sie nicht länger warten als
-noetig und bei Timeouts klar scheitern.
+nötig und bei Timeouts klar scheitern.
 
 ## WaitForRecord
 

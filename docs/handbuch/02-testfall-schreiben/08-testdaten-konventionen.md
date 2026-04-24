@@ -151,7 +151,7 @@ Ausnahmen:
 Umlaute sind erlaubt und sogar gut (Encoding-Tests!). Aber:
 
 ```json
-"name": "Test \"mit\" Anführungszeichen"     // JSON-Escape noetig
+"name": "Test \"mit\" Anführungszeichen"     // JSON-Escape nötig
 "name": "Test mit\nUmbruch"                   // geht, aber selten sinnvoll
 ```
 

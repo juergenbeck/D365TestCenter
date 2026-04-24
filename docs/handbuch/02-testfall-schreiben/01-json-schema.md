@@ -115,7 +115,7 @@ Frühere Versionen verwendeten getrennte Arrays `preconditions`, `steps`,
 |---|---|
 | `preconditions: [...]` | `CreateRecord`-Steps am Anfang der `steps`-Liste |
 | `assertions: [...]` | `Assert`-Steps am Ende der `steps`-Liste |
-| `dataMode: "template"` | entfallen, nicht mehr noetig |
+| `dataMode: "template"` | entfallen, nicht mehr nötig |
 
 Alle Records auf den Umgebungen sind schon migriert. Neue Tests schreibst
 du direkt im neuen Schema.

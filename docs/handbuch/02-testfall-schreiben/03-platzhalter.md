@@ -148,7 +148,7 @@ description:    "Erzeugt von Test {alias_if_exists} am 2026-04-24T11:45:32Z"
 ```
 
 Wenn ein Platzhalter nicht aufgelöst werden kann (z.B. `{alias_if_exists}`
-ist ein Tippfehler), bleibt er **woertlich** im String stehen.
+ist ein Tippfehler), bleibt er **wörtlich** im String stehen.
 
 ## Platzhalter in Filtern
 
@@ -164,13 +164,13 @@ Platzhalter:
 
 ## Was NICHT geht
 
-- **Arithmetik**: `{acc.id + 1}` — nicht unterstuetzt.
+- **Arithmetik**: `{acc.id + 1}` — nicht unterstützt.
 - **Fällt zurück auf alten Wert**: wenn du den Record zwischendurch
   änderst, zeigt `{alias.fields.x}` den Wert zum Zeitpunkt des letzten
   `CreateRecord` / `RetrieveRecord`, nicht den aktuellen DB-Stand.
   Für aktuelle Werte: `RetrieveRecord` einschieben.
 - **Verschachtelte Platzhalter**: `{alias.{name_var}.id}` — nicht
-  unterstuetzt.
+  unterstützt.
 - **In Zahlen-Feldern**: `"numberofemployees": "{TIMESTAMP_SECONDS}"` geht
   nicht, weil das Feld eine echte Zahl erwartet, und Platzhalter produzieren
   Strings. Workaround: hardcode die Zahl oder nutze `columns` für

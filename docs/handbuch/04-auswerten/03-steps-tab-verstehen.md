@@ -72,7 +72,7 @@ Klick eine Zeile an um das Step-Detail zu öffnen:
 |  +--------------------------------------------------------+   |
 |                                                               |
 |  Record-Referenz                                              |
-|  > 3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3  [Record oeffnen]     |
+|  > 3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3  [Record öffnen]     |
 |                                                               |
 |  Input-Daten (JSON)                                           |
 |  +--------------------------------------------------------+   |
@@ -111,7 +111,7 @@ dir anschauen.
   Bedarf gekürzt).
 
 Die meisten Tests brauchen diese Felder nie. Bei tief verschachtelten
-Problemen (Custom-Action-Aufrufe mit ungewoehnlichen Parametern) helfen
+Problemen (Custom-Action-Aufrufe mit ungewöhnlichen Parametern) helfen
 sie beim Debuggen.
 
 ## Das Stepstatus-Symbol
@@ -132,7 +132,7 @@ Ein erfahrener Leser überfliegt den Step-Tab so:
 2. **Welcher Step hat gekippt?** — oft gibt es nur einen Assert-Fehler,
    alle anderen sind OK.
 3. **Was war Erwartet vs Tatsächlich?** — hier kommt die Diagnose her.
-4. **Dauerte der Step ungewoehnlich lange?** — Hinweis auf Timing-
+4. **Dauerte der Step ungewöhnlich lange?** — Hinweis auf Timing-
    Probleme.
 
 ## Dauern pro Action-Typ (Erfahrungswerte)

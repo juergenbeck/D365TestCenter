@@ -118,7 +118,7 @@ asynchrone Plugins.
   "timeoutSeconds": 30 }
 ```
 
-Das Polling wartet **so lange wie noetig** aber nicht länger.
+Das Polling wartet **so lange wie nötig** aber nicht länger.
 
 Siehe [../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue](../02-testfall-schreiben/02-actions-referenz.md#waitforfieldvalue).
 

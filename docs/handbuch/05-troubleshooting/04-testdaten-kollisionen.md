@@ -123,7 +123,7 @@ Fall 3: **Beide Runs exakt parallel gestartet.** `{TIMESTAMP}` kann
 bei extrem schnellen Abfolgen auf die selbe Sekunde fallen. Unwahr-
 scheinlich, aber möglich.
 
-Workaround: zusaetzlich noch `{GENERATED:guid}` kombinieren:
+Workaround: zusätzlich noch `{GENERATED:guid}` kombinieren:
 
 ```json
 "fields": {

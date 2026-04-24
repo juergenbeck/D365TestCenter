@@ -41,7 +41,7 @@ und am Ende prüfen, ob das Gesamtsystem das erwartete Ergebnis liefert.
                                            |    schreiben            |
                                            |                         |
    +------------------------+              |                         |
-   | jbe_testrun oeffnen    |<-------------| Status: "Abgeschlossen" |
+   | jbe_testrun öffnen    |<-------------| Status: "Abgeschlossen" |
    | -> passed/failed/total |              | jbe_testrunresult +     |
    | -> Steps-Tab ansehen   |              | jbe_teststep gefüllt   |
    +------------------------+              +-------------------------+

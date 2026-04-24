@@ -160,7 +160,7 @@ Beispiele:
 
 ## Filter-Syntax (target: Query)
 
-Der `filter` ist ein Array aus Bedingungen. Alle werden **AND** verknuepft:
+Der `filter` ist ein Array aus Bedingungen. Alle werden **AND** verknüpft:
 
 ```json
 "filter": [

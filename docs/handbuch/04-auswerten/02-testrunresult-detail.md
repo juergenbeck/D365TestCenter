@@ -125,7 +125,7 @@ fehlgeschlagenen Asserts, schau dir `Erwartet` und `Tatsächlich` an.
 Action-Fehler sind oft **syntaktisch**: falscher Entity-Name, fehlendes
 Pflichtfeld, Lookup-Binding falsch formatiert.
 
-Oder **permission-basiert**: dein Service-User hat nicht die noetigen
+Oder **permission-basiert**: dein Service-User hat nicht die nötigen
 Rechte.
 
 Oder **Plugin-Interferenz**: ein anderes Plugin auf der Zielumgebung hat

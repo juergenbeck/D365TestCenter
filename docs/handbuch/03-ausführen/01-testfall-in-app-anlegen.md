@@ -15,7 +15,7 @@ Als Vorlage: [Rezepte](../02-testfall-schreiben/07-rezepte.md).
 
 ## Schritt 1: In die App navigieren
 
-Öffne in Dynamics die App **D365 Test Center**. Im linken Menue findest
+Öffne in Dynamics die App **D365 Test Center**. Im linken Menü findest
 du:
 
 ```

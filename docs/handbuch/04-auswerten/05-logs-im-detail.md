@@ -64,7 +64,7 @@ Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 
 - `INFO` — wichtige Meilensteine (Testcase-Start, Batch-Ende)
 - `DEBUG` — jeder einzelne Step
-- `WARN` — ungewoehnliche Lage, Test läuft aber weiter
+- `WARN` — ungewöhnliche Lage, Test läuft aber weiter
 - `ERROR` — fataler Fehler, Testcase abgebrochen
 
 ## Wann lese ich jbe_fulllog?

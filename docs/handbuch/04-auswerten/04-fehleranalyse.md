@@ -115,7 +115,7 @@ HTTP 400: expected guid format.
 HTTP 403: Principal user does not have the required permission.
 ```
 
--> Dein Service-User hat nicht die noetigen Privilegien für die Entity.
+-> Dein Service-User hat nicht die nötigen Privilegien für die Entity.
 Projekt-Owner fragen.
 
 **Plugin-Exception:**

@@ -6,7 +6,7 @@ automatisch.
 
 ## Schritt 1: Zu den Testläufen navigieren
 
-In der App **D365 Test Center** im linken Menue: **Testläufe**.
+In der App **D365 Test Center** im linken Menü: **Testläufe**.
 
 ```
 +-- Testläufe -----------------------------------------+

@@ -32,7 +32,7 @@ Timeout.
 wenn das Plugin meist schon nach 3 Sekunden fertig ist.
 
 **Besser:** `WaitForFieldValue` mit großzügigem Timeout. Wartet so
-lange wie noetig, aber nicht länger.
+lange wie nötig, aber nicht länger.
 
 ### 2. `WaitForRecord` mit großem Timeout ohne Prüfung
 
@@ -112,7 +112,7 @@ startest, kann's dich treffen.
 Jedes Feld in `columns` wird vom Server frisch gelesen. Je mehr Felder,
 desto länger der Create-Step. Für typische Tests reicht 0-2 Felder.
 
-### `RetrieveRecord` nur wenn noetig
+### `RetrieveRecord` nur wenn nötig
 
 Das ist ein extra HTTP-Call. Wenn die AssertionEngine sowieso frisch
 liest, ist das Retrieve redundant.
@@ -133,7 +133,7 @@ eigene Dataverse-Abfrage).
 { "action": "Wait", "waitSeconds": 6 }
 ```
 
-Wenn du das Timing nicht kennst: Erst mal großzügig schaetzen, den
+Wenn du das Timing nicht kennst: Erst mal großzügig schätzen, den
 Test 3x laufen lassen, dann das Maximum + 20% einstellen.
 
 ## Kann ich einen Test asynchron starten und später prüfen?

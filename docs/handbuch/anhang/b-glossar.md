@@ -173,7 +173,7 @@ ggf. Assertion-Details.
 
 Rate-Limiting von Dataverse gegen Überlast (HTTP 429). Das Test Center
 hat automatische Retries. Bei sehr vielen parallelen Runs kann's
-trotzdem spuerbar werden.
+trotzdem spürbar werden.
 
 ## TIMESTAMP
 
