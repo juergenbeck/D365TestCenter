@@ -10,7 +10,7 @@
       <Description description="Generische Integrations-Testplattform für Dynamics 365" languagecode="1031" />
       <Description description="Generische Integrations-Testplattform für Dynamics 365" languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0.5</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>JBE</UniqueName>
@@ -89,6 +89,7 @@
       <RootComponent type="1" schemaName="jbe_testrunresult" behavior="0" />
       <RootComponent type="1" schemaName="jbe_teststep" behavior="0" />
       <RootComponent type="61" schemaName="jbe_/forms.js" behavior="0" />
+      <RootComponent type="61" schemaName="jbe_/handbuch.html" behavior="0" />
       <RootComponent type="61" schemaName="jbe_/packs/demo-standard.json" behavior="0" />
       <RootComponent type="61" schemaName="jbe_/packs/empty.json" behavior="0" />
       <RootComponent type="61" schemaName="jbe_/packs/manifest.json" behavior="0" />

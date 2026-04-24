@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{25f92518-bf4e-4c66-9423-e1e8d500fd4e}</WebResourceId>
+  <Name>jbe_/handbuch.html</Name>
+  <DisplayName>D365 Test Center — Handbuch</DisplayName>
+  <Description>Entwickler-Handbuch: Testfälle schreiben, ausführen, auswerten. Generiert aus docs/handbuch/*.md via build-handbuch.py.</Description>
+  <WebResourceType>1</WebResourceType>
+  <IntroducedVersion>1.0.0.5</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>0</IsHidden>
+  <FileName>/WebResources/jbe_handbuchhtml25F92518-BF4E-4C66-9423-E1E8D500FD4E</FileName>
+</WebResource>

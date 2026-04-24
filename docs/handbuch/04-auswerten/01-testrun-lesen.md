@@ -16,7 +16,7 @@ Nach Abschluss eines Runs öffnest du den Record:
 |  Test-Status       [ Abgeschlossen          v ]           |
 |  Records behalten  [ ] nein                               |
 |  Gestartet         24.04.2026 11:45:32                    |
-|  Geändert         24.04.2026 11:47:58                    |
+|  Geändert          24.04.2026 11:47:58                    |
 |                                                           |
 |  Bestanden          4                                     |
 |  Fehlgeschlagen     1                                     |
