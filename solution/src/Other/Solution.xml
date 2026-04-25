@@ -10,7 +10,7 @@
       <Description description="Generische Integrations-Testplattform für Dynamics 365" languagecode="1031" />
       <Description description="Generische Integrations-Testplattform für Dynamics 365" languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.14</Version>
+    <Version>1.0.0.15</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>JBE</UniqueName>

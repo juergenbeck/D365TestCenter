@@ -35,9 +35,17 @@ public sealed class RunIntegrationTestsApi : IPlugin
             .GetService(typeof(ITracingService));
         var factory = (IOrganizationServiceFactory)serviceProvider
             .GetService(typeof(IOrganizationServiceFactory));
-        var service = factory.CreateOrganizationService(context.UserId);
+        var rawService = factory.CreateOrganizationService(context.UserId);
 
-        tracingService.Trace("RunIntegrationTestsApi: Start");
+        // ADR-0005 / FB-31b: Im Sync-Plugin-Pfad alle Service-Calls via
+        // SandboxSafeOrganizationService routen. Damit faengt das Plugin
+        // niemals direkt eine Exception aus IOrganizationService — Faults
+        // kommen als InvalidPluginExecutionException, die als managed
+        // Exception kein Sandbox-Wachter-Verstoss sind. Das deckt auch
+        // den FindRecord-auf-systemuser-Pfad ab (FB-31-Variante 2b).
+        var service = new SandboxSafeOrganizationService(rawService);
+
+        tracingService.Trace("RunIntegrationTestsApi: Start (SandboxSafe wrapper aktiv)");
 
         try
         {
