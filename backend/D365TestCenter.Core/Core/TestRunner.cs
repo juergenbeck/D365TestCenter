@@ -711,7 +711,23 @@ public sealed class TestRunner
 
     private void HandleExecuteRequestResponse(TestStep step, TestContext ctx, OrganizationResponse response)
     {
-        // Response-Werte im Kontext speichern (wenn Alias gesetzt)
+        // A4 / ZastrPay-Feedback: outputAlias macht den OrganizationResponse
+        // mit nativen Typen unter Alias verfuegbar fuer {alias.outputs.X}
+        // und {alias.outputs.X[type=Y]}-Platzhalter.
+        if (!string.IsNullOrEmpty(step.OutputAlias) && response.Results.Count > 0)
+        {
+            var outputs = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in response.Results)
+            {
+                outputs[kvp.Key] = kvp.Value;
+            }
+            ctx.OutputAliases[step.OutputAlias!] = outputs;
+            Log($"      Response: {response.Results.Count} Output-Werte unter outputAlias='{step.OutputAlias}' gespeichert");
+        }
+
+        // Backward-Compat: bestehender Alias-Pfad legt String-Repraesentationen
+        // in GeneratedValues ab (alte Tests nutzen das ggf. ueber {alias.response.X}-
+        // Pattern, das aber keine offizielle Resolver-Syntax hatte).
         if (!string.IsNullOrEmpty(step.Alias) && response.Results.Count > 0)
         {
             foreach (var kvp in response.Results)
@@ -726,7 +742,7 @@ public sealed class TestRunner
                 };
                 ctx.GeneratedValues[$"{step.Alias}.response.{kvp.Key}"] = strVal;
             }
-            Log($"      Response: {response.Results.Count} Werte unter [{step.Alias}] gespeichert");
+            Log($"      Response: {response.Results.Count} Werte unter [{step.Alias}] gespeichert (legacy)");
         }
     }
 

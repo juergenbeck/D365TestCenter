@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json.Linq;
@@ -18,6 +19,10 @@ public sealed class PlaceholderEngine
     private static readonly Regex AliasIdPattern = new(@"\{(\w+)\.id\}", RegexOptions.Compiled);
     private static readonly Regex AliasFieldPattern = new(@"\{(\w+)\.fields\.(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex RowPattern = new(@"\{ROW:(\w+)\}", RegexOptions.Compiled);
+    // A4: ExecuteRequest-Output via outputAlias. Mit optionalem [type=...]-Filter
+    // fuer EntityReferenceCollection.
+    private static readonly Regex OutputAliasPattern = new(
+        @"\{(\w+)\.outputs\.(\w+)(?:\[type=(\w+)\])?\}", RegexOptions.Compiled);
 
     private readonly Bogus.Faker _faker = new Bogus.Faker("de");
 
@@ -84,6 +89,43 @@ public sealed class PlaceholderEngine
             if (ctx.Records.TryGetValue(alias, out var record))
                 return record.Id.ToString();
             return m.Value;
+        });
+
+        // {alias.outputs.fieldname} -> ExecuteRequest-Output (A4). Optional [type=X]-Filter
+        // fuer EntityReferenceCollection. VOR den anderen alias-Pattern weil sonst
+        // {alias.fields.X} oder {alias.id} potentiell den Output-Token vorzeitig fressen
+        // (matched aber wegen .outputs nicht — trotzdem Reihenfolge stabil halten).
+        result = OutputAliasPattern.Replace(result, m =>
+        {
+            var alias = m.Groups[1].Value;
+            var key = m.Groups[2].Value;
+            var typeFilter = m.Groups[3].Success ? m.Groups[3].Value : null;
+            if (!ctx.OutputAliases.TryGetValue(alias, out var outputs))
+                return m.Value; // Alias unbekannt: unveraendert lassen
+            if (!outputs.TryGetValue(key, out var raw))
+                throw new InvalidOperationException(
+                    $"Platzhalter '{m.Value}': Output-Key '{key}' nicht im outputAlias '{alias}'. " +
+                    $"Vorhanden: [{string.Join(", ", outputs.Keys)}]");
+
+            // Type-Filter nur sinnvoll bei EntityReferenceCollection / List-Werten.
+            if (typeFilter != null)
+            {
+                if (raw is EntityReferenceCollection erc)
+                {
+                    var match = erc.FirstOrDefault(er =>
+                        string.Equals(er.LogicalName, typeFilter, StringComparison.OrdinalIgnoreCase));
+                    if (match == null)
+                        throw new InvalidOperationException(
+                            $"Platzhalter '{m.Value}': kein EntityReference mit type='{typeFilter}' " +
+                            $"in '{alias}.outputs.{key}'. Vorhanden: [{string.Join(", ", erc.Select(e => e.LogicalName))}]");
+                    return match.Id.ToString();
+                }
+                throw new InvalidOperationException(
+                    $"Platzhalter '{m.Value}': type-Filter nur bei EntityReferenceCollection unterstuetzt. " +
+                    $"Tatsaechlicher Typ: {raw?.GetType().Name ?? "null"}");
+            }
+
+            return FormatValueForPlaceholder(raw);
         });
 
         // {alias.fields.fieldname} -> Feldwert aus FoundRecords (VOR {alias.id})

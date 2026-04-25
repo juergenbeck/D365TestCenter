@@ -201,6 +201,18 @@ public sealed class TestStep
     [JsonProperty("requestName")]
     public string? RequestName { get; set; }
 
+    /// <summary>
+    /// ExecuteRequest-Output als Alias verfuegbar machen (A4 / ZastrPay-Feedback).
+    /// Wenn gesetzt, werden alle OrganizationResponse-Werte unter diesem Alias
+    /// im ctx.OutputAliases-Dict abgelegt und sind via Platzhalter
+    /// {alias.outputs.X} oder {alias.outputs.X[type=Y]} (fuer
+    /// EntityReferenceCollection-Filter) referenzierbar.
+    /// Beispiel: ExecuteRequest QualifyLead mit outputAlias='qres' macht
+    /// {qres.outputs.CreatedEntityReferences[type=account]} verfuegbar.
+    /// </summary>
+    [JsonProperty("outputAlias")]
+    public string? OutputAlias { get; set; }
+
     // ── Assert-spezifische Properties ─────────────────────────
 
     /// <summary>
@@ -395,6 +407,15 @@ public sealed class TestContext
 
     /// <summary>Snapshots fuer EnvironmentVariable-Auto-Restore im Cleanup.</summary>
     public List<EnvVarSnapshot> EnvVarSnapshots { get; set; } = new List<EnvVarSnapshot>();
+
+    /// <summary>
+    /// ExecuteRequest-Output-Werte unter Alias (A4). Aussen: Alias-Name.
+    /// Innen: Output-Name -> nativer Wert (EntityReference, EntityReferenceCollection,
+    /// OptionSetValue, Money, Guid, primitive Typen). PlaceholderEngine
+    /// loest {alias.outputs.X} und {alias.outputs.X[type=Y]} hierueber auf.
+    /// </summary>
+    public Dictionary<string, Dictionary<string, object?>> OutputAliases { get; set; }
+        = new Dictionary<string, Dictionary<string, object?>>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Sucht eine Record-ID über das Records-Registry.</summary>
     public Guid ResolveRecordId(string alias)
