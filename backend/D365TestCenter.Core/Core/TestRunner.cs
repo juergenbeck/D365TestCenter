@@ -335,10 +335,25 @@ public sealed class TestRunner
                             $"Unbekannte Step-Action: {step.Action}");
                 }
 
-                // Wenn der Assert-Handler stepResult.Success bereits gesetzt hat
-                // (Fail-Case), nicht ueberschreiben.
-                if (!step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase))
+                // expectFailure / expectException: bei Non-Assert-Actions
+                // muss eine Exception gekommen sein. Wenn nicht: Fail.
+                var isAssert = step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase);
+                var expectFailure = !isAssert &&
+                    ((step.ExpectFailure ?? false) || step.ExpectException != null);
+
+                if (expectFailure)
                 {
+                    stepResult.Success = false;
+                    stepResult.Message = "Expected exception but action succeeded.";
+                    stepResult.ExpectedDisplay = step.ExpectException != null
+                        ? "Exception matching expectException"
+                        : "Any exception";
+                    stepResult.ActualDisplay = "<no exception>";
+                }
+                else if (!isAssert)
+                {
+                    // Standard-Fall: kein expectFailure, Action lief durch = success.
+                    // Assert setzt Success selbst (auch im Fail-Case).
                     stepResult.Success = true;
                 }
 
@@ -352,6 +367,26 @@ public sealed class TestRunner
             }
             catch (Exception ex)
             {
+                var isAssertCatch = step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase);
+                var expectFailureCatch = !isAssertCatch &&
+                    ((step.ExpectFailure ?? false) || step.ExpectException != null);
+
+                if (expectFailureCatch)
+                {
+                    // Exception war erwartet. Optional gegen Spec matchen.
+                    var (ok, reason) = EvaluateExpectException(step.ExpectException, ex);
+                    stepResult.Success = ok;
+                    stepResult.ExpectedDisplay = step.ExpectException != null
+                        ? FormatExpectException(step.ExpectException)
+                        : "Any exception";
+                    stepResult.ActualDisplay = ex.Message;
+                    stepResult.Message = ok
+                        ? $"OK: Expected exception caught ({ex.GetType().Name}): {Truncate(ex.Message, 200)}"
+                        : reason;
+                    Log($"      expectFailure: {(ok ? "OK" : "MISMATCH")} -- {Truncate(ex.Message, 200)}");
+                    continue; // zum naechsten Step, StepResult wird im finally geschrieben
+                }
+
                 stepResult.Success = false;
                 stepResult.Message = ex.Message;
 
@@ -514,7 +549,9 @@ public sealed class TestRunner
         var found = _recordWaiter.WaitForRecord(
             _service, entityName, resolvedFilters, columns,
             step.TimeoutSeconds, step.PollingIntervalMs,
-            msg => Log($"      {msg}"));
+            msg => Log($"      {msg}"),
+            orderBy: step.OrderBy,
+            top: step.Top);
 
         sw.Stop();
 
@@ -940,6 +977,160 @@ public sealed class TestRunner
         }
         return results.Entities[0];
     }
+
+    // ================================================================
+    //  expectFailure / expectException Helpers (1b)
+    //  Siehe D365TestCenter-Workspace/03_implementation/expectfailure-feature.md
+    // ================================================================
+
+    /// <summary>
+    /// Prueft ob die tatsaechlich gefangene Exception der expectException-Spec
+    /// entspricht. Ohne Spec ("irgendein Fehler reicht") liefert immer (true, "").
+    /// Mehrere gesetzte Felder werden mit AND verknuepft.
+    /// messageContains und messageMatches sind exklusiv (Validation).
+    /// </summary>
+    public static (bool Ok, string Reason) EvaluateExpectException(
+        ExpectExceptionSpec? spec, Exception ex)
+    {
+        if (spec == null) return (true, "");
+
+        if (!string.IsNullOrEmpty(spec.MessageContains) &&
+            !string.IsNullOrEmpty(spec.MessageMatches))
+        {
+            return (false,
+                "expectException: messageContains und messageMatches koennen nicht gleichzeitig gesetzt sein.");
+        }
+
+        if (!string.IsNullOrEmpty(spec.MessageContains))
+        {
+            if ((ex.Message ?? "").IndexOf(spec.MessageContains, StringComparison.OrdinalIgnoreCase) < 0)
+                return (false,
+                    $"Exception-Message enthaelt '{spec.MessageContains}' nicht. Actual: '{Truncate(ex.Message ?? "", 200)}'");
+        }
+
+        if (!string.IsNullOrEmpty(spec.MessageMatches))
+        {
+            try
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(
+                    ex.Message ?? "", spec.MessageMatches,
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    return (false,
+                        $"Exception-Message matcht Regex '{spec.MessageMatches}' nicht. Actual: '{Truncate(ex.Message ?? "", 200)}'");
+                }
+            }
+            catch (ArgumentException regexEx)
+            {
+                return (false, $"Ungueltiger Regex in expectException.messageMatches: {regexEx.Message}");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(spec.ErrorCode))
+        {
+            var actualCode = ExtractErrorCode(ex);
+            if (!string.Equals(actualCode, spec.ErrorCode, StringComparison.OrdinalIgnoreCase))
+                return (false,
+                    $"Error-Code '{spec.ErrorCode}' erwartet, actual '{actualCode ?? "<none>"}'");
+        }
+
+        if (spec.HttpStatus.HasValue)
+        {
+            var actualStatus = ExtractHttpStatus(ex);
+            if (actualStatus != spec.HttpStatus.Value)
+                return (false,
+                    $"HTTP-Status {spec.HttpStatus.Value} erwartet, actual {actualStatus?.ToString() ?? "<none>"}");
+        }
+
+        return (true, "");
+    }
+
+    /// <summary>
+    /// Zieht den Dataverse-Error-Code aus einer Exception (FaultException oder
+    /// eingebettete Infos im Message). Null wenn nicht extrahierbar.
+    /// </summary>
+    private static string? ExtractErrorCode(Exception ex)
+    {
+        var cur = ex;
+        while (cur != null)
+        {
+            // SDK-Pfad: FaultException<OrganizationServiceFault>
+            var faultDetailProp = cur.GetType().GetProperty("Detail");
+            if (faultDetailProp != null)
+            {
+                var detail = faultDetailProp.GetValue(cur);
+                if (detail is OrganizationServiceFault fault)
+                {
+                    return $"0x{fault.ErrorCode:X8}";
+                }
+            }
+
+            // Fallback: Message enthaelt oft "0x8004...":
+            var match = System.Text.RegularExpressions.Regex.Match(
+                cur.Message ?? "", @"0x[0-9A-Fa-f]{8}");
+            if (match.Success) return match.Value;
+
+            cur = cur.InnerException;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Zieht einen HTTP-Status aus einer Web-API-basierten Exception.
+    /// Bei SDK-Calls meist null. Wir lesen die StatusCode-Property per
+    /// Reflection (kommt erst mit .NET 5 auf HttpRequestException, waehrend
+    /// D365TestCenter.Core ein netstandard2.0-Assembly ist).
+    /// Fallback: Message-Scan nach "HTTP XXX" oder "Status Code: XXX".
+    /// </summary>
+    private static int? ExtractHttpStatus(Exception ex)
+    {
+        var cur = ex;
+        while (cur != null)
+        {
+            // Reflection-basierte Extraktion einer StatusCode-Property
+            var statusProp = cur.GetType().GetProperty("StatusCode");
+            if (statusProp != null)
+            {
+                var val = statusProp.GetValue(cur);
+                if (val is int i) return i;
+                if (val != null)
+                {
+                    // HttpStatusCode enum (System.Net) hat numeric value
+                    try { return (int)Convert.ChangeType(val, typeof(int)); }
+                    catch { /* ignore */ }
+                }
+            }
+
+            // Message-Fallback: suche 3-stellige HTTP-Statuscodes
+            var m = System.Text.RegularExpressions.Regex.Match(
+                cur.Message ?? "", @"\b(4\d\d|5\d\d)\b");
+            if (m.Success && int.TryParse(m.Value, out var parsed))
+                return parsed;
+
+            cur = cur.InnerException;
+        }
+        return null;
+    }
+
+    private static string FormatExpectException(ExpectExceptionSpec spec)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(spec.MessageContains)) parts.Add($"messageContains='{spec.MessageContains}'");
+        if (!string.IsNullOrEmpty(spec.MessageMatches)) parts.Add($"messageMatches=/{spec.MessageMatches}/");
+        if (!string.IsNullOrEmpty(spec.ErrorCode)) parts.Add($"errorCode={spec.ErrorCode}");
+        if (spec.HttpStatus.HasValue) parts.Add($"httpStatus={spec.HttpStatus.Value}");
+        return parts.Count > 0 ? string.Join(" AND ", parts) : "Any exception";
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return value ?? "";
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
+    }
+
+    // ================================================================
+    //  EnvVar Helpers (1a)
+    // ================================================================
 
     /// <summary>
     /// Holt den environmentvariablevalue-Record per Definition-Lookup. Null wenn nicht vorhanden.

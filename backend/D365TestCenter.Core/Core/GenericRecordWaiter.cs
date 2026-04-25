@@ -16,6 +16,8 @@ public sealed class GenericRecordWaiter
     /// Polls until a record in the specified entity matches all filter conditions.
     /// Returns the found entity or null on timeout.
     /// </summary>
+    /// <param name="orderBy">Optional comma-separated ordering, e.g. "modifiedon asc, createdon desc". Default asc if direction omitted.</param>
+    /// <param name="top">Optional max result count. Default 1.</param>
     public Entity? WaitForRecord(
         IOrganizationService service,
         string entityName,
@@ -23,7 +25,9 @@ public sealed class GenericRecordWaiter
         string[]? columns,
         int timeoutSeconds = 120,
         int pollingIntervalMs = 2000,
-        Action<string>? log = null)
+        Action<string>? log = null,
+        string? orderBy = null,
+        int? top = null)
     {
         var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
 
@@ -32,8 +36,7 @@ public sealed class GenericRecordWaiter
 
         while (DateTime.UtcNow < deadline)
         {
-            var query = BuildQuery(entityName, filters, columns);
-            query.TopCount = 1;
+            var query = BuildQuery(entityName, filters, columns, orderBy, top ?? 1);
 
             var results = service.RetrieveMultiple(query);
             if (results.Entities.Count > 0)
@@ -89,10 +92,17 @@ public sealed class GenericRecordWaiter
     /// <summary>
     /// Builds a QueryExpression from a list of FilterConditions.
     /// </summary>
+    /// <param name="orderBy">Optional comma-separated order expression, OData style
+    /// ("modifiedon asc, createdon desc"). Default sort direction is ascending
+    /// if only a field name is given.</param>
+    /// <param name="topCount">Optional TopCount override. If null, TopCount stays
+    /// at default (QueryExpression default = unbounded). WaitForRecord passes 1.</param>
     public static QueryExpression BuildQuery(
         string entityName,
         List<FilterCondition> filters,
-        string[]? columns)
+        string[]? columns,
+        string? orderBy = null,
+        int? topCount = null)
     {
         var query = new QueryExpression(entityName)
         {
@@ -121,6 +131,26 @@ public sealed class GenericRecordWaiter
                 query.Criteria.AddCondition(filter.Field, op, value);
             }
         }
+
+        if (!string.IsNullOrWhiteSpace(orderBy))
+        {
+            foreach (var rawToken in orderBy!.Split(','))
+            {
+                var token = rawToken.Trim();
+                if (string.IsNullOrEmpty(token)) continue;
+                var parts = token.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
+                    throw new InvalidOperationException($"Ungueltiger orderBy-Token: '{token}'");
+                var field = parts[0];
+                var desc = parts.Length > 1 && parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
+                if (parts.Length > 1 && !desc && !parts[1].Equals("asc", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException(
+                        $"Ungueltige Sortierrichtung '{parts[1]}' in orderBy-Token '{token}'. Erlaubt: asc, desc.");
+                query.AddOrder(field, desc ? OrderType.Descending : OrderType.Ascending);
+            }
+        }
+
+        if (topCount.HasValue) query.TopCount = topCount.Value;
 
         return query;
     }

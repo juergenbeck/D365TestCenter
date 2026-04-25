@@ -244,6 +244,83 @@ public sealed class TestStep
     /// </summary>
     [JsonProperty("source")]
     public string? Source { get; set; }
+
+    // ── Query-Sortierung fuer FindRecord/WaitForRecord (1c Option A) ──
+
+    /// <summary>
+    /// Sortierung fuer WaitForRecord/FindRecord. Komma-separierter String im
+    /// OData-Stil: "feldname asc|desc, feldname2 asc|desc". Default ist asc
+    /// wenn nur Feldname ohne Richtung angegeben.
+    /// Beispiel: "modifiedon asc, createdon desc"
+    /// </summary>
+    [JsonProperty("orderBy")]
+    public string? OrderBy { get; set; }
+
+    /// <summary>
+    /// Maximalzahl Treffer fuer WaitForRecord/FindRecord. Default ist 1 (nimmt
+    /// den ersten Treffer gemaess Sortierung). Stretch-Feature fuer top > 1
+    /// (mehrere Alias-Records) ist aktuell nicht unterstuetzt.
+    /// </summary>
+    [JsonProperty("top")]
+    public int? Top { get; set; }
+
+    // ── Negative-Path-Tests (expectFailure / expectException) ──
+
+    /// <summary>
+    /// Wenn true: dieser Step darf (muss) eine Exception werfen um als
+    /// Passed zu gelten. Ohne Exception wird der Step als Failed markiert
+    /// mit Message "Expected exception but action succeeded".
+    /// Fuer Assert-Actions ignoriert (Assert-Failure ist bereits durch
+    /// NotEquals/IsNull/NotExists etc. abgedeckt).
+    /// </summary>
+    [JsonProperty("expectFailure")]
+    public bool? ExpectFailure { get; set; }
+
+    /// <summary>
+    /// Erweiterte Variante: Spec zum Matchen der erwarteten Exception
+    /// (messageContains, messageMatches, errorCode, httpStatus).
+    /// expectException impliziert expectFailure=true. Alle gesetzten Felder
+    /// werden mit AND verknuepft.
+    /// </summary>
+    [JsonProperty("expectException")]
+    public ExpectExceptionSpec? ExpectException { get; set; }
+}
+
+/// <summary>
+/// Match-Spezifikation fuer erwartete Exceptions (expectException).
+/// Mehrere gesetzte Felder werden mit AND verknuepft.
+/// messageContains und messageMatches sind exklusiv — beide zusammen ist
+/// ein Validierungsfehler.
+/// </summary>
+public sealed class ExpectExceptionSpec
+{
+    /// <summary>
+    /// Exception.Message muss diesen Substring enthalten. Case-insensitive.
+    /// Exklusiv zu messageMatches.
+    /// </summary>
+    [JsonProperty("messageContains")]
+    public string? MessageContains { get; set; }
+
+    /// <summary>
+    /// Exception.Message muss diesem Regex entsprechen.
+    /// Case-insensitive Default. Exklusiv zu messageContains.
+    /// </summary>
+    [JsonProperty("messageMatches")]
+    public string? MessageMatches { get; set; }
+
+    /// <summary>
+    /// Dataverse-Error-Code (z.B. "0x80040227") muss exakt matchen.
+    /// Bei SDK-Pfad aus FaultException&lt;OrganizationServiceFault&gt;.Detail.ErrorCode.
+    /// </summary>
+    [JsonProperty("errorCode")]
+    public string? ErrorCode { get; set; }
+
+    /// <summary>
+    /// HTTP-Status der API-Antwort muss matchen. Meist 400/403/404 bei
+    /// Plugin-Faults. Bei pure SDK-Calls ignoriert (kein HTTP-Kontext).
+    /// </summary>
+    [JsonProperty("httpStatus")]
+    public int? HttpStatus { get; set; }
 }
 
 /// <summary>
