@@ -70,13 +70,14 @@ erreicht wurde. Dieses Dokument erklärt alle Varianten von
 
 | Operator | Erklärung | Beispiel |
 |---|---|---|
-| `Equals` | Exakt gleich | `"operator": "Equals", "value": "Anna"` |
+| `Equals` | Exakt gleich (trimmed) | `"operator": "Equals", "value": "Anna"` |
 | `NotEquals` | Ungleich | `"operator": "NotEquals", "value": ""` |
 | `Contains` | Teilstring enthalten | `"operator": "Contains", "value": "Test"` |
 | `StartsWith` | Beginnt mit | `"operator": "StartsWith", "value": "JBE"` |
 | `EndsWith` | Endet mit | `"operator": "EndsWith", "value": "@example.com"` |
 
-Alle Vergleiche sind case-sensitive.
+Alle String-Operatoren sind **case-insensitive** und ignorieren
+führende/folgende Whitespaces.
 
 ### Numerische Operatoren
 
@@ -86,6 +87,11 @@ Alle Vergleiche sind case-sensitive.
 | `NotEquals` | Ungleich |
 | `GreaterThan` | Größer als |
 | `LessThan` | Kleiner als |
+
+`GreaterThan` und `LessThan` sind typ-bewusst: zuerst wird numerisch
+verglichen (decimal), dann DateTime (UTC-normalisiert), dann
+String-Vergleich (case-insensitive ordinal). `Money`-Felder, OptionSet-
+Werte und Integer-Felder werden direkt numerisch behandelt.
 
 Beispiel:
 
