@@ -795,21 +795,21 @@ Der CONFIG-Block (ab Zeile 798) definiert alle anpassbaren Schema-Namen:
 | `fields.category`            | `"jbe_category"`            | Kategorie (OptionSet)                      |
 | `fields.tags`                | `"jbe_tags"`                | Tags (kommagetrennt)                       |
 | `fields.enabled`             | `"jbe_enabled"`             | Aktiv-Flag (Boolean)                       |
-| `fields.definition_json`     | `"jbe_definition_json"`     | JSON-Definition (Memo)                     |
+| `fields.definition_json`     | `"jbe_definitionjson"`     | JSON-Definition (Memo)                     |
 | `fields.userstories`         | `"jbe_userstories"`         | User Stories (kommagetrennt)               |
 | `fields.teststatus`          | `"jbe_teststatus"`          | Lauf-Status (OptionSet)                    |
 | `fields.passed`              | `"jbe_passed"`              | Anzahl bestanden (Integer)                 |
 | `fields.failed`              | `"jbe_failed"`              | Anzahl fehlgeschlagen (Integer)            |
 | `fields.total`               | `"jbe_total"`               | Gesamtanzahl (Integer)                     |
-| `fields.started_on`          | `"jbe_started_on"`          | Startzeit (DateTime)                       |
-| `fields.completed_on`        | `"jbe_completed_on"`        | Endzeit (DateTime)                         |
+| `fields.started_on`          | `"jbe_startedon"`          | Startzeit (DateTime)                       |
+| `fields.completed_on`        | `"jbe_completedon"`        | Endzeit (DateTime)                         |
 | `fields.testsummary`         | `"jbe_testsummary"`         | Zusammenfassung (Memo)                     |
 | `fields.fulllog`             | `"jbe_fulllog"`             | Vollständiges Log (Memo)                   |
 | `fields.testcasefilter`      | `"jbe_testcasefilter"`      | Verwendeter Filter (String)                |
 | `fields.outcome`             | `"jbe_outcome"`             | Ergebnis (OptionSet)                       |
-| `fields.duration_ms`         | `"jbe_duration_ms"`         | Dauer in ms (Integer)                      |
-| `fields.error_message`       | `"jbe_error_message"`       | Fehlermeldung (Memo)                       |
-| `fields.assertion_results`   | `"jbe_assertion_results"`   | Assertion-Ergebnisse (Memo, JSON)          |
+| `fields.duration_ms`         | `"jbe_durationms"`         | Dauer in ms (Integer)                      |
+| `fields.error_message`       | `"jbe_errormessage"`       | Fehlermeldung (Memo)                       |
+| `fields.assertion_results`   | `"jbe_assertionresults"`   | Assertion-Ergebnisse (Memo, JSON)          |
 | `actions.runTests`           | `"jbe_RunIntegrationTests"` | Custom Action zum Starten                  |
 | `optionSets.statusPlanned`   | `100000000`                 | Status: Geplant                            |
 | `optionSets.statusRunning`   | `100000001`                 | Status: Läuft                              |

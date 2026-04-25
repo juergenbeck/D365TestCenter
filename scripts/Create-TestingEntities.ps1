@@ -112,7 +112,7 @@ $entities = @(
             @{ SchemaName = "jbe_category"; Type = "Picklist"; OptionSet = "jbe_testcategory"; DisplayName = "Category" }
             @{ SchemaName = "jbe_tags"; Type = "String"; MaxLength = 500; DisplayName = "Tags"; Description = "Comma-separated tags" }
             @{ SchemaName = "jbe_enabled"; Type = "Boolean"; DisplayName = "Enabled"; DefaultValue = $true }
-            @{ SchemaName = "jbe_definition_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Definition (JSON)"; Description = "Full test case JSON (preconditions + steps + assertions)" }
+            @{ SchemaName = "jbe_definitionjson"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Definition (JSON)"; Description = "Full test case JSON (preconditions + steps + assertions)" }
         )
         AlternateKeys = @(
             @{ Name = "jbe_testid_key"; Attributes = @("jbe_testid") }
@@ -128,8 +128,8 @@ $entities = @(
             @{ SchemaName = "jbe_teststatus"; Type = "Picklist"; OptionSet = "jbe_teststatus"; DisplayName = "Status" }
             @{ SchemaName = "jbe_testcasefilter"; Type = "String"; MaxLength = 500; DisplayName = "Test Case Filter"; Description = "*, TC01,TC02, tag:LUW, category:Bridge" }
             @{ SchemaName = "jbe_environment"; Type = "Picklist"; OptionSet = "jbe_testenvironment"; DisplayName = "Environment" }
-            @{ SchemaName = "jbe_started_on"; Type = "DateTime"; DisplayName = "Started On" }
-            @{ SchemaName = "jbe_completed_on"; Type = "DateTime"; DisplayName = "Completed On" }
+            @{ SchemaName = "jbe_startedon"; Type = "DateTime"; DisplayName = "Started On" }
+            @{ SchemaName = "jbe_completedon"; Type = "DateTime"; DisplayName = "Completed On" }
             @{ SchemaName = "jbe_total"; Type = "Integer"; DisplayName = "Total"; Min = 0; Max = 10000 }
             @{ SchemaName = "jbe_passed"; Type = "Integer"; DisplayName = "Passed"; Min = 0; Max = 10000 }
             @{ SchemaName = "jbe_failed"; Type = "Integer"; DisplayName = "Failed"; Min = 0; Max = 10000 }
@@ -150,9 +150,9 @@ $entities = @(
             @{ SchemaName = "jbe_testcaseid"; Type = "Lookup"; Target = "jbe_testcase"; DisplayName = "Test Case" }
             @{ SchemaName = "jbe_testid"; Type = "String"; MaxLength = 20; DisplayName = "Test ID"; Description = "Denormalized for subgrid display" }
             @{ SchemaName = "jbe_outcome"; Type = "Picklist"; OptionSet = "jbe_testoutcome"; DisplayName = "Outcome" }
-            @{ SchemaName = "jbe_duration_ms"; Type = "Integer"; DisplayName = "Duration (ms)"; Min = 0; Max = 600000 }
-            @{ SchemaName = "jbe_error_message"; Type = "Memo"; MaxLength = 100000; DisplayName = "Error Message" }
-            @{ SchemaName = "jbe_assertion_results_json"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Assertion Results (JSON)" }
+            @{ SchemaName = "jbe_durationms"; Type = "Integer"; DisplayName = "Duration (ms)"; Min = 0; Max = 600000 }
+            @{ SchemaName = "jbe_errormessage"; Type = "Memo"; MaxLength = 100000; DisplayName = "Error Message" }
+            @{ SchemaName = "jbe_assertionresults"; Type = "Memo"; MaxLength = 1000000; DisplayName = "Assertion Results (JSON)" }
         )
     }
 )

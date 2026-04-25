@@ -217,9 +217,21 @@ Records im Dataverse-Graph verbinden.
 **Wichtige Stellen im Detail:**
 
 - `"parentcustomerid_account@odata.bind": "/accounts({acc.id})"`
-  Das ist der kanonische Weg, einen Lookup-Wert beim Create zu setzen.
-  Schema: `lookupname_zielentity@odata.bind` -> `/zielentityPlural(GUID)`.
-  Mehr dazu in [04-lookup-und-binding.md](../02-testfall-schreiben/04-lookup-und-binding.md).
+  Das ist der kanonische Weg, einen **polymorphen** Lookup-Wert beim
+  Create zu setzen — `parentcustomerid` kann auf Account oder Contact
+  zeigen, deshalb das `_account`-Suffix für die Disambiguierung.
+
+  **Single-Target-Lookups** (Lookup mit nur einer Ziel-Entity, z.B.
+  `originatingleadid` auf Lead) brauchen das Suffix **nicht**:
+
+  ```json
+  "originatingleadid@odata.bind": "/leads({lead.id})"
+  ```
+
+  Falls du das `_target`-Suffix bei einem Single-Target-Lookup angibst,
+  kommt eine Fehlermeldung à la `entity doesn't contain attribute
+  'originatingleadid_lead'`. Mehr dazu in
+  [04-lookup-und-binding.md](../02-testfall-schreiben/04-lookup-und-binding.md).
 
 - `{acc.id}` löst sich nach dem ersten Step in die GUID des
   angelegten Accounts auf. `{con.id}` analog für den Contact.

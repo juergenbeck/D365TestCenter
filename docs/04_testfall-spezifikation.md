@@ -4,7 +4,7 @@ Dieses Dokument beschreibt das JSON-Schema eines Testfalls, alle verfügbaren Ac
 
 ## JSON-Schema eines Testfalls
 
-Jeder Testfall wird als JSON-Objekt im Feld `jbe_definition_json` gespeichert. Das Objekt hat drei Hauptabschnitte:
+Jeder Testfall wird als JSON-Objekt im Feld `jbe_definitionjson` gespeichert. Das Objekt hat drei Hauptabschnitte:
 
 ```json
 {
@@ -355,7 +355,7 @@ Beim Starten eines Testlaufs kann ein globaler Timeout pro Testfall eingestellt 
 
 - Testfall wird über den JSON-Editor im Test Center erstellt oder per PowerShell-Import.
 - Metadaten (Test ID, Titel, Kategorie, Tags, User Stories) werden als Felder des `jbe_testcase`-Datensatzes gespeichert.
-- Die JSON-Definition wird im Memo-Feld `jbe_definition_json` abgelegt.
+- Die JSON-Definition wird im Memo-Feld `jbe_definitionjson` abgelegt.
 
 ### 2. Validieren
 

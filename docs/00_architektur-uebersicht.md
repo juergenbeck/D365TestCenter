@@ -346,11 +346,11 @@ jbe_testcase                    jbe_testrun                     jbe_testrunresul
 | jbe_name (AutoNumber) |       | jbe_name (AutoNumber) |       | jbe_name (AutoNumber)      |
 | jbe_testid            |       | jbe_teststatus (OS)   |       | jbe_testid                 |
 | jbe_title             |       | jbe_passed            |       | jbe_outcome (OS)           |
-| jbe_category (OS)     |       | jbe_failed            |       | jbe_duration_ms            |
-| jbe_tags              |       | jbe_total             |       | jbe_error_message          |
-| jbe_userstories       |       | jbe_started_on        |       | jbe_assertion_results      |
-| jbe_enabled           |       | jbe_completed_on      |       | jbe_testrunid (FK) --------+
-| jbe_definition_json   |       | jbe_testcasefilter    |       +---------------------------+
+| jbe_category (OS)     |       | jbe_failed            |       | jbe_durationms            |
+| jbe_tags              |       | jbe_total             |       | jbe_errormessage          |
+| jbe_userstories       |       | jbe_startedon        |       | jbe_assertionresults      |
+| jbe_enabled           |       | jbe_completedon      |       | jbe_testrunid (FK) --------+
+| jbe_definitionjson   |       | jbe_testcasefilter    |       +---------------------------+
 +-----------------------+       | jbe_testsummary       |
                                 | jbe_fulllog           |                    ^
                                 | jbe_keeprecords (Bool)|                    |
@@ -539,7 +539,7 @@ activateDemoMode()
         |
         v
   _hydrate(rawPack):
-    - jbe_definition_json: Object -> JSON.stringify()
+    - jbe_definitionjson: Object -> JSON.stringify()
     - $date:daysAgo,hour,minute -> ISO-Timestamp
         |
         v

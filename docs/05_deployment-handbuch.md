@@ -63,7 +63,7 @@ Drei Custom Entities müssen in Dataverse erstellt werden. Dies kann manuell im 
 | `jbe_tags` | Tags | String (500) | Optional | Kommagetrennte Tags |
 | `jbe_userstories` | User Stories | String (500) | Optional | Kommagetrennte Jira-Keys |
 | `jbe_enabled` | Aktiv | Boolean | Optional | Testfall aktiv/deaktiviert (Standard: true) |
-| `jbe_definition_json` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
+| `jbe_definitionjson` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
 
 **Alternate Key:** `jbe_testid` (ermöglicht Upsert bei Import).
 
@@ -85,8 +85,8 @@ Drei Custom Entities müssen in Dataverse erstellt werden. Dies kann manuell im 
 | `jbe_passed` | Bestanden | Integer | Optional | Anzahl bestandener Tests |
 | `jbe_failed` | Fehlgeschlagen | Integer | Optional | Anzahl fehlgeschlagener Tests |
 | `jbe_total` | Gesamt | Integer | Optional | Gesamtanzahl Tests im Lauf |
-| `jbe_started_on` | Gestartet | DateTime | Optional | Startzeitpunkt |
-| `jbe_completed_on` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
+| `jbe_startedon` | Gestartet | DateTime | Optional | Startzeitpunkt |
+| `jbe_completedon` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
 | `jbe_testcasefilter` | Testfall-Filter | String (500) | Optional | Angewendeter Filter (z.B. `"*"`, `"story:DYN-1234"`) |
 | `jbe_testsummary` | Zusammenfassung | Memo (Multiline) | Optional | Textuelle Zusammenfassung |
 | `jbe_fulllog` | Vollständiges Log | Memo (Multiline) | Optional | Komplettes Ausführungslog |
@@ -110,9 +110,9 @@ Drei Custom Entities müssen in Dataverse erstellt werden. Dies kann manuell im 
 | `jbe_testcaseid` | Testfall | Lookup auf `jbe_testcase` | Optional | Zugehöriger Testfall |
 | `jbe_testid` | Test ID | String (100) | Optional | Test-ID (redundant für schnelle Abfragen) |
 | `jbe_outcome` | Ergebnis | OptionSet (Picklist) | Optional | Testergebnis (siehe OptionSets) |
-| `jbe_duration_ms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
-| `jbe_error_message` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
-| `jbe_assertion_results` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
+| `jbe_durationms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
+| `jbe_errormessage` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
+| `jbe_assertionresults` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
 
 ### OptionSets
 

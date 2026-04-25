@@ -96,7 +96,7 @@ async getOne(entity: string, id: string, select?: string): Promise<object>
 **Beispiel:**
 ```javascript
 const run = await API.getOne("jbe_testruns", runId,
-    "jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_started_on");
+    "jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon");
 ```
 
 ---
@@ -421,14 +421,14 @@ Zentrale Konfiguration der Anwendung. Alle Entity-Namen, Feldnamen und OptionSet
 | `fields.category`             | `string` | `"jbe_category"`     | Feld: Kategorie (OptionSet)                               |
 | `fields.tags`                 | `string` | `"jbe_tags"`         | Feld: Tags (kommagetrennt)                                |
 | `fields.enabled`              | `string` | `"jbe_enabled"`      | Feld: Aktiv-Flag                                          |
-| `fields.definition_json`      | `string` | `"jbe_definition_json"` | Feld: JSON-Definition                                  |
+| `fields.definition_json`      | `string` | `"jbe_definitionjson"` | Feld: JSON-Definition                                  |
 | `fields.userstories`          | `string` | `"jbe_userstories"`  | Feld: User Stories (kommagetrennt)                        |
 | `fields.teststatus`           | `string` | `"jbe_teststatus"`   | Feld: Testlauf-Status                                     |
 | `fields.passed`               | `string` | `"jbe_passed"`       | Feld: Anzahl bestanden                                    |
 | `fields.failed`               | `string` | `"jbe_failed"`       | Feld: Anzahl fehlgeschlagen                               |
 | `fields.total`                | `string` | `"jbe_total"`        | Feld: Gesamtanzahl                                        |
-| `fields.started_on`           | `string` | `"jbe_started_on"`   | Feld: Startzeitpunkt                                      |
-| `fields.completed_on`         | `string` | `"jbe_completed_on"` | Feld: Abschlusszeitpunkt                                  |
+| `fields.started_on`           | `string` | `"jbe_startedon"`   | Feld: Startzeitpunkt                                      |
+| `fields.completed_on`         | `string` | `"jbe_completedon"` | Feld: Abschlusszeitpunkt                                  |
 | `fields.testsummary`          | `string` | `"jbe_testsummary"`  | Feld: Zusammenfassung                                     |
 | `fields.fulllog`              | `string` | `"jbe_fulllog"`      | Feld: Vollständiges Log                                   |
 | `fields.testcasefilter`       | `string` | `"jbe_testcasefilter"` | Feld: Filter-Ausdruck                                  |
@@ -436,9 +436,9 @@ Zentrale Konfiguration der Anwendung. Alle Entity-Namen, Feldnamen und OptionSet
 | `fields.testrunid`            | `string` | `"jbe_testrunid"`    | Feld: Testlauf-Lookup                                     |
 | `fields.testcaseid`           | `string` | `"jbe_testcaseid"`   | Feld: Testfall-Lookup                                     |
 | `fields.outcome`              | `string` | `"jbe_outcome"`      | Feld: Ergebnis (OptionSet)                                |
-| `fields.duration_ms`          | `string` | `"jbe_duration_ms"`  | Feld: Dauer in Millisekunden                              |
-| `fields.error_message`        | `string` | `"jbe_error_message"` | Feld: Fehlermeldung                                      |
-| `fields.assertion_results`    | `string` | `"jbe_assertion_results"` | Feld: Assertion-Ergebnisse (JSON)                    |
+| `fields.duration_ms`          | `string` | `"jbe_durationms"`  | Feld: Dauer in Millisekunden                              |
+| `fields.error_message`        | `string` | `"jbe_errormessage"` | Feld: Fehlermeldung                                      |
+| `fields.assertion_results`    | `string` | `"jbe_assertionresults"` | Feld: Assertion-Ergebnisse (JSON)                    |
 | **optionSets**                 |          |                      |                                                           |
 | `optionSets.statusPlanned`    | `number` | `100000000`          | Teststatus: Geplant                                       |
 | `optionSets.statusRunning`    | `number` | `100000001`          | Teststatus: Läuft                                         |

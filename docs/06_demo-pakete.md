@@ -369,7 +369,7 @@ Dieser Testfall erstellt einen Account mit dem Namen "Testfirma GmbH", wartet 3 
             jbe_tags: "Demo",
             jbe_userstories: "PROJ-9999",
             jbe_enabled: true,
-            jbe_definition_json: JSON.stringify({
+            jbe_definitionjson: JSON.stringify({
                 preconditions: { createAccount: true },
                 steps: [
                     {
@@ -440,8 +440,8 @@ get testRuns() {
             jbe_passed: 5,
             jbe_failed: 1,
             jbe_total: 6,
-            jbe_started_on: _makeDate(0, 10, 0),   // heute, 10:00
-            jbe_completed_on: _makeDate(0, 10, 8),  // heute, 10:08
+            jbe_startedon: _makeDate(0, 10, 0),   // heute, 10:00
+            jbe_completedon: _makeDate(0, 10, 8),  // heute, 10:08
             jbe_testcasefilter: "*",
             jbe_testsummary: "6 Tests ausgeführt.",
             jbe_fulllog: "..."
