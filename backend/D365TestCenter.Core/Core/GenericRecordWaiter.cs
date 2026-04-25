@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace D365TestCenter.Core;
@@ -18,6 +19,9 @@ public sealed class GenericRecordWaiter
     /// </summary>
     /// <param name="orderBy">Optional comma-separated ordering, e.g. "modifiedon asc, createdon desc". Default asc if direction omitted.</param>
     /// <param name="top">Optional max result count. Default 1.</param>
+    /// <param name="metadataCache">Optional metadata cache. When provided, BuildQuery checks the
+    /// filter field's attribute type before auto-converting GUID-shaped strings to Guid (FB-32).
+    /// Without cache, behavior is the legacy path (always Guid.TryParse first).</param>
     public Entity? WaitForRecord(
         IOrganizationService service,
         string entityName,
@@ -27,7 +31,8 @@ public sealed class GenericRecordWaiter
         int pollingIntervalMs = 2000,
         Action<string>? log = null,
         string? orderBy = null,
-        int? top = null)
+        int? top = null,
+        EntityMetadataCache? metadataCache = null)
     {
         var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
 
@@ -36,7 +41,7 @@ public sealed class GenericRecordWaiter
 
         while (DateTime.UtcNow < deadline)
         {
-            var query = BuildQuery(entityName, filters, columns, orderBy, top ?? 1);
+            var query = BuildQuery(entityName, filters, columns, orderBy, top ?? 1, metadataCache);
 
             var results = service.RetrieveMultiple(query);
             if (results.Entities.Count > 0)
@@ -97,12 +102,17 @@ public sealed class GenericRecordWaiter
     /// if only a field name is given.</param>
     /// <param name="topCount">Optional TopCount override. If null, TopCount stays
     /// at default (QueryExpression default = unbounded). WaitForRecord passes 1.</param>
+    /// <param name="metadataCache">Optional metadata cache. Used to type-aware-convert
+    /// filter values: GUID-shaped strings on String/Memo fields stay as strings
+    /// instead of being auto-converted to Guid (FB-32). Without cache, legacy
+    /// auto-conversion is used.</param>
     public static QueryExpression BuildQuery(
         string entityName,
         List<FilterCondition> filters,
         string[]? columns,
         string? orderBy = null,
-        int? topCount = null)
+        int? topCount = null,
+        EntityMetadataCache? metadataCache = null)
     {
         var query = new QueryExpression(entityName)
         {
@@ -114,7 +124,7 @@ public sealed class GenericRecordWaiter
         foreach (var filter in filters)
         {
             var op = ResolveOperator(filter.Operator);
-            var value = ConvertFilterValue(filter.Value);
+            var value = ConvertFilterValue(filter.Value, entityName, filter.Field, metadataCache);
 
             if (op == ConditionOperator.Null || op == ConditionOperator.NotNull)
             {
@@ -201,7 +211,8 @@ public sealed class GenericRecordWaiter
         }
     }
 
-    private static object ConvertFilterValue(object? value)
+    private static object ConvertFilterValue(
+        object? value, string entityName, string fieldName, EntityMetadataCache? cache)
     {
         if (value == null) return DBNull.Value;
         if (value is Newtonsoft.Json.Linq.JToken jt)
@@ -211,18 +222,79 @@ public sealed class GenericRecordWaiter
                 case Newtonsoft.Json.Linq.JTokenType.Integer: return (int)(long)jt;
                 case Newtonsoft.Json.Linq.JTokenType.Float: return (decimal)(double)jt;
                 case Newtonsoft.Json.Linq.JTokenType.Boolean: return (bool)jt;
-                case Newtonsoft.Json.Linq.JTokenType.String: return ConvertString((string)jt!);
+                case Newtonsoft.Json.Linq.JTokenType.String: return ConvertString((string)jt!, entityName, fieldName, cache);
                 case Newtonsoft.Json.Linq.JTokenType.Null: return DBNull.Value;
                 default: return jt.ToString();
             }
         }
-        if (value is string s) return ConvertString(s);
+        if (value is string s) return ConvertString(s, entityName, fieldName, cache);
         return value;
     }
 
-    /// <summary>Tries to convert string values to their native types (Guid, int, decimal, bool).</summary>
-    private static object ConvertString(string s)
+    /// <summary>
+    /// Tries to convert string values to their native types (Guid, int, decimal, bool).
+    /// FB-32 fix: when a metadata cache is provided, the conversion respects the target
+    /// field's attribute type — GUID-shaped strings on String/Memo fields stay as strings
+    /// instead of being auto-converted to Guid (which would never match in Dataverse).
+    /// </summary>
+    private static object ConvertString(
+        string s, string entityName, string fieldName, EntityMetadataCache? cache)
     {
+        // Metadata-aware path (FB-32): determine target field type before conversion.
+        if (cache != null && !string.IsNullOrEmpty(fieldName))
+        {
+            var attrType = cache.GetAttributeType(entityName, fieldName);
+            if (attrType.HasValue)
+            {
+                switch (attrType.Value)
+                {
+                    case AttributeTypeCode.Lookup:
+                    case AttributeTypeCode.Customer:
+                    case AttributeTypeCode.Owner:
+                    case AttributeTypeCode.Uniqueidentifier:
+                        // Guid-typed fields: convert if parseable
+                        if (Guid.TryParse(s, out var guidLk)) return guidLk;
+                        return s;
+
+                    case AttributeTypeCode.String:
+                    case AttributeTypeCode.Memo:
+                        // String fields: never auto-convert. Even if the value looks like
+                        // a GUID, Dataverse stores it as string and Guid-comparison fails.
+                        return s;
+
+                    case AttributeTypeCode.Integer:
+                    case AttributeTypeCode.BigInt:
+                    case AttributeTypeCode.Picklist:
+                    case AttributeTypeCode.State:
+                    case AttributeTypeCode.Status:
+                        if (int.TryParse(s, out var intLk)) return intLk;
+                        return s;
+
+                    case AttributeTypeCode.Decimal:
+                    case AttributeTypeCode.Double:
+                    case AttributeTypeCode.Money:
+                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var decLk))
+                            return decLk;
+                        return s;
+
+                    case AttributeTypeCode.Boolean:
+                        if (bool.TryParse(s, out var boolLk)) return boolLk;
+                        return s;
+
+                    case AttributeTypeCode.DateTime:
+                        if (DateTime.TryParse(s, System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtLk))
+                            return dtLk;
+                        return s;
+
+                    // Other types: fall through to legacy auto-detection
+                }
+            }
+        }
+
+        // Legacy fallback (no cache, unknown field, or unhandled type):
+        // try Guid first (most specific), then numeric, then bool.
         if (Guid.TryParse(s, out var guid)) return guid;
         if (int.TryParse(s, out var intVal)) return intVal;
         if (decimal.TryParse(s, System.Globalization.NumberStyles.Any,
@@ -239,7 +311,11 @@ public sealed class GenericRecordWaiter
 
     private static bool ValuesMatch(object? actual, object expectedRaw)
     {
-        var expected = ConvertFilterValue(expectedRaw);
+        // ValuesMatch ist der WaitForFieldValue-Pfad, kein Filter-Query — wir
+        // haben hier kein Entity/Field/Cache. Ohne Cache nutzt ConvertFilterValue
+        // den Legacy-Pfad (Guid.TryParse zuerst). Das ist backward-compatibel
+        // und FB-32-orthogonal (FB-32 betrifft nur Filter auf Server-Seite).
+        var expected = ConvertFilterValue(expectedRaw, string.Empty, string.Empty, null);
         if (actual == null && (expected == null || expected == DBNull.Value)) return true;
         if (actual == null || expected == null) return false;
 

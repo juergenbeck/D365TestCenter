@@ -1,3 +1,4 @@
+using System.Reflection;
 using D365TestCenter.Core;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
@@ -202,5 +203,80 @@ public class ExpectFailureTests
         var (ok, reason) = TestRunner.EvaluateExpectException(spec, ex);
         Assert.False(ok);
         Assert.Contains("400", reason);
+    }
+
+    // ================================================================
+    //  FB-31: Sandbox-safe Step-Execution via ExecuteMultipleRequest
+    //  Helper FaultToException: erzeugt Exception aus
+    //  OrganizationServiceFault, die EvaluateExpectException konsumieren
+    //  kann (ErrorCode wird via Regex aus der Message extrahiert).
+    // ================================================================
+
+    [Fact]
+    public void FaultToException_ErrorCodeIsRecognized()
+    {
+        var fault = new Microsoft.Xrm.Sdk.OrganizationServiceFault
+        {
+            ErrorCode = unchecked((int)0x80040227),
+            Message = "GDPR-Guard: cannot reactivate"
+        };
+
+        var ex = InvokeFaultToException(fault);
+
+        var spec = new ExpectExceptionSpec { ErrorCode = "0x80040227" };
+        var (ok, _) = TestRunner.EvaluateExpectException(spec, ex);
+        Assert.True(ok);
+    }
+
+    [Fact]
+    public void FaultToException_MessageContainsIsRecognized()
+    {
+        var fault = new Microsoft.Xrm.Sdk.OrganizationServiceFault
+        {
+            ErrorCode = unchecked((int)0x80040227),
+            Message = "GDPR-Guard: kann nicht reaktiviert werden — admin role required"
+        };
+
+        var ex = InvokeFaultToException(fault);
+
+        var spec = new ExpectExceptionSpec { MessageContains = "admin role" };
+        var (ok, _) = TestRunner.EvaluateExpectException(spec, ex);
+        Assert.True(ok);
+    }
+
+    [Fact]
+    public void IsSandboxSafeAction_RecognizesPrimitiveActions()
+    {
+        Assert.True(InvokeIsSandboxSafeAction("CreateRecord"));
+        Assert.True(InvokeIsSandboxSafeAction("UpdateRecord"));
+        Assert.True(InvokeIsSandboxSafeAction("DeleteRecord"));
+        Assert.True(InvokeIsSandboxSafeAction("ExecuteRequest"));
+        Assert.True(InvokeIsSandboxSafeAction("createrecord"));  // case-insensitive
+
+        Assert.False(InvokeIsSandboxSafeAction("Assert"));
+        Assert.False(InvokeIsSandboxSafeAction("WaitForRecord"));
+        Assert.False(InvokeIsSandboxSafeAction("RetrieveRecord"));
+        Assert.False(InvokeIsSandboxSafeAction("SetEnvironmentVariable"));
+        Assert.False(InvokeIsSandboxSafeAction("Wait"));
+    }
+
+    // ================================================================
+    //  Reflection-Helpers fuer die privaten/static-Methoden in TestRunner
+    // ================================================================
+
+    private static Exception InvokeFaultToException(Microsoft.Xrm.Sdk.OrganizationServiceFault fault)
+    {
+        var method = typeof(TestRunner).GetMethod("FaultToException",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        return (Exception)method!.Invoke(null, new object[] { fault })!;
+    }
+
+    private static bool InvokeIsSandboxSafeAction(string action)
+    {
+        var method = typeof(TestRunner).GetMethod("IsSandboxSafeAction",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        return (bool)method!.Invoke(null, new object[] { action })!;
     }
 }

@@ -14,6 +14,26 @@ namespace D365TestCenter.Core;
 /// </summary>
 public sealed class AssertionEngine
 {
+    private readonly EntityMetadataCache? _metadataCache;
+
+    /// <summary>
+    /// Default-Konstruktor ohne Metadata-Cache. Filter-Conversion arbeitet im
+    /// Legacy-Modus (Guid.TryParse vor String).
+    /// </summary>
+    public AssertionEngine()
+    {
+        _metadataCache = null;
+    }
+
+    /// <summary>
+    /// Konstruktor mit Metadata-Cache. Filter-Conversion ist type-aware (FB-32):
+    /// GUID-foermige Strings auf String/Memo-Feldern bleiben Strings.
+    /// </summary>
+    public AssertionEngine(EntityMetadataCache metadataCache)
+    {
+        _metadataCache = metadataCache;
+    }
+
     /// <summary>
     /// Wertet eine einzelne Assertion aus und gibt das Ergebnis zurück.
     /// </summary>
@@ -136,7 +156,8 @@ public sealed class AssertionEngine
 
         var query = GenericRecordWaiter.BuildQuery(
             entityName, resolvedFilters,
-            string.IsNullOrEmpty(assertion.Field) ? null : new[] { assertion.Field });
+            string.IsNullOrEmpty(assertion.Field) ? null : new[] { assertion.Field },
+            metadataCache: _metadataCache);
         query.TopCount = 1;
 
         var results = service.RetrieveMultiple(query);

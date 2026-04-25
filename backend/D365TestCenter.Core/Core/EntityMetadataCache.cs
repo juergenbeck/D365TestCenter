@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace D365TestCenter.Core;
 
@@ -23,6 +24,41 @@ public sealed class EntityMetadataCache
     {
         _service = service;
         _log = log;
+    }
+
+    /// <summary>
+    /// Test-Helper: erzeugt einen Cache mit vorgegebenen Attribute-Typen, ohne
+    /// echte Metadata-Abfrage. Damit lassen sich type-aware-Pfade unit-testen
+    /// ohne FakeOrgService mit RetrieveEntityRequest-Implementierung.
+    /// Nicht fuer Produktiv-Code gedacht — Naming-Suffix "ForTesting" macht das
+    /// explizit.
+    /// </summary>
+    public static EntityMetadataCache CreateForTesting(
+        Dictionary<string, Dictionary<string, AttributeTypeCode>> seed)
+    {
+        var cache = new EntityMetadataCache(new NullOrganizationService());
+        foreach (var entityKvp in seed)
+        {
+            var info = new EntityMetadataInfo();
+            foreach (var attrKvp in entityKvp.Value)
+            {
+                info.AttributeTypes[attrKvp.Key] = attrKvp.Value;
+            }
+            cache._cache[entityKvp.Key] = info;
+        }
+        return cache;
+    }
+
+    private sealed class NullOrganizationService : IOrganizationService
+    {
+        public Guid Create(Entity entity) => throw new NotImplementedException();
+        public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet) => throw new NotImplementedException();
+        public void Update(Entity entity) => throw new NotImplementedException();
+        public void Delete(string entityName, Guid id) => throw new NotImplementedException();
+        public OrganizationResponse Execute(OrganizationRequest request) => throw new NotImplementedException();
+        public void Associate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) => throw new NotImplementedException();
+        public void Disassociate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) => throw new NotImplementedException();
+        public EntityCollection RetrieveMultiple(QueryBase query) => throw new NotImplementedException();
     }
 
     /// <summary>Loads metadata for an entity (cached per instance lifetime).</summary>

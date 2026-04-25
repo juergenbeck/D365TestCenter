@@ -1,4 +1,5 @@
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using System.Diagnostics;
 using System.Text;
@@ -38,7 +39,10 @@ public sealed class TestRunner
         _entityMetadata = new EntityMetadataCache(service, msg => Log($"      {msg}"));
         _dataFactory = new TestDataFactory();
         _placeholderEngine = new PlaceholderEngine();
-        _assertionEngine = new AssertionEngine();
+        // FB-32: pass shared metadata cache to AssertionEngine so query-filter
+        // value conversion is type-aware (GUID-shaped strings on String fields
+        // stay as strings instead of being auto-converted to Guid).
+        _assertionEngine = new AssertionEngine(_entityMetadata);
         _log = new StringBuilder();
     }
 
@@ -261,6 +265,57 @@ public sealed class TestRunner
                     : step.Description
             };
             var stepSw = Stopwatch.StartNew();
+
+            // ADR-0005 (FB-31): Steps mit expectFailure/expectException auf primitiven
+            // Service-Aktionen (Create/Update/Delete/ExecuteRequest) laufen ueber den
+            // sandbox-sicheren Pfad. ExecuteMultipleRequest mit ContinueOnError=true
+            // verhindert, dass der Sandbox-Wachter "ISV reduced transaction count"
+            // (0x80040265) wirft, weil das Plugin keine Service-Exception faengt —
+            // Faults landen in ExecuteMultipleResponse.Responses[0].Fault.
+            var isAssertOuter = step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase);
+            var hasExpectFailureOuter = !isAssertOuter &&
+                ((step.ExpectFailure ?? false) || step.ExpectException != null);
+
+            if (hasExpectFailureOuter && IsSandboxSafeAction(step.Action))
+            {
+                try
+                {
+                    var resolvedFieldsSb = ResolveFieldValues(
+                        _dataFactory.ResolveTemplateData(step.Fields, ctx), ctx);
+                    ExecuteStepInSandboxBoundary(step, ctx, resolvedFieldsSb, stepResult);
+                }
+                catch (Exception ex)
+                {
+                    // Nur wenn der Sandbox-Pfad selbst einen Fehler hat (z.B. unbekannter
+                    // Action-Typ, ResolveFieldValues wirft). Sandbox-Wurf von dem reinen
+                    // Step-Service-Call kommt nicht hier an — er ist im Fault-Pfad.
+                    stepResult.Success = false;
+                    stepResult.Message = ex.Message;
+                    Log($"      Sandbox-Pfad-Fehler: {ex.Message}");
+
+                    var onErrorSb = step.OnError?.ToLowerInvariant();
+                    if (onErrorSb != "continue")
+                    {
+                        stepSw.Stop();
+                        stepResult.DurationMs = stepSw.ElapsedMilliseconds;
+                        tcResult.StepResults.Add(stepResult);
+                        throw;
+                    }
+                }
+                finally
+                {
+                    if (!string.IsNullOrEmpty(stepResult.Alias) && ctx.Records.TryGetValue(stepResult.Alias!, out var recSb))
+                    {
+                        stepResult.RecordId = recSb.Id;
+                        if (string.IsNullOrEmpty(stepResult.Entity))
+                            stepResult.Entity = recSb.EntityName;
+                    }
+                    stepSw.Stop();
+                    stepResult.DurationMs = stepSw.ElapsedMilliseconds;
+                    tcResult.StepResults.Add(stepResult);
+                }
+                continue;
+            }
 
             try
             {
@@ -561,7 +616,8 @@ public sealed class TestRunner
             step.TimeoutSeconds, step.PollingIntervalMs,
             msg => Log($"      {msg}"),
             orderBy: step.OrderBy,
-            top: step.Top);
+            top: step.Top,
+            metadataCache: _entityMetadata);
 
         sw.Stop();
 
@@ -1122,6 +1178,188 @@ public sealed class TestRunner
             cur = cur.InnerException;
         }
         return null;
+    }
+
+    // ================================================================
+    //  Sandbox-safe Step-Execution (ADR-0005, FB-31)
+    // ================================================================
+
+    /// <summary>
+    /// Aktionstypen die im Sandbox-safe-Pfad als Single-Service-Call ausgefuehrt
+    /// werden koennen. ADR-0005 (FB-31): expectFailure/expectException auf diesen
+    /// Aktionen wird via ExecuteMultipleRequest gewrappt.
+    /// </summary>
+    private static bool IsSandboxSafeAction(string action)
+    {
+        return action.Equals("CreateRecord", StringComparison.OrdinalIgnoreCase)
+            || action.Equals("UpdateRecord", StringComparison.OrdinalIgnoreCase)
+            || action.Equals("DeleteRecord", StringComparison.OrdinalIgnoreCase)
+            || action.Equals("ExecuteRequest", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Fuehrt einen Step mit expectFailure/expectException sandbox-sicher aus.
+    /// Der eigentliche Service-Call laeuft via ExecuteMultipleRequest mit
+    /// ContinueOnError=true — der Sandbox-Wachter "ISV reduced transaction count"
+    /// wirft nicht, weil das Plugin keine Service-Exception faengt. Faults
+    /// landen als ExecuteMultipleResponse.Responses[0].Fault und werden gegen
+    /// die ExpectExceptionSpec gematcht.
+    /// </summary>
+    private void ExecuteStepInSandboxBoundary(
+        TestStep step, TestContext ctx,
+        Dictionary<string, object?> resolvedFields,
+        StepResult stepResult)
+    {
+        OrganizationRequest req;
+        switch (step.Action.ToUpperInvariant())
+        {
+            case "CREATERECORD":
+                req = BuildCreateRequestFromStep(step, resolvedFields);
+                break;
+            case "UPDATERECORD":
+                req = BuildUpdateRequestFromStep(step, ctx, resolvedFields);
+                break;
+            case "DELETERECORD":
+                req = BuildDeleteRequestFromStep(step, ctx);
+                break;
+            case "EXECUTEREQUEST":
+                req = BuildExecuteRequestFromStep(step, ctx, resolvedFields);
+                break;
+            default:
+                throw new InvalidOperationException(
+                    $"ExecuteStepInSandboxBoundary: Action '{step.Action}' wird im Sandbox-Pfad nicht unterstuetzt.");
+        }
+
+        var (response, fault) = ExecuteSandboxSafe(req);
+
+        if (fault != null)
+        {
+            // Erwartete Exception ist eingetreten — Fault gegen Spec matchen.
+            // Wrap als InvalidPluginExecutionException mit eingebettetem Error-Code,
+            // damit EvaluateExpectException + ExtractErrorCode greifen koennen.
+            var faultException = FaultToException(fault);
+            var (ok, reason) = EvaluateExpectException(step.ExpectException, faultException);
+            var actualSummary = $"OrganizationServiceFault [0x{fault.ErrorCode:X8}]: {Truncate(fault.Message ?? "", 300)}";
+
+            stepResult.Success = ok;
+            stepResult.ExpectedDisplay = step.ExpectException != null
+                ? FormatExpectException(step.ExpectException)
+                : "Any exception";
+            stepResult.ActualDisplay = actualSummary;
+            stepResult.Message = ok
+                ? $"OK: Expected exception caught (sandbox-safe) — {actualSummary}"
+                : $"expectException-Match fehlgeschlagen. {reason} | Tatsaechlich: {actualSummary}";
+            Log($"      expectFailure (sandbox-safe): {(ok ? "OK" : "MISMATCH")} -- {actualSummary}");
+        }
+        else
+        {
+            // Action ging durch — kein Fault, expectFailure ist verletzt.
+            stepResult.Success = false;
+            stepResult.Message = "Expected exception but action succeeded.";
+            stepResult.ExpectedDisplay = step.ExpectException != null
+                ? "Exception matching expectException"
+                : "Any exception";
+            stepResult.ActualDisplay = "<no exception>";
+            Log($"      expectFailure (sandbox-safe): MISS — Aktion lief erfolgreich durch");
+        }
+    }
+
+    /// <summary>
+    /// Fuehrt einen einzelnen OrganizationRequest in einem ExecuteMultipleRequest-
+    /// Envelope aus. Fehler aus dem inneren Request landen als Fault in der
+    /// Response, nicht als Exception — das Plugin faengt nichts und der
+    /// Sandbox-Wachter wirft keinen 0x80040265 (ADR-0005).
+    /// </summary>
+    private (OrganizationResponse? Response, OrganizationServiceFault? Fault) ExecuteSandboxSafe(
+        OrganizationRequest req)
+    {
+        var emReq = new ExecuteMultipleRequest
+        {
+            Settings = new ExecuteMultipleSettings
+            {
+                ContinueOnError = true,
+                ReturnResponses = true
+            },
+            Requests = new OrganizationRequestCollection { req }
+        };
+
+        var emResp = (ExecuteMultipleResponse)_service.Execute(emReq);
+        if (emResp.Responses == null || emResp.Responses.Count == 0)
+        {
+            return (null, null);
+        }
+        var first = emResp.Responses[0];
+        return (first.Response, first.Fault);
+    }
+
+    /// <summary>
+    /// Baut einen OrganizationServiceFault in eine Exception um, die
+    /// EvaluateExpectException + ExtractErrorCode konsumieren koennen. Der
+    /// ErrorCode wird in die Message eingebettet, damit der Regex-Fallback in
+    /// ExtractErrorCode greift (cur.Detail ist hier nicht gesetzt, weil wir
+    /// bewusst keine FaultException-Hierarchie aufbauen — D365TestCenter.Core
+    /// ist netstandard2.0 ohne System.ServiceModel-Default).
+    /// </summary>
+    private static Exception FaultToException(OrganizationServiceFault fault)
+    {
+        var errorCodeHex = $"0x{fault.ErrorCode:X8}";
+        var msg = $"{errorCodeHex}: {fault.Message}";
+        return new InvalidPluginExecutionException(msg);
+    }
+
+    private CreateRequest BuildCreateRequestFromStep(TestStep step, Dictionary<string, object?> resolvedFields)
+    {
+        var entityName = ResolveEntity(step.Entity);
+        var entity = new Entity(entityName);
+        ApplyFields(entity, resolvedFields);
+        return new CreateRequest { Target = entity };
+    }
+
+    private UpdateRequest BuildUpdateRequestFromStep(
+        TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
+    {
+        var alias = step.RecordRef ?? step.Alias
+            ?? throw new InvalidOperationException(
+                "UpdateRecord (sandbox-safe) benoetigt 'recordRef' oder 'alias'.");
+        if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
+            alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
+
+        var recordId = ctx.ResolveRecordId(alias);
+        var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
+
+        var entity = new Entity(entityName, recordId);
+        ApplyFields(entity, resolvedFields, allowNull: true);
+        return new UpdateRequest { Target = entity };
+    }
+
+    private DeleteRequest BuildDeleteRequestFromStep(TestStep step, TestContext ctx)
+    {
+        var alias = step.RecordRef ?? step.Alias
+            ?? throw new InvalidOperationException(
+                "DeleteRecord (sandbox-safe) benoetigt 'recordRef' oder 'alias'.");
+        if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
+            alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
+
+        var recordId = ctx.ResolveRecordId(alias);
+        var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
+
+        return new DeleteRequest { Target = new EntityReference(entityName, recordId) };
+    }
+
+    private OrganizationRequest BuildExecuteRequestFromStep(
+        TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
+    {
+        var requestName = step.RequestName
+            ?? throw new InvalidOperationException(
+                "ExecuteRequest (sandbox-safe) braucht 'requestName'.");
+
+        var request = new OrganizationRequest(requestName);
+        foreach (var kvp in resolvedFields)
+        {
+            if (kvp.Value == null) continue;
+            request[kvp.Key] = ResolveTypedValue(kvp.Value, ctx);
+        }
+        return request;
     }
 
     private static string FormatExpectException(ExpectExceptionSpec spec)
