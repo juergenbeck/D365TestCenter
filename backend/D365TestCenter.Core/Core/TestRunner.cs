@@ -374,16 +374,26 @@ public sealed class TestRunner
                 if (expectFailureCatch)
                 {
                     // Exception war erwartet. Optional gegen Spec matchen.
+                    // A13-Fix (Plugin v5.3.2): bei FAILED-Match die actualException
+                    // mit Type + ErrorCode-Hinweis aufbereiten, damit der Test-Autor
+                    // sofort erkennt ob er eine Plattform- oder Plugin-Exception hat.
                     var (ok, reason) = EvaluateExpectException(step.ExpectException, ex);
+                    var exType = ex.GetType().Name;
+                    var actualCode = ExtractErrorCode(ex);
+                    var actualMsg = Truncate(ex.Message ?? "", 300);
+                    var actualSummary = string.IsNullOrEmpty(actualCode)
+                        ? $"{exType}: {actualMsg}"
+                        : $"{exType} [{actualCode}]: {actualMsg}";
+
                     stepResult.Success = ok;
                     stepResult.ExpectedDisplay = step.ExpectException != null
                         ? FormatExpectException(step.ExpectException)
                         : "Any exception";
-                    stepResult.ActualDisplay = ex.Message;
+                    stepResult.ActualDisplay = actualSummary;
                     stepResult.Message = ok
-                        ? $"OK: Expected exception caught ({ex.GetType().Name}): {Truncate(ex.Message, 200)}"
-                        : reason;
-                    Log($"      expectFailure: {(ok ? "OK" : "MISMATCH")} -- {Truncate(ex.Message, 200)}");
+                        ? $"OK: Expected exception caught — {actualSummary}"
+                        : $"expectException-Match fehlgeschlagen. {reason} | Tatsaechlich: {actualSummary}";
+                    Log($"      expectFailure: {(ok ? "OK" : "MISMATCH")} -- {actualSummary}");
                     continue; // zum naechsten Step, StepResult wird im finally geschrieben
                 }
 

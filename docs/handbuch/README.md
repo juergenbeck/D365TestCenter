@@ -38,6 +38,7 @@ als Async-Plugin im Server und protokolliert jeden Schritt als
 3. [Platzhalter](02-testfall-schreiben/03-platzhalter.md) — `{TIMESTAMP}`, `{alias.id}` und Co.
 4. [Rezepte](02-testfall-schreiben/07-rezepte.md) — Vorlagen für Standard-Szenarien
 5. [Negative-Path-Tests](02-testfall-schreiben/09-negative-path.md) — `expectFailure` für erwartete Fehler (v5.3+)
+6. [Pitfalls und Plattform-Constraints](02-testfall-schreiben/10-pitfalls.md) — state-locked Creation, Plattform-Exception, Cold-Start, Lookup-Binds
 
 ### Du willst einen Test ausführen
 
