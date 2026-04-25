@@ -51,6 +51,9 @@ public sealed class TestCenterOrchestrator
     private const string FldCaseTags = "jbe_tags";
     private const string FldCaseCategory = "jbe_category";
 
+    // Felder des jbe_testrun-Records
+    private const string FldFullLog = "jbe_fulllog";
+
     // Felder des jbe_testrunresult-Records
     private const string FldResultTestId = "jbe_testid";
     private const string FldResultOutcome = "jbe_outcome";
@@ -58,6 +61,7 @@ public sealed class TestCenterOrchestrator
     private const string FldResultError = "jbe_errormessage";
     private const string FldResultAssertions = "jbe_assertionresults";
     private const string FldResultTestRun = "jbe_testrunid";
+    private const string FldResultTrackedRecords = "jbe_trackedrecords";
 
     // Felder des jbe_teststep-Records (ADR-0004: kein Phase-Feld mehr,
     // der Action-Typ steht im String-Feld jbe_action).
@@ -291,7 +295,7 @@ public sealed class TestCenterOrchestrator
 
         var result = runner.RunAll(cases);
 
-        // 3c. Final-Update: Status + Summary + Counts
+        // 3c. Final-Update: Status + Summary + Counts + FullLog (B4)
         var summary = BuildSummary(result);
         _service.Update(new Entity(_config.TestRunEntity, testRunId)
         {
@@ -300,7 +304,12 @@ public sealed class TestCenterOrchestrator
             [FldCompletedOn] = DateTime.UtcNow,
             [FldTotal] = result.TotalCount,
             [FldPassed] = result.PassedCount,
-            [FldFailed] = result.FailedCount + result.ErrorCount
+            [FldFailed] = result.FailedCount + result.ErrorCount,
+            // B4-Fix: jbe_fulllog wurde bisher nie geschrieben, obwohl die
+            // Engine das gesamte Log inkl. Plugin-Trace-Logs (A7) sammelt.
+            // Memo-Feld erlaubt sehr grosse Strings; wir kappen bei 100k Zeichen
+            // damit das Update nicht blockiert.
+            [FldFullLog] = Truncate(result.FullLog ?? "", 100000)
         });
 
         Log("");
@@ -526,6 +535,19 @@ public sealed class TestCenterOrchestrator
                 .ToList();
             resultRecord[FldResultAssertions] = Truncate(
                 JsonConvert.SerializeObject(assertSteps, JsonSettings), 100000);
+        }
+        catch { /* Feld existiert vielleicht nicht auf allen Umgebungen */ }
+
+        // B5-Fix: TrackedRecords als JSON in jbe_trackedrecords. Wurde bisher
+        // nie geschrieben — Test-Autoren konnten nicht sehen welche Records
+        // ein Test angelegt hatte, insbesondere bei keepRecords=true.
+        try
+        {
+            if (tcResult.TrackedRecords.Count > 0)
+            {
+                resultRecord[FldResultTrackedRecords] = Truncate(
+                    JsonConvert.SerializeObject(tcResult.TrackedRecords, JsonSettings), 100000);
+            }
         }
         catch { /* Feld existiert vielleicht nicht auf allen Umgebungen */ }
 

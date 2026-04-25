@@ -180,12 +180,13 @@ public sealed class TestRunner
         var sw = Stopwatch.StartNew();
         var tcResult = new TestCaseResult { TestId = tc.Id, Title = tc.Title };
         TestContext? ctx = null;
+        var testStartUtc = DateTime.UtcNow;
 
         Log($"-- [{index}/{total}] [{tc.Id}] {tc.Title} --");
 
         try
         {
-            ctx = new TestContext { TestStartUtc = DateTime.UtcNow, TestId = tc.Id };
+            ctx = new TestContext { TestStartUtc = testStartUtc, TestId = tc.Id };
             ctx.CurrentDataRow = dataRow;
 
             Log("  Teststeps ausführen...");
@@ -212,6 +213,20 @@ public sealed class TestRunner
         {
             if (ctx != null)
             {
+                // B5: TrackedRecords aus ctx.CreatedEntities VOR dem Cleanup
+                // einfrieren — danach werden sie ggf. geloescht.
+                tcResult.TrackedRecords = ctx.CreatedEntities
+                    .Select(e => new TrackedRecord
+                    {
+                        Entity = e.EntityName,
+                        Id = e.Id,
+                        Alias = ctx.Records
+                            .Where(kv => kv.Value.Id == e.Id)
+                            .Select(kv => kv.Key)
+                            .FirstOrDefault()
+                    })
+                    .ToList();
+
                 try
                 {
                     Log("  Cleanup...");
@@ -221,6 +236,12 @@ public sealed class TestRunner
                 {
                     Log($"  Cleanup-Fehler (nicht kritisch): {ex.Message}");
                 }
+
+                // A7: Plugin-Trace-Logs seit Test-Start in das Log einbinden,
+                // damit jbe_fulllog Plugin-Diagnostik enthaelt. Schreib-Plugin
+                // (PluginTraceLogSetting=All oder Exception) muss aktiv sein,
+                // sonst sind keine Records vorhanden — kein Fehler, nur leer.
+                CapturePluginTraceLogs(testStartUtc, tc.Id);
             }
 
             sw.Stop();
@@ -229,6 +250,62 @@ public sealed class TestRunner
         }
 
         return tcResult;
+    }
+
+    /// <summary>
+    /// A7 / ZastrPay-Feedback: Plugin-Trace-Logs seit Test-Start aus der
+    /// plugintracelog-Tabelle holen und in den runner-internen Log-Builder
+    /// schreiben. Im Sync-Plugin laeuft das via SandboxSafeOrganizationService
+    /// (Wrapper, ADR-0005). Funktioniert nur wenn PluginTraceLogSetting auf
+    /// All oder Exception steht — sonst leeres Ergebnis (kein Fehler).
+    /// </summary>
+    private void CapturePluginTraceLogs(DateTime testStartUtc, string testId)
+    {
+        try
+        {
+            var query = new QueryExpression("plugintracelog")
+            {
+                ColumnSet = new ColumnSet("typename", "messageblock", "createdon",
+                    "performanceexecutionduration"),
+                Criteria = new FilterExpression
+                {
+                    Conditions = {
+                        new ConditionExpression("createdon", ConditionOperator.GreaterEqual, testStartUtc)
+                    }
+                },
+                Orders = { new OrderExpression("createdon", OrderType.Ascending) },
+                TopCount = 200
+            };
+            var results = _service.RetrieveMultiple(query);
+            if (results.Entities.Count == 0)
+            {
+                Log($"      Plugin-Trace-Logs: 0 Eintraege seit Teststart " +
+                    $"(PluginTraceLogSetting evtl. inaktiv).");
+                return;
+            }
+            Log($"      Plugin-Trace-Logs ({results.Entities.Count} Eintraege seit Teststart):");
+            foreach (var e in results.Entities)
+            {
+                var typeName = e.GetAttributeValue<string>("typename") ?? "<?>";
+                var createdOn = e.GetAttributeValue<DateTime>("createdon");
+                var duration = e.GetAttributeValue<int?>("performanceexecutionduration") ?? 0;
+                var msg = e.GetAttributeValue<string>("messageblock") ?? "";
+                // Zur Begrenzung der Log-Groesse: Plugin-Trace-Body auf 2000 Zeichen kuerzen.
+                if (msg.Length > 2000) msg = msg.Substring(0, 2000) + "...[truncated]";
+                Log($"      [{createdOn:HH:mm:ss.fff}] {typeName} ({duration}ms)");
+                foreach (var line in msg.Split('\n'))
+                {
+                    Log($"        {line.TrimEnd('\r')}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Trace-Capture darf den Test nicht scheitern lassen. Mit
+            // SandboxSafe-Wrapper (v5.3.4) wird das eine managed
+            // Exception, kein Sandbox-Wachter-Verstoss.
+            Log($"      Plugin-Trace-Capture nicht moeglich: {ex.Message}");
+        }
     }
 
     // ================================================================

@@ -66,6 +66,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const string FldResultError = "jbe_errormessage";
     private const string FldResultAssertions = "jbe_assertionresults";
     private const string FldResultTestRun = "jbe_testrunid";
+    private const string FldResultTrackedRecords = "jbe_trackedrecords";
 
     // ── TestStep Fields (ADR-0004: kein Phase-Feld mehr) ─────────
     private const string FldStepNumber = "jbe_stepnumber";
@@ -326,7 +327,12 @@ public sealed class RunTestsOnStatusChange : IPlugin
                 [FldTotal] = totalCount,
                 [FldPassed] = totalPassed,
                 [FldFailed] = totalFailed,
-                [FldBatchOffset] = 0
+                [FldBatchOffset] = 0,
+                // B4-Fix: jbe_fulllog wurde bisher nie geschrieben. Bei Multi-
+                // Batch-Runs enthaelt das Feld das Log des letzten Batches plus
+                // Plugin-Trace-Logs (A7). Frueher Batches gehen verloren —
+                // Stretch-Verbesserung waere ein Append-Pfad mit pre-Read.
+                [FldFullLog] = Truncate(result.FullLog ?? "", 100000)
             };
             service.Update(finalUpdate);
             trace.Trace("All batches complete: {0}/{1} passed", totalPassed, totalCount);
@@ -512,6 +518,19 @@ public sealed class RunTestsOnStatusChange : IPlugin
             }
             catch { /* fallback: leer */ }
 
+            // B5-Fix: TrackedRecords als JSON in jbe_trackedrecords. Wurde
+            // bisher nie geschrieben — Test-Autoren konnten nicht sehen welche
+            // Records ein Test angelegt hatte (insb. bei keepRecords=true).
+            string? trackedJson = null;
+            try
+            {
+                if (tcResult.TrackedRecords.Count > 0)
+                {
+                    trackedJson = JsonConvert.SerializeObject(tcResult.TrackedRecords, JsonSettings);
+                }
+            }
+            catch { /* fallback: kein trackedJson */ }
+
             var resultRecord = new Entity(TestRunResultEntity)
             {
                 [FldResultTestId] = tcResult.TestId,
@@ -521,6 +540,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
                 [FldResultAssertions] = Truncate(assertionsJson, 100000),
                 [FldResultTestRun] = testRunRef
             };
+            if (!string.IsNullOrEmpty(trackedJson))
+                resultRecord[FldResultTrackedRecords] = Truncate(trackedJson, 100000);
 
             var resultId = service.Create(resultRecord);
             var resultRef = new EntityReference(TestRunResultEntity, resultId);

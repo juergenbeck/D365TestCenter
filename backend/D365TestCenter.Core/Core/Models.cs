@@ -496,6 +496,29 @@ public sealed class TestCaseResult
 
     [JsonProperty("stepResults")]
     public List<StepResult> StepResults { get; set; } = new();
+
+    /// <summary>
+    /// B5 / ZastrPay-Feedback: alle vom Test angelegten Records (Alias plus
+    /// Entity plus Id). Wird vor Cleanup aus ctx.CreatedEntities gefuellt
+    /// und als JSON in jbe_testrunresult.jbe_trackedrecords persistiert.
+    /// Gibt Test-Autoren bei keepRecords=true die Liste zum manuellen Cleanup
+    /// und dokumentiert bei normalem Cleanup welche Records es gab.
+    /// </summary>
+    [JsonProperty("trackedRecords")]
+    public List<TrackedRecord> TrackedRecords { get; set; } = new();
+}
+
+/// <summary>Pro TestCase getrackter Record fuer jbe_trackedrecords (B5).</summary>
+public sealed class TrackedRecord
+{
+    [JsonProperty("entity")]
+    public string Entity { get; set; } = "";
+
+    [JsonProperty("id")]
+    public Guid Id { get; set; }
+
+    [JsonProperty("alias")]
+    public string? Alias { get; set; }
 }
 
 /// <summary>
