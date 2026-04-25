@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>D365TestCenter.CrmPlugin</RootNamespace>
     <AssemblyName>D365TestCenter.CrmPlugin</AssemblyName>
-    <Version>5.3.0</Version>
+    <Version>5.3.1</Version>
     <Authors>Integration Test Center Team</Authors>
     <Description>D365 Test Center - Plugin Package (Custom API + CRUD-Trigger)</Description>
 

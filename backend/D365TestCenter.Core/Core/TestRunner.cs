@@ -844,24 +844,26 @@ public sealed class TestRunner
                 "Erlaubt: effective, currentValue, defaultValue.")
         };
 
-        // Snapshot fuer Auto-Restore (nur bei alias)
-        EnvVarSnapshot? snap = null;
-        if (!string.IsNullOrEmpty(step.Alias))
+        // Snapshot fuer Auto-Restore — IMMER erstellen (FB-30 Fix, Plugin v5.3.1).
+        // Vorher wurde der Snapshot nur bei gesetztem alias erstellt; das fuehrte
+        // dazu dass Tests ohne alias den EnvVar-Wert dauerhaft veraenderten und
+        // nachfolgende Tests kippten (Markant-Pack `gdpr-dyn9148.json`,
+        // `markant_gdpr_pseudonym_enabled` blieb auf 'false' haengen).
+        // alias ist nur noch fuer explizites Referenzieren des Snapshot-Objekts
+        // in nachfolgenden Steps relevant; das Auto-Restore selbst ist Default.
+        var snap = new EnvVarSnapshot
         {
-            snap = new EnvVarSnapshot
-            {
-                SchemaName = schemaName,
-                DefinitionId = definition.Id,
-                ResolvedTarget = resolvedTarget,
-                ValueRecordExistedBefore = valueRecord != null,
-                ValueRecordId = valueRecord?.Id,
-                OriginalValue = valueRecord?.GetAttributeValue<string>("value"),
-                OriginalDefaultValue = resolvedTarget == "defaultValue"
-                    ? definition.GetAttributeValue<string>("defaultvalue")
-                    : null
-            };
-            ctx.EnvVarSnapshots.Add(snap);
-        }
+            SchemaName = schemaName,
+            DefinitionId = definition.Id,
+            ResolvedTarget = resolvedTarget,
+            ValueRecordExistedBefore = valueRecord != null,
+            ValueRecordId = valueRecord?.Id,
+            OriginalValue = valueRecord?.GetAttributeValue<string>("value"),
+            OriginalDefaultValue = resolvedTarget == "defaultValue"
+                ? definition.GetAttributeValue<string>("defaultvalue")
+                : null
+        };
+        ctx.EnvVarSnapshots.Add(snap);
 
         // Schreiben
         if (resolvedTarget == "currentValue")

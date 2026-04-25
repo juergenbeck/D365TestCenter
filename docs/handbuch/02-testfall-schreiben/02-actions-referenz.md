@@ -319,7 +319,7 @@ wiederhergestellt — selbst wenn der Test in der Mitte fehlschlägt.
 | `schemaName` | ja | `schemaname` der Definition (env-unabhängig). |
 | `value` | ja | Neuer Wert als String. Max 2.000 Zeichen. |
 | `target` | nein | `effective` (Default), `currentValue`, `defaultValue`. |
-| `alias` | nein | Aktiviert Auto-Restore über RecordTracker. |
+| `alias` | nein | Optional, nur für explizites Referenzieren des Snapshot-Objekts. **Auto-Restore ist immer aktiv** (Plugin v5.3.1+). |
 
 **Target-Semantik:**
 

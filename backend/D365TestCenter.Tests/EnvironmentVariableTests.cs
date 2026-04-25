@@ -208,6 +208,40 @@ public class EnvironmentVariableTests
     }
 
     [Fact]
+    public void SetEnvironmentVariable_NoAlias_StillCreatesSnapshot()
+    {
+        // FB-30 Fix (Plugin v5.3.1): Snapshot wird IMMER erstellt, nicht
+        // nur wenn alias gesetzt ist. Verhindert dauerhafte EnvVar-Aenderungen
+        // durch Tests die alias vergessen haben.
+        var fake = new FakeOrgService();
+        var defId = Guid.NewGuid();
+        var valueId = Guid.NewGuid();
+        fake.SeedDefinition(defId, "markant_TestFlag", "originalDefault");
+        fake.SeedValueRecord(valueId, defId, "markant_TestFlag", "originalCurrent");
+
+        var runner = new TestRunner(fake);
+        var ctx = new TestContext();
+
+        var step = new TestStep
+        {
+            Action = "SetEnvironmentVariable",
+            SchemaName = "markant_TestFlag",
+            Value = "newValue",
+            Target = "effective"
+            // KEIN alias gesetzt!
+        };
+
+        InvokeSet(runner, step, ctx);
+
+        Assert.Single(ctx.EnvVarSnapshots);
+        var snap = ctx.EnvVarSnapshots[0];
+        Assert.Equal("currentValue", snap.ResolvedTarget);
+        Assert.True(snap.ValueRecordExistedBefore);
+        Assert.Equal("originalCurrent", snap.OriginalValue);
+        Assert.Equal("newValue", fake.GetValueRecord(valueId));
+    }
+
+    [Fact]
     public void SetEnvironmentVariable_UnknownTarget_Throws()
     {
         var fake = new FakeOrgService();
