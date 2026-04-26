@@ -153,8 +153,12 @@ public sealed class PlaywrightBrowserActionExecutor : IBrowserActionExecutor
 
         if (!string.IsNullOrWhiteSpace(step.WaitForSelector))
         {
+            // .First avoids Playwright strict-mode violations when the wait-for
+            // selector matches multiple elements (e.g. wide attribute selectors
+            // like [data-id*='HomePageGrid'] which can resolve to many toolbar
+            // children). The wait is just a "loaded?"-probe, not an interaction.
             await page.Locator(step.WaitForSelector)
-                .WaitForAsync(new LocatorWaitForOptions { Timeout = step.TimeoutSeconds * 1000 });
+                .First.WaitForAsync(new LocatorWaitForOptions { Timeout = step.TimeoutSeconds * 1000 });
         }
 
         _log($"      navigate: {step.Url}");
@@ -187,8 +191,12 @@ public sealed class PlaywrightBrowserActionExecutor : IBrowserActionExecutor
 
         if (!string.IsNullOrWhiteSpace(step.WaitForSelector))
         {
+            // .First avoids Playwright strict-mode violations when the wait-for
+            // selector matches multiple elements (e.g. wide attribute selectors
+            // like [data-id*='HomePageGrid'] which can resolve to many toolbar
+            // children). The wait is just a "loaded?"-probe, not an interaction.
             await page.Locator(step.WaitForSelector)
-                .WaitForAsync(new LocatorWaitForOptions { Timeout = step.TimeoutSeconds * 1000 });
+                .First.WaitForAsync(new LocatorWaitForOptions { Timeout = step.TimeoutSeconds * 1000 });
         }
 
         _log($"      {(doubleClick ? "doubleClick" : "click")}: {step.Selector}");
@@ -232,8 +240,30 @@ public sealed class PlaywrightBrowserActionExecutor : IBrowserActionExecutor
         }
 
         // Try top-level frame first (Modern UCI is iframe-less for top-level content,
-        // verified via PoC selector spike 2026-04-26).
+        // verified via PoC selector spike 2026-04-26). If the expected value is set
+        // and the top-frame answer mismatches, fall back to scanning sub-frames —
+        // some Markant forms initialise window.Markant in a Power Apps host iframe
+        // rather than the main frame.
         var result = await page.EvaluateAsync<object?>(step.Expression);
+        if (!string.IsNullOrEmpty(step.Value) &&
+            !string.Equals(result?.ToString(), step.Value, StringComparison.Ordinal))
+        {
+            foreach (var frame in page.Frames)
+            {
+                if (frame == page.MainFrame) continue;
+                try
+                {
+                    var frameResult = await frame.EvaluateAsync<object?>(step.Expression);
+                    if (string.Equals(frameResult?.ToString(), step.Value, StringComparison.Ordinal))
+                    {
+                        result = frameResult;
+                        _log($"      evaluate matched in frame '{frame.Name}'");
+                        break;
+                    }
+                }
+                catch { /* frame not accessible — skip */ }
+            }
+        }
 
         // If alias is set, store result in OutputAliases for placeholder resolution
         // in subsequent steps (analogue to ExecuteRequest.OutputAlias from A4).
@@ -246,7 +276,24 @@ public sealed class PlaywrightBrowserActionExecutor : IBrowserActionExecutor
             ctx.OutputAliases[step.OutputAlias]["result"] = result;
         }
 
-        _log($"      evaluate: {step.Expression?.Replace("\n", " ")} => {result ?? "null"}");
+        var resultStr = result?.ToString() ?? "null";
+        _log($"      evaluate: {step.Expression?.Replace("\n", " ")} => {resultStr}");
+
+        // Inline assertion: if 'value' is provided, the step asserts result == value.
+        // This avoids needing a separate Assert step + a custom assert target=Output
+        // (which would require AssertionEngine extension). Pragmatic for UI tests
+        // where evaluate-and-assert is the common pattern.
+        if (!string.IsNullOrEmpty(step.Value))
+        {
+            if (!string.Equals(resultStr, step.Value, StringComparison.Ordinal))
+            {
+                await CapturePageDiagnostics(page);
+                throw new InvalidOperationException(
+                    $"BrowserAction evaluate assertion failed. Expression: {step.Expression}; " +
+                    $"expected '{step.Value}', got '{resultStr}'.");
+            }
+            _log($"      evaluate-assert: PASSED (matches '{step.Value}')");
+        }
     }
 
     private async Task CapturePageDiagnostics(IPage page)
