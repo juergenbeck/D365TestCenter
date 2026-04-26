@@ -21,6 +21,15 @@ public sealed class TestRunner
     private readonly StringBuilder _log;
 
     /// <summary>
+    /// Optional: Browser-based UI automation executor (ADR-0006). Null in the
+    /// Plugin-Sandbox path (RunIntegrationTestsApi, RunTestsOnStatusChange) —
+    /// BrowserAction steps are skipped with a clear "not supported in sandbox"
+    /// message there. Non-null in the CLI path, where Microsoft.Playwright
+    /// drives Chromium against Markant DEV.
+    /// </summary>
+    private readonly IBrowserActionExecutor? _browser;
+
+    /// <summary>
     /// Wenn true, werden die in Steps angelegten Records nach dem Testlauf
     /// nicht gelöscht. Default false (Cleanup lief historisch immer).
     /// Wird vom Orchestrator aus jbe_testrun.jbe_keeprecords gesetzt.
@@ -33,7 +42,7 @@ public sealed class TestRunner
     /// </summary>
     public event Action<int, int, TestCaseResult>? OnTestCompleted;
 
-    public TestRunner(IOrganizationService service)
+    public TestRunner(IOrganizationService service, IBrowserActionExecutor? browser = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _entityMetadata = new EntityMetadataCache(service, msg => Log($"      {msg}"));
@@ -44,6 +53,7 @@ public sealed class TestRunner
         // stay as strings instead of being auto-converted to Guid).
         _assertionEngine = new AssertionEngine(_entityMetadata);
         _log = new StringBuilder();
+        _browser = browser;
     }
 
     // Geteilte Kontexte für dependsOn/sharedContext
@@ -460,6 +470,28 @@ public sealed class TestRunner
                         var delayMs = step.DelayMs ?? 500;
                         Log($"      Delay {delayMs}ms...");
                         Thread.Sleep(delayMs);
+                        break;
+
+                    case "BROWSERACTION":
+                        // ADR-0006: BrowserAction is CLI-only. The Plugin-Sandbox path
+                        // injects null and skips with a clear message — no failure,
+                        // no broken test run. The CLI path injects a Playwright-backed
+                        // executor that handles the step.
+                        if (_browser == null)
+                        {
+                            Log($"      SKIP BrowserAction (operation={step.Operation ?? "?"}): " +
+                                $"not supported in this execution path (likely Plugin-Sandbox). See ADR-0006.");
+                            stepResult.Message = "BrowserAction skipped: not supported in the Plugin-Sandbox path. " +
+                                "Use the CLI path with --browser-state for UI tests.";
+                        }
+                        else
+                        {
+                            Log($"      BrowserAction operation={step.Operation ?? "?"}");
+                            // Async-over-sync because TestRunner is sync-by-design (Plugin-compatible).
+                            // The BrowserActionExecutor manages browser lifecycle internally and yields
+                            // quickly between operations.
+                            _browser.ExecuteAsync(step, ctx).GetAwaiter().GetResult();
+                        }
                         break;
 
                     default:

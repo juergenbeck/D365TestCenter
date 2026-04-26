@@ -99,19 +99,28 @@ public sealed class TestCenterOrchestrator
     };
 
     /// <summary>
+    /// Optional browser-action executor for UI tests (ADR-0006). Null in the
+    /// Plugin-Sandbox path. Set in the CLI when --browser-state is provided.
+    /// </summary>
+    private readonly IBrowserActionExecutor? _browser;
+
+    /// <summary>
     /// Erstellt einen neuen Orchestrator.
     /// </summary>
     /// <param name="service">Dataverse-Service (IOrganizationService)</param>
     /// <param name="config">Config mit Entity-Namen und Status-Codes</param>
     /// <param name="log">Optionaler Logger (z.B. Console.WriteLine)</param>
+    /// <param name="browser">Optional: BrowserActionExecutor for UI tests (ADR-0006). CLI-only.</param>
     public TestCenterOrchestrator(
         IOrganizationService service,
         ITestCenterConfig config,
-        Action<string>? log = null)
+        Action<string>? log = null,
+        IBrowserActionExecutor? browser = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _log = log;
+        _browser = browser;
     }
 
     /// <summary>
@@ -254,7 +263,7 @@ public sealed class TestCenterOrchestrator
 
     private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases, bool keepRecords)
     {
-        var runner = new TestRunner(_service) { KeepRecords = keepRecords };
+        var runner = new TestRunner(_service, _browser) { KeepRecords = keepRecords };
         var progressCount = 0;
 
         runner.OnTestCompleted += (index, total, tcResult) =>

@@ -66,7 +66,18 @@ public static class Program
             "Keep test data after run"));
         runCommand.AddOption(new Option<string>("--config", () => "standard",
             "Config profile: standard, markant"));
-        runCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, bool, string>(
+        // ADR-0006: UI automation options. When --browser-state is provided,
+        // BrowserAction steps are dispatched via Microsoft.Playwright; otherwise
+        // BrowserAction steps are skipped (same behaviour as the Plugin path).
+        runCommand.AddOption(new Option<string?>("--browser-state",
+            "Path to Playwright storage-state JSON for UI tests (enables BrowserAction)"));
+        runCommand.AddOption(new Option<bool>("--browser-headed", () => false,
+            "Run browser headed (default headless, set for local debug)"));
+        runCommand.AddOption(new Option<string>("--browser-locale", () => "de-DE",
+            "Browser locale for UI tests"));
+        runCommand.AddOption(new Option<string?>("--browser-trace",
+            "Path to write Playwright trace.zip (default: skip tracing)"));
+        runCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, bool, string, string?, bool, string, string?>(
             RunTests);
         rootCommand.AddCommand(runCommand);
 
@@ -96,7 +107,8 @@ public static class Program
 
     static Task<int> RunTests(
         string org, string? clientId, string? clientSecret, string? tenantId,
-        string? token, bool interactive, string filter, bool keepRecords, string config)
+        string? token, bool interactive, string filter, bool keepRecords, string config,
+        string? browserState, bool browserHeaded, string browserLocale, string? browserTrace)
     {
         WriteHeader(org, filter, config);
 
@@ -106,13 +118,30 @@ public static class Program
             var cfg = GetConfig(config);
 
             Console.WriteLine($"  Verbunden als: {client.OAuthUserId ?? "Service Principal"}");
+
+            // ADR-0006: BrowserActionExecutor only when --browser-state is provided.
+            // Without it, BrowserAction steps are skipped (test still runs API steps).
+            using var browser = browserState != null
+                ? new D365TestCenter.Cli.UiAutomation.PlaywrightBrowserActionExecutor(
+                    storageStatePath: browserState,
+                    headless: !browserHeaded,
+                    locale: browserLocale,
+                    tracePath: browserTrace,
+                    log: Console.WriteLine)
+                : null;
+
+            if (browser != null)
+            {
+                Console.WriteLine($"  UI automation: Storage-State={browserState}, Headed={browserHeaded}, Locale={browserLocale}");
+            }
             Console.WriteLine();
 
             // Zentraler Orchestrator aus der Core-Library
             var orchestrator = new TestCenterOrchestrator(
                 client,
                 cfg,
-                log: Console.WriteLine);
+                log: Console.WriteLine,
+                browser: browser);
 
             var result = orchestrator.RunNewTestRun(filter, keepRecords);
 

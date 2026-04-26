@@ -155,10 +155,52 @@ public sealed class TestStep
     /// <summary>
     /// Action-Typ. Gueltige Werte: CreateRecord, UpdateRecord, DeleteRecord,
     /// Wait, ExecuteRequest, CallCustomApi, RetrieveRecord, WaitForRecord,
-    /// WaitForFieldValue, AssertEnvironment, Assert.
+    /// WaitForFieldValue, AssertEnvironment, Assert, BrowserAction (ADR-0006).
     /// </summary>
     [JsonProperty("action")]
     public string Action { get; set; } = "";
+
+    // ── BrowserAction-spezifische Properties (ADR-0006) ────────────────────
+    // Die folgenden Felder sind nur fuer Action="BrowserAction" relevant.
+    // Im Plugin-Pfad (Sandbox) wird BrowserAction als Skipped markiert.
+
+    /// <summary>
+    /// BrowserAction-Sub-Operation: navigate, click, doubleClick, fill,
+    /// selectOption, delay, screenshot, waitFor, evaluate.
+    /// </summary>
+    [JsonProperty("operation")]
+    public string? Operation { get; set; }
+
+    /// <summary>BrowserAction navigate: Ziel-URL.</summary>
+    [JsonProperty("url")]
+    public string? Url { get; set; }
+
+    /// <summary>BrowserAction click/doubleClick/fill/waitFor/evaluate: CSS-Selektor.</summary>
+    [JsonProperty("selector")]
+    public string? Selector { get; set; }
+
+    /// <summary>BrowserAction click/doubleClick: Fallback-Selektor wenn Primary nicht matcht.</summary>
+    [JsonProperty("fallbackSelector")]
+    public string? FallbackSelector { get; set; }
+
+    // BrowserAction fill: nutzt das existing 'value'-Property (Assert-Wert),
+    // semantisch identisch (erwarteter/einzugebender String-Wert).
+
+    /// <summary>BrowserAction navigate/click/etc.: nach Aktion auf diesen Selektor warten.</summary>
+    [JsonProperty("waitForSelector")]
+    public string? WaitForSelector { get; set; }
+
+    /// <summary>BrowserAction evaluate: JavaScript-Expression (z.B. "() => localStorage.getItem('roleType')").</summary>
+    [JsonProperty("expression")]
+    public string? Expression { get; set; }
+
+    /// <summary>BrowserAction screenshot: Datei-Name (ohne Pfad/Endung).</summary>
+    [JsonProperty("name")]
+    public string? Name { get; set; }
+
+    /// <summary>BrowserAction navigate: assertNoLoginRedirect (Default true).</summary>
+    [JsonProperty("assertNoLoginRedirect")]
+    public bool? AssertNoLoginRedirect { get; set; }
 
     [JsonProperty("entity")]
     public string? Entity { get; set; }
