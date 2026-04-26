@@ -97,34 +97,49 @@ public sealed class PlaywrightBrowserActionExecutor : IBrowserActionExecutor
 
         var page = await EnsurePageAsync();
 
-        switch (operation)
+        // Reset diagnostics from any previous step — only the most recent
+        // failure carries diagnostics into the Orchestrator's file-upload.
+        LastDiagnostics = null;
+
+        try
         {
-            case "navigate":
-                await Navigate(page, step);
-                break;
-            case "click":
-                await Click(page, step, doubleClick: false);
-                break;
-            case "doubleclick":
-                await Click(page, step, doubleClick: true);
-                break;
-            case "fill":
-                await Fill(page, step);
-                break;
-            case "delay":
-                await Task.Delay(step.DelayMs ?? 500);
-                break;
-            case "waitfor":
-                await WaitFor(page, step);
-                break;
-            case "screenshot":
-                await Screenshot(page, step);
-                break;
-            case "evaluate":
-                await Evaluate(page, step, ctx);
-                break;
-            default:
-                throw new InvalidOperationException($"Unknown BrowserAction operation: {operation}");
+            switch (operation)
+            {
+                case "navigate":
+                    await Navigate(page, step);
+                    break;
+                case "click":
+                    await Click(page, step, doubleClick: false);
+                    break;
+                case "doubleclick":
+                    await Click(page, step, doubleClick: true);
+                    break;
+                case "fill":
+                    await Fill(page, step);
+                    break;
+                case "delay":
+                    await Task.Delay(step.DelayMs ?? 500);
+                    break;
+                case "waitfor":
+                    await WaitFor(page, step);
+                    break;
+                case "screenshot":
+                    await Screenshot(page, step);
+                    break;
+                case "evaluate":
+                    await Evaluate(page, step, ctx);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown BrowserAction operation: {operation}");
+            }
+        }
+        catch (Exception)
+        {
+            // ADR-0006 Phase 1d: capture diagnostics on any failure for later
+            // upload to jbe_testrunresult.jbe_screenshot / jbe_uitrace.
+            // Re-throw so TestRunner marks the step as Failed/Error.
+            await CapturePageDiagnostics(page);
+            throw;
         }
     }
 
