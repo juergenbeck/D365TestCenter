@@ -98,6 +98,16 @@ public static class Program
             ShowStatus);
         rootCommand.AddCommand(statusCommand);
 
+        // ── ui-setup command (ADR-0006) ──────────────────────────
+        var uiSetupCommand = new Command("ui-setup",
+            "Create a Playwright storage-state by interactive login (UI tests). DEV-only hard-guard.");
+        uiSetupCommand.AddOption(orgOption);
+        uiSetupCommand.AddOption(new Option<string>("--output", () => "auth/markant-dev-juergen.json",
+            "Output path for the storage-state JSON"));
+        uiSetupCommand.Handler = CommandHandler.Create<string, string>(
+            D365TestCenter.Cli.UiAutomation.StorageStateSetup.RunAsync);
+        rootCommand.AddCommand(uiSetupCommand);
+
         return await rootCommand.InvokeAsync(args);
     }
 
