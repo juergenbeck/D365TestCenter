@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ServiceModel;
 using D365TestCenter.Core.Config;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 
@@ -563,6 +566,46 @@ public sealed class TestCenterOrchestrator
         var resultId = _service.Create(resultRecord);
         var resultRef = new EntityReference(_config.TestRunResultEntity, resultId);
 
+        // ADR-0006 Phase 1d: Diagnostic artefacts (PNG screenshot, trace.zip)
+        // from failed BrowserAction steps. Uploaded only on the most recent
+        // failure of the test case — earlier step failures are overwritten by
+        // the orchestrator iteration (one File per result record).
+        var lastDiag = tcResult.StepResults
+            .Where(s => s.Diagnostics != null)
+            .Select(s => s.Diagnostics!)
+            .LastOrDefault();
+        if (lastDiag != null)
+        {
+            try
+            {
+                if (lastDiag.ScreenshotPng != null && lastDiag.ScreenshotPng.Length > 0)
+                {
+                    UploadFileToFileField(resultId, "jbe_screenshot",
+                        lastDiag.ScreenshotPng, $"screenshot-{tcResult.TestId}.png", "image/png");
+                    Log($"      Screenshot hochgeladen ({lastDiag.ScreenshotPng.Length} bytes)");
+                }
+                if (lastDiag.TraceZip != null && lastDiag.TraceZip.Length > 0)
+                {
+                    UploadFileToFileField(resultId, "jbe_uitrace",
+                        lastDiag.TraceZip, $"trace-{tcResult.TestId}.zip", "application/zip");
+                    Log($"      Trace hochgeladen ({lastDiag.TraceZip.Length} bytes)");
+                }
+            }
+            catch (Exception ex)
+            {
+                var detail = ex.Message;
+                if (ex is FaultException<OrganizationServiceFault> faultEx)
+                {
+                    detail = $"{faultEx.Detail.ErrorCode:X} {faultEx.Detail.Message}";
+                }
+                else if (ex.InnerException != null)
+                {
+                    detail = $"{ex.GetType().Name}: {ex.Message} | Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}";
+                }
+                Log($"      Diagnostics-Upload fehlgeschlagen (nicht fatal): {detail}");
+            }
+        }
+
         // ADR-0004: eine einheitliche Persistenz-Schleife. Jeder StepResult
         // wird zu genau einem jbe_teststep-Record. Action-Typ im String-Feld
         // jbe_action, keine Phase-OptionSet mehr.
@@ -673,4 +716,61 @@ public sealed class TestCenterOrchestrator
     }
 
     private void Log(string msg) => _log?.Invoke(msg);
+
+    /// <summary>
+    /// ADR-0006 Phase 1d: Uploads a binary blob to a Dataverse File-field
+    /// (e.g. jbe_testrunresult.jbe_screenshot or jbe_uitrace).
+    ///
+    /// Uses the SDK 3-step File upload pattern:
+    ///   1. InitializeFileBlocksUploadRequest -> FileContinuationToken
+    ///   2. UploadBlockRequest per chunk (max 4 MB per block)
+    ///   3. CommitFileBlocksUploadRequest with the BlockId list
+    ///
+    /// Block IDs are GUID-based for uniqueness (Dataverse requires base64-
+    /// encoded strings of identical length within a request).
+    /// </summary>
+    private void UploadFileToFileField(
+        Guid recordId, string fieldName, byte[] content, string fileName, string mimeType)
+    {
+        var entityRef = new EntityReference(_config.TestRunResultEntity, recordId);
+
+        var initResponse = (InitializeFileBlocksUploadResponse)_service.Execute(
+            new InitializeFileBlocksUploadRequest
+            {
+                Target = entityRef,
+                FileAttributeName = fieldName,
+                FileName = fileName
+            });
+        var token = initResponse.FileContinuationToken;
+
+        const int blockSize = 4 * 1024 * 1024; // 4 MB per Dataverse limit
+        var blockIds = new List<string>();
+
+        for (int offset = 0; offset < content.Length; offset += blockSize)
+        {
+            var size = Math.Min(blockSize, content.Length - offset);
+            var block = new byte[size];
+            Array.Copy(content, offset, block, 0, size);
+
+            // Block IDs must be base64 strings of identical length within a request.
+            // GUID -> 16 bytes -> 24 chars base64 satisfies that.
+            var blockId = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+
+            _service.Execute(new UploadBlockRequest
+            {
+                FileContinuationToken = token,
+                BlockId = blockId,
+                BlockData = block
+            });
+            blockIds.Add(blockId);
+        }
+
+        _service.Execute(new CommitFileBlocksUploadRequest
+        {
+            FileContinuationToken = token,
+            FileName = fileName,
+            MimeType = mimeType,
+            BlockList = blockIds.ToArray()
+        });
+    }
 }

@@ -623,6 +623,17 @@ public sealed class StepResult
     /// <summary>Ausgabe-Payload als JSON (optional, z.B. ExecuteRequest-Response).</summary>
     [JsonProperty("outputData")]
     public string? OutputData { get; set; }
+
+    /// <summary>
+    /// ADR-0006 Phase 1d: Diagnostic artefacts from a failed BrowserAction step
+    /// (PNG screenshot, Playwright trace.zip, context). Set by TestRunner from
+    /// IBrowserActionExecutor.LastDiagnostics. Null for non-UI steps and for
+    /// successful UI steps. Picked up by TestCenterOrchestrator for upload to
+    /// jbe_testrunresult.jbe_screenshot / jbe_uitrace File-fields.
+    /// Excluded from JSON serialisation (binary blobs do not belong in test logs).
+    /// </summary>
+    [JsonIgnore]
+    public StepDiagnostics? Diagnostics { get; set; }
 }
 
 /// <summary>

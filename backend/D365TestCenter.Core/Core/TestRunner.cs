@@ -487,10 +487,20 @@ public sealed class TestRunner
                         else
                         {
                             Log($"      BrowserAction operation={step.Operation ?? "?"}");
-                            // Async-over-sync because TestRunner is sync-by-design (Plugin-compatible).
-                            // The BrowserActionExecutor manages browser lifecycle internally and yields
-                            // quickly between operations.
-                            _browser.ExecuteAsync(step, ctx).GetAwaiter().GetResult();
+                            try
+                            {
+                                // Async-over-sync because TestRunner is sync-by-design (Plugin-compatible).
+                                // The BrowserActionExecutor manages browser lifecycle internally and yields
+                                // quickly between operations.
+                                _browser.ExecuteAsync(step, ctx).GetAwaiter().GetResult();
+                            }
+                            catch
+                            {
+                                // ADR-0006 Phase 1d: Capture diagnostics into StepResult so the
+                                // Orchestrator can upload them to jbe_testrunresult File-fields.
+                                stepResult.Diagnostics = _browser.LastDiagnostics;
+                                throw;
+                            }
                         }
                         break;
 
