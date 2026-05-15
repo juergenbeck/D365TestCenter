@@ -3313,12 +3313,12 @@ const CardRenderer = {
         html += `<div class="ve-card-header">`;
         html += `<span class="ve-drag-handle" title="Drag to reorder">\u2261</span>`;
 
-        // Action type badge
-        const actionColors = { CreateRecord: "accent-green", UpdateRecord: "accent-yellow", Wait: "text-muted", ExecuteAction: "accent-purple", DeleteRecord: "accent-red", CreateContactSource: "accent-purple" };
-        const actionLabels = { CreateRecord: "Create", UpdateRecord: "Update", Wait: "Wait", ExecuteAction: "API", DeleteRecord: "Delete", CreateContactSource: "Create CS" };
+        // Action type badge — ExecuteAction/CallCustomApi are legacy aliases for ExecuteRequest (ADR-0007)
+        const actionColors = { CreateRecord: "accent-green", UpdateRecord: "accent-yellow", Wait: "text-muted", ExecuteRequest: "accent-purple", ExecuteAction: "accent-purple", CallCustomApi: "accent-purple", DeleteRecord: "accent-red", CreateContactSource: "accent-purple" };
+        const actionLabels = { CreateRecord: "Create", UpdateRecord: "Update", Wait: "Wait", ExecuteRequest: "API", ExecuteAction: "API", CallCustomApi: "API", DeleteRecord: "Delete", CreateContactSource: "Create CS" };
         html += `<span style="font-size:10px;font-weight:600;color:var(--${actionColors[action] || 'text-secondary'})">${actionLabels[action] || action}</span>`;
 
-        if (action !== "Wait" && action !== "ExecuteAction") {
+        if (action !== "Wait" && action !== "ExecuteAction" && action !== "ExecuteRequest" && action !== "CallCustomApi") {
             html += `<span class="ve-entity-badge ${this._badgeClass(item.entity)}">${escapeHtml(this._entityLabel(item.entity))}</span>`;
         }
         if (item.alias) {
