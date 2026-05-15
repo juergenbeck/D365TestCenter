@@ -193,13 +193,17 @@ Testfall, anpassen, fertig.
   } }
 ```
 
-## Custom Action aufrufen
+## Custom Action / Custom API aufrufen
+
+Kanonisch ab v5.3.7 (ADR-0007) via `ExecuteRequest`:
 
 ```json
-{ "stepNumber": 3, "action": "ExecuteAction",
-  "actionName":  "new_MyCustomAction",
-  "parameters":  { "param1": "{acc.id}", "param2": "value" } }
+{ "stepNumber": 3, "action": "ExecuteRequest",
+  "requestName": "new_MyCustomAction",
+  "fields":      { "param1": "{acc.id}", "param2": "value" } }
 ```
+
+Legacy-Verben `ExecuteAction` und `CallCustomApi` bleiben als Aliasse erhalten.
 
 ## Record neu laden
 

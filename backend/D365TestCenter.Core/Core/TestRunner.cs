@@ -432,15 +432,13 @@ public sealed class TestRunner
                         StepWaitForFieldValue(step, ctx);
                         break;
 
-                    case "CALLCUSTOMAPI":
-                        StepCallCustomApi(step, ctx, resolvedFields);
-                        break;
-
                     case "ASSERTENVIRONMENT":
                         StepAssertEnvironment(step, ctx);
                         break;
 
                     case "EXECUTEREQUEST":
+                    case "CALLCUSTOMAPI":   // Legacy-Alias (ADR-0007)
+                    case "EXECUTEACTION":   // Legacy-Alias (ADR-0007)
                         StepExecuteRequest(step, ctx, resolvedFields);
                         break;
 
@@ -785,38 +783,39 @@ public sealed class TestRunner
         Log($"      WaitForFieldValue [{alias}].{fieldName} = {expectedValue} erreicht");
     }
 
-    private void StepCallCustomApi(
-        TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
-    {
-        var apiName = step.Entity
-            ?? throw new InvalidOperationException("CallCustomApi benötigt 'entity' (API-Name).");
-
-        var request = new OrganizationRequest(apiName);
-        foreach (var kvp in resolvedFields)
-        {
-            if (kvp.Value == null) continue;
-            request[kvp.Key] = ConvertValue(kvp.Value);
-        }
-
-        _service.Execute(request);
-        Log($"      CallCustomApi '{apiName}' aufgerufen");
-    }
-
     // ================================================================
-    //  ExecuteRequest: Generische SDK-Message
+    //  ExecuteRequest: kanonische SDK-Message-Aktion (ADR-0007)
+    //  Aliasse: CallCustomApi, ExecuteAction (Verb-Aliasse im Switch).
+    //  Schema-Aliasse: ActionName/ApiName (-> RequestName), Entity
+    //  (-> RequestName Fallback), Parameters (-> Fields Fallback).
     // ================================================================
 
     private void StepExecuteRequest(
         TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
     {
+        // ADR-0007 Fallback-Kette fuer den SDK-Message-Namen.
+        // RequestName ist kanonisch; ActionName/ApiName sind Legacy-Aliasse;
+        // Entity wird als letzter Fallback akzeptiert, um Pre-v5.3.7
+        // CallCustomApi-Packs ohne Migration weiter zu unterstuetzen.
         var requestName = step.RequestName
+            ?? step.ActionName
+            ?? step.ApiName
+            ?? step.Entity
             ?? throw new InvalidOperationException(
-                "ExecuteRequest braucht 'requestName' (z.B. \"Merge\", \"SetState\", \"Assign\").");
+                "ExecuteRequest braucht 'requestName' (oder Legacy-Alias " +
+                "'actionName'/'apiName'/'entity', siehe ADR-0007).");
+
+        // ADR-0007 Parameter-Map: Wenn 'parameters' gesetzt ist, gewinnt
+        // es gegen 'fields' (Legacy-Schema). Sonst die in ExecuteSteps
+        // bereits aufgeloesten Fields-Werte.
+        var parameterMap = (step.Parameters != null && step.Parameters.Count > 0)
+            ? _dataFactory.ResolveTemplateData(step.Parameters, ctx)
+            : resolvedFields;
 
         var request = new OrganizationRequest(requestName);
 
         // Felder als typisierte Parameter aufloesen
-        foreach (var kvp in resolvedFields)
+        foreach (var kvp in parameterMap)
         {
             if (kvp.Value == null) continue;
             request[kvp.Key] = ResolveTypedValue(kvp.Value, ctx);

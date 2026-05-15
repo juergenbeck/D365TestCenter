@@ -14,8 +14,7 @@ typische Fallen, und wofür sie da sind.
 | [`Wait`](#wait) | Feste Wartezeit |
 | [`WaitForRecord` / `FindRecord`](#waitforrecord--findrecord) | Warten bis ein Record existiert (mit `orderBy`/`top` ab v5.3) |
 | [`WaitForFieldValue`](#waitforfieldvalue) | Warten bis ein Feld einen Wert hat |
-| [`ExecuteRequest`](#executerequest) | Beliebige SDK-Message (Merge, QualifyLead, ...) |
-| [`ExecuteAction`](#executeaction) | Custom Action aufrufen |
+| [`ExecuteRequest`](#executerequest) | Beliebige SDK-Message (Merge, QualifyLead, Custom Actions, Custom APIs) |
 | [`SetEnvironmentVariable`](#setenvironmentvariable-plugin-v53) | Environment-Variable setzen mit Auto-Restore (v5.3+) |
 | [`RetrieveEnvironmentVariable`](#retrieveenvironmentvariable-plugin-v53) | Environment-Variable lesen (v5.3+) |
 | [`Assert`](#assert) | Ergebnis prüfen |
@@ -277,28 +276,48 @@ Ruft eine Microsoft SDK-Message auf. Nicht für Custom APIs — dafür ist
 Die vollständige Liste steht in der Microsoft-Dokumentation unter
 "Organization Service Messages".
 
-## ExecuteAction
+### Custom Actions und Custom APIs via ExecuteRequest
 
-Für **Custom Actions** (selbst definierte Actions in der Solution).
+Custom Actions und Custom APIs sind aus SDK-Sicht ebenfalls SDK-Messages
+(per `OrganizationRequest(uniquename)` aufgerufen). Sie verwenden
+denselben `ExecuteRequest`-Pfad wie Microsoft-Standard-Messages.
 
 ```json
-{ "stepNumber": 3, "action": "ExecuteAction",
-  "actionName": "new_CalculatePriceList",
-  "parameters": {
-    "Target": "{opp.id}",
+{ "stepNumber": 3, "action": "ExecuteRequest",
+  "requestName": "new_CalculatePriceList",
+  "fields": {
+    "Target":      { "$type": "EntityReference", "entity": "opportunity", "ref": "opp" },
     "PriceListId": "stdprice"
   }
 }
 ```
 
-| Feld | Pflicht | Bedeutung |
-|---|:---:|---|
-| `actionName` | ja | Schema-Name der Custom Action. |
-| `parameters` | nein | Parameter-Map. |
+```json
+{ "stepNumber": 4, "action": "ExecuteRequest",
+  "requestName": "markant_RunFieldGovernanceForContact",
+  "fields": { "ContactId": "{contact.id}" }
+}
+```
 
-Unterschied zu `ExecuteRequest`: `ExecuteAction` ist für Actions mit
-einfachen Parametern. Für komplexe `$type`-Parameter nimm lieber
-`ExecuteRequest`.
+Einfache Parameter (String/Int/Bool/Guid) werden direkt als Wert
+gemappt, komplexe Parameter mit `$type` wie bei jeder anderen SDK-Message.
+
+### Legacy-Aliasse (ADR-0007)
+
+Bis Plugin v5.3.6 gab es zwei zusätzliche Action-Verben (`CallCustomApi`,
+`ExecuteAction`) mit eigenen Schemata. Ab v5.3.7 werden diese als Aliasse
+zu `ExecuteRequest` behandelt (Konsolidierung, siehe ADR-0007):
+
+| Legacy-Verb | Legacy-Schema | Mapping zu kanonisch |
+|---|---|---|
+| `CallCustomApi` | `entity` + `fields` | Verb → `ExecuteRequest`; `entity` → `requestName` |
+| `ExecuteAction` | `actionName` + `parameters` | Verb → `ExecuteRequest`; `actionName` → `requestName`; `parameters` → `fields` |
+| `ExecuteAction` | `apiName` + `parameters` | wie oben, `apiName` ist Synonym zu `actionName` |
+| `ExecuteAction` | `entity` + `fields` | wie oben (Mischform, z.B. Markant SW03) |
+
+Bestehende Tests mit Legacy-Verben/-Schemas laufen unverändert. Empfehlung
+für neue Tests: kanonisch `ExecuteRequest` + `requestName` + `fields`.
+Aliasse bleiben für mindestens zwei Plugin-Major-Versionen erhalten.
 
 ## SetEnvironmentVariable (Plugin v5.3+)
 

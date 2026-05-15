@@ -173,23 +173,30 @@ Ruft die Governance-API für den aktuellen Contact auf. Löst die Field-Governan
 }
 ```
 
-### ExecuteAction
+### ExecuteRequest (Custom API / Custom Action / SDK-Message)
 
-Ruft eine Custom API (Action oder Function) in Dataverse auf.
+Ruft eine SDK-Message in Dataverse auf — Standard-Messages (Merge, QualifyLead, ...)
+und Custom Actions / Custom APIs gleichermaßen. Kanonisch seit Plugin v5.3.7
+(ADR-0007).
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
-| `action` | String | Pflicht | `"ExecuteAction"` |
-| `apiName` | String | Pflicht | Vollständiger Name der Custom API (z.B. `"jbe_RunIntegrationTests"`) |
-| `parameters` | Object | Optional | Eingabeparameter für die Custom API |
+| `action` | String | Pflicht | `"ExecuteRequest"` |
+| `requestName` | String | Pflicht | Name der SDK-Message bzw. Custom API (z.B. `"jbe_RunIntegrationTests"`, `"Merge"`) |
+| `fields` | Object | Optional | Parameter, ggf. mit `$type` für komplexe Typen |
 
 ```json
 {
-  "action": "ExecuteAction",
-  "apiName": "jbe_RunIntegrationTests",
-  "parameters": {}
+  "action": "ExecuteRequest",
+  "requestName": "jbe_RunIntegrationTests",
+  "fields": {}
 }
 ```
+
+**Legacy-Aliasse (ADR-0007):** Die Verben `ExecuteAction` und `CallCustomApi`
+bleiben als Aliasse erhalten, ebenso die Schema-Aliasse `actionName`/`apiName`
+(→ `requestName`) und `parameters` (→ `fields`). Bestehende Tests laufen
+unverändert. Neue Tests sollen das kanonische Schema verwenden.
 
 ### Wait
 

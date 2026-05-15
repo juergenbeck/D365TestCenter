@@ -153,9 +153,13 @@ public sealed class TestStep
     public string Description { get; set; } = "";
 
     /// <summary>
-    /// Action-Typ. Gueltige Werte: CreateRecord, UpdateRecord, DeleteRecord,
-    /// Wait, ExecuteRequest, CallCustomApi, RetrieveRecord, WaitForRecord,
-    /// WaitForFieldValue, AssertEnvironment, Assert, BrowserAction (ADR-0006).
+    /// Action-Typ. Kanonische Werte: CreateRecord, UpdateRecord, DeleteRecord,
+    /// Wait, Delay, ExecuteRequest, RetrieveRecord, WaitForRecord, FindRecord,
+    /// WaitForFieldValue, AssertEnvironment, Assert, SetEnvironmentVariable,
+    /// RetrieveEnvironmentVariable, BrowserAction (ADR-0006).
+    /// Legacy-Aliasse (ADR-0007): CallCustomApi und ExecuteAction werden auf
+    /// ExecuteRequest gemappt. Aliasse bleiben fuer mind. zwei Plugin-Major-
+    /// Versionen erhalten.
     /// </summary>
     [JsonProperty("action")]
     public string Action { get; set; } = "";
@@ -239,9 +243,35 @@ public sealed class TestStep
     [JsonProperty("delayMs")]
     public int? DelayMs { get; set; }
 
-    /// <summary>SDK-Message-Name für ExecuteRequest (z.B. "Merge", "SetState", "Assign").</summary>
+    /// <summary>
+    /// SDK-Message-Name für ExecuteRequest (z.B. "Merge", "SetState", "Assign",
+    /// "QualifyLead", "markant_RunFieldGovernanceForContact").
+    /// </summary>
     [JsonProperty("requestName")]
     public string? RequestName { get; set; }
+
+    /// <summary>
+    /// Legacy-Alias zu RequestName (ADR-0007). Wird in StepExecuteRequest
+    /// via Fallback-Kette RequestName -> ActionName -> ApiName -> Entity
+    /// gelesen. Bleibt fuer mind. zwei Plugin-Major-Versionen erhalten.
+    /// </summary>
+    [JsonProperty("actionName")]
+    public string? ActionName { get; set; }
+
+    /// <summary>
+    /// Legacy-Alias zu RequestName, Schwester von ActionName (ADR-0007).
+    /// SKILL.md d365-test-center 3.2 nutzte vor v5.3.7 'apiName',
+    /// Handbuch 'actionName'. Beide werden als Alias akzeptiert.
+    /// </summary>
+    [JsonProperty("apiName")]
+    public string? ApiName { get; set; }
+
+    /// <summary>
+    /// Legacy-Alias zu Fields (ADR-0007). Wenn gesetzt, werden die Werte
+    /// hier statt aus Fields als SDK-Message-Parameter verwendet.
+    /// </summary>
+    [JsonProperty("parameters")]
+    public Dictionary<string, object?>? Parameters { get; set; }
 
     /// <summary>
     /// ExecuteRequest-Output als Alias verfuegbar machen (A4 / ZastrPay-Feedback).
