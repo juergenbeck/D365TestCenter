@@ -39,6 +39,7 @@ als Async-Plugin im Server und protokolliert jeden Schritt als
 4. [Rezepte](02-testfall-schreiben/07-rezepte.md) — Vorlagen für Standard-Szenarien
 5. [Negative-Path-Tests](02-testfall-schreiben/09-negative-path.md) — `expectFailure` für erwartete Fehler (v5.3+)
 6. [Pitfalls und Plattform-Constraints](02-testfall-schreiben/10-pitfalls.md) — state-locked Creation, Plattform-Exception, Cold-Start, Lookup-Binds
+7. [Pre-Run-Validation](02-testfall-schreiben/11-pre-run-validation.md) — statischer Lint vor jedem Run plus `validate`-Cli (v5.3.8+)
 
 ### Du willst einen Test ausführen
 

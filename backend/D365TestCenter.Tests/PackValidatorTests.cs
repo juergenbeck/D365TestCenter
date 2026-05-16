@@ -1,0 +1,543 @@
+using System.Collections.Generic;
+using System.Linq;
+using D365TestCenter.Core;
+using D365TestCenter.Core.Validation;
+using Microsoft.Xrm.Sdk;
+using Xunit;
+
+namespace D365TestCenter.Tests;
+
+/// <summary>
+/// Tests for OE-6 Phase 1 pack validator. Each rule has at least one positive
+/// (rule fires) and one negative (rule stays silent) coverage. Plus three
+/// integration tests against TestRunner that prove the engine aborts the test
+/// with Outcome=Error when the validator reports an Error finding.
+/// </summary>
+public class PackValidatorTests
+{
+    // ════════════════════════════════════════════════════════════════
+    //  ACTION_UNKNOWN
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ActionUnknown_Typo_FlagsWithSuggestion()
+    {
+        var tc = TestCaseWith(new TestStep { StepNumber = 1, Action = "CreateRecrd" });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "ACTION_UNKNOWN");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Contains("CreateRecord", finding.Suggestion);
+    }
+
+    [Fact]
+    public void ActionUnknown_FarOff_NoSuggestion()
+    {
+        var tc = TestCaseWith(new TestStep { StepNumber = 1, Action = "ZebraStripes" });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "ACTION_UNKNOWN");
+        Assert.DoesNotContain("Did you mean", finding.Suggestion ?? "");
+    }
+
+    [Fact]
+    public void ActionEmpty_IsError()
+    {
+        var tc = TestCaseWith(new TestStep { StepNumber = 1, Action = "" });
+        var report = new PackValidator().ValidateOne(tc);
+
+        AssertSingle(report, "ACTION_UNKNOWN");
+    }
+
+    [Fact]
+    public void KnownActions_DoNotFlag()
+    {
+        foreach (var action in PackValidator.KnownActions)
+        {
+            var step = new TestStep
+            {
+                StepNumber = 1,
+                Action = action,
+                Entity = "accounts",
+                RequestName = "Stub", // satisfy R4
+                Fields = new Dictionary<string, object?>(),
+                RecordRef = "{a.id}", // satisfy R7 Record
+                Filter = new List<FilterCondition> { new FilterCondition { Field = "name", Operator = "eq", Value = "x" } },
+                Target = "Query"
+            };
+            var tc = TestCaseWith(step);
+            var report = new PackValidator().ValidateOne(tc);
+            Assert.DoesNotContain(report.Findings, f => f.Code == "ACTION_UNKNOWN");
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  FILTER_FIELD_NOT_LOGICAL
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void FilterField_ODataFormat_IsError()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "_markant_contactid_value", Operator = "eq", Value = "{c.id}" }
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "FILTER_FIELD_NOT_LOGICAL");
+        Assert.Contains("markant_contactid", finding.Suggestion);
+    }
+
+    [Fact]
+    public void FilterField_LogicalName_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "markant_contactid", Operator = "eq", Value = "{c.id}" }
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "FILTER_FIELD_NOT_LOGICAL");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  FILTER_OPERATOR_VALUE_NULL
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void FilterOperator_EqValueNull_SuggestsIsnull()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "applicationid", Operator = "eq", Value = null }
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "FILTER_OPERATOR_VALUE_NULL");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Contains("isnull", finding.Suggestion);
+    }
+
+    [Fact]
+    public void FilterOperator_NeValueNull_SuggestsIsnotnull()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "applicationid", Operator = "ne", Value = null }
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "FILTER_OPERATOR_VALUE_NULL");
+        Assert.Contains("isnotnull", finding.Suggestion);
+    }
+
+    [Fact]
+    public void FilterOperator_IsNull_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "applicationid", Operator = "isnull" }
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "FILTER_OPERATOR_VALUE_NULL");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  EXECUTEREQUEST_MISSING_NAME
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ExecuteRequest_AllNameSourcesEmpty_IsError()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "ExecuteRequest",
+            Fields = new Dictionary<string, object?> { ["LeadId"] = "x" }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        AssertSingle(report, "EXECUTEREQUEST_MISSING_NAME");
+    }
+
+    [Fact]
+    public void ExecuteRequest_EntityFallback_Ok()
+    {
+        // ADR-0007: 'entity' is part of the fallback chain for the request name
+        // (legacy CallCustomApi packs). Must NOT be flagged.
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "CallCustomApi",
+            Entity = "lm_CancelInvoice",
+            Fields = new Dictionary<string, object?> { ["InvoiceId"] = "x" }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "EXECUTEREQUEST_MISSING_NAME");
+    }
+
+    [Fact]
+    public void ExecuteAction_OnlyApiName_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "ExecuteAction",
+            ApiName = "lm_CancelInvoice",
+            Parameters = new Dictionary<string, object?> { ["InvoiceId"] = "x" }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "EXECUTEREQUEST_MISSING_NAME");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  LOOKUP_BIND_FORMAT
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void LookupBind_ODataFormat_IsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "CreateRecord",
+            Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["_parentcustomerid_value@odata.bind"] = "/accounts({a.id})"
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "LOOKUP_BIND_FORMAT");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("parentcustomerid@odata.bind", finding.Suggestion);
+    }
+
+    [Fact]
+    public void LookupBind_LogicalName_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "CreateRecord",
+            Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["parentcustomerid_account@odata.bind"] = "/accounts({a.id})"
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "LOOKUP_BIND_FORMAT");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  STATECODE_STATUSCODE_HINT
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Statuscode_WithoutStatecode_IsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "UpdateRecord",
+            Alias = "task1",
+            Fields = new Dictionary<string, object?> { ["statuscode"] = 5 }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "STATECODE_STATUSCODE_HINT");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+    }
+
+    [Fact]
+    public void Statuscode_WithStatecode_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "UpdateRecord",
+            Alias = "task1",
+            Fields = new Dictionary<string, object?>
+            {
+                ["statuscode"] = 5,
+                ["statecode"] = 1
+            }
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "STATECODE_STATUSCODE_HINT");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  ASSERT_TARGET_INCOMPLETE
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Assert_TargetQueryWithoutEntity_IsError()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "Assert",
+            Target = "Query",
+            Field = "name",
+            Operator = "Equals",
+            Value = "X"
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        AssertSingle(report, "ASSERT_TARGET_INCOMPLETE");
+    }
+
+    [Fact]
+    public void Assert_TargetRecordWithoutRecordRef_IsError()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "Assert",
+            Target = "Record",
+            Field = "name",
+            Operator = "Equals",
+            Value = "X"
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        AssertSingle(report, "ASSERT_TARGET_INCOMPLETE");
+    }
+
+    [Fact]
+    public void Assert_TargetQueryComplete_Ok()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "Assert",
+            Target = "Query",
+            Entity = "accounts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "name", Operator = "eq", Value = "X" }
+            },
+            Field = "websiteurl",
+            Operator = "IsNotNull"
+        });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "ASSERT_TARGET_INCOMPLETE");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  STEP_NUMBER_DUPLICATE
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void StepNumberDuplicate_IsWarning()
+    {
+        var tc = new TestCase
+        {
+            Id = "TC-DUP-01",
+            Title = "duplicate step numbers",
+            Steps = new List<TestStep>
+            {
+                new TestStep { StepNumber = 1, Action = "Wait", WaitSeconds = 1 },
+                new TestStep { StepNumber = 1, Action = "Wait", WaitSeconds = 1 }
+            }
+        };
+        var report = new PackValidator().ValidateOne(tc);
+        AssertSingle(report, "STEP_NUMBER_DUPLICATE");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Multiple findings + canonical pack
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void CanonicalPack_NoFindings()
+    {
+        var tc = new TestCase
+        {
+            Id = "CANON-01",
+            Title = "canonical",
+            Steps = new List<TestStep>
+            {
+                new TestStep
+                {
+                    StepNumber = 1, Action = "CreateRecord", Entity = "accounts", Alias = "a",
+                    Fields = new Dictionary<string, object?> { ["name"] = "Demo" }
+                },
+                new TestStep
+                {
+                    StepNumber = 2, Action = "Assert", Target = "Record",
+                    RecordRef = "{a.id}", Field = "name", Operator = "Equals", Value = "Demo"
+                }
+            }
+        };
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.Empty(report.Findings);
+        Assert.False(report.HasErrors);
+    }
+
+    [Fact]
+    public void MultipleTests_FindingsCarryTestId()
+    {
+        var a = TestCaseWith(new TestStep { StepNumber = 1, Action = "WrongAction" });
+        a.Id = "AAA";
+        var b = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "WaitForRecord", Entity = "x",
+            Filter = new List<FilterCondition> { new FilterCondition { Field = "_x_value", Operator = "eq", Value = "v" } }
+        });
+        b.Id = "BBB";
+
+        var report = new PackValidator().Validate(new[] { a, b });
+
+        Assert.Equal(2, report.ErrorCount);
+        Assert.Contains(report.Findings, f => f.TestId == "AAA" && f.Code == "ACTION_UNKNOWN");
+        Assert.Contains(report.Findings, f => f.TestId == "BBB" && f.Code == "FILTER_FIELD_NOT_LOGICAL");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  TestRunner integration (OE-6 Engine-Integration)
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void TestRunner_PreRunValidation_AbortsOnError()
+    {
+        var svc = new StubOrgService();
+        var runner = new TestRunner(svc);
+        var bad = TestCaseWith(new TestStep
+        {
+            StepNumber = 1,
+            Action = "WaitForRecord",
+            Entity = "contacts",
+            Filter = new List<FilterCondition>
+            {
+                new FilterCondition { Field = "_markant_contactid_value", Operator = "eq", Value = "x" }
+            }
+        });
+
+        var result = runner.RunAll(new List<TestCase> { bad });
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Equal(0, result.PassedCount);
+        Assert.Equal(0, svc.ExecuteCallCount);
+        Assert.Contains("FILTER_FIELD_NOT_LOGICAL", result.Results[0].ErrorMessage ?? "");
+    }
+
+    [Fact]
+    public void TestRunner_PreRunValidation_WarningDoesNotAbort()
+    {
+        var svc = new StubOrgService();
+        var runner = new TestRunner(svc);
+        // Only a warning-level finding (statuscode without statecode). Test must still run.
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "UpdateRecord", Alias = "a",
+            Fields = new Dictionary<string, object?> { ["statuscode"] = 5 }
+        });
+        tc.Id = "WARN-ONLY";
+
+        // Register alias 'a' so UpdateRecord can find it. We mimic this by
+        // letting the first step Create instead.
+        tc.Steps.Insert(0, new TestStep
+        {
+            StepNumber = 0, Action = "CreateRecord", Entity = "accounts", Alias = "a",
+            Fields = new Dictionary<string, object?> { ["name"] = "x" }
+        });
+
+        var result = runner.RunAll(new List<TestCase> { tc });
+
+        // The test runs at least the Create step (no abort), then UpdateRecord
+        // would route through the service. The point of this assertion is that
+        // the validator's warning did NOT short-circuit the run.
+        Assert.NotEqual(TestOutcome.Error, result.Results[0].Outcome);
+    }
+
+    [Fact]
+    public void TestRunner_PreRunValidation_ErrorMessage_ContainsCodeAndSuggestion()
+    {
+        var runner = new TestRunner(new StubOrgService());
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecrd",
+            Entity = "accounts", Fields = new Dictionary<string, object?>()
+        });
+
+        var result = runner.RunAll(new List<TestCase> { tc });
+
+        var msg = result.Results[0].ErrorMessage ?? "";
+        Assert.Contains("ACTION_UNKNOWN", msg);
+        Assert.Contains("CreateRecord", msg);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Helpers
+    // ════════════════════════════════════════════════════════════════
+
+    private static TestCase TestCaseWith(params TestStep[] steps) => new TestCase
+    {
+        Id = "TC-PV-01",
+        Title = "pack validator test",
+        Enabled = true,
+        Steps = new List<TestStep>(steps)
+    };
+
+    private static ValidationFinding AssertSingle(ValidationReport report, string code)
+    {
+        var matches = report.Findings.Where(f => f.Code == code).ToList();
+        Assert.Single(matches);
+        return matches[0];
+    }
+
+    /// <summary>
+    /// Minimal IOrganizationService double that just counts Execute calls.
+    /// Used to prove the pre-run validator aborts before any service call.
+    /// </summary>
+    private sealed class StubOrgService : IOrganizationService
+    {
+        public int ExecuteCallCount { get; private set; }
+
+        public OrganizationResponse Execute(OrganizationRequest request)
+        {
+            ExecuteCallCount++;
+            // Return a minimal response so the runner can proceed if it reaches here.
+            return new OrganizationResponse();
+        }
+
+        public Guid Create(Entity entity) { ExecuteCallCount++; return Guid.NewGuid(); }
+        public Entity Retrieve(string entityName, Guid id, Microsoft.Xrm.Sdk.Query.ColumnSet columnSet) { ExecuteCallCount++; return new Entity(entityName, id); }
+        public void Update(Entity entity) { ExecuteCallCount++; }
+        public void Delete(string entityName, Guid id) { ExecuteCallCount++; }
+        public Microsoft.Xrm.Sdk.EntityCollection RetrieveMultiple(Microsoft.Xrm.Sdk.Query.QueryBase query) { ExecuteCallCount++; return new Microsoft.Xrm.Sdk.EntityCollection(); }
+        public void Associate(string entityName, Guid entityId, Microsoft.Xrm.Sdk.Relationship relationship, Microsoft.Xrm.Sdk.EntityReferenceCollection relatedEntities) { ExecuteCallCount++; }
+        public void Disassociate(string entityName, Guid entityId, Microsoft.Xrm.Sdk.Relationship relationship, Microsoft.Xrm.Sdk.EntityReferenceCollection relatedEntities) { ExecuteCallCount++; }
+    }
+}

@@ -4,6 +4,7 @@ using Microsoft.Xrm.Sdk.Query;
 using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using D365TestCenter.Core.Validation;
 
 namespace D365TestCenter.Core;
 
@@ -18,6 +19,7 @@ public sealed class TestRunner
     private readonly TestDataFactory _dataFactory;
     private readonly PlaceholderEngine _placeholderEngine;
     private readonly AssertionEngine _assertionEngine;
+    private readonly IPackValidator _validator;
     private readonly StringBuilder _log;
 
     /// <summary>
@@ -42,7 +44,10 @@ public sealed class TestRunner
     /// </summary>
     public event Action<int, int, TestCaseResult>? OnTestCompleted;
 
-    public TestRunner(IOrganizationService service, IBrowserActionExecutor? browser = null)
+    public TestRunner(
+        IOrganizationService service,
+        IBrowserActionExecutor? browser = null,
+        IPackValidator? validator = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _entityMetadata = new EntityMetadataCache(service, msg => Log($"      {msg}"));
@@ -52,6 +57,10 @@ public sealed class TestRunner
         // value conversion is type-aware (GUID-shaped strings on String fields
         // stay as strings instead of being auto-converted to Guid).
         _assertionEngine = new AssertionEngine(_entityMetadata);
+        // OE-6: pack validator for pre-run schema checks. Default instance is
+        // metadata-free (Phase 1 rules only); callers may inject a richer
+        // validator implementation later (Phase 2).
+        _validator = validator ?? new PackValidator();
         _log = new StringBuilder();
         _browser = browser;
     }
@@ -196,6 +205,23 @@ public sealed class TestRunner
 
         try
         {
+            // OE-6: static pre-run validation. Schema and pattern findings are
+            // reported BEFORE any service call runs. Warning/Info findings are
+            // logged for visibility; Error findings abort the test with
+            // Outcome=Error so the user does not waste a 44s WaitForRecord
+            // timeout on a filter typo or a missing requestName.
+            var validation = _validator.ValidateOne(tc);
+            LogValidationFindings(validation);
+            if (validation.HasErrors)
+            {
+                tcResult.Outcome = TestOutcome.Error;
+                tcResult.ErrorMessage = FormatValidationErrors(validation);
+                sw.Stop();
+                tcResult.DurationMs = sw.ElapsedMilliseconds;
+                Log($"  -> FEHLER: Pre-Run-Validation hat {validation.ErrorCount} Error-Befund(e). Test wird nicht ausgefuehrt.");
+                return tcResult;
+            }
+
             ctx = new TestContext { TestStartUtc = testStartUtc, TestId = tc.Id };
             ctx.CurrentDataRow = dataRow;
 
@@ -316,6 +342,44 @@ public sealed class TestRunner
             // Exception, kein Sandbox-Wachter-Verstoss.
             Log($"      Plugin-Trace-Capture nicht moeglich: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// OE-6: write validator findings into the runner log. Warning and Info
+    /// findings are emitted for visibility (test still runs); Error findings
+    /// are emitted before the run is aborted.
+    /// </summary>
+    private void LogValidationFindings(ValidationReport report)
+    {
+        if (report.Findings.Count == 0) return;
+        Log($"  Pack-Validation: {report.ErrorCount} Error, {report.WarningCount} Warning, {report.InfoCount} Info.");
+        foreach (var f in report.Findings)
+        {
+            var loc = f.StepNumber.HasValue ? $"Step {f.StepNumber.Value}" : "(test)";
+            var suggestion = string.IsNullOrEmpty(f.Suggestion) ? "" : $" -- {f.Suggestion}";
+            Log($"    [{f.Severity}] {loc} {f.Code}: {f.Message}{suggestion}");
+        }
+    }
+
+    /// <summary>
+    /// OE-6: render error-severity findings as a single human-readable string
+    /// for <see cref="TestCaseResult.ErrorMessage"/>. Warning/Info entries are
+    /// excluded — they are already in the runner log.
+    /// </summary>
+    private static string FormatValidationErrors(ValidationReport report)
+    {
+        var sb = new StringBuilder();
+        sb.Append("Pre-run validation failed with ").Append(report.ErrorCount).Append(" error(s):");
+        foreach (var f in report.Findings.Where(f => f.Severity == ValidationSeverity.Error))
+        {
+            var loc = f.StepNumber.HasValue ? $"Step {f.StepNumber.Value}" : "(test)";
+            sb.Append("\n  ").Append(loc).Append(' ').Append(f.Code).Append(": ").Append(f.Message);
+            if (!string.IsNullOrEmpty(f.Suggestion))
+            {
+                sb.Append(" -- ").Append(f.Suggestion);
+            }
+        }
+        return sb.ToString();
     }
 
     // ================================================================
