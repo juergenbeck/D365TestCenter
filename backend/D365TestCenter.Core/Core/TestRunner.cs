@@ -2,6 +2,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using System.Diagnostics;
+using System.ServiceModel;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using D365TestCenter.Core.Validation;
@@ -1464,9 +1465,24 @@ public sealed class TestRunner
 
     /// <summary>
     /// Fuehrt einen einzelnen OrganizationRequest in einem ExecuteMultipleRequest-
-    /// Envelope aus. Fehler aus dem inneren Request landen als Fault in der
-    /// Response, nicht als Exception — das Plugin faengt nichts und der
-    /// Sandbox-Wachter wirft keinen 0x80040265 (ADR-0005).
+    /// Envelope aus. Fehler aus dem inneren Request landen NORMALERWEISE als Fault
+    /// in der ExecuteMultipleResponse-Slot, nicht als Exception — das Plugin faengt
+    /// nichts und der Sandbox-Wachter wirft keinen 0x80040265 (ADR-0005).
+    ///
+    /// AUSNAHME (Markant Session 13, 2026-05-16): Bei Custom-APIs mit Pattern 1
+    /// (PluginType direkt am customapi.plugintypeid verknuepft, Stage 30
+    /// MainOperation) wrappt die Plattform den Plugin-Fault als
+    /// FaultException&lt;OrganizationServiceFault&gt; am ExecuteMultipleRequest-
+    /// Endpoint und propagiert ihn als Exception, statt in den Fault-Slot der
+    /// ExecuteMultipleResponse zu legen. Diese Variante fangen wir hier explizit
+    /// und konvertieren sie in den normalen Fault-Slot-Pfad, damit
+    /// ExecuteStepInSandboxBoundary den expectException-Matcher korrekt
+    /// aufruft (statt dass die Exception ins aeussere Catch propagiert und
+    /// Outcome=Error meldet).
+    ///
+    /// Andere Exception-Typen (Netzwerk, Timeout, generische Plattform-Fehler)
+    /// werden bewusst NICHT gefangen — sie sollen weiter propagieren und vom
+    /// aeusseren Catch als echter Test-Fehler behandelt werden.
     /// </summary>
     private (OrganizationResponse? Response, OrganizationServiceFault? Fault) ExecuteSandboxSafe(
         OrganizationRequest req)
@@ -1481,7 +1497,20 @@ public sealed class TestRunner
             Requests = new OrganizationRequestCollection { req }
         };
 
-        var emResp = (ExecuteMultipleResponse)_service.Execute(emReq);
+        ExecuteMultipleResponse emResp;
+        try
+        {
+            emResp = (ExecuteMultipleResponse)_service.Execute(emReq);
+        }
+        catch (FaultException<OrganizationServiceFault> faultEx)
+        {
+            // Plattform-Variante Custom-API Pattern 1 Stage 30 MainOperation:
+            // Fault kommt am Endpoint statt im Slot. Auf Fault-Slot-Pfad umleiten,
+            // damit der Aufrufer (ExecuteStepInSandboxBoundary) expectException
+            // sauber matcht und Outcome=Passed statt Outcome=Error meldet.
+            return (null, faultEx.Detail);
+        }
+
         if (emResp.Responses == null || emResp.Responses.Count == 0)
         {
             return (null, null);

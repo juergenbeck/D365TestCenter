@@ -148,12 +148,46 @@ Am Testende (automatisch durch `keeprecords: false`):
   implementierungsnah, bricht bei Refactorings). Stattdessen Message-
   oder ErrorCode-Match.
 
+## Pitfall: Custom-API Pattern 1 (Stage 30 MainOperation) — v5.3.9 Fix
+
+Bei `action: "ExecuteRequest"` gegen eine **Custom-API mit Pattern 1**
+(PluginType direkt am `customapi.plugintypeid` verknüpft, Stage 30
+MainOperation) wickelt die Plattform den Plugin-Fault asymmetrisch zum
+Pre/Post-Plugin-Pattern ab:
+
+| Plugin-Pattern | Plattform-Verhalten | Engine-Auswertung |
+|---|---|---|
+| Pre/PostOp (Stage 20/40) | Fault landet im `ExecuteMultipleResponse.Responses[0].Fault`-Slot | sauber durch `EvaluateExpectException` |
+| MainOperation Pattern 1 (Stage 30) | Fault wird als `FaultException` am Endpoint propagiert | **bis v5.3.8 Bug:** Step landet im Catch ohne Matcher-Aufruf → `Outcome=Error` |
+
+Bis Plugin v5.3.8 hatte `TestRunner.ExecuteSandboxSafe` keinen
+Catch-Handler für die FaultException am Endpoint. `expectException`-Tests
+gegen Pattern-1-Custom-APIs schlugen daher fälschlich als `Errored`
+fehl, obwohl der `messageContains`-Substring matchen würde.
+
+**Ab Plugin v5.3.9 (ADR-0005 Stufe 3, 2026-05-16) ist das gefixt.**
+Beide Plattform-Varianten laufen jetzt durch denselben Matcher-Pfad,
+das Verhalten ist im CLI-Pfad und im Plugin-CRUD-Trigger-Pfad
+identisch. Der Fix sitzt in `ExecuteSandboxSafe`: gezieltes `catch
+(FaultException<OrganizationServiceFault>)` mappt die Exception auf den
+normalen Fault-Slot-Pfad.
+
+Belegt durch Markants Repro-Tests `RTC05` (`ContactIds: "[]"`) und
+`RTC03` (201 GUIDs) gegen `markant_RequestFieldGovernanceBatch` plus
+vier Mock-Unit-Tests in `ExpectExceptionCustomApiTests.cs`.
+
 ## Engine-Tests die das Feature absichern
 
-Im D365TestCenter-Repo decken 15 Unit-Tests die Match-Logik ab:
-JSON-Deserialisierung, MessageContains case-insensitive + miss,
-MessageMatches Regex + invalid, Both-Modes-Validation, ErrorCode aus
-Message, AND-Kombination, HttpStatus-Match.
+Im D365TestCenter-Repo decken 19 Unit-Tests die Match-Logik plus die
+Sandbox-Boundary-Wege ab:
+- 15 Tests `ExpectFailureTests.cs`: JSON-Deserialisierung,
+  MessageContains case-insensitive + miss, MessageMatches Regex +
+  invalid, Both-Modes-Validation, ErrorCode aus Message, AND-Kombination,
+  HttpStatus-Match.
+- 4 Tests `ExpectExceptionCustomApiTests.cs` (v5.3.9): Custom-API
+  Pattern 1 Stage 30 mit FaultException-am-Endpoint (Match + Mismatch)
+  plus Plugin-Pfad-Variante mit Fault-im-Slot plus Pre/PostOp-Pattern-
+  Regress-Guard.
 
 ---
 
