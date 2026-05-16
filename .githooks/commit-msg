@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# commit-msg Hook: blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten.
+#
+# Aktivierung pro Clone (einmalig):
+#   git config core.hooksPath .githooks
+#
+# Umgehen einer einzelnen Verletzung (nur in echten Ausnahmen):
+#   git commit --no-verify
+#
+# Erlaubt sind Surrogate INNERHALB von Inline-Code (`...`), weil dort Zitate des
+# Verstoß-Patterns stehen (Audit-Reports, Lessons-Doku, Skill-Updates).
+#
+# Trigger-Liste:
+# - Einfache Grundformen mit Word-Boundary (\b)
+# - Häufige zusammengesetzte Stämme explizit (weil \b in der Wortmitte nicht greift)
+# - "ausser " mit Leerzeichen, damit "außer" als Fließtext-Trigger fängt
+#
+# Pflege: bei neuem Verstoß-Stamm hier ergänzen UND in
+# .github/skills/umlaute/SKILL.md (Section "Self-Check-Pflicht") synchron halten.
+
+set -e
+
+MSG_FILE="$1"
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+    # Defensive: ohne Argument kein Block
+    exit 0
+fi
+
+TRIGGERS='\b(fuer|waere|koennen|muessen|naechst|gemaess|noetig|Massnahme|vollstaendig|Ergaen|zusaetz|Klaerung|ausserhalb|laesst|durchgefuehrt|gepruft|spaeter|moeglich|haengt|gehoert|erwaehnt|Strassen|Domaene|ausfuehrlich|nuetzlich|verstaerken|uebernom|Begruend|veroeffentl|Aenderung|Loesung|Pruefung|Ausfuehrung|Eintraege|Verstoss|vollstaendig|geloescht|naechster|aenderung|loeschen|pruefen)\b|ausser '
+
+# Strip backtick-quoted inline code (Zitate sind erlaubt) und Comment-Zeilen
+# die git in der commit-msg-Datei einfügt (beginnen mit '#').
+STRIPPED=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
+
+if HITS=$(echo "$STRIPPED" | grep -nE "$TRIGGERS"); then
+    cat >&2 <<'EOF'
+
+============================================================
+  COMMIT BLOCKIERT: ASCII-Ersatz für Umlaut in Commit-Message
+============================================================
+
+Verwende echte Umlaute (ä ö ü ß) statt ae / oe / ue / ss in
+deutschen Texten. Zitate des Verstoß-Patterns sind erlaubt,
+müssen aber in Inline-Code-Backticks stehen (`ausserhalb`).
+
+Trefferzeilen (Backtick-Zitate wurden bereits ignoriert):
+EOF
+    echo "$HITS" >&2
+    cat >&2 <<'EOF'
+
+Details:        .github/skills/umlaute/SKILL.md
+Pflege-Section: "Self-Check-Pflicht" + "Pre-Commit-Workflow"
+
+Umgehen (nur in echten Ausnahmen):
+    git commit --no-verify
+
+============================================================
+EOF
+    exit 1
+fi
+
+exit 0
