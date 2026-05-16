@@ -27,7 +27,7 @@ if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
     exit 0
 fi
 
-TRIGGERS='\b(fuer|waere|koennen|muessen|naechst|gemaess|noetig|Massnahme|vollstaendig|Ergaen|zusaetz|Klaerung|ausserhalb|laesst|durchgefuehrt|gepruft|spaeter|moeglich|haengt|gehoert|erwaehnt|Strassen|Domaene|ausfuehrlich|nuetzlich|verstaerken|uebernom|Begruend|veroeffentl|Aenderung|Loesung|Pruefung|Ausfuehrung|Eintraege|Verstoss|vollstaendig|geloescht|naechster|aenderung|loeschen|pruefen)\b|ausser '
+TRIGGERS='\b(fuer|waere|koennen|muessen|naechst|naechster|gemaess|noetig|Massnahme|vollstaendig|Ergaen|zusaetz|Klaerung|ausserhalb|laesst|durchgefuehrt|gepruft|pruefen|spaeter|moeglich|haengt|gehoert|erwaehnt|Strassen|Domaene|ausfuehrlich|nuetzlich|verstaerken|uebernom|Begruend|veroeffentl|Aenderung|aenderung|Loesung|loeschen|geloescht|Pruefung|Ausfuehrung|Eintraege|Verstoss|gehoer|verstaendlich|Empfaenger|Geschaeft|haeufig|Vorgaenger|Schluessel|Ueberblick|ueblich|ueberpruef|moegen|moechte)\b|ausser '
 
 # Strip backtick-quoted inline code (Zitate sind erlaubt) und Comment-Zeilen
 # die git in der commit-msg-Datei einfügt (beginnen mit '#').
