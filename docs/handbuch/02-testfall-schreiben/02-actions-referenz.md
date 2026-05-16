@@ -230,8 +230,11 @@ Wartet bis beide Felder gleichzeitig diese Werte haben.
 
 ## ExecuteRequest
 
-Ruft eine Microsoft SDK-Message auf. Nicht für Custom APIs — dafür ist
-[`ExecuteAction`](#executeaction).
+Ruft eine SDK-Message auf. Seit Plugin v5.3.7 (ADR-0007) **die einzige
+kanonische Aktion für alle SDK-Message-Aufrufe** — Microsoft-Standard-Messages
+(Merge, QualifyLead, Assign, SetState, ...) **und** Custom Actions / Custom APIs.
+Legacy-Verben `CallCustomApi` und `ExecuteAction` werden als Aliasse durchgereicht
+(siehe ["Legacy-Aliasse (ADR-0007)"](#legacy-aliasse-adr-0007) unten).
 
 ```json
 { "stepNumber": 3, "action": "ExecuteRequest",
@@ -275,6 +278,41 @@ Ruft eine Microsoft SDK-Message auf. Nicht für Custom APIs — dafür ist
 
 Die vollständige Liste steht in der Microsoft-Dokumentation unter
 "Organization Service Messages".
+
+### Pitfall: QualifyLead-Target-Drift bei PreOperation-Plugins
+
+Beim `ExecuteRequest` mit `requestName: "QualifyLead"` weicht das interne
+Account-Target leicht vom Web-API-Pendant `POST /leads(<id>)/Microsoft.Dynamics.CRM.QualifyLead` ab:
+
+| Eintritts-Pfad | Verhalten im PreOperation-Account-Create-Target |
+|---|---|
+| Web-API-Action `POST /leads(<id>)/Microsoft.Dynamics.CRM.QualifyLead` | Nur die in der Lead-zu-Account-AttributeMap gelisteten Felder sind im Target enthalten. Custom-Felder ohne AttributeMap-Eintrag (z.B. `za_accounttype`) sind **nicht** in `target.Contains(...)`. |
+| `ExecuteRequest QualifyLead` aus dem Test Center | Manche Felder ohne AttributeMap-Eintrag landen als `null` im Target. `target.Contains("za_accounttype")` ist **true**, aber `target["za_accounttype"]` ist **null**. |
+
+**Konsequenz für PreOperation-Plugins:** Wenn dein Plugin `target.Contains(field)` als
+"User-hat-Wert-explizit-gesetzt"-Indikator nutzt, prüfe zusätzlich auf `target[field] != null`.
+
+```csharp
+// Statt: if (target.Contains("za_accounttype")) { ... user wins ... }
+// Sauber:
+if (target.Contains("za_accounttype") && target["za_accounttype"] != null)
+{
+    // User hat den Wert explizit gesetzt, behalten.
+}
+else
+{
+    // Plugin füllt den Wert.
+}
+```
+
+**Verifizierter Workaround in Tests:** Wenn der Test ausschließlich den Web-API-Pfad
+exerzieren soll, statt `ExecuteRequest QualifyLead` einen direkten `CreateRecord` auf
+`accounts` mit `originatingleadid@odata.bind` verwenden (Single-Target-Lookup,
+Bind ohne `_target`-Suffix). Dann läuft der Plugin-Pfad identisch zum HTTP-API-Aufruf.
+
+Belegt durch das ZP-LeadQualifyMapping-Befund (April 2026, Suite 1 v1.0.0.10):
+ZP-LQM-01/02/07 (ExecuteRequest-Pfad) FAILED an `za_accounttype = <null>`,
+ZP-LQM-04/06 (Direct-Create-Pfad) PASSED.
 
 ### Custom Actions und Custom APIs via ExecuteRequest
 
