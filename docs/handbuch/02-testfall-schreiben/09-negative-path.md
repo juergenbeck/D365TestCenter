@@ -176,18 +176,75 @@ Belegt durch Markants Repro-Tests `RTC05` (`ContactIds: "[]"`) und
 `RTC03` (201 GUIDs) gegen `markant_RequestFieldGovernanceBatch` plus
 vier Mock-Unit-Tests in `ExpectExceptionCustomApiTests.cs`.
 
+## Welche Actions unterstützen `expectException` zuverlässig?
+
+Eine kompakte Übersicht, wann `expectFailure`/`expectException` den
+gewünschten Effekt erzielt und wann nicht:
+
+| Action | Sync-CLI-Pfad | Async-CRUD-Trigger-Pfad |
+|---|---|---|
+| `CreateRecord`, `UpdateRecord`, `DeleteRecord` | zuverlässig (Sandbox-Boundary, Slot + Endpoint) | nicht zuverlässig für Plugin-Exceptions |
+| `ExecuteRequest` (inkl. Custom-API Pattern 1+2) | zuverlässig ab v5.3.9 | wie oben |
+| `CallCustomApi`, `ExecuteAction` (Legacy-Aliasse) | zuverlässig (normaler Step-Loop-Catch) | wie oben |
+| `RetrieveRecord`, `SetEnvironmentVariable`, `RetrieveEnvironmentVariable` | zuverlässig (normaler Step-Loop-Catch) | wie oben |
+| `FindRecord`, `WaitForRecord`, `WaitForFieldValue` | **nicht empfohlen** — Polling-Semantik kollidiert mit Exception-Erwartung | **nicht empfohlen** |
+| `BrowserAction` (Playwright) | nicht im Scope von `expectException` | nicht im Scope |
+| `AssertEnvironment`, `Assert` | konzeptionell unpassend (Assert hat eigene Failure-Semantik) | konzeptionell unpassend |
+
+### Polling-Actions: warum „nicht empfohlen"?
+
+`FindRecord`/`WaitForRecord`/`WaitForFieldValue` führen einen
+Polling-Loop mit mehreren Service-Calls aus. Eine Exception-Erwartung
+auf einem Polling-Step ist semantisch unscharf:
+
+- Was zählt: die erste Exception oder die letzte vor Timeout?
+- Was wenn die ersten Aufrufe durchlaufen und der dritte wirft?
+- Was wenn die Plattform den Aufruf-Fault zwischen den Polling-Ticks
+  selbst maskiert?
+
+**Empfohlene Auflösung:** Wenn ein Polling-Step eine Exception erwarten
+soll, ist das in Wahrheit ein Single-Call-Test. Stattdessen
+`RetrieveRecord` mit `expectException` verwenden. Beispiel:
+
+```json
+{ "stepNumber": 1, "action": "CreateRecord", "entity": "contacts", "alias": "c1", ... },
+{ "stepNumber": 2, "action": "RetrieveRecord", "alias": "c1",
+  "expectException": { "messageContains": "row-level security" } }
+```
+
+Das ist deterministisch (genau ein Service-Call), klar lesbar und
+hat eine eindeutige Pass/Fail-Semantik.
+
+### Async-Pfad: Plugin-Exceptions sind unzuverlässig
+
+Im **Async-CRUD-Trigger-Pfad** (`RunTestsOnStatusChange`) werden
+`InvalidPluginExecutionException`-Throws vom Async-Worker-Kontext
+oft stillgelegt: der Update läuft trotz Plugin-Throw scheinbar durch,
+der `expectException`-Step bekommt „Expected exception but action
+succeeded". Plugin-Trace zeigt den Throw trotzdem.
+
+**Empfohlene Auflösung:** Negative-Path-Tests die auf Plugin-Throws
+prüfen, im Sync-CLI-Pfad laufen lassen (`D365TestCenter.Cli run` oder
+`API.executeAction("jbe_RunIntegrationTests", ...)`). Plattform-Exceptions
+(Read-Only-Field, Concurrency, State-locked) verhalten sich auch im
+Async-Pfad wie erwartet.
+
 ## Engine-Tests die das Feature absichern
 
-Im D365TestCenter-Repo decken 19 Unit-Tests die Match-Logik plus die
+Im D365TestCenter-Repo decken Unit-Tests die Match-Logik plus die
 Sandbox-Boundary-Wege ab:
-- 15 Tests `ExpectFailureTests.cs`: JSON-Deserialisierung,
+- **15 Tests `ExpectFailureTests.cs`**: JSON-Deserialisierung,
   MessageContains case-insensitive + miss, MessageMatches Regex +
   invalid, Both-Modes-Validation, ErrorCode aus Message, AND-Kombination,
   HttpStatus-Match.
-- 4 Tests `ExpectExceptionCustomApiTests.cs` (v5.3.9): Custom-API
+- **4 Tests `ExpectExceptionCustomApiTests.cs`** (v5.3.9): Custom-API
   Pattern 1 Stage 30 mit FaultException-am-Endpoint (Match + Mismatch)
   plus Plugin-Pfad-Variante mit Fault-im-Slot plus Pre/PostOp-Pattern-
   Regress-Guard.
+- **5 Tests `ExpectExceptionCoverageTests.cs`** (Session 19, B1-Lücken-
+  Inventur): CallCustomApi/ExecuteAction-Aliasse mit Match plus Mismatch,
+  Custom-API Stage 40 PostOp Fault-im-Slot, RetrieveRecord-Plugin-Fault
+  als Repräsentant für Single-Call-Actions im normalen Step-Loop-Catch.
 
 ---
 

@@ -324,12 +324,66 @@ public sealed class TestCenterOrchestrator
             [FldFullLog] = Truncate(result.FullLog ?? "", 100000)
         });
 
+        // C5: Cold-Start-Hint. Markiert den ersten Test als (cold start),
+        // wenn seine Dauer > 3x Median der Folge-Tests ist (JIT, Plugin-Class-Load,
+        // Cache-Warmup). Schwelle 3x ist empirisch konservativ — bei echtem
+        // Cold-Start liegt der Faktor typischerweise zwischen 5x und 20x.
+        EmitColdStartHint(result, Log);
+
         Log("");
         Log($"  ============================================================");
         Log($"  ERGEBNIS: {result.PassedCount} PASSED | {result.FailedCount} FAILED | {result.ErrorCount} ERROR | {result.TotalCount} TOTAL");
         Log($"  ============================================================");
 
         return result;
+    }
+
+    /// <summary>
+    /// C5 Cold-Start-Hint: bei mindestens 4 ausgefuehrten Tests den ersten
+    /// gegen den Median der Folge-Tests pruefen. Schwelle 3x, weil bei echtem
+    /// Cold-Start (JIT, Class-Load, Metadata-Cache) der Faktor deutlich darueber
+    /// liegt. Skipped/Errored-Tests ohne DurationMs (0) gehen nicht in den Median.
+    /// </summary>
+    private static void EmitColdStartHint(TestRunResult result, Action<string> log)
+    {
+        var (line1, line2) = BuildColdStartHint(result);
+        if (line1 == null) return;
+        log("");
+        log(line1);
+        if (line2 != null) log(line2);
+    }
+
+    /// <summary>
+    /// Reine Funktion fuer C5: liefert die zwei Hint-Zeilen oder (null, null)
+    /// wenn kein Hint angebracht ist. Testbar ohne Konsolen-Hook.
+    /// Heuristik: erste Test-Dauer > 3x Median der Folge-Tests, mindestens 3
+    /// Folge-Tests mit nicht-null Dauer.
+    /// </summary>
+    public static (string? Line1, string? Line2) BuildColdStartHint(TestRunResult result)
+    {
+        if (result.Results.Count < 4) return (null, null);
+
+        var first = result.Results[0];
+        if (first.DurationMs <= 0) return (null, null);
+
+        var rest = result.Results
+            .Skip(1)
+            .Where(r => r.DurationMs > 0)
+            .Select(r => r.DurationMs)
+            .OrderBy(d => d)
+            .ToList();
+        if (rest.Count < 3) return (null, null);
+
+        var median = rest[rest.Count / 2];
+        if (median <= 0) return (null, null);
+
+        if (first.DurationMs <= 3 * median) return (null, null);
+
+        var line1 = $"  Hinweis: Test 1 ('{first.TestId}') dauerte {first.DurationMs}ms, " +
+                    $"Median der {rest.Count} Folge-Tests {median}ms (Faktor {first.DurationMs / (double)median:F1}x).";
+        var line2 = "           Wahrscheinlich Cold-Start (JIT, Plugin-Class-Load, Metadata-Cache-Warmup). " +
+                    "Bei Auswertung berücksichtigen.";
+        return (line1, line2);
     }
 
     // ════════════════════════════════════════════════════════════════════
