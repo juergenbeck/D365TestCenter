@@ -204,29 +204,30 @@ für zukünftige Versionen).
 
 ## WaitForFieldValue
 
-Pollt bis ein Feld des Alias-Records einen erwarteten Wert hat.
+Pollt bis **ein** Feld des Alias-Records einen erwarteten Wert hat.
 
 ```json
 { "stepNumber": 4, "action": "WaitForFieldValue",
   "alias":          "opp",
-  "fields":         { "statecode": 1 },
+  "fields":         { "statecode": null },
+  "expectedValue":  1,
   "timeoutSeconds": 30
 }
 ```
 
 | Feld | Pflicht | Bedeutung |
 |---|:---:|---|
-| `alias` | ja | Alias eines vorhandenen Records. |
-| `fields` | ja | Feld-zu-Wert-Mapping. **Alle** Felder müssen den Wert haben. |
+| `alias` (oder `recordRef`) | ja | Alias eines vorhandenen Records. |
+| `fields` | ja | Single-Key-Map. Der **Key** ist der zu beobachtende Feldname; der Wert wird ignoriert (Konvention: `null` setzen). Mehrere Keys werden nicht unterstützt — nur der erste wird ausgewertet. |
+| `expectedValue` | ja | Der erwartete Wert für das Feld. Platzhalter wie `{alias.id}` werden aufgelöst. |
+| `entity` | nein | Logical-Name der Entity. Default: aus dem Alias-Record. |
 | `timeoutSeconds` | nein | Default 60. |
+| `pollingIntervalMs` | nein | Default 2000. |
 
-**Mehrere Felder gleichzeitig sind ein AND:**
-
-```json
-"fields": { "statecode": 1, "statuscode": 3 }
-```
-
-Wartet bis beide Felder gleichzeitig diese Werte haben.
+Schema-Hintergrund: WaitForFieldValue ist als Single-Field-Polling konzipiert
+(`GenericRecordWaiter.WaitForFieldValue(entityName, recordId, fieldName, expectedValue, ...)`).
+Multi-Field-AND ist heute nicht implementiert — bei Bedarf zwei separate
+WaitForFieldValue-Steps oder einen FindRecord/Assert-Schritt verwenden.
 
 ## ExecuteRequest
 

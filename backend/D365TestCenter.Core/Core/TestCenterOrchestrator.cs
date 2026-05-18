@@ -35,6 +35,17 @@ public sealed class TestCenterOrchestrator
     private readonly ITestCenterConfig _config;
     private readonly Action<string>? _log;
 
+    /// <summary>
+    /// Spiegel-Buffer: jede Log-Zeile landet zusätzlich hier, damit sie am
+    /// Sessionende mit dem Engine-Log in `jbe_fulllog` gemerged werden kann.
+    /// Vor Block 1 L (Bridge-Befund Markant T9 2026-05-18) blieb `jbe_fulllog`
+    /// auf die TestRunner-Step-Logs beschränkt; Orchestrator-Header (Filter,
+    /// KeepRecords, Lade-Phase, Ergebnis-Banner, Cold-Start-Hint) gingen
+    /// ausschließlich an den externen Console-Hook und waren in Dataverse
+    /// nicht sichtbar.
+    /// </summary>
+    private readonly StringBuilder _logBuffer = new StringBuilder();
+
     // Felder des jbe_testrun-Records
     private const string FldStatus = "jbe_teststatus";
     private const string FldSummary = "jbe_testsummary";
@@ -224,11 +235,13 @@ public sealed class TestCenterOrchestrator
         // 3a. Leere Tests: sofort abschliessen
         if (cases.Count == 0)
         {
+            Log("Keine Testfälle gefunden.");
             _service.Update(new Entity(_config.TestRunEntity, testRunId)
             {
                 [FldStatus] = new OptionSetValue(_config.StatusCompleted),
                 [FldCompletedOn] = DateTime.UtcNow,
-                [FldSummary] = "Keine Testfälle gefunden."
+                [FldSummary] = "Keine Testfälle gefunden.",
+                [FldFullLog] = Truncate(BuildMergedFullLog(null), 100000)
             });
             return new TestRunResult
             {
@@ -256,7 +269,8 @@ public sealed class TestCenterOrchestrator
                 {
                     [FldStatus] = new OptionSetValue(_config.StatusFailed),
                     [FldCompletedOn] = DateTime.UtcNow,
-                    [FldSummary] = Truncate($"Fataler Fehler: {ex.Message}", 4000)
+                    [FldSummary] = Truncate($"Fataler Fehler: {ex.Message}", 4000),
+                    [FldFullLog] = Truncate(BuildMergedFullLog(null), 100000)
                 });
             }
             catch { /* Status-Update selbst darf nicht blocken */ }
@@ -307,7 +321,16 @@ public sealed class TestCenterOrchestrator
 
         var result = runner.RunAll(cases);
 
-        // 3c. Final-Update: Status + Summary + Counts + FullLog (B4)
+        // C5: Cold-Start-Hint vor dem Final-Update emittieren, damit der Hint
+        // im Orchestrator-Buffer und damit auch in jbe_fulllog landet.
+        EmitColdStartHint(result, Log);
+
+        Log("");
+        Log($"  ============================================================");
+        Log($"  ERGEBNIS: {result.PassedCount} PASSED | {result.FailedCount} FAILED | {result.ErrorCount} ERROR | {result.TotalCount} TOTAL");
+        Log($"  ============================================================");
+
+        // 3c. Final-Update: Status + Summary + Counts + FullLog (B4 + Block 1 L)
         var summary = BuildSummary(result);
         _service.Update(new Entity(_config.TestRunEntity, testRunId)
         {
@@ -319,21 +342,11 @@ public sealed class TestCenterOrchestrator
             [FldFailed] = result.FailedCount + result.ErrorCount,
             // B4-Fix: jbe_fulllog wurde bisher nie geschrieben, obwohl die
             // Engine das gesamte Log inkl. Plugin-Trace-Logs (A7) sammelt.
-            // Memo-Feld erlaubt sehr grosse Strings; wir kappen bei 100k Zeichen
-            // damit das Update nicht blockiert.
-            [FldFullLog] = Truncate(result.FullLog ?? "", 100000)
+            // Block 1 L (v5.3.11): Orchestrator-Buffer + Engine-Log mergen,
+            // damit Header, Lade-Phase, Cold-Start-Hint und Ergebnis-Banner
+            // ebenfalls in Dataverse sichtbar werden.
+            [FldFullLog] = Truncate(BuildMergedFullLog(result.FullLog), 100000)
         });
-
-        // C5: Cold-Start-Hint. Markiert den ersten Test als (cold start),
-        // wenn seine Dauer > 3x Median der Folge-Tests ist (JIT, Plugin-Class-Load,
-        // Cache-Warmup). Schwelle 3x ist empirisch konservativ — bei echtem
-        // Cold-Start liegt der Faktor typischerweise zwischen 5x und 20x.
-        EmitColdStartHint(result, Log);
-
-        Log("");
-        Log($"  ============================================================");
-        Log($"  ERGEBNIS: {result.PassedCount} PASSED | {result.FailedCount} FAILED | {result.ErrorCount} ERROR | {result.TotalCount} TOTAL");
-        Log($"  ============================================================");
 
         return result;
     }
@@ -769,7 +782,26 @@ public sealed class TestCenterOrchestrator
         return value.Length <= maxLength ? value : value.Substring(0, maxLength);
     }
 
-    private void Log(string msg) => _log?.Invoke(msg);
+    private void Log(string msg)
+    {
+        _log?.Invoke(msg);
+        _logBuffer.AppendLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {msg}");
+    }
+
+    /// <summary>
+    /// Mergt Orchestrator-Log-Buffer und Engine-Log (TestRunner) zu einem
+    /// einzigen FullLog-Memo. Orchestrator-Logs (Header, Lade-Phase, Final-Block)
+    /// kommen zuerst, danach der Engine-Block als getrennt markierte Sektion.
+    /// </summary>
+    private string BuildMergedFullLog(string? engineLog)
+    {
+        var orchestrator = _logBuffer.ToString();
+        if (string.IsNullOrEmpty(engineLog))
+            return orchestrator;
+        if (string.IsNullOrEmpty(orchestrator))
+            return engineLog;
+        return orchestrator + "--- Engine-Log ---" + Environment.NewLine + engineLog;
+    }
 
     /// <summary>
     /// ADR-0006 Phase 1d: Uploads a binary blob to a Dataverse File-field

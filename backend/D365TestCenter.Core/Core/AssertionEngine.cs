@@ -116,14 +116,14 @@ public sealed class AssertionEngine
             }
             else
             {
-                var entityName = assertion.Entity ?? ctx.ResolveRecordEntityName(refStr);
+                var entityName = ResolveEntityName(assertion.Entity ?? ctx.ResolveRecordEntityName(refStr));
                 entity = service.Retrieve(entityName, foundEntity.Id, new ColumnSet(assertion.Field));
             }
         }
         else
         {
             var recordId = ctx.ResolveRecordId(refStr);
-            var entityName = assertion.Entity ?? ctx.ResolveRecordEntityName(refStr);
+            var entityName = ResolveEntityName(assertion.Entity ?? ctx.ResolveRecordEntityName(refStr));
             entity = service.Retrieve(entityName, recordId, new ColumnSet(assertion.Field));
         }
 
@@ -139,8 +139,8 @@ public sealed class AssertionEngine
         TestAssertion assertion, TestContext ctx,
         IOrganizationService service, AssertionResult result)
     {
-        var entityName = assertion.Entity
-            ?? throw new InvalidOperationException("Query-Assertion benötigt 'entity'.");
+        var entityName = ResolveEntityName(assertion.Entity
+            ?? throw new InvalidOperationException("Query-Assertion benötigt 'entity'."));
         var filters = assertion.Filter
             ?? throw new InvalidOperationException("Query-Assertion benötigt 'filter'.");
 
@@ -212,6 +212,20 @@ public sealed class AssertionEngine
             ? results.Entities[0][assertion.Field]
             : null;
         ApplyOperator(assertion, actual, result);
+    }
+
+    // ---------------------------------------------------------------
+    //  Entity-Resolution (Symmetrie zu TestRunner.ResolveEntity)
+    // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Löst einen EntitySetName (Plural, Web-API-Form) zu LogicalName (Singular, SDK-Form) auf.
+    /// Spiegel zu TestRunner.ResolveEntity, damit Test-Autoren beide Formen schreiben dürfen.
+    /// Ohne Metadata-Cache (Default-Konstruktor) bleibt der Name unverändert.
+    /// </summary>
+    private string ResolveEntityName(string entityName)
+    {
+        return _metadataCache?.ResolveLogicalName(entityName) ?? entityName;
     }
 
     // ---------------------------------------------------------------

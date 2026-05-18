@@ -215,12 +215,16 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
             if (testCases.Count == 0)
             {
+                var emptyMsg = $"Keine Testfälle gefunden (Filter: {filter ?? "*"})";
                 var emptyUpdate = new Entity(TestRunEntity, testRunId)
                 {
                     [FldStatus] = new OptionSetValue(StatusCompleted),
-                    [FldSummary] = $"Keine Testfälle gefunden (Filter: {filter ?? "*"})",
+                    [FldSummary] = emptyMsg,
                     [FldCompletedOn] = DateTime.UtcNow,
-                    [FldTotal] = 0
+                    [FldTotal] = 0,
+                    // Block 1 L (v5.3.11, Markant T9): Auch im Empty-Pfad jbe_fulllog
+                    // schreiben, damit Diagnose sichtbar wird (Filter, Anzahl, Trigger).
+                    [FldFullLog] = $"[Plugin RunTestsOnStatusChange] {emptyMsg}"
                 };
                 service.Update(emptyUpdate);
                 return;
@@ -319,6 +323,18 @@ public sealed class RunTestsOnStatusChange : IPlugin
             var totalFailed = prevFailed + result.FailedCount + result.ErrorCount;
             var totalCount = prevTotal + result.TotalCount;
 
+            // Block 1 L (v5.3.11, Markant T9): Plugin-Header + Per-Batch-Summary
+            // + Engine-Log zusammenführen. Bei Multi-Batch enthält das Feld nur
+            // den letzten Batch (Stretch: Append via pre-Read als Backlog).
+            var mergedLog = new StringBuilder();
+            mergedLog.AppendLine($"[Plugin RunTestsOnStatusChange] Final batch | Offset {offset} | Batch {batch.Count} tests | Total {allTests.Count}");
+            mergedLog.AppendLine(summary.ToString());
+            if (!string.IsNullOrEmpty(result.FullLog))
+            {
+                mergedLog.AppendLine("--- Engine-Log ---");
+                mergedLog.AppendLine(result.FullLog);
+            }
+
             var finalUpdate = new Entity(TestRunEntity, testRunId)
             {
                 [FldStatus] = new OptionSetValue(StatusCompleted),
@@ -328,11 +344,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
                 [FldPassed] = totalPassed,
                 [FldFailed] = totalFailed,
                 [FldBatchOffset] = 0,
-                // B4-Fix: jbe_fulllog wurde bisher nie geschrieben. Bei Multi-
-                // Batch-Runs enthaelt das Feld das Log des letzten Batches plus
-                // Plugin-Trace-Logs (A7). Frueher Batches gehen verloren —
-                // Stretch-Verbesserung waere ein Append-Pfad mit pre-Read.
-                [FldFullLog] = Truncate(result.FullLog ?? "", 100000)
+                [FldFullLog] = Truncate(mergedLog.ToString(), 100000)
             };
             service.Update(finalUpdate);
             trace.Trace("All batches complete: {0}/{1} passed", totalPassed, totalCount);
