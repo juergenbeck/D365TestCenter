@@ -4,6 +4,11 @@ Dieses Verzeichnis enthält Git-Hooks, die ins Repo eingecheckt sind und
 für alle Clones gelten — sofern `core.hooksPath` einmalig auf `.githooks`
 gesetzt wird.
 
+> **Hinweis:** Die `commit-msg`-Datei wird automatisch aus der zentralen
+> Trigger-Liste `~/.claude/umlaute-triggers.json` generiert. Manuelle
+> Änderungen werden beim nächsten Sync überschrieben. Pflege erfolgt
+> ausschließlich über `pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply`.
+
 ## Aktivierung pro Clone (einmalig)
 
 ```bash
@@ -17,7 +22,7 @@ git config --local --get core.hooksPath
 # erwartet: .githooks
 ```
 
-## Aktive Hooks
+## Aktiver Hook
 
 ### `commit-msg`
 
@@ -25,15 +30,10 @@ Blockt Commits, deren Message ASCII-Ersatz für Umlaute enthält
 (`ae`/`oe`/`ue`/`ss` statt `ä ö ü ß` in deutschen Texten).
 
 **Erlaubt** sind Surrogate **innerhalb von Inline-Code-Backticks**
-(`` `ausserhalb` ``), weil dort Zitate des Verstoß-Patterns stehen
-(Audit-Reports, Lessons-Doku, Skill-Updates).
+(`` `ausserhalb` ``), weil dort Zitate des Verstoß-Patterns stehen.
 
-**Trigger-Liste** umfasst die häufigsten Grundformen plus typische
-zusammengesetzte Stämme. Pflege bei neu entdecktem Stamm:
-
-- Hier in `.githooks/commit-msg` ergänzen
-- Synchron in der zentralen Umlaut-Skill-Definition halten
-  (`~/.claude/skills/umlaute/SKILL.md` oder Repo-lokal)
+**Whitelist** für englische Fachbegriffe (User, Queue, Status, Plugin, ...)
+und projektspezifische Code-Bezeichner wird vor dem Match-Check angewandt.
 
 **Umgehen** einer einzelnen Verletzung (nur in echten Ausnahmen):
 
@@ -41,8 +41,13 @@ zusammengesetzte Stämme. Pflege bei neu entdecktem Stamm:
 git commit --no-verify
 ```
 
-## Ursprung
+## Pflege
 
-Hook-Template stammt aus `juergenbeck/Zastrpay` (Datei
-`.githooks/commit-msg`). Bei Updates der Trigger-Liste an einer Stelle
-bitte alle Clones synchron pflegen.
+Neuen Verstoß-Stamm entdeckt? In `~/.claude/umlaute-triggers.json` ergänzen,
+dann zentral synchronisieren:
+
+```powershell
+pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
+```
+
+patcht alle registrierten Repos in einem Lauf.

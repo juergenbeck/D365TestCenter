@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 #
-# commit-msg Hook: blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten.
+# commit-msg Hook — AUTO-GENERATED
+#
+# Quelle:    ~/.claude/umlaute-triggers.json (Version 1, Stand 2026-05-20)
+# Generator: ~/.claude/scripts/Sync-UmlautTriggers.ps1
+# Manuelle Änderungen werden beim nächsten Sync überschrieben.
+#
+# Zweck:     Blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten
+#            (ae/oe/ue/ss statt ä/ö/ü/ß).
 #
 # Aktivierung pro Clone (einmalig):
 #   git config core.hooksPath .githooks
@@ -8,30 +15,29 @@
 # Umgehen einer einzelnen Verletzung (nur in echten Ausnahmen):
 #   git commit --no-verify
 #
-# Erlaubt sind Surrogate INNERHALB von Inline-Code (`...`), weil dort Zitate des
-# Verstoß-Patterns stehen (Audit-Reports, Lessons-Doku, Skill-Updates).
-#
-# Trigger-Liste:
-# - Einfache Grundformen mit Word-Boundary (\b)
-# - Häufige zusammengesetzte Stämme explizit (weil \b in der Wortmitte nicht greift)
-# - "ausser " mit Leerzeichen, damit "außer" als Fließtext-Trigger fängt
-#
-# Pflege: bei neuem Verstoß-Stamm hier ergänzen UND in
-# .github/skills/umlaute/SKILL.md (Section "Self-Check-Pflicht") synchron halten.
+# Erlaubt sind Surrogate INNERHALB von Inline-Code (`...`), weil dort Zitate
+# des Verstoß-Patterns stehen (Audit-Reports, Lessons-Doku, Skill-Updates).
 
 set -e
 
 MSG_FILE="$1"
 if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
-    # Defensive: ohne Argument kein Block
     exit 0
 fi
 
-TRIGGERS='\b(fuer|waere|koennen|muessen|naechst|naechster|gemaess|noetig|Massnahme|vollstaendig|Ergaen|zusaetz|Klaerung|ausserhalb|laesst|durchgefuehrt|gepruft|pruefen|spaeter|moeglich|haengt|gehoert|erwaehnt|Strassen|Domaene|ausfuehrlich|nuetzlich|verstaerken|uebernom|Begruend|veroeffentl|Aenderung|aenderung|Loesung|loeschen|geloescht|Pruefung|Ausfuehrung|Eintraege|Verstoss|gehoer|verstaendlich|Empfaenger|Geschaeft|haeufig|Vorgaenger|Schluessel|Ueberblick|ueblich|ueberpruef|moegen|moechte|aendert|regulaer|faerb)\b|ausser '
-
-# Strip backtick-quoted inline code (Zitate sind erlaubt) und Comment-Zeilen
-# die git in der commit-msg-Datei einfügt (beginnen mit '#').
+# Pre-process:
+#   1. Backtick-Inline-Code rausstrippen (Zitate des Verstoß-Patterns erlaubt)
+#   2. Comment-Zeilen rausstrippen (git hängt diese an die Commit-Message an)
+#   3. Whitelist-Tokens neutralisieren, damit englische Fachbegriffe
+#      (User, Queue, Status, Plugin, ...) und Code-Bezeichner nicht falsch matchen
 STRIPPED=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
+
+WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|Address|ausfuehrungs_modi|Azure|bfuer|Class|Daemon|Failed|Issue|Layer|loesch|over|overall|ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2|Payload|Pipeline|Plugin|Process|pruef|Queue|Rescue|Sandbox|Schedule|Session|Source|Stage|Status|Trace|Ueber|User|Value)\b'
+if [ -n "$WHITELIST_REGEX" ]; then
+    STRIPPED=$(echo "$STRIPPED" | sed -E "s/$WHITELIST_REGEX//g")
+fi
+
+TRIGGERS='\b\w*(abhaengig|abloest|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|Anhaenge|aufgeloest|Aufloesung|aufraeum|ausfueh|ausgefuehrt|Auszueg|begruend|behoerde|beruecks|Bezueg|Domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|Empfaenger|enthaelt|Entitaeten|Ergaen|ergaenz|erschoepft|erwaehnt|Fachdomaene|faerb|fluess|frueher|fuehl|fuehrend|fuer|gefaehr|gefaehrli|gehoer|geloescht|gemaess|gepruft|Geschaeft|groesse|gruen|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoehe|hoehere|jaehrli|klaer|Klaerung|koennen|koennte|Konformitaet|kuendig|kuenftig|laenge|laengst|laesst|laeuft|Loesch|loeschen|loest|Loesung|Massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetzlich|Plaene|praezis|pruef|pruefen|Pruefung|qualitaet|raeum|Realitaet|regulaer|Ruecksprach|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|stoer|Stoerung|Strassen|Stueck|tatsaechli|Tonalitaet|ueberall|Ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|Uebersicht|ueberspring|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaendlich|verstaerken|Verstoss|vollstaendig|Vorgaenger|vorschlaeg|waehl|waere|wuensch|wuerd|zaehl|zoeger|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|ausserhalb|aussert|aussreich|einschliess|gemaess|groess|gross|grosse|grosser|grosses|Hauptstrass|laess|maess|massnahm|regelmaess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|Hauptstrasse)\b'
 
 if HITS=$(echo "$STRIPPED" | grep -nE "$TRIGGERS"); then
     cat >&2 <<'EOF'
@@ -44,13 +50,13 @@ Verwende echte Umlaute (ä ö ü ß) statt ae / oe / ue / ss in
 deutschen Texten. Zitate des Verstoß-Patterns sind erlaubt,
 müssen aber in Inline-Code-Backticks stehen (`ausserhalb`).
 
-Trefferzeilen (Backtick-Zitate wurden bereits ignoriert):
+Trefferzeilen (Backtick-Zitate und Whitelist-Tokens bereits ignoriert):
 EOF
     echo "$HITS" >&2
     cat >&2 <<'EOF'
 
-Details:        .github/skills/umlaute/SKILL.md
-Pflege-Section: "Self-Check-Pflicht" + "Pre-Commit-Workflow"
+Quelle der Trigger-Liste: ~/.claude/umlaute-triggers.json
+Pflege:                   pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
 
 Umgehen (nur in echten Ausnahmen):
     git commit --no-verify
