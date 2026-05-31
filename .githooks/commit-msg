@@ -2,12 +2,13 @@
 #
 # commit-msg Hook — AUTO-GENERATED
 #
-# Quelle:    ~/.claude/umlaute-triggers.json (Version 1, Stand 2026-05-20)
+# Quelle:    ~/.claude/umlaute-triggers.json
 # Generator: ~/.claude/scripts/Sync-UmlautTriggers.ps1
 # Manuelle Änderungen werden beim nächsten Sync überschrieben.
 #
 # Zweck:     Blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten
-#            (ae/oe/ue/ss statt ä/ö/ü/ß).
+#            (ae/oe/ue/ss statt ä/ö/ü/ß). Das Pattern wrappt jeden Stamm in
+#            \w* und fängt Surrogate damit auch in Komposita und Flexionsformen.
 #
 # Aktivierung pro Clone (einmalig):
 #   git config core.hooksPath .githooks
@@ -37,10 +38,10 @@ if [ -n "$WHITELIST_REGEX" ]; then
     STRIPPED=$(echo "$STRIPPED" | sed -E "s/$WHITELIST_REGEX//g")
 fi
 
-TRIGGERS='\b\w*(abhaengig|abloest|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|Anhaenge|aufgeloest|Aufloesung|aufraeum|ausfueh|ausgefuehrt|Auszueg|begruend|behoerde|beruecks|Bezueg|Domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|Empfaenger|enthaelt|Entitaeten|Ergaen|ergaenz|erschoepft|erwaehnt|Fachdomaene|faerb|fluess|frueher|fuehl|fuehrend|fuer|gefaehr|gefaehrli|gehoer|geloescht|gemaess|gepruft|Geschaeft|groesse|gruen|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoehe|hoehere|jaehrli|klaer|Klaerung|koennen|koennte|Konformitaet|kuendig|kuenftig|laenge|laengst|laesst|laeuft|Loesch|loeschen|loest|Loesung|Massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetzlich|Plaene|praezis|pruef|pruefen|Pruefung|qualitaet|raeum|Realitaet|regulaer|Ruecksprach|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|stoer|Stoerung|Strassen|Stueck|tatsaechli|Tonalitaet|ueberall|Ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|Uebersicht|ueberspring|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaendlich|verstaerken|Verstoss|vollstaendig|Vorgaenger|vorschlaeg|waehl|waere|wuensch|wuerd|zaehl|zoeger|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|ausserhalb|aussert|aussreich|einschliess|gemaess|groess|gross|grosse|grosser|grosses|Hauptstrass|laess|maess|massnahm|regelmaess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|Hauptstrasse)\b'
+TRIGGERS='\b\w*(abhaengig|abloest|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|Anhaenge|aufgeloest|Aufloesung|aufraeum|ausfueh|ausgefuehrt|Auszueg|begruend|behoerde|beruecks|Bezueg|Domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|Empfaenger|enthaelt|Entitaeten|Ergaen|ergaenz|erschoepft|erwaehnt|Fachdomaene|faerb|fluess|frueher|fuehl|fuehrend|fuer|gefaehr|gefaehrli|gehoer|geloescht|gemaess|gepruft|Geschaeft|groesse|gruen|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoehe|hoehere|jaehrli|klaer|Klaerung|koennen|koennte|Konformitaet|kuendig|kuenftig|laenge|laengst|laesst|laeuft|Loesch|loeschen|loest|Loesung|Massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetzlich|Plaene|praezis|pruef|pruefen|Pruefung|qualitaet|raeum|Realitaet|regulaer|Ruecksprach|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|stoer|Stoerung|Strassen|Stueck|tatsaechli|Tonalitaet|ueberall|Ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|Uebersicht|ueberspring|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaendlich|verstaerken|Verstoss|vollstaendig|Vorgaenger|vorschlaeg|waehl|waere|wuensch|wuerd|zaehl|zoeger|zurueck|zusaetz|zusaetzli|gueltig|hoeh|ueberarb|primaer|ueberwach|Hoeh|Ueberarb|Primaer|Ueberwach)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|ausserhalb|aussert|aussreich|einschliess|gemaess|groess|gross|grosse|grosser|grosses|Hauptstrass|laess|maess|massnahm|regelmaess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|Hauptstrasse)\b'
 
 if HITS=$(echo "$STRIPPED" | grep -nE "$TRIGGERS"); then
-    cat >&2 <<'EOF'
+    cat >&2 <<'MSGEOF'
 
 ============================================================
   COMMIT BLOCKIERT: ASCII-Ersatz für Umlaut in Commit-Message
@@ -51,9 +52,9 @@ deutschen Texten. Zitate des Verstoß-Patterns sind erlaubt,
 müssen aber in Inline-Code-Backticks stehen (`ausserhalb`).
 
 Trefferzeilen (Backtick-Zitate und Whitelist-Tokens bereits ignoriert):
-EOF
+MSGEOF
     echo "$HITS" >&2
-    cat >&2 <<'EOF'
+    cat >&2 <<'MSGEOF'
 
 Quelle der Trigger-Liste: ~/.claude/umlaute-triggers.json
 Pflege:                   pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
@@ -62,7 +63,7 @@ Umgehen (nur in echten Ausnahmen):
     git commit --no-verify
 
 ============================================================
-EOF
+MSGEOF
     exit 1
 fi
 
