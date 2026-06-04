@@ -1,53 +1,50 @@
-# Versionierte Git-Hooks
+# Git-Hooks: Umlaut-Schutz (Python)
 
-Dieses Verzeichnis enthält Git-Hooks, die ins Repo eingecheckt sind und
-für alle Clones gelten — sofern `core.hooksPath` einmalig auf `.githooks`
-gesetzt wird.
+Plattformneutral (macOS / Windows / Linux). Erzwingt echte Umlaute (ä ö ü ß)
+statt ASCII-Ersatz (`ae`/`oe`/`ue`/`ss`) in deutschen Texten.
 
-> **Hinweis:** Die `commit-msg`-Datei wird automatisch aus der zentralen
-> Trigger-Liste `~/.claude/umlaute-triggers.json` generiert. Manuelle
-> Änderungen werden beim nächsten Sync überschrieben. Pflege erfolgt
-> ausschließlich über `pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply`.
+AUTO-GENERATED aus `~/.claude/hook-templates/python/` (ausgerollt von
+`~/.claude/scripts/Sync-UmlautTriggers.ps1`). Nicht von Hand editieren.
 
-## Aktivierung pro Clone (einmalig)
+## Aktivierung
 
-```bash
+Pro Klon einmalig:
+
+```
 git config core.hooksPath .githooks
 ```
 
-Verifizieren:
+**Automatisch:** Der `SessionStart`-Hook in `.claude/settings.json` setzt das bei
+jedem Start von Claude Code idempotent selbst. Nach dem ersten `claude`-Start im
+Repo ist der Schutz also ohne manuellen Schritt aktiv, auch auf einem frisch
+geklonten Rechner.
 
-```bash
-git config --local --get core.hooksPath
-# erwartet: .githooks
+## Voraussetzung
+
+`python3` (auf macOS/Linux vorinstalliert) oder `python` (Windows). Keine PowerShell.
+
+## Bestandteile
+
+| Datei | Zweck |
+|-------|-------|
+| `commit-msg` | bash: blockt Surrogate in der **Commit-Message** |
+| `pre-commit` | bash-Wrapper, ruft `pre-commit.py` (bevorzugt `python3`, sonst `python`) |
+| `pre-commit.py` | prüft alle staged `.md` auf Surrogate im **Datei-Inhalt** |
+| `umlaut_check_lib.py` | gemeinsame Prüf-Logik (Stamm-Liste, Filter) |
+
+Der nicht-blockierende Schreib-Warn-Hook `.claude/hooks/check-umlaute.py` teilt
+dieselbe Lib (gleiche Treffer wie der Commit-Block).
+
+## Pflege der Stamm-Liste
+
+Single source of truth ist `~/.claude/umlaute-triggers.json` (auf dem Pflege-Rechner).
+Nach einer Änderung rendert `pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply`
+die Datenregion in `commit-msg` und `umlaut_check_lib.py` neu. Die Trigger-Daten
+sind in die Hooks **eingebettet**, zur Laufzeit wird die zentrale JSON nicht
+gebraucht, das Repo ist autark.
+
+## Umgehen (nur im Notfall, mit Begründung dokumentieren)
+
 ```
-
-## Aktiver Hook
-
-### `commit-msg`
-
-Blockt Commits, deren Message ASCII-Ersatz für Umlaute enthält
-(`ae`/`oe`/`ue`/`ss` statt `ä ö ü ß` in deutschen Texten).
-
-**Erlaubt** sind Surrogate **innerhalb von Inline-Code-Backticks**
-(`` `ausserhalb` ``), weil dort Zitate des Verstoß-Patterns stehen.
-
-**Whitelist** für englische Fachbegriffe (User, Queue, Status, Plugin, ...)
-und projektspezifische Code-Bezeichner wird vor dem Match-Check angewandt.
-
-**Umgehen** einer einzelnen Verletzung (nur in echten Ausnahmen):
-
-```bash
 git commit --no-verify
 ```
-
-## Pflege
-
-Neuen Verstoß-Stamm entdeckt? In `~/.claude/umlaute-triggers.json` ergänzen,
-dann zentral synchronisieren:
-
-```powershell
-pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
-```
-
-patcht alle registrierten Repos in einem Lauf.

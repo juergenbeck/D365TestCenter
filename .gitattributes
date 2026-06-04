@@ -5,3 +5,7 @@
 .githooks/pre-commit   text eol=lf
 .githooks/*.ps1        text eol=lf
 .claude/hooks/*.ps1    text eol=lf
+
+# Hook-Dateien muessen LF behalten (Windows-Clone-Schutz).
+.githooks/*.py         text eol=lf
+.claude/hooks/*.py     text eol=lf

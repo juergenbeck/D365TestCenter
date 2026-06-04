@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Pre-Commit-Hook (POSIX-Wrapper für die Python-Logik).
+#
+# AUTO-GENERATED aus ~/.claude/hook-templates/python/pre-commit
+# (ausgerollt von ~/.claude/scripts/Sync-UmlautTriggers.ps1). Nicht von Hand editieren.
+#
+# Ruft .githooks/pre-commit.py. Plattformneutral: bevorzugt python3 (macOS/Linux),
+# fällt auf python zurück (Windows). Keine PowerShell-Abhängigkeit.
+# -B: kein __pycache__/.pyc anlegen (sonst wuerde der Auto-Sync den Bytecode mitcommitten).
+#
+# Aktivierung pro Klon (einmalig):
+#   git config core.hooksPath .githooks
+# (Wird vom SessionStart-Hook in .claude/settings.json automatisch gesetzt.)
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+HOOK_PY="$REPO_ROOT/.githooks/pre-commit.py"
+
+if [ ! -f "$HOOK_PY" ]; then
+    echo "Pre-Commit-Hook: $HOOK_PY fehlt." >&2
+    exit 1
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+    python3 -B "$HOOK_PY"
+elif command -v python >/dev/null 2>&1; then
+    python -B "$HOOK_PY"
+else
+    echo "Pre-Commit-Hook: weder python3 noch python gefunden." >&2
+    exit 1
+fi

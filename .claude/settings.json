@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-umlaute.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && git config core.hooksPath .githooks && BRANCH=$(git rev-parse --abbrev-ref HEAD) && { if [ -n \"$(git status --porcelain)\" ]; then git add -A && git commit -m 'chore(auto-sync): offene Änderungen' -q; fi; } && git pull --rebase origin \"$BRANCH\" -q && git push origin \"$BRANCH\" -q 2>&1",
+            "timeout": 30,
+            "statusMessage": "Git-Sync läuft"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && BRANCH=$(git rev-parse --abbrev-ref HEAD) && if [ -n \"$(git status --porcelain)\" ]; then git add -A && git commit -m 'chore(auto-sync): offene Änderungen am Session-Ende' -q && git push origin \"$BRANCH\" -q; fi",
+            "timeout": 60,
+            "statusMessage": "Auto-Sync läuft"
+          }
+        ]
+      }
+    ]
+  }
+}
