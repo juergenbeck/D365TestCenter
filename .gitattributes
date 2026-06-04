@@ -1,0 +1,7 @@
+# Zeilenenden konsistent halten — Repo wird über mehrere Rechner genutzt.
+# Die Bash-Hooks MÜSSEN LF behalten, sonst brechen sie auf Windows nach einem
+# frischen Clone (CRLF im Shebang -> "bad interpreter", Hook still wirkungslos).
+.githooks/commit-msg   text eol=lf
+.githooks/pre-commit   text eol=lf
+.githooks/*.ps1        text eol=lf
+.claude/hooks/*.ps1    text eol=lf
