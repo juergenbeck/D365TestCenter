@@ -38,3 +38,11 @@ publish/
 
 # Solution export/working artifacts (regenerierbar via pac solution export/unpack)
 solution/out/
+
+# Claude-interne Wegwerf-Artefakte nicht versionieren (Auto-Sync-Schutz).
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.claude/settings.local.json
+
+# Claude-interne Wegwerf-Artefakte nicht versionieren (Auto-Sync-Schutz).
+__pycache__/
