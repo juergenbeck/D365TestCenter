@@ -4,9 +4,12 @@
 # AUTO-GENERATED aus ~/.claude/hook-templates/python/pre-commit
 # (ausgerollt von ~/.claude/scripts/Sync-UmlautTriggers.ps1). Nicht von Hand editieren.
 #
-# Ruft .githooks/pre-commit.py. Plattformneutral: bevorzugt python3 (macOS/Linux),
-# fällt auf python zurück (Windows). Keine PowerShell-Abhängigkeit.
-# -B: kein __pycache__/.pyc anlegen (sonst wuerde der Auto-Sync den Bytecode mitcommitten).
+# Ablauf: (1) zentraler Umlaut-Check .githooks/pre-commit.py; (2) optionaler
+# projekt-lokaler Check .githooks/pre-commit-local.py, falls vorhanden (NICHT vom
+# Sync verwaltet — hier klinkt jedes Repo eigene Prüfungen ein). Plattformneutral:
+# bevorzugt python3 (macOS/Linux), fällt auf python zurück (Windows). Keine
+# PowerShell-Abhängigkeit.
+# -B: kein __pycache__/.pyc anlegen (sonst würde der Auto-Sync den Bytecode mitcommitten).
 #
 # Aktivierung pro Klon (einmalig):
 #   git config core.hooksPath .githooks
@@ -23,10 +26,22 @@ if [ ! -f "$HOOK_PY" ]; then
 fi
 
 if command -v python3 >/dev/null 2>&1; then
-    python3 -B "$HOOK_PY"
+    PYBIN=python3
 elif command -v python >/dev/null 2>&1; then
-    python -B "$HOOK_PY"
+    PYBIN=python
 else
     echo "Pre-Commit-Hook: weder python3 noch python gefunden." >&2
     exit 1
+fi
+
+# 1. Zentraler Umlaut-Check (auto-generiert, für alle kit=python-Repos gleich).
+"$PYBIN" -B "$HOOK_PY"
+
+# 2. Optionaler projekt-lokaler Pre-Commit-Check, falls vorhanden (NICHT vom Sync
+#    verwaltet). Jedes Repo darf hier eigene Prüfungen einklinken (z.B. Doku-/
+#    Konsistenz-Abgleich), ohne die auto-generierte Kette zu verändern. Exit != 0
+#    blockt den Commit; Bypass im Notfall wie üblich mit git commit --no-verify.
+HOOK_LOCAL="$REPO_ROOT/.githooks/pre-commit-local.py"
+if [ -f "$HOOK_LOCAL" ]; then
+    "$PYBIN" -B "$HOOK_LOCAL"
 fi
