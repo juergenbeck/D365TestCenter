@@ -11,6 +11,7 @@ Bei Verstoß: Report auf stderr, Exit 1. Sauber: Exit 0.
 Bypass im Notfall: git commit --no-verify (dokumentieren, warum).
 """
 import os
+import re
 import subprocess
 import sys
 from itertools import groupby
@@ -29,9 +30,17 @@ def git(*args):
     return subprocess.run(['git', *args], capture_output=True, text=True, encoding='utf-8').stdout
 
 
+# Anhang-Begleittexte (<name>.<ext>.md) sind 1:1 aus Originaldokumenten extrahierte
+# Fremdtexte (Volltextsuche-Hilfe), kein selbst verfasster deutscher Text. Sie werden
+# vom Umlaut-Check ausgenommen, weil ASCII-Schreibweisen darin (z.B. Adressen wie
+# "Osnabrueck" im Original) nicht verändert werden dürfen (Originaltreue).
+COMPANION_RE = re.compile(
+    r'\.(pdf|docx?|xlsx?|pptx?|vcf|txt|csv|ics|jpe?g|png|gif|odt|ods)\.md$', re.I)
+
+
 def main():
     staged = [f for f in git('diff', '--cached', '--name-only', '--diff-filter=ACM').splitlines()
-              if f.endswith('.md')]
+              if f.endswith('.md') and not COMPANION_RE.search(f)]
     if not staged:
         return 0
     repo_root = git('rev-parse', '--show-toplevel').strip()

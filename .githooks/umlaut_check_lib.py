@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Gemeinsame Umlaut-Pruef-Logik fuer die Datei-Inhalt-Hooks (Python-Port).
+"""Gemeinsame Umlaut-Prüf-Logik für die Datei-Inhalt-Hooks (Python-Port).
 
-AUTO-GENERATED-Geruest aus ~/.claude/hook-templates/python/umlaut_check_lib.py
-(ausgerollt von ~/.claude/scripts/Sync-UmlautTriggers.ps1). Die Datenregion
-zwischen den AUTO-GENERATED-Markern wird zusaetzlich aus
-~/.claude/umlaute-triggers.json gerendert. Nicht von Hand editieren.
+Diese Datei ist zentral gepflegt: Sync-UmlautTriggers.ps1 rollt den kompletten
+Code-Rahmen aus ~/.claude/hook-templates/python/umlaut_check_lib.py in jedes
+kit=python-Repo aus und rendert die Datenregion zwischen den AUTO-GENERATED-
+Markern aus ~/.claude/umlaute-triggers.json. Nicht von Hand editieren, sondern
+am Template ändern und neu syncen.
 
 Plattformneutral (macOS / Windows / Linux). Genutzt von:
   - .githooks/pre-commit.py          (Commit-Block, blockierend)
@@ -18,7 +19,7 @@ Bezeichner, Slug-/Domain-/Dateinamen-Tokens).
 import re
 
 # >>> AUTO-GENERATED:UMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
-UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|ausfueh|ausgefuehrt|begruend|behoerde|durchfueh|einfueh|enthaelt|faerb|fluess|frueher|fuehl|fuer|gefaehr|gehoer|geloescht|gemaess|groesse|gruen|haengt|haetten|haeufig|hoechste|hoehe|hoehere|jaehrli|klaer|koennen|kuendig|laenge|laeuft|loesch|loeschen|loest|loesung|moegli|muessen|naechst|naehe|naemli|noetig|praezis|pruef|qualitaet|regulaer|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|spaet|stoer|tatsaechli|ueberall|uebernom|uebersetz|uebersich|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|verfueg|verknuepf|wuensch|wuerd|zaehl|zoeger|gueltig|hoeh|ueberarb|primaer|ueberwach|hoeh|ueberarb|primaer|ueberwach|bestaet|bestaet|tragfaeh|tragfaeh|bruecke|bruecke|aender|fuehr|fuehr|hoer|loes|loes|gewaehr|gewaehr|erwaeg|erwaeg|genueg|fueg|schuetz|stuetz|nuetz|ueben|uebung|uebt|schaeft|gruend|gruend|haeng|haelt|faehig|faehig|staend|faehr|haendl|haendl|glaeub|glaeub|itaet|taetig|taetig|moegli|gueltig|gaeng|gaeng|faell|faell|traeg|schlaeg|saetz|saetz|laeuf|laeuf|kraeft|kraeft|maerkt|maerkt|gebuehr|gebuehr|waehr|waehr|waerts|fuellen|fuellt|fuellung|fuellung|buerg|buerg|praesent|praesent|praemi|praezis|taegli|woechentl|frueh|frueh|staerk|staerk|schwaech|schwaech|kuerz|kuerz|ruehr|rueck|rueck|schoepf|schraenk|knuepf|schluess|schluess|erloes|erloes|zueg|zueg|wuensch|beduerf|beduerf|luecke|luecke|verstaend|verstaend|erlaeuter|erlaeuter|vorraet|vorraet|gefaess|gefaess|gebaeud|gebaeud|gelaend|gelaend|zaehler|zaehl|schaed|naehe|aeusser|ueber|ueber)\w*\b'
+UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|ausfueh|ausgefuehrt|begruend|behoerde|durchfueh|einfueh|enthaelt|faerb|fluess|frueher|fuehl|fuer|gefaehr|gehoer|geloescht|gemaess|groesse|gruen|haengt|haetten|haeufig|hoechste|hoehe|hoehere|jaehrli|klaer|koennen|kuendig|laenge|laeuft|loesch|loeschen|loest|loesung|moegli|muessen|naechst|naehe|naemli|noetig|praezis|pruef|qualitaet|regulaer|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|spaet|stoer|tatsaechli|ueberall|uebernom|uebersetz|uebersich|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|verfueg|verknuepf|wuensch|wuerd|zaehl|zoeger|gueltig|hoeh|ueberarb|primaer|ueberwach|hoeh|ueberarb|primaer|ueberwach|bestaet|bestaet|tragfaeh|tragfaeh|bruecke|bruecke|aender|fuehr|fuehr|hoer|loes|loes|gewaehr|gewaehr|erwaeg|erwaeg|genueg|fueg|schuetz|stuetz|nuetz|ueben|uebung|uebt|schaeft|gruend|gruend|haeng|haelt|faehig|faehig|staend|faehr|haendl|haendl|glaeub|glaeub|itaet|taetig|taetig|moegli|gueltig|gaeng|gaeng|faell|faell|traeg|schlaeg|saetz|saetz|laeuf|laeuf|kraeft|kraeft|maerkt|maerkt|gebuehr|gebuehr|waehr|waehr|waerts|fuellen|fuellt|fuellung|fuellung|buerg|buerg|praesent|praesent|praemi|praezis|taegli|woechentl|frueh|frueh|staerk|staerk|schwaech|schwaech|kuerz|kuerz|ruehr|rueck|rueck|schoepf|schraenk|knuepf|schluess|schluess|erloes|erloes|zueg|zueg|wuensch|beduerf|beduerf|luecke|luecke|verstaend|verstaend|erlaeuter|erlaeuter|vorraet|vorraet|gefaess|gefaess|gebaeud|gebaeud|gelaend|gelaend|zaehler|zaehl|schaed|naehe|aeusser|ueber|ueber)\w*\b|\b\w*(schliess|fliess|geniess)\w*\b'
 
 # Block 2: alleinstehende Woerter
 UMLAUT_BLOCK2 = r'\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b'
@@ -73,12 +74,29 @@ def is_code_identifier(token):
 
 
 def is_slug_token(token):
-    """Umgebender Token ist Slug/Bezeichner/Ordnername: enthaelt Underscore oder
-    Ziffer (in deutscher Prosa nicht vorhanden). Rand-Markup vorher abgeschnitten."""
+    """Umgebender Token ist Slug/Bezeichner/Ordnername und laut CLAUDE.md von der
+    Umlaut-Pflicht ausgenommen. Erkennungen auf dem Kern-Token (Rand-Markup vorher
+    abgeschnitten):
+      1. Underscore oder Ziffer (in deutscher Prosa nicht vorhanden), z.B.
+         `04_tests-und-qualitaet`, `OE-M6_...`.
+      2. Kebab-Slug: mehrere durch Bindestrich verbundene Segmente (>=2), jedes
+         nur aus Kleinbuchstaben (inkl. Umlauten), z.B. `story-uebersicht`,
+         `analyse-vor-aenderung`. Capitalized Komposita (`Plugin-Loeschung`,
+         `Master-Daten`) sind dagegen Prosa und werden weiter geprüft.
+    Verhaltensgleich zur PowerShell-Regex `^[\\p{Ll}]+(-[\\p{Ll}]+)+$` (-cmatch,
+    case-sensitiv)."""
     core = _strip_edges(token)
     if not core:
         return False
-    return ('_' in core) or bool(re.search(r'[0-9]', core))
+    if ('_' in core) or bool(re.search(r'[0-9]', core)):
+        return True
+    # Kebab-Slug: >=2 nicht-leere Segmente, jedes nur aus Kleinbuchstaben.
+    # str.islower() deckt a-z plus die Umlaute ab und entspricht damit \p{Ll};
+    # ein Großbuchstabe in einem Segment disqualifiziert den Slug (Prosa).
+    segments = core.split('-')
+    if len(segments) < 2:
+        return False
+    return all(seg and all(ch.islower() for ch in seg) for seg in segments)
 
 
 def is_technical_token(token):
