@@ -39,7 +39,7 @@ dieselbe Lib (gleiche Treffer wie der Commit-Block).
 
 Der `pre-commit`-Wrapper ruft nach dem Umlaut-Check **optional** ein
 `.githooks/pre-commit-local.py` auf, falls es existiert. Diese Datei ist **nicht**
-auto-generiert und wird vom Sync **nicht** angelegt oder überschrieben — hier klinkt
+auto-generiert und wird vom Sync **nicht** angelegt oder überschrieben: hier klinkt
 jedes Repo eigene Checks ein (z.B. Doku-/Konsistenz-Abgleich), ohne die zentrale
 Kette zu verändern. Exit ≠ 0 blockt den Commit. Sie endet auf `.py` und wird damit
 von der bestehenden `.gitattributes`-Regel `.githooks/*.py text eol=lf` erfasst.
