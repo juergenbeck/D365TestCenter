@@ -37,10 +37,25 @@ def git(*args):
 COMPANION_RE = re.compile(
     r'\.(pdf|docx?|xlsx?|pptx?|vcf|txt|csv|ics|jpe?g|png|gif|odt|ods)\.md$', re.I)
 
+# Strukturell ausgenommene Pfade (analog zum Pfad-Filter in Markants pre-commit.ps1):
+# gespiegelte Skill-Bibliothek (gehört an den zentralen Skill-Master, wird nicht pro
+# Repo korrigiert), eingefrorene Historie und Traceability (handover/changelog/reviews/
+# research/...), Planungs-/Backlog-/Jira-Dumps, Archive und generierte Outputs. Diese
+# enthalten bewusst Fremd-, Alt- oder Code-Surrogate und sind kein selbst verfasster,
+# laufender Doku-Bestand. Laufende Doku (Konzepte, READMEs, Datenmodelle, ADRs) bleibt
+# geprüft.
+EXCLUDE_RE = re.compile(
+    r'(^|/)(\.github|\.claude)/skills/'
+    r'|(^|/)(handover|changelog|reviews|research|recherche|poc|backlog|planung|jira|output|scans|99_archiv|99_confluence-export)/'
+    r'|(^|/)_archive/'
+    r'|(^|/)Wissen/temp/'
+    r'|(^|/)memory-snapshot[^/]*/'
+    r'|(feedback|bug-report|alte-notizen|lessons-learned|skeptiker-review)', re.I)
+
 
 def main():
     staged = [f for f in git('diff', '--cached', '--name-only', '--diff-filter=ACM').splitlines()
-              if f.endswith('.md') and not COMPANION_RE.search(f)]
+              if f.endswith('.md') and not COMPANION_RE.search(f) and not EXCLUDE_RE.search(f)]
     if not staged:
         return 0
     repo_root = git('rev-parse', '--show-toplevel').strip()
