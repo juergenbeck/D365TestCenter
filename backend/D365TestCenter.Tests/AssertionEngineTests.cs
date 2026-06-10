@@ -306,6 +306,46 @@ public class AssertionEngineTests
     }
 
     [Fact]
+    public void DateSetRecently_ValueTolerance_OverridesDefault()
+    {
+        // 130s old fails the 120s default but passes an explicit 160s tolerance.
+        var aged = DateTime.UtcNow.AddSeconds(-130);
+
+        var withTolerance = EvalOperator("DateSetRecently", aged, "160");
+        Assert.True(withTolerance.Passed);
+        Assert.Contains("160s", withTolerance.Message);
+
+        var withDefault = EvalOperator("DateSetRecently", aged, null);
+        Assert.False(withDefault.Passed);
+    }
+
+    [Fact]
+    public void DateSetRecently_UnspecifiedKind_IsTreatedAsUtc()
+    {
+        // Dataverse delivers UTC values; Kind=Unspecified must not be
+        // re-interpreted as local time (would add the TZ offset to the diff).
+        var recent = DateTime.SpecifyKind(
+            DateTime.UtcNow.AddSeconds(-10), DateTimeKind.Unspecified);
+        var result = EvalOperator("DateSetRecently", recent, null);
+
+        Assert.True(result.Passed);
+        // ActualDisplay starts with the diff in seconds ("10s her (...)").
+        var diffToken = result.ActualDisplay!.Split('s')[0];
+        Assert.True(double.Parse(diffToken) < 60,
+            $"Diff must stay near 10s, was: {result.ActualDisplay}");
+    }
+
+    [Fact]
+    public void DateSetRecently_LocalKind_ConvertsToUtc()
+    {
+        var recentLocal = DateTime.UtcNow.AddSeconds(-10).ToLocalTime();
+        Assert.Equal(DateTimeKind.Local, recentLocal.Kind);
+
+        var result = EvalOperator("DateSetRecently", recentLocal, null);
+        Assert.True(result.Passed);
+    }
+
+    [Fact]
     public void UnknownOperator_FailsWithMessage()
     {
         var result = EvalOperator("InvalidOp", "Max", "Max");

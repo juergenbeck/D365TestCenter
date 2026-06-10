@@ -164,6 +164,11 @@ Beispiele:
 }
 ```
 
+**Achtung:** Die Sekunden-Toleranz steht ausschließlich im Key `value` (als String).
+Einen Key `withinSeconds` gibt es im Step-Schema nicht. Unbekannte JSON-Keys werden
+beim Parsen still verworfen, ohne Warnung; ein Tippfehler oder ein erfundener Key
+führt also dazu, dass stillschweigend der Default von 120 Sekunden greift.
+
 ## Filter-Syntax (target: Query)
 
 Der `filter` ist ein Array aus Bedingungen. Alle werden **AND** verknüpft:

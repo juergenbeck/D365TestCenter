@@ -322,7 +322,16 @@ public sealed class AssertionEngine
     {
         if (actual is DateTime dt)
         {
-            var utcDt = dt.Kind == DateTimeKind.Utc ? dt : dt.ToUniversalTime();
+            // Dataverse returns DateTime values in UTC. A value arriving with
+            // Kind=Unspecified must be treated as UTC; ToUniversalTime() would
+            // interpret it as local time and subtract the offset a second time
+            // (observed as +7200s drift in CEST, Markant bug report 2026-06-10).
+            var utcDt = dt.Kind switch
+            {
+                DateTimeKind.Utc => dt,
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+                _ => dt.ToUniversalTime()
+            };
             var diffSeconds = (DateTime.UtcNow - utcDt).TotalSeconds;
             result.Passed = diffSeconds >= 0 && diffSeconds <= withinSeconds;
             result.ExpectedDisplay = $"Innerhalb der letzten {withinSeconds}s";
