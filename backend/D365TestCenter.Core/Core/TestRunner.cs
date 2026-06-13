@@ -497,6 +497,10 @@ public sealed class TestRunner
                         StepWaitForFieldValue(step, ctx);
                         break;
 
+                    case "WAITFORNOTEXISTS":
+                        StepWaitForNotExists(step, ctx);
+                        break;
+
                     case "ASSERTENVIRONMENT":
                         StepAssertEnvironment(step, ctx);
                         break;
@@ -846,6 +850,44 @@ public sealed class TestRunner
                 $"WaitForFieldValue: '{fieldName}' hat den erwarteten Wert nicht erreicht (Timeout: {step.TimeoutSeconds}s).");
 
         Log($"      WaitForFieldValue [{alias}].{fieldName} = {expectedValue} erreicht");
+    }
+
+    private void StepWaitForNotExists(TestStep step, TestContext ctx)
+    {
+        var entityName = ResolveEntity(step.Entity);
+        var filters = step.Filter
+            ?? throw new InvalidOperationException("WaitForNotExists benötigt 'filter'.");
+
+        // Platzhalter in Filter-Werten auflösen (wie StepWaitForRecord)
+        var resolvedFilters = new List<FilterCondition>();
+        foreach (var f in filters)
+        {
+            var resolvedValue = f.Value;
+            if (resolvedValue is string s)
+                resolvedValue = _placeholderEngine.Resolve(s, ctx);
+            resolvedFilters.Add(new FilterCondition { Field = f.Field, Operator = f.Operator, Value = resolvedValue });
+        }
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        var gone = _recordWaiter.WaitForRecordAbsence(
+            _service, entityName, resolvedFilters,
+            step.TimeoutSeconds, step.PollingIntervalMs,
+            msg => Log($"      {msg}"),
+            metadataCache: _entityMetadata);
+
+        sw.Stop();
+
+        if (!gone)
+            throw new InvalidOperationException(
+                $"WaitForNotExists: Record in '{entityName}' existiert noch (Timeout: {step.TimeoutSeconds}s).");
+
+        Log($"      WaitForNotExists [{entityName}] verschwunden ({sw.ElapsedMilliseconds}ms)");
+
+        // Performance-Assertion (Lösch-Frist), analog StepWaitForRecord
+        if (step.MaxDurationMs.HasValue && sw.ElapsedMilliseconds > step.MaxDurationMs.Value)
+            throw new InvalidOperationException(
+                $"WaitForNotExists [{entityName}]: Dauer {sw.ElapsedMilliseconds}ms überschreitet maxDurationMs={step.MaxDurationMs.Value}ms");
     }
 
     // ================================================================

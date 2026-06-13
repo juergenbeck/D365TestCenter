@@ -1,4 +1,5 @@
 using D365TestCenter.Core;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Xunit;
@@ -361,5 +362,117 @@ public class GenericRecordWaiterTests
         Assert.NotNull(step);
         Assert.Equal("modifiedon asc", step!.OrderBy);
         Assert.Equal(1, step.Top);
+    }
+
+    // ================================================================
+    //  WaitForRecordAbsence (WaitForNotExists)
+    // ================================================================
+
+    [Fact]
+    public void WaitForRecordAbsence_RecordAlreadyGone_ReturnsTrueOnFirstPoll()
+    {
+        var svc = new FakeCountService(0); // query yields zero matches immediately
+        var ok = new GenericRecordWaiter().WaitForRecordAbsence(
+            svc, "contact", new List<FilterCondition>(),
+            timeoutSeconds: 5, pollingIntervalMs: 5);
+
+        Assert.True(ok);
+        Assert.Equal(1, svc.RetrieveMultipleCalls);
+    }
+
+    [Fact]
+    public void WaitForRecordAbsence_DisappearsAfterPolls_ReturnsTrue()
+    {
+        // present on the first two polls, gone on the third (async delete completes)
+        var svc = new FakeCountService(1, 1, 0);
+        var ok = new GenericRecordWaiter().WaitForRecordAbsence(
+            svc, "contact", new List<FilterCondition>(),
+            timeoutSeconds: 5, pollingIntervalMs: 5);
+
+        Assert.True(ok);
+        Assert.Equal(3, svc.RetrieveMultipleCalls);
+    }
+
+    [Fact]
+    public void WaitForRecordAbsence_RecordStays_TimesOutFalse()
+    {
+        // record never disappears -> poll until the (short) timeout, return false
+        var svc = new FakeCountService(1); // sticky: always one match
+        var ok = new GenericRecordWaiter().WaitForRecordAbsence(
+            svc, "contact", new List<FilterCondition>(),
+            timeoutSeconds: 1, pollingIntervalMs: 50);
+
+        Assert.False(ok);
+        Assert.True(svc.RetrieveMultipleCalls >= 1);
+    }
+
+    [Fact]
+    public void WaitForRecordAbsence_UsesMinimalColumnSet()
+    {
+        // Count-only check: the absence waiter must not over-fetch all columns.
+        var svc = new FakeCountService(0);
+        new GenericRecordWaiter().WaitForRecordAbsence(
+            svc, "contact", new List<FilterCondition>(),
+            timeoutSeconds: 5, pollingIntervalMs: 5);
+
+        Assert.NotNull(svc.LastQuery);
+        Assert.False(svc.LastQuery!.ColumnSet.AllColumns);
+        Assert.Empty(svc.LastQuery.ColumnSet.Columns);
+    }
+
+    [Fact]
+    public void WaitForRecordAbsence_PassesFilterIntoQuery()
+    {
+        var svc = new FakeCountService(0);
+        var filters = new List<FilterCondition>
+        {
+            new() { Field = "lastname", Operator = "eq", Value = "Composite Address" }
+        };
+        new GenericRecordWaiter().WaitForRecordAbsence(
+            svc, "contact", filters, timeoutSeconds: 5, pollingIntervalMs: 5);
+
+        Assert.NotNull(svc.LastQuery);
+        Assert.Equal("contact", svc.LastQuery!.EntityName);
+        Assert.Single(svc.LastQuery.Criteria.Conditions);
+        Assert.Equal("lastname", svc.LastQuery.Criteria.Conditions[0].AttributeName);
+    }
+
+    /// <summary>
+    /// IOrganizationService double for the absence-waiter: RetrieveMultiple returns
+    /// a configurable sequence of match-counts. When the queue is exhausted it repeats
+    /// the last value (sticky), so a single-element ctor models a record that never
+    /// disappears. Captures the last QueryExpression for column-set assertions.
+    /// </summary>
+    private sealed class FakeCountService : IOrganizationService
+    {
+        private readonly Queue<int> _counts;
+        private readonly int _last;
+        public int RetrieveMultipleCalls { get; private set; }
+        public QueryExpression? LastQuery { get; private set; }
+
+        public FakeCountService(params int[] counts)
+        {
+            _counts = new Queue<int>(counts);
+            _last = counts.Length > 0 ? counts[counts.Length - 1] : 0;
+        }
+
+        public EntityCollection RetrieveMultiple(QueryBase query)
+        {
+            RetrieveMultipleCalls++;
+            LastQuery = query as QueryExpression;
+            var count = _counts.Count > 0 ? _counts.Dequeue() : _last;
+            var ec = new EntityCollection();
+            for (var i = 0; i < count; i++)
+                ec.Entities.Add(new Entity("contact", Guid.NewGuid()));
+            return ec;
+        }
+
+        public OrganizationResponse Execute(OrganizationRequest request) => throw new NotImplementedException();
+        public Guid Create(Entity entity) => throw new NotImplementedException();
+        public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet) => throw new NotImplementedException();
+        public void Update(Entity entity) => throw new NotImplementedException();
+        public void Delete(string entityName, Guid id) => throw new NotImplementedException();
+        public void Associate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) => throw new NotImplementedException();
+        public void Disassociate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) => throw new NotImplementedException();
     }
 }

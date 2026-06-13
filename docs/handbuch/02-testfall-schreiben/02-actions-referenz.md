@@ -14,6 +14,7 @@ typische Fallen, und wofür sie da sind.
 | [`Wait`](#wait) | Feste Wartezeit |
 | [`WaitForRecord` / `FindRecord`](#waitforrecord--findrecord) | Warten bis ein Record existiert (mit `orderBy`/`top` ab v5.3) |
 | [`WaitForFieldValue`](#waitforfieldvalue) | Warten bis ein Feld einen Wert hat |
+| [`WaitForNotExists`](#waitfornotexists) | Warten bis ein Record nicht mehr existiert (async-Lösch-Tests, v5.3.12) |
 | [`ExecuteRequest`](#executerequest) | Beliebige SDK-Message (Merge, QualifyLead, Custom Actions, Custom APIs) |
 | [`SetEnvironmentVariable`](#setenvironmentvariable-plugin-v53) | Environment-Variable setzen mit Auto-Restore (v5.3+) |
 | [`RetrieveEnvironmentVariable`](#retrieveenvironmentvariable-plugin-v53) | Environment-Variable lesen (v5.3+) |
@@ -228,6 +229,49 @@ Schema-Hintergrund: WaitForFieldValue ist als Single-Field-Polling konzipiert
 (`GenericRecordWaiter.WaitForFieldValue(entityName, recordId, fieldName, expectedValue, ...)`).
 Multi-Field-AND ist heute nicht implementiert — bei Bedarf zwei separate
 WaitForFieldValue-Steps oder einen FindRecord/Assert-Schritt verwenden.
+
+## WaitForNotExists
+
+Pollt bis **kein** Record mehr auf den Filter matcht. Das Polling-Pendant zu
+`WaitForFieldValue`, aber für Record-Abwesenheit statt Feldwert. Gemacht für
+async-Lösch-Tests: ein asynchrones Plugin (Post-Operation) löscht einen Record,
+und der Test soll robust auf die Löschung warten, statt mit einem fixen `Wait`
+zu raten.
+
+```json
+{ "stepNumber": 6, "action": "WaitForNotExists",
+  "entity":         "contacts",
+  "filter":         [
+    { "field": "lastname", "operator": "eq", "value": "Composite Address" }
+  ],
+  "timeoutSeconds": 90
+}
+```
+
+| Feld | Pflicht | Bedeutung |
+|---|:---:|---|
+| `entity` | ja | EntitySetName (Plural). |
+| `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax)). |
+| `timeoutSeconds` | nein | Default 120. **Empfohlen 90** für async-Delete: Puffer über die typische Job-Laufzeit, klar unter dem 2-min-Sandbox-Limit. |
+| `pollingIntervalMs` | nein | Default 2000. |
+| `maxDurationMs` | nein | Performance-Assertion: wirft, wenn die Löschung länger als X ms dauert. |
+
+**Warum eigene Action und nicht ein Flag auf `WaitForRecord`?** Bei Abwesenheit
+gibt es keinen Record zum Registrieren, keinen Alias, keine `columns`/`orderBy`.
+Eine eigene Action hält den Vertrag sauber, symmetrisch zu `WaitForFieldValue`.
+
+**Verhalten bei Timeout:** existiert der Record nach `timeoutSeconds` noch,
+wirft der Step (`Outcome=Error`), analog `WaitForRecord`.
+
+**Sandbox-Grenze:** im async-CRUD-Trigger-Plugin-Pfad gilt das 2-min-Sandbox-Limit
+für den gesamten Testlauf. Für lange async-Lösch-Ketten den CLI-Pfad bevorzugen
+(kein Sandbox-Timeout).
+
+**Migration von fixem Wait:** Statt `Wait` plus `Assert ... NotExists` (flaky,
+wenn der async-Job mal länger braucht als der Wait) ein einzelner
+`WaitForNotExists`-Step. Er scheitert von selbst, wenn der Record innerhalb des
+Timeouts nicht verschwindet, ein separater `Assert NotExists` ist dann nicht
+mehr nötig.
 
 ## ExecuteRequest
 

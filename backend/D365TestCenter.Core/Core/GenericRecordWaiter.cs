@@ -95,6 +95,50 @@ public sealed class GenericRecordWaiter
     }
 
     /// <summary>
+    /// Polls until NO record in the specified entity matches the filter conditions.
+    /// Mirror of <see cref="WaitForRecord"/> for asynchronous deletions: returns
+    /// true once the query yields zero matches, false on timeout. Returns bool
+    /// (not an Entity) because there is no record to hand back, symmetric to
+    /// <see cref="WaitForFieldValue"/>.
+    /// </summary>
+    /// <param name="metadataCache">Optional metadata cache for FB-32 type-aware
+    /// filter conversion, same semantics as WaitForRecord.</param>
+    public bool WaitForRecordAbsence(
+        IOrganizationService service,
+        string entityName,
+        List<FilterCondition> filters,
+        int timeoutSeconds = 120,
+        int pollingIntervalMs = 2000,
+        Action<string>? log = null,
+        EntityMetadataCache? metadataCache = null)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        // Initial delay to give the async delete job time to start, matching
+        // the WaitForRecord cadence.
+        Thread.Sleep(Math.Min(pollingIntervalMs, 1500));
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var query = BuildQuery(entityName, filters, columns: null, topCount: 1, metadataCache: metadataCache);
+            // Count-only check: the primary key alone is enough, no column fetch.
+            query.ColumnSet = new ColumnSet();
+
+            var results = service.RetrieveMultiple(query);
+            if (results.Entities.Count == 0)
+            {
+                log?.Invoke($"WaitForNotExists: Record in '{entityName}' verschwunden");
+                return true;
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForNotExists: Timeout ({timeoutSeconds}s), Record in '{entityName}' noch vorhanden");
+        return false;
+    }
+
+    /// <summary>
     /// Builds a QueryExpression from a list of FilterConditions.
     /// </summary>
     /// <param name="orderBy">Optional comma-separated order expression, OData style

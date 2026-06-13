@@ -425,6 +425,102 @@ public class PackValidatorTests
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  R10 PRECONDITIONS_OBSOLETE / ASSERTIONS_OBSOLETE (Bridge T6)
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ObsoleteAssertionsArray_FromJson_IsError()
+    {
+        // Top-level assertions[] is the pre-ADR-0004 schema. Newtonsoft drops it
+        // (TestCase only has Steps); [JsonExtensionData] keeps it visible to R10.
+        const string json = """
+        {
+            "id": "OBS-ASSERT-01", "title": "obsolete top-level assertions",
+            "steps": [
+                { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "fields": { "name": "x" } }
+            ],
+            "assertions": [
+                { "field": "name", "operator": "Equals", "value": "x" }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "ASSERTIONS_OBSOLETE");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Null(finding.StepNumber);
+        Assert.Contains("assertions", finding.Message);
+    }
+
+    [Fact]
+    public void ObsoletePreconditionsArray_FromJson_IsError()
+    {
+        const string json = """
+        {
+            "id": "OBS-PRE-01", "title": "obsolete top-level preconditions",
+            "preconditions": [
+                { "action": "CreateRecord", "entity": "accounts" }
+            ],
+            "steps": [
+                { "stepNumber": 1, "action": "Assert", "target": "Record", "recordRef": "{a.id}", "field": "name", "operator": "Equals", "value": "x" }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "PRECONDITIONS_OBSOLETE");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void BothObsoleteArrays_FromJson_TwoErrors()
+    {
+        const string json = """
+        {
+            "id": "OBS-BOTH-01", "title": "both obsolete arrays",
+            "preconditions": [ { "action": "CreateRecord" } ],
+            "assertions": [ { "field": "x", "operator": "Equals", "value": "y" } ],
+            "steps": [ { "stepNumber": 1, "action": "Wait", "waitSeconds": 1 } ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.Contains(report.Findings, f => f.Code == "PRECONDITIONS_OBSOLETE");
+        Assert.Contains(report.Findings, f => f.Code == "ASSERTIONS_OBSOLETE");
+    }
+
+    [Fact]
+    public void ModernStepsOnly_FromJson_NoObsoleteFinding()
+    {
+        const string json = """
+        {
+            "id": "MOD-01", "title": "modern steps-only",
+            "steps": [
+                { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "fields": { "name": "x" } }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "ASSERTIONS_OBSOLETE" || f.Code == "PRECONDITIONS_OBSOLETE");
+    }
+
+    [Fact]
+    public void ObsoleteRule_DirectlyConstructedTestCase_NullSafe()
+    {
+        // A TestCase built in code (not deserialized) has AdditionalData=null.
+        // The rule must not throw.
+        var tc = new TestCase { Id = "X", Title = "code-built", Steps = new List<TestStep>() };
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "ASSERTIONS_OBSOLETE" || f.Code == "PRECONDITIONS_OBSOLETE");
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  TestRunner integration (OE-6 Engine-Integration)
     // ════════════════════════════════════════════════════════════════
 
@@ -496,6 +592,29 @@ public class PackValidatorTests
         var msg = result.Results[0].ErrorMessage ?? "";
         Assert.Contains("ACTION_UNKNOWN", msg);
         Assert.Contains("CreateRecord", msg);
+    }
+
+    [Fact]
+    public void TestRunner_PreRunValidation_AbortsOnObsoleteAssertions()
+    {
+        // End-to-end: a test-level R10 Error (obsolete top-level assertions[])
+        // must abort the run before any service call, just like step-level errors.
+        var svc = new StubOrgService();
+        var runner = new TestRunner(svc);
+        const string json = """
+        {
+            "id": "OBS-RUN-01", "title": "obsolete assertions abort",
+            "steps": [ { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "fields": { "name": "x" } } ],
+            "assertions": [ { "field": "name", "operator": "Equals", "value": "x" } ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+
+        var result = runner.RunAll(new List<TestCase> { tc });
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Equal(0, svc.ExecuteCallCount);
+        Assert.Contains("ASSERTIONS_OBSOLETE", result.Results[0].ErrorMessage ?? "");
     }
 
     // ════════════════════════════════════════════════════════════════

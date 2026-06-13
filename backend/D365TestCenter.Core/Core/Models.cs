@@ -74,6 +74,16 @@ public sealed class TestCase
 
     [JsonProperty("sharedContext")]
     public string? SharedContext { get; set; }
+
+    /// <summary>
+    /// Captures unknown top-level JSON properties on deserialization (Newtonsoft
+    /// [JsonExtensionData]). Used by the pack validator (R10): an obsolete
+    /// pre-ADR-0004 top-level 'preconditions[]'/'assertions[]' array would otherwise
+    /// be silently dropped (TestCase only has 'Steps'), and the validator, which runs
+    /// on the deserialized object, could no longer see it.
+    /// </summary>
+    [JsonExtensionData]
+    public IDictionary<string, JToken>? AdditionalData { get; set; }
 }
 
 /// <summary>

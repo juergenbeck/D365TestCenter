@@ -35,6 +35,15 @@ braucht weder Auth noch Org-Metadata. Dynamische Checks gegen die Ziel-Env
 | `STATECODE_STATUSCODE_HINT` | Warning | Create/Update setzt `statuscode` ohne `statecode` (Plattform-Validierung lehnt oft ab). |
 | `ASSERT_TARGET_INCOMPLETE` | Error | `Assert target=Query` ohne `entity`+`filter`, oder `target=Record` ohne `recordRef`. |
 | `STEP_NUMBER_DUPLICATE` | Warning | Zwei Steps mit derselben `stepNumber > 0` in einem Test. |
+| `PRECONDITIONS_OBSOLETE` | Error | Obsoletes Top-Level-`preconditions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `steps[]` migrieren. |
+| `ASSERTIONS_OBSOLETE` | Error | Obsoletes Top-Level-`assertions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `Assert`-Steps migrieren. |
+
+Die beiden `*_OBSOLETE`-Regeln (v5.3.12) schützen das ADR-0004-Schema: seit
+ADR-0004 ist ein Test eine einzige `steps[]`-Liste. Ein Test mit altem
+Top-Level-`preconditions[]` oder `assertions[]` parst zwar sauber, aber die
+Engine ignoriert die Arrays still (das Modell kennt nur `Steps`), der Test
+prüft dann **nichts** und läuft fälschlich grün. Der Validator fängt diese
+Arrays über `[JsonExtensionData]` ab, bevor sie verloren gehen.
 
 ## CLI: `validate`-Sub-Command
 

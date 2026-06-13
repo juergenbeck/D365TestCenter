@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace D365TestCenter.Core.Validation;
 
@@ -17,6 +18,8 @@ namespace D365TestCenter.Core.Validation;
 ///   STATECODE_STATUSCODE_HINT   - statuscode without statecode in the same Create/Update fields
 ///   ASSERT_TARGET_INCOMPLETE    - Assert target=Query without entity+filter, or target=Record without recordRef
 ///   STEP_NUMBER_DUPLICATE       - two steps share the same stepNumber inside a test case
+///   PRECONDITIONS_OBSOLETE      - obsolete pre-ADR-0004 top-level preconditions[] array (R10)
+///   ASSERTIONS_OBSOLETE         - obsolete pre-ADR-0004 top-level assertions[] array (R10)
 ///
 /// Phase 2 (separate decision) would add metadata-aware checks (logical-name
 /// existence, polymorph resolution, optionset plausibility).
@@ -40,6 +43,7 @@ public sealed class PackValidator : IPackValidator
         "WaitForRecord",
         "FindRecord",
         "WaitForFieldValue",
+        "WaitForNotExists",
         "AssertEnvironment",
         "Assert",
         "Wait",
@@ -118,10 +122,47 @@ public sealed class PackValidator : IPackValidator
             });
         }
 
+        // R10 PRECONDITIONS_OBSOLETE / ASSERTIONS_OBSOLETE: pre-ADR-0004 schema.
+        // These top-level arrays are silently dropped by Newtonsoft (TestCase only
+        // has 'Steps'); [JsonExtensionData] on TestCase keeps them visible here so a
+        // test that asserts nothing (null-assertion) does not slip through green.
+        CheckObsoleteTopLevelArray(tc, "preconditions", "PRECONDITIONS_OBSOLETE", report);
+        CheckObsoleteTopLevelArray(tc, "assertions", "ASSERTIONS_OBSOLETE", report);
+
         foreach (var step in tc.Steps)
         {
             ValidateStep(tc, step, report);
         }
+    }
+
+    /// <summary>
+    /// R10: flags an obsolete pre-ADR-0004 top-level array (preconditions/assertions).
+    /// Since ADR-0004 a test is a single ordered steps[] list; Models.cs knows only
+    /// 'Steps', so Newtonsoft silently drops a top-level 'preconditions[]'/'assertions[]'.
+    /// Such a test parses clean but asserts nothing. [JsonExtensionData] on TestCase
+    /// preserves the dropped keys in AdditionalData so this rule can see them.
+    /// </summary>
+    private static void CheckObsoleteTopLevelArray(
+        TestCase tc, string key, string code, ValidationReport report)
+    {
+        if (tc.AdditionalData == null) return;
+        if (!tc.AdditionalData.TryGetValue(key, out var token)) return;
+
+        var count = token is JArray arr ? arr.Count : 0;
+        report.Add(new ValidationFinding
+        {
+            TestId = tc.Id,
+            StepNumber = null,
+            Severity = ValidationSeverity.Error,
+            Code = code,
+            Message = $"Test case carries an obsolete top-level '{key}[]' array ({count} entries). " +
+                      "Since ADR-0004 a test is a single ordered 'steps[]' list; the engine knows only " +
+                      $"'Steps' and silently ignores '{key}[]', so these entries run as a no-op and the " +
+                      "test asserts nothing.",
+            Suggestion = string.Equals(key, "assertions", StringComparison.OrdinalIgnoreCase)
+                ? "Move each assertion into the 'steps[]' list as an 'Assert' action."
+                : "Move each precondition into the 'steps[]' list as a 'CreateRecord' (or matching) action."
+        });
     }
 
     private void ValidateStep(TestCase tc, TestStep step, ValidationReport report)
