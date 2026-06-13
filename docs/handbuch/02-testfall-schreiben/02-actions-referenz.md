@@ -155,7 +155,7 @@ Record sicher schon existiert (statt darauf zu warten).
 | `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax)). |
 | `alias` | nein | Wenn gesetzt: der gefundene Record bekommt diesen Alias. |
 | `columns` | nein | Welche Felder laden. |
-| `timeoutSeconds` | nein | Default 60. |
+| `timeoutSeconds` | nein | Default 120. |
 | `orderBy` | nein | Sortierung (Plugin v5.3+), siehe unten. |
 | `top` | nein | Max-Treffer (Plugin v5.3+), Default 1. |
 
@@ -222,7 +222,7 @@ Pollt bis **ein** Feld des Alias-Records einen erwarteten Wert hat.
 | `fields` | ja | Single-Key-Map. Der **Key** ist der zu beobachtende Feldname; der Wert wird ignoriert (Konvention: `null` setzen). Mehrere Keys werden nicht unterstützt — nur der erste wird ausgewertet. |
 | `expectedValue` | ja | Der erwartete Wert für das Feld. Platzhalter wie `{alias.id}` werden aufgelöst. |
 | `entity` | nein | Logical-Name der Entity. Default: aus dem Alias-Record. |
-| `timeoutSeconds` | nein | Default 60. |
+| `timeoutSeconds` | nein | Default 120. |
 | `pollingIntervalMs` | nein | Default 2000. |
 
 Schema-Hintergrund: WaitForFieldValue ist als Single-Field-Polling konzipiert
