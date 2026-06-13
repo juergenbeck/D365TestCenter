@@ -45,7 +45,10 @@ ALLES_GUT_RE = re.compile(r'\balles\s+gut\b', re.IGNORECASE)
 
 RESEARCH_RE = re.compile(r'"name":"(Read|Grep|Glob|WebFetch|WebSearch)"', re.IGNORECASE)
 PERSIST_NAME_RE = re.compile(r'"name":\s*"(Write|Edit)"', re.IGNORECASE)
-PERSIST_PATH_RE = re.compile(r'"file_path":\s*"[^"]*(skills|architekturen|memory)', re.IGNORECASE)
+# Wissens-Write-Pfade dieses Repos (repo-spezifisch an die Doku-Struktur angepasst,
+# nicht die Markant-Defaults skills|architekturen|memory): der docs/-Baum, Skills und
+# der Auto-Memory-Pfad. Ein Treffer setzt den Recherche-Block-Zähler zurück.
+PERSIST_PATH_RE = re.compile(r'"file_path":\s*"[^"]*(docs|skills|memory)', re.IGNORECASE)
 
 
 def emit(msg):
