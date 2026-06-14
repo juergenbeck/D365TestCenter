@@ -378,6 +378,17 @@ public sealed class TestStep
     /// </summary>
     [JsonProperty("expectException")]
     public ExpectExceptionSpec? ExpectException { get; set; }
+
+    /// <summary>
+    /// Captures unknown step-level JSON properties on deserialization (Newtonsoft
+    /// [JsonExtensionData]). Used by the pack validator (STEP_KEY_UNKNOWN, Backlog N):
+    /// an unknown key such as 'withinSeconds'/'timeoutMs' is otherwise silently dropped
+    /// (MissingMemberHandling default Ignore), so the validator, which runs on the
+    /// deserialized object, could not warn about the typo (FB-45). Same mechanism as
+    /// TestCase.AdditionalData for R10, one level deeper.
+    /// </summary>
+    [JsonExtensionData]
+    public IDictionary<string, JToken>? AdditionalData { get; set; }
 }
 
 /// <summary>

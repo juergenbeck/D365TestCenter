@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace D365TestCenter.Core.Validation;
@@ -20,6 +22,7 @@ namespace D365TestCenter.Core.Validation;
 ///   STEP_NUMBER_DUPLICATE       - two steps share the same stepNumber inside a test case
 ///   PRECONDITIONS_OBSOLETE      - obsolete pre-ADR-0004 top-level preconditions[] array (R10)
 ///   ASSERTIONS_OBSOLETE         - obsolete pre-ADR-0004 top-level assertions[] array (R10)
+///   STEP_KEY_UNKNOWN            - unknown step-level key silently dropped on parse (e.g. withinSeconds/timeoutMs), Warning (Backlog N)
 ///
 /// Phase 2 (separate decision) would add metadata-aware checks (logical-name
 /// existence, polymorph resolution, optionset plausibility).
@@ -73,6 +76,33 @@ public sealed class PackValidator : IPackValidator
     {
         "ExecuteRequest", "CallCustomApi", "ExecuteAction"
     };
+
+    /// <summary>
+    /// All known step-level JSON keys, reflected from the [JsonProperty] attributes on
+    /// <see cref="TestStep"/>. Stays automatically in sync with the model (driftproof),
+    /// unlike a hand-maintained list. Used by STEP_KEY_UNKNOWN to flag keys that
+    /// Newtonsoft silently drops (MissingMemberHandling default Ignore).
+    /// </summary>
+    private static readonly HashSet<string> _knownStepKeys = BuildKnownStepKeys();
+
+    /// <summary>
+    /// Step keys that are intentional inline documentation, not a typo, so
+    /// STEP_KEY_UNKNOWN does not flag them. 'comment' is used as an inline note in
+    /// existing UI packs; the others are common conventions.
+    /// </summary>
+    private static readonly HashSet<string> _stepKeyAnnotationAllowlist =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "comment", "note", "_comment", "$comment" };
+
+    private static HashSet<string> BuildKnownStepKeys()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var prop in typeof(TestStep).GetProperties())
+        {
+            var attr = prop.GetCustomAttribute<JsonPropertyAttribute>();
+            if (!string.IsNullOrEmpty(attr?.PropertyName)) set.Add(attr!.PropertyName!);
+        }
+        return set;
+    }
 
     public ValidationReport Validate(IEnumerable<TestCase> testCases)
     {
@@ -292,6 +322,33 @@ public sealed class PackValidator : IPackValidator
                 }
             }
         }
+
+        // R11 STEP_KEY_UNKNOWN: keys that are not part of the step schema are silently
+        // dropped by Newtonsoft (MissingMemberHandling default Ignore). [JsonExtensionData]
+        // on TestStep preserves them in AdditionalData so a typo like 'withinSeconds' or
+        // 'timeoutMs' is flagged instead of running with the schema default (FB-45).
+        // Warning severity; intentional inline documentation keys are allow-listed.
+        if (step.AdditionalData != null)
+        {
+            foreach (var key in step.AdditionalData.Keys)
+            {
+                if (_stepKeyAnnotationAllowlist.Contains(key)) continue;
+
+                var suggestion = SuggestStepKey(key);
+                report.Add(new ValidationFinding
+                {
+                    TestId = tc.Id,
+                    StepNumber = step.StepNumber,
+                    Severity = ValidationSeverity.Warning,
+                    Code = "STEP_KEY_UNKNOWN",
+                    Message = $"Unknown step key '{key}'. It is not part of the step schema and is " +
+                              "silently ignored on parse, so its value has no effect (the schema default applies).",
+                    Suggestion = suggestion != null
+                        ? $"Did you mean '{suggestion}'?"
+                        : "Remove the key or use a documented step property. Inline notes can use 'comment'."
+                });
+            }
+        }
     }
 
     private static void CheckFilterField(TestCase tc, TestStep step, FilterCondition f, ValidationReport report)
@@ -383,6 +440,27 @@ public sealed class PackValidator : IPackValidator
 
         var best = (Name: (string?)null, Distance: int.MaxValue);
         foreach (var candidate in KnownActions)
+        {
+            var d = LevenshteinDistance(actual.ToLowerInvariant(), candidate.ToLowerInvariant());
+            if (d < best.Distance)
+            {
+                best = (candidate, d);
+            }
+        }
+        return best.Distance <= 2 ? best.Name : null;
+    }
+
+    /// <summary>
+    /// Suggest a known step key within Levenshtein distance 2 of the input. Returns
+    /// null if no close match exists (most unknown keys are wrong concepts, not typos,
+    /// e.g. 'timeoutMs' is far from 'timeoutSeconds', so the generic hint is shown).
+    /// </summary>
+    internal static string? SuggestStepKey(string actual)
+    {
+        if (string.IsNullOrWhiteSpace(actual)) return null;
+
+        var best = (Name: (string?)null, Distance: int.MaxValue);
+        foreach (var candidate in _knownStepKeys)
         {
             var d = LevenshteinDistance(actual.ToLowerInvariant(), candidate.ToLowerInvariant());
             if (d < best.Distance)

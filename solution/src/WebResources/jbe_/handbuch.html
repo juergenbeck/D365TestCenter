@@ -5125,6 +5125,15 @@ Test.</td>
 Wird still ignoriert, Test prüft nichts. Als <code>Assert</code>-Steps
 migrieren.</td>
 </tr>
+<tr>
+<td><code>STEP_KEY_UNKNOWN</code></td>
+<td>Warning</td>
+<td>Step-Key, der nicht im Schema steht (z.B.
+<code>withinSeconds</code>, <code>timeoutMs</code>, <code>ms</code>).
+Wird beim Parse still ignoriert, der Wert wirkt nicht.
+<code>comment</code>/<code>note</code> sind als Inline-Doku erlaubt.
+(v5.3.13)</td>
+</tr>
 </tbody>
 </table>
 <p>Die beiden <code>*_OBSOLETE</code>-Regeln (v5.3.12) schützen das
@@ -5136,6 +5145,19 @@ Modell kennt nur <code>Steps</code>), der Test prüft dann
 <strong>nichts</strong> und läuft fälschlich grün. Der Validator fängt
 diese Arrays über <code>[JsonExtensionData]</code> ab, bevor sie
 verloren gehen.</p>
+<p><code>STEP_KEY_UNKNOWN</code> (v5.3.13, Backlog N) ist die Schwester
+davon eine Ebene tiefer: ein unbekannter <strong>Step</strong>-Key
+(Tippfehler oder falsches Konzept, z.B. <code>withinSeconds</code> statt
+der <code>DateSetRecently</code>-Toleranz im <code>value</code>-Key,
+oder <code>timeoutMs</code> statt <code>timeoutSeconds</code>) wird von
+Newtonsoft still verworfen (<code>MissingMemberHandling</code>-Default
+<code>Ignore</code>), der Wert greift nicht. Ein
+<code>[JsonExtensionData]</code> auf <code>TestStep</code> macht die
+übrig gebliebenen Keys sichtbar. Severity Warning (kein Test-Abbruch),
+aber im CLI <code>validate --strict</code> ein Build-Failure. Die
+Schema-Key-Liste wird per Reflection aus <code>TestStep</code>
+abgeleitet (bleibt automatisch synchron); bewusste Inline-Doku-Keys
+(<code>comment</code>, <code>note</code>) sind erlaubt.</p>
 <h2 id="cli-validate-sub-command">CLI:
 <code>validate</code>-Sub-Command</h2>
 <p>Pack-File lokal prüfen, ohne Run zu starten:</p>

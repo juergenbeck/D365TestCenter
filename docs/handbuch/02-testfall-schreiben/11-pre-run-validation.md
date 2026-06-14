@@ -37,6 +37,7 @@ braucht weder Auth noch Org-Metadata. Dynamische Checks gegen die Ziel-Env
 | `STEP_NUMBER_DUPLICATE` | Warning | Zwei Steps mit derselben `stepNumber > 0` in einem Test. |
 | `PRECONDITIONS_OBSOLETE` | Error | Obsoletes Top-Level-`preconditions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `steps[]` migrieren. |
 | `ASSERTIONS_OBSOLETE` | Error | Obsoletes Top-Level-`assertions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `Assert`-Steps migrieren. |
+| `STEP_KEY_UNKNOWN` | Warning | Step-Key, der nicht im Schema steht (z.B. `withinSeconds`, `timeoutMs`, `ms`). Wird beim Parse still ignoriert, der Wert wirkt nicht. `comment`/`note` sind als Inline-Doku erlaubt. (v5.3.13) |
 
 Die beiden `*_OBSOLETE`-Regeln (v5.3.12) schützen das ADR-0004-Schema: seit
 ADR-0004 ist ein Test eine einzige `steps[]`-Liste. Ein Test mit altem
@@ -44,6 +45,17 @@ Top-Level-`preconditions[]` oder `assertions[]` parst zwar sauber, aber die
 Engine ignoriert die Arrays still (das Modell kennt nur `Steps`), der Test
 prüft dann **nichts** und läuft fälschlich grün. Der Validator fängt diese
 Arrays über `[JsonExtensionData]` ab, bevor sie verloren gehen.
+
+`STEP_KEY_UNKNOWN` (v5.3.13, Backlog N) ist die Schwester davon eine Ebene
+tiefer: ein unbekannter **Step**-Key (Tippfehler oder falsches Konzept, z.B.
+`withinSeconds` statt der `DateSetRecently`-Toleranz im `value`-Key, oder
+`timeoutMs` statt `timeoutSeconds`) wird von Newtonsoft still verworfen
+(`MissingMemberHandling`-Default `Ignore`), der Wert greift nicht. Ein
+`[JsonExtensionData]` auf `TestStep` macht die übrig gebliebenen Keys sichtbar.
+Severity Warning (kein Test-Abbruch), aber im CLI `validate --strict` ein
+Build-Failure. Die Schema-Key-Liste wird per Reflection aus `TestStep`
+abgeleitet (bleibt automatisch synchron); bewusste Inline-Doku-Keys
+(`comment`, `note`) sind erlaubt.
 
 ## CLI: `validate`-Sub-Command
 

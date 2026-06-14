@@ -521,6 +521,124 @@ public class PackValidatorTests
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  STEP_KEY_UNKNOWN (Backlog N)
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void UnknownStepKey_WithinSeconds_FromJson_IsWarning()
+    {
+        // FB-45: 'withinSeconds' is not a step key; the DateSetRecently tolerance
+        // belongs in 'value'. Newtonsoft drops it; [JsonExtensionData] on TestStep
+        // keeps it visible so STEP_KEY_UNKNOWN can warn.
+        const string json = """
+        {
+            "id": "UK-WS-01", "title": "unknown step key withinSeconds",
+            "steps": [
+                { "stepNumber": 1, "action": "Assert", "target": "Record", "recordRef": "{a.id}",
+                  "field": "modifiedon", "operator": "DateSetRecently", "withinSeconds": 160 }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "STEP_KEY_UNKNOWN");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Equal(1, finding.StepNumber);
+        Assert.Contains("withinSeconds", finding.Message);
+    }
+
+    [Fact]
+    public void UnknownStepKey_CloseTypo_SuggestsKnownKey()
+    {
+        // 'timeoutSecond' is Levenshtein distance 1 from 'timeoutSeconds'.
+        const string json = """
+        {
+            "id": "UK-TYPO-01", "title": "close typo",
+            "steps": [
+                { "stepNumber": 1, "action": "WaitForNotExists", "entity": "contacts", "timeoutSecond": 90 }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "STEP_KEY_UNKNOWN");
+        Assert.Contains("timeoutSeconds", finding.Suggestion);
+    }
+
+    [Fact]
+    public void UnknownStepKey_TimeoutMs_RealWorld_IsWarning()
+    {
+        // Empirical Backlog-N finding: BrowserAction waitFor with 'timeoutMs' instead
+        // of 'timeoutSeconds'. Wrong concept (far from any key), so generic hint.
+        const string json = """
+        {
+            "id": "UK-TMS-01", "title": "timeoutMs typo",
+            "steps": [
+                { "stepNumber": 1, "action": "BrowserAction", "operation": "waitFor", "selector": "[role='row']", "timeoutMs": 30000 }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "STEP_KEY_UNKNOWN");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("timeoutMs", finding.Message);
+    }
+
+    [Fact]
+    public void KnownStepKeysOnly_FromJson_NoUnknownKeyFinding()
+    {
+        // All keys are part of the TestStep schema -> no STEP_KEY_UNKNOWN.
+        const string json = """
+        {
+            "id": "UK-OK-01", "title": "all known keys",
+            "steps": [
+                { "stepNumber": 1, "action": "WaitForNotExists", "entity": "contacts",
+                  "filter": [ { "field": "contactid", "operator": "eq", "value": "{c.id}" } ],
+                  "timeoutSeconds": 90, "pollingIntervalMs": 2000, "maxDurationMs": 60000, "description": "wait" }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "STEP_KEY_UNKNOWN");
+    }
+
+    [Fact]
+    public void UnknownStepKey_CommentAnnotation_NotFlagged()
+    {
+        // 'comment' is an intentional inline-documentation key (allow-listed),
+        // empirically used in the Markant UI packs. Must not be flagged.
+        const string json = """
+        {
+            "id": "UK-CMT-01", "title": "comment annotation",
+            "steps": [
+                { "stepNumber": 1, "action": "Wait", "waitSeconds": 1, "comment": "inline note" }
+            ]
+        }
+        """;
+        var tc = Newtonsoft.Json.JsonConvert.DeserializeObject<TestCase>(json)!;
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "STEP_KEY_UNKNOWN");
+    }
+
+    [Fact]
+    public void UnknownStepKey_DirectlyConstructedStep_NullSafe()
+    {
+        // A code-built TestStep has AdditionalData=null. The rule must not throw
+        // and must not produce a finding.
+        var tc = TestCaseWith(new TestStep { StepNumber = 1, Action = "Wait", WaitSeconds = 1 });
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "STEP_KEY_UNKNOWN");
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  TestRunner integration (OE-6 Engine-Integration)
     // ════════════════════════════════════════════════════════════════
 
