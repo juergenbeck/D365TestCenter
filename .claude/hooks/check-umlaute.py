@@ -166,7 +166,7 @@ def main():
            "Bitte echte Umlaute (ä ö ü ß) statt ae/oe/ue/ss verwenden. "
            "Technische Bezeichner (Variablen, Funktionsnamen) sind ausgenommen. Detail: Skill umlaute."
            % (fname, scope_note, len(hits), '\n'.join(details)))
-    print(json.dumps({'hookSpecificOutput': {'additionalContext': msg}}, ensure_ascii=False))
+    print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': msg}}, ensure_ascii=False))
     return 0
 
 
