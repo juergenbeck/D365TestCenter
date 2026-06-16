@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>D365TestCenter.CrmPlugin</RootNamespace>
     <AssemblyName>D365TestCenter.CrmPlugin</AssemblyName>
-    <Version>5.3.15</Version>
+    <Version>5.3.16</Version>
     <Authors>Integration Test Center Team</Authors>
     <Description>D365 Test Center - Plugin Package (Custom API + CRUD-Trigger)</Description>
 
@@ -61,6 +61,20 @@
           AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Microsoft.Bcl'))
           AND !$([System.String]::new('%(ReferenceCopyLocalPaths.Filename)').StartsWith('System.'))
           AND '%(ReferenceCopyLocalPaths.Filename)' != 'netstandard'"
+        TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
+
+      <!-- FB-43 (Backlog K): ship System.ServiceModel.Primitives/.Http explicitly.
+           They come in transitively via CrmSdk.CoreAssemblies but are dropped by the
+           System.* rule above. Some sandbox tenants (e.g. LM DEV) lack the 4.10.3 GAC
+           version, which makes the sync/async plugin path throw
+           FileLoadException: System.ServiceModel.Primitives, Version=4.10.3.0. Bundling
+           the exact same version (~38 KB total) makes the plugin self-contained.
+           Verified by Dependency-Graph (dotnet nuget why) that CrmSdk, not Bogus, is
+           the source; OE-7 'Bogus weg' would not have fixed this. -->
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)"
+        Condition="
+          '%(ReferenceCopyLocalPaths.Filename)' == 'System.ServiceModel.Primitives'
+          OR '%(ReferenceCopyLocalPaths.Filename)' == 'System.ServiceModel.Http'"
         TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
     </ItemGroup>
   </Target>
