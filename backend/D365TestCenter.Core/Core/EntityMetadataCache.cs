@@ -34,7 +34,9 @@ public sealed class EntityMetadataCache
     /// explizit.
     /// </summary>
     public static EntityMetadataCache CreateForTesting(
-        Dictionary<string, Dictionary<string, AttributeTypeCode>> seed)
+        Dictionary<string, Dictionary<string, AttributeTypeCode>> seed,
+        Dictionary<string, Dictionary<string, HashSet<int>>>? optionSetValues = null,
+        Dictionary<string, Dictionary<string, string[]>>? lookupTargets = null)
     {
         var cache = new EntityMetadataCache(new NullOrganizationService());
         foreach (var entityKvp in seed)
@@ -44,6 +46,21 @@ public sealed class EntityMetadataCache
             {
                 info.AttributeTypes[attrKvp.Key] = attrKvp.Value;
             }
+
+            if (optionSetValues != null && optionSetValues.TryGetValue(entityKvp.Key, out var osSeed))
+            {
+                foreach (var os in osSeed) info.OptionSetValues[os.Key] = new HashSet<int>(os.Value);
+            }
+
+            if (lookupTargets != null && lookupTargets.TryGetValue(entityKvp.Key, out var ltSeed))
+            {
+                foreach (var lt in ltSeed)
+                {
+                    info.LookupAllTargets[lt.Key] = lt.Value;
+                    if (lt.Value.Length > 0) info.LookupTargets[lt.Key] = lt.Value[0];
+                }
+            }
+
             cache._cache[entityKvp.Key] = info;
         }
         return cache;
@@ -191,9 +208,24 @@ public sealed class EntityMetadataInfo
     public Dictionary<string, AttributeTypeCode> AttributeTypes { get; set; }
         = new Dictionary<string, AttributeTypeCode>(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>attributeName -> targetEntityLogicalName (for Lookups only)</summary>
+    /// <summary>attributeName -> first targetEntityLogicalName (for Lookups only).
+    /// Kept for backward compatibility with the runtime @odata.bind resolution that
+    /// only needs a single target. Polymorph-aware callers use <see cref="LookupAllTargets"/>.</summary>
     public Dictionary<string, string> LookupTargets { get; set; }
         = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>attributeName -> all target entity logical names (for Lookups only).
+    /// Polymorph lookups (Customer/Owner/Regarding) carry more than one target;
+    /// the OE-8 polymorph-target check validates the bound entity against this set.</summary>
+    public Dictionary<string, string[]> LookupAllTargets { get; set; }
+        = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>attributeName -> set of valid option values (Picklist/State/Status/
+    /// MultiSelectPicklist). Populated from the same RetrieveEntity response, so loading
+    /// option values costs no extra service call (OE-8 performance note). Empty for
+    /// non-optionset attributes.</summary>
+    public Dictionary<string, HashSet<int>> OptionSetValues { get; set; }
+        = new Dictionary<string, HashSet<int>>(StringComparer.OrdinalIgnoreCase);
 
     public static EntityMetadataInfo FromMetadata(EntityMetadata entityMetadata)
     {
@@ -209,12 +241,30 @@ public sealed class EntityMetadataInfo
                 info.AttributeTypes[attr.LogicalName] = attr.AttributeType.Value;
             }
 
-            // For lookup fields, store the first target entity
+            // For lookup fields, store the first target (back-compat) plus all targets.
             if (attr is LookupAttributeMetadata lookupAttr
                 && lookupAttr.Targets != null
                 && lookupAttr.Targets.Length > 0)
             {
                 info.LookupTargets[lookupAttr.LogicalName] = lookupAttr.Targets[0];
+                info.LookupAllTargets[lookupAttr.LogicalName] = lookupAttr.Targets;
+            }
+
+            // OptionSet values: Picklist/State/Status/MultiSelectPicklist all derive
+            // from EnumAttributeMetadata and carry their options inline in the
+            // EntityFilters.Attributes response (no extra RetrieveOptionSet call).
+            // Boolean (TwoOptions) is intentionally skipped: packs set those as
+            // true/false, not numeric, so a value check would only false-positive.
+            if (attr is EnumAttributeMetadata enumAttr
+                && enumAttr.OptionSet?.Options != null
+                && !string.IsNullOrEmpty(attr.LogicalName))
+            {
+                var values = new HashSet<int>();
+                foreach (var opt in enumAttr.OptionSet.Options)
+                {
+                    if (opt.Value.HasValue) values.Add(opt.Value.Value);
+                }
+                if (values.Count > 0) info.OptionSetValues[attr.LogicalName] = values;
             }
         }
 

@@ -928,6 +928,267 @@ public class PackValidatorTests
         Assert.DoesNotContain(new PackValidator().ValidateOne(tc, AccountCache()).Findings, f => f.Code == "ENTITY_UNKNOWN");
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  OPTIONSET_VALUE_IMPLAUSIBLE / POLYMORPH_TARGET_INVALID (OE-8 Phase 2 rest)
+    // ════════════════════════════════════════════════════════════════
+
+    // account: statecode {0,1}, za_accounttype {105710000,105710001},
+    //          primarycontactid -> [contact] (single target).
+    // contact: parentcustomerid -> [account, contact] (polymorph Customer).
+    private static EntityMetadataCache RichCache() =>
+        EntityMetadataCache.CreateForTesting(
+            new Dictionary<string, Dictionary<string, AttributeTypeCode>>
+            {
+                ["account"] = new Dictionary<string, AttributeTypeCode>
+                {
+                    ["name"] = AttributeTypeCode.String,
+                    ["statecode"] = AttributeTypeCode.State,
+                    ["za_accounttype"] = AttributeTypeCode.Picklist,
+                    ["primarycontactid"] = AttributeTypeCode.Lookup
+                },
+                ["contact"] = new Dictionary<string, AttributeTypeCode>
+                {
+                    ["lastname"] = AttributeTypeCode.String,
+                    ["parentcustomerid"] = AttributeTypeCode.Customer
+                }
+            },
+            optionSetValues: new Dictionary<string, Dictionary<string, HashSet<int>>>
+            {
+                ["account"] = new Dictionary<string, HashSet<int>>
+                {
+                    ["statecode"] = new HashSet<int> { 0, 1 },
+                    ["za_accounttype"] = new HashSet<int> { 105710000, 105710001 }
+                }
+            },
+            lookupTargets: new Dictionary<string, Dictionary<string, string[]>>
+            {
+                ["account"] = new Dictionary<string, string[]>
+                {
+                    ["primarycontactid"] = new[] { "contact" }
+                },
+                ["contact"] = new Dictionary<string, string[]>
+                {
+                    ["parentcustomerid"] = new[] { "account", "contact" }
+                }
+            });
+
+    [Fact]
+    public void OptionSetValidValue_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?> { ["name"] = "x", ["za_accounttype"] = 105710001L, ["statecode"] = 1L }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void OptionSetInvalidNumericValue_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?> { ["za_accounttype"] = 999L }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, RichCache()), "OPTIONSET_VALUE_IMPLAUSIBLE");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("999", finding.Message);
+        Assert.Contains("105710000", finding.Suggestion);
+    }
+
+    [Fact]
+    public void OptionSetInvalidNumericString_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "UpdateRecord", Entity = "account", Alias = "a",
+            Fields = new Dictionary<string, object?> { ["statecode"] = "5" }
+        });
+        AssertSingle(new PackValidator().ValidateOne(tc, RichCache()), "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void OptionSetPlaceholderValue_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["za_accounttype"] = "{src.fields.type}" }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void OptionSetLabelValue_WithMetadata_NoFinding()
+    {
+        // A non-numeric label is not validated here (no false positive on label-style packs).
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["za_accounttype"] = "Premium" }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void OptionSetValueInQueryAssert_WithMetadata_NotChecked()
+    {
+        // Only Create/Update field values are checked; filter values may compare labels.
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "Assert", Target = "Query", Entity = "account",
+            Filter = new List<FilterCondition> { new FilterCondition { Field = "za_accounttype", Operator = "eq", Value = "999" } },
+            Field = "name", Operator = "Equals", Value = "x"
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void OptionSetInvalidValue_WithoutMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["za_accounttype"] = 999L }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings,
+            f => f.Code == "OPTIONSET_VALUE_IMPLAUSIBLE");
+    }
+
+    [Fact]
+    public void PolymorphValidTarget_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["lastname"] = "x",
+                ["parentcustomerid_account@odata.bind"] = "/accounts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "POLYMORPH_TARGET_INVALID");
+    }
+
+    [Fact]
+    public void PolymorphSuffixBindMismatch_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["lastname"] = "x",
+                ["parentcustomerid_account@odata.bind"] = "/contacts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, RichCache()), "POLYMORPH_TARGET_INVALID");
+        Assert.Contains("account", finding.Message);
+        Assert.Contains("contact", finding.Message);
+    }
+
+    [Fact]
+    public void PolymorphInvalidSuffixTarget_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["lastname"] = "x",
+                ["parentcustomerid_lead@odata.bind"] = "/leads(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, RichCache()), "POLYMORPH_TARGET_INVALID");
+        Assert.Contains("lead", finding.Message);
+    }
+
+    [Fact]
+    public void DirectLookupValidTarget_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["name"] = "x",
+                ["primarycontactid@odata.bind"] = "/contacts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "POLYMORPH_TARGET_INVALID");
+    }
+
+    [Fact]
+    public void DirectLookupWrongTarget_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["name"] = "x",
+                ["primarycontactid@odata.bind"] = "/accounts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, RichCache()), "POLYMORPH_TARGET_INVALID");
+        Assert.Contains("primarycontactid", finding.Message);
+    }
+
+    [Fact]
+    public void PolymorphUnknownNavProperty_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["name"] = "x",
+                ["foobar@odata.bind"] = "/accounts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "POLYMORPH_TARGET_INVALID");
+    }
+
+    [Fact]
+    public void PolymorphPlaceholderBindValue_WithMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["lastname"] = "x",
+                ["parentcustomerid_account@odata.bind"] = "/accounts({acc.id})"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, RichCache()).Findings,
+            f => f.Code == "POLYMORPH_TARGET_INVALID");
+    }
+
+    [Fact]
+    public void PolymorphInvalidTarget_WithoutMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contacts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["lastname"] = "x",
+                ["parentcustomerid_account@odata.bind"] = "/contacts(00000000-0000-0000-0000-000000000001)"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings,
+            f => f.Code == "POLYMORPH_TARGET_INVALID");
+    }
+
     private static TestCase TestCaseWith(params TestStep[] steps) => new TestCase
     {
         Id = "TC-PV-01",

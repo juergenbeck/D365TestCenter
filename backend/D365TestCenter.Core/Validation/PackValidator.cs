@@ -26,10 +26,14 @@ namespace D365TestCenter.Core.Validation;
 ///   STEP_KEY_UNKNOWN            - unknown step-level key silently dropped on parse (e.g. withinSeconds/timeoutMs), Warning (Backlog N)
 ///   ALIAS_UNDEFINED             - alias reference ({alias.id}/{RECORD:alias}/...) with no prior defining step, Warning (OE-6 Phase 2 symbol-table, Backlog J)
 ///
-/// Phase 2 metadata-aware checks (logical-name existence, polymorph resolution,
-/// optionset plausibility) remain a separate, org-bound decision and are not yet
-/// implemented here. The symbol-table half of Phase 2 (ALIAS_UNDEFINED) is static
-/// and lives in this class.
+/// Phase 2 metadata-aware checks run only when an EntityMetadataCache for the
+/// target env is supplied (CLI 'validate --org'); they never run in the
+/// service-call-free TestRunner pre-validation. Implemented (OE-8, Backlog J):
+///   ENTITY_UNKNOWN              - entity has no loadable metadata on the target env, Warning
+///   FIELD_UNKNOWN               - field is not an attribute of the entity (Levenshtein-suggested), Warning
+///   OPTIONSET_VALUE_IMPLAUSIBLE - Create/Update value not among the field's option values, Warning
+///   POLYMORPH_TARGET_INVALID    - @odata.bind target outside the lookup's allowed targets, Warning
+/// The symbol-table half of Phase 2 (ALIAS_UNDEFINED) is static and runs always.
 /// </summary>
 public sealed class PackValidator : IPackValidator
 {
@@ -502,6 +506,206 @@ public sealed class PackValidator : IPackValidator
                 Suggestion = suggestion != null ? $"Did you mean '{suggestion}'?" : "Check the field logical name."
             });
         }
+
+        // OPTIONSET_VALUE_IMPLAUSIBLE + POLYMORPH_TARGET_INVALID (OE-8 Phase 2 rest, Backlog J).
+        CheckOptionSetValues(tc, step, report, logical, info);
+        CheckPolymorphTargets(tc, step, report, info, metadata);
+    }
+
+    // ── OE-8 Phase 2 rest: optionset plausibility (Backlog J) ───────────────
+    // Flags a numeric value written to a Picklist/State/Status/MultiSelectPicklist
+    // field that is not among the option values defined on the target env. Only
+    // checks Create/Update field values: those carry raw option values, whereas
+    // filter/assert values may legitimately compare against labels or placeholders.
+    // Skips placeholders and non-numeric values (a label is not an error here).
+    // Severity Warning: a pack may target a different env where the option exists.
+    private static void CheckOptionSetValues(
+        TestCase tc, TestStep step, ValidationReport report, string logical, EntityMetadataInfo info)
+    {
+        if (!IsCreateOrUpdate(step.Action)) return;
+        if (info.OptionSetValues.Count == 0) return;
+
+        foreach (var kvp in step.Fields)
+        {
+            var key = kvp.Key;
+            if (key.IndexOf("@odata.bind", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+            if (!info.OptionSetValues.TryGetValue(key, out var allowed)) continue;
+            if (!TryGetOptionSetInt(kvp.Value, out var value)) continue; // placeholder / label / null
+            if (allowed.Contains(value)) continue;
+
+            var allowedList = string.Join(", ", allowed.OrderBy(v => v).Take(12));
+            if (allowed.Count > 12) allowedList += ", ...";
+            report.Add(new ValidationFinding
+            {
+                TestId = tc.Id,
+                StepNumber = step.StepNumber,
+                Severity = ValidationSeverity.Warning,
+                Code = "OPTIONSET_VALUE_IMPLAUSIBLE",
+                Message = $"Value {value} on optionset field '{key}' of '{logical}' is not a defined option " +
+                          "on the target env. The platform would reject it at runtime.",
+                Suggestion = $"Use one of the defined option values: {allowedList}."
+            });
+        }
+    }
+
+    /// <summary>
+    /// Extracts an integer option value from a JSON field value. Newtonsoft yields
+    /// long for JSON numbers and string for quoted numbers; both are accepted.
+    /// Returns false for placeholders, labels (non-numeric strings) and null.
+    /// </summary>
+    private static bool TryGetOptionSetInt(object? raw, out int value)
+    {
+        value = 0;
+        switch (raw)
+        {
+            case null:
+                return false;
+            case int i:
+                value = i; return true;
+            case long l when l >= int.MinValue && l <= int.MaxValue:
+                value = (int)l; return true;
+            case string s:
+                s = s.Trim();
+                if (s.Length == 0 || s.IndexOf('{') >= 0) return false; // placeholder
+                return int.TryParse(s, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out value);
+            default:
+                return false;
+        }
+    }
+
+    // ── OE-8 Phase 2 rest: polymorph lookup target check (Backlog J) ────────
+    // Validates @odata.bind keys against the lookup's allowed target entities.
+    // Catches (1) a navigation-property suffix that names an invalid target,
+    // (2) a suffix that disagrees with the bound entity (e.g. customerid_account
+    // bound to /contacts), and (3) a bound entity outside the lookup's targets.
+    // Conservative: if the nav-property cannot be mapped to a known lookup
+    // attribute, or the bind value is a placeholder/unparseable, nothing is
+    // flagged. Severity Warning.
+    private static void CheckPolymorphTargets(
+        TestCase tc, TestStep step, ValidationReport report, EntityMetadataInfo info, EntityMetadataCache metadata)
+    {
+        if (info.LookupAllTargets.Count == 0) return;
+        CheckPolymorphTargetsIn(tc, step, step.Fields, report, info, metadata);
+        if (step.Parameters != null) CheckPolymorphTargetsIn(tc, step, step.Parameters, report, info, metadata);
+    }
+
+    private static void CheckPolymorphTargetsIn(
+        TestCase tc, TestStep step, IDictionary<string, object?> fields, ValidationReport report,
+        EntityMetadataInfo info, EntityMetadataCache metadata)
+    {
+        const string suffix = "@odata.bind";
+        foreach (var kvp in fields)
+        {
+            var key = kvp.Key;
+            if (!key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) continue;
+
+            var navProp = key.Substring(0, key.Length - suffix.Length);
+            // Skip the malformed OData getter shape (_x_value@odata.bind); LOOKUP_BIND_FORMAT owns that.
+            if (navProp.StartsWith("_") && navProp.EndsWith("_value")) continue;
+
+            var (lookupAttr, navTarget) = ResolveLookupNav(navProp, info);
+            if (lookupAttr == null) continue; // unknown nav-property -> graceful skip
+
+            var boundTarget = ParseBindTarget(kvp.Value, metadata);
+            if (boundTarget == null) continue; // placeholder / unparseable
+
+            var allowed = info.LookupAllTargets[lookupAttr];
+            var allowedList = string.Join(", ", allowed);
+
+            // (1)+(2) explicit nav-property suffix
+            if (navTarget != null)
+            {
+                if (!allowed.Any(t => string.Equals(t, navTarget, StringComparison.OrdinalIgnoreCase)))
+                {
+                    report.Add(new ValidationFinding
+                    {
+                        TestId = tc.Id,
+                        StepNumber = step.StepNumber,
+                        Severity = ValidationSeverity.Warning,
+                        Code = "POLYMORPH_TARGET_INVALID",
+                        Message = $"Lookup '{lookupAttr}' has no target '{navTarget}' (from nav-property " +
+                                  $"'{navProp}'). Allowed targets: {allowedList}.",
+                        Suggestion = $"Use one of '{lookupAttr}_<target>@odata.bind' with target in: {allowedList}."
+                    });
+                    continue;
+                }
+                if (!string.Equals(navTarget, boundTarget, StringComparison.OrdinalIgnoreCase))
+                {
+                    report.Add(new ValidationFinding
+                    {
+                        TestId = tc.Id,
+                        StepNumber = step.StepNumber,
+                        Severity = ValidationSeverity.Warning,
+                        Code = "POLYMORPH_TARGET_INVALID",
+                        Message = $"Nav-property '{navProp}' disambiguates lookup '{lookupAttr}' to target " +
+                                  $"'{navTarget}', but the bound record is a '{boundTarget}'.",
+                        Suggestion = $"Bind to a '{navTarget}' record, or use '{lookupAttr}_{boundTarget}@odata.bind'."
+                    });
+                    continue;
+                }
+            }
+
+            // (3) bound entity must be an allowed target of the lookup
+            if (!allowed.Any(t => string.Equals(t, boundTarget, StringComparison.OrdinalIgnoreCase)))
+            {
+                report.Add(new ValidationFinding
+                {
+                    TestId = tc.Id,
+                    StepNumber = step.StepNumber,
+                    Severity = ValidationSeverity.Warning,
+                    Code = "POLYMORPH_TARGET_INVALID",
+                    Message = $"Lookup '{lookupAttr}' is bound to a '{boundTarget}' record, which is not an " +
+                              $"allowed target. Allowed targets: {allowedList}.",
+                    Suggestion = $"Bind to a record of one of: {allowedList}."
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Maps an @odata.bind navigation-property name to a lookup attribute and an
+    /// optional disambiguation target. A direct match (navProp is itself a lookup
+    /// attribute) yields no target suffix. A polymorph nav-property has the shape
+    /// '&lt;lookupAttr&gt;_&lt;targetLogicalName&gt;'; the longest matching lookup
+    /// attribute prefix wins so attributes whose names share a prefix resolve
+    /// unambiguously. Returns (null, null) when no lookup attribute matches.
+    /// </summary>
+    private static (string? LookupAttr, string? NavTarget) ResolveLookupNav(string navProp, EntityMetadataInfo info)
+    {
+        if (info.LookupAllTargets.ContainsKey(navProp)) return (navProp, null);
+
+        string? bestAttr = null;
+        string? bestTarget = null;
+        foreach (var attr in info.LookupAllTargets.Keys)
+        {
+            if (navProp.Length <= attr.Length + 1) continue;
+            if (!navProp.StartsWith(attr + "_", StringComparison.OrdinalIgnoreCase)) continue;
+            if (bestAttr == null || attr.Length > bestAttr.Length)
+            {
+                bestAttr = attr;
+                bestTarget = navProp.Substring(attr.Length + 1);
+            }
+        }
+        return (bestAttr, bestTarget);
+    }
+
+    /// <summary>
+    /// Extracts the bound entity's logical name from an @odata.bind value such as
+    /// "/accounts(guid)" or "accounts(guid)". Returns null for placeholders, empty
+    /// values, or shapes that do not carry an entity set.
+    /// </summary>
+    private static string? ParseBindTarget(object? raw, EntityMetadataCache metadata)
+    {
+        if (raw is not string s) return null;
+        s = s.Trim();
+        if (s.Length == 0 || s.IndexOf('{') >= 0) return null; // placeholder
+        s = s.TrimStart('/');
+        var paren = s.IndexOf('(');
+        var entitySet = paren > 0 ? s.Substring(0, paren) : s;
+        entitySet = entitySet.Trim();
+        if (entitySet.Length == 0 || entitySet.IndexOf('/') >= 0) return null;
+        return metadata.ResolveLogicalName(entitySet);
     }
 
     private static IEnumerable<string> CollectFieldNames(TestStep step)
