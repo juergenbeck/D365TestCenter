@@ -739,6 +739,97 @@ public class PackValidatorTests
     //  Helpers
     // ════════════════════════════════════════════════════════════════
 
+    // ════════════════════════════════════════════════════════════════
+    //  ALIAS_UNDEFINED (OE-6 Phase 2 symbol-table, Backlog J)
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void AliasUndefined_DanglingRecordRef_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "Assert", Target = "Record",
+            RecordRef = "{contat.id}", Field = "name", Operator = "Equals", Value = "x"
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "ALIAS_UNDEFINED");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("contat", finding.Message);
+    }
+
+    [Fact]
+    public void AliasDefinedBeforeUse_NoAliasFinding()
+    {
+        var tc = TestCaseWith(
+            new TestStep { StepNumber = 1, Action = "CreateRecord", Entity = "accounts", Alias = "acc",
+                Fields = new Dictionary<string, object?> { ["name"] = "x" } },
+            new TestStep { StepNumber = 2, Action = "Assert", Target = "Record",
+                RecordRef = "{acc.id}", Field = "name", Operator = "Equals", Value = "x" });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
+    [Fact]
+    public void AliasReferencedBeforeDefined_Flags()
+    {
+        // Definition only in step 2 -> alias is still undefined when step 1 references it.
+        var tc = TestCaseWith(
+            new TestStep { StepNumber = 1, Action = "Assert", Target = "Record",
+                RecordRef = "{acc.id}", Field = "name", Operator = "Equals", Value = "x" },
+            new TestStep { StepNumber = 2, Action = "CreateRecord", Entity = "accounts", Alias = "acc",
+                Fields = new Dictionary<string, object?> { ["name"] = "x" } });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "ALIAS_UNDEFINED");
+        Assert.Equal(1, finding.StepNumber);
+    }
+
+    [Fact]
+    public void OutputAliasDefinedBeforeUse_NoAliasFinding()
+    {
+        var tc = TestCaseWith(
+            new TestStep { StepNumber = 1, Action = "ExecuteRequest", RequestName = "WhoAmI", OutputAlias = "me" },
+            new TestStep { StepNumber = 2, Action = "CreateRecord", Entity = "accounts",
+                Fields = new Dictionary<string, object?> { ["name"] = "{me.outputs.UserId}" } });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
+    [Fact]
+    public void AliasUndefined_SuppressedBySharedContext()
+    {
+        var tc = new TestCase
+        {
+            Id = "TC-SC", Title = "shared", SharedContext = "grp1",
+            Steps = new List<TestStep> { new TestStep { StepNumber = 1, Action = "Assert", Target = "Record",
+                RecordRef = "{external.id}", Field = "name", Operator = "Equals", Value = "x" } }
+        };
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
+    [Fact]
+    public void AliasUndefined_SuppressedByDependsOn()
+    {
+        var tc = new TestCase
+        {
+            Id = "TC-DEP", Title = "dep", DependsOn = new List<string> { "TC-OTHER" },
+            Steps = new List<TestStep> { new TestStep { StepNumber = 1, Action = "Assert", Target = "Record",
+                RecordRef = "{external.id}", Field = "name", Operator = "Equals", Value = "x" } }
+        };
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
+    [Fact]
+    public void NonAliasTokens_NotFlaggedAsUndefined()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "accounts",
+            Fields = new Dictionary<string, object?>
+            {
+                ["name"] = "{GENERATED:company} {TIMESTAMP} {GUID}",
+                ["telephone1"] = "{CONTACT_ID}",
+                ["description"] = "{ROW:note}"
+            }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
     private static TestCase TestCaseWith(params TestStep[] steps) => new TestCase
     {
         Id = "TC-PV-01",

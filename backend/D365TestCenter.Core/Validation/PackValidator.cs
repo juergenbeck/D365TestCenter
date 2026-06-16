@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -23,9 +24,12 @@ namespace D365TestCenter.Core.Validation;
 ///   PRECONDITIONS_OBSOLETE      - obsolete pre-ADR-0004 top-level preconditions[] array (R10)
 ///   ASSERTIONS_OBSOLETE         - obsolete pre-ADR-0004 top-level assertions[] array (R10)
 ///   STEP_KEY_UNKNOWN            - unknown step-level key silently dropped on parse (e.g. withinSeconds/timeoutMs), Warning (Backlog N)
+///   ALIAS_UNDEFINED             - alias reference ({alias.id}/{RECORD:alias}/...) with no prior defining step, Warning (OE-6 Phase 2 symbol-table, Backlog J)
 ///
-/// Phase 2 (separate decision) would add metadata-aware checks (logical-name
-/// existence, polymorph resolution, optionset plausibility).
+/// Phase 2 metadata-aware checks (logical-name existence, polymorph resolution,
+/// optionset plausibility) remain a separate, org-bound decision and are not yet
+/// implemented here. The symbol-table half of Phase 2 (ALIAS_UNDEFINED) is static
+/// and lives in this class.
 /// </summary>
 public sealed class PackValidator : IPackValidator
 {
@@ -163,6 +167,9 @@ public sealed class PackValidator : IPackValidator
         {
             ValidateStep(tc, step, report);
         }
+
+        // ALIAS_UNDEFINED (OE-6 Phase 2, symbol-table half / Backlog J)
+        CheckAliasSymbolTable(tc, report);
     }
 
     /// <summary>
@@ -193,6 +200,82 @@ public sealed class PackValidator : IPackValidator
                 ? "Move each assertion into the 'steps[]' list as an 'Assert' action."
                 : "Move each precondition into the 'steps[]' list as a 'CreateRecord' (or matching) action."
         });
+    }
+
+    // ── OE-6 Phase 2 (symbol-table half, Backlog J) ─────────────────────────
+    // Alias references resolved by the PlaceholderEngine from records/outputs that
+    // a PRIOR step registered. Pattern -> resolution source:
+    //   {alias.id}            record alias  (step 'alias')
+    //   {alias.fields.X}      record alias  (step 'alias' + loaded columns)
+    //   {RECORD:alias}        record alias  (step 'alias')
+    //   {RESULT:alias.X}      record alias  (step 'alias')
+    //   {alias.outputs.X}     output alias  (ExecuteRequest 'outputAlias')
+    // Non-alias tokens ({TESTID}, {TIMESTAMP*}, {GENERATED:*}, {GUID}, {ROW:*},
+    // {CONTACT_ID}/{ACCOUNT_ID}) do not match these shapes and are not flagged.
+    private static readonly Regex _aliasRefId = new(@"\{(\w+)\.id\}", RegexOptions.Compiled);
+    private static readonly Regex _aliasRefFields = new(@"\{(\w+)\.fields\.\w+\}", RegexOptions.Compiled);
+    private static readonly Regex _aliasRefOutputs = new(@"\{(\w+)\.outputs\.\w+(?:\[type=\w+\])?\}", RegexOptions.Compiled);
+    private static readonly Regex _aliasRefRecord = new(@"\{RECORD:(\w+)\}", RegexOptions.Compiled);
+    private static readonly Regex _aliasRefResult = new(@"\{RESULT:(\w+)\.\w+\}", RegexOptions.Compiled);
+
+    /// <summary>
+    /// ALIAS_UNDEFINED (OE-6 Phase 2, symbol-table). Flags an alias reference whose
+    /// alias is not defined by any earlier step via 'alias'/'outputAlias'. Such a
+    /// placeholder stays an unresolved literal at runtime (usually a typo, e.g.
+    /// '{con.id}' when the alias was 'contact').
+    ///
+    /// Conservative by design: aliases can also flow cross-test via 'sharedContext'
+    /// or 'dependsOn', which a single-test static pass cannot resolve. A test that
+    /// uses either is skipped so the rule never false-positives on a shared alias.
+    /// Severity Warning, so a residual false positive never aborts a run.
+    /// </summary>
+    private static void CheckAliasSymbolTable(TestCase tc, ValidationReport report)
+    {
+        if (!string.IsNullOrWhiteSpace(tc.SharedContext)) return;
+        if (tc.DependsOn != null && tc.DependsOn.Count > 0) return;
+
+        var defined = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var reported = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var step in tc.Steps)
+        {
+            string json;
+            try { json = JsonConvert.SerializeObject(step); }
+            catch { json = ""; }
+
+            foreach (var (alias, kind) in ExtractAliasReferences(json))
+            {
+                if (defined.Contains(alias)) continue;
+                // Dedup per (alias, step) so a reference used twice in one step
+                // produces one finding.
+                if (!reported.Add($"{alias}|{step.StepNumber}|{kind}")) continue;
+
+                report.Add(new ValidationFinding
+                {
+                    TestId = tc.Id,
+                    StepNumber = step.StepNumber,
+                    Severity = ValidationSeverity.Warning,
+                    Code = "ALIAS_UNDEFINED",
+                    Message = $"Step references alias '{alias}' via {kind}, but no earlier step defines " +
+                              "it via 'alias' or 'outputAlias'. The placeholder stays unresolved at runtime.",
+                    Suggestion = "Define the alias on a prior CreateRecord/RetrieveRecord/FindRecord step " +
+                                 "(or 'outputAlias' on an ExecuteRequest), or fix a typo in the reference."
+                });
+            }
+
+            // Aliases this step registers become visible to LATER steps only.
+            if (!string.IsNullOrWhiteSpace(step.Alias)) defined.Add(step.Alias!.Trim());
+            if (!string.IsNullOrWhiteSpace(step.OutputAlias)) defined.Add(step.OutputAlias!.Trim());
+        }
+    }
+
+    private static IEnumerable<(string Alias, string Kind)> ExtractAliasReferences(string json)
+    {
+        foreach (Match m in _aliasRefId.Matches(json)) yield return (m.Groups[1].Value, "{alias.id}");
+        foreach (Match m in _aliasRefFields.Matches(json)) yield return (m.Groups[1].Value, "{alias.fields.*}");
+        foreach (Match m in _aliasRefOutputs.Matches(json)) yield return (m.Groups[1].Value, "{alias.outputs.*}");
+        foreach (Match m in _aliasRefRecord.Matches(json)) yield return (m.Groups[1].Value, "{RECORD:alias}");
+        foreach (Match m in _aliasRefResult.Matches(json)) yield return (m.Groups[1].Value, "{RESULT:alias.*}");
     }
 
     private void ValidateStep(TestCase tc, TestStep step, ValidationReport report)
