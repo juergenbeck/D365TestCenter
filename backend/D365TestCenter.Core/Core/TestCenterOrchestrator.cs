@@ -25,7 +25,7 @@ namespace D365TestCenter.Core;
 /// Headless-Aufruf (Single-Engine-Architektur, siehe ADR-0003).
 ///
 /// Das CRUD-Trigger-Plugin (RunTestsOnStatusChange) nutzt den Orchestrator NICHT,
-/// weil es eine Batch-Cascade-Architektur hat (BatchSize=12, Self-Trigger). Das ist
+/// weil es eine Batch-Cascade-Architektur hat (BatchSize=5, Self-Trigger). Das ist
 /// eine Optimierung für das 2-Minuten-Sandbox-Timeout und läuft auf demselben
 /// TestRunner-Core.
 /// </summary>
@@ -281,12 +281,13 @@ public sealed class TestCenterOrchestrator
     private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases, bool keepRecords)
     {
         var runner = new TestRunner(_service, _browser) { KeepRecords = keepRecords };
-        var progressCount = 0;
 
+        // Live-Progress pro Testfall: Konsolen-/fulllog-Zeile plus leichtgewichtiges
+        // Fortschritts-Update auf jbe_testrun. Das Schreiben der Result-Records
+        // passiert bewusst NICHT hier im Event, sondern deterministisch nach RunAll
+        // (Backlog I, siehe unten).
         runner.OnTestCompleted += (index, total, tcResult) =>
         {
-            progressCount++;
-
             // Log zum Konsolen-Output
             var icon = tcResult.Outcome switch
             {
@@ -307,19 +308,29 @@ public sealed class TestCenterOrchestrator
             {
                 // Progress-Update ist nicht kritisch
             }
+        };
 
-            // Result-Record sofort schreiben (damit Browser-Live-View es sehen kann)
+        var result = runner.RunAll(cases);
+
+        // Backlog I (v5.3.14): Result-Records deterministisch nach RunAll schreiben,
+        // nicht mehr per-Test im OnTestCompleted-Event. result.Results enthält genau
+        // die Ergebnisse, die das Event emittiert hat (der TestRunner fügt jeden
+        // Result vor dem Invoke zu result.Results hinzu), in derselben Reihenfolge.
+        // Das macht den Orchestrator-Pfad konsistent mit dem Plugin (WriteResultRecords)
+        // und schließt die in Befund 1 (LMApp, Bridge 2026-05-18) vermutete
+        // Race-Condition strukturell aus. Die Live-View verliert nichts: der synchrone
+        // Custom-API-/CLI-Aufruf ist für den Aufrufer ohnehin erst nach Rückkehr sichtbar.
+        foreach (var tcResult in result.Results)
+        {
             try
             {
                 WriteSingleResultRecord(testRunId, tcResult);
             }
             catch (Exception ex)
             {
-                Log($"      Result-Write fehlgeschlagen: {ex.Message}");
+                Log($"      Result-Write fehlgeschlagen ({tcResult.TestId}): {ex.Message}");
             }
-        };
-
-        var result = runner.RunAll(cases);
+        }
 
         // C5: Cold-Start-Hint vor dem Final-Update emittieren, damit der Hint
         // im Orchestrator-Buffer und damit auch in jbe_fulllog landet.

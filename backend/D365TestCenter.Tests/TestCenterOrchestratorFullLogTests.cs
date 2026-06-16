@@ -50,9 +50,13 @@ public class TestCenterOrchestratorFullLogTests
     {
         public Guid TestRunId { get; } = Guid.NewGuid();
         public List<Dictionary<string, object?>> Updates { get; } = new();
+        public List<string> Created { get; } = new();
 
-        public Guid Create(Entity entity) =>
-            entity.LogicalName == "jbe_testrun" ? TestRunId : Guid.NewGuid();
+        public Guid Create(Entity entity)
+        {
+            Created.Add(entity.LogicalName);
+            return entity.LogicalName == "jbe_testrun" ? TestRunId : Guid.NewGuid();
+        }
 
         public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet)
         {
@@ -148,5 +152,24 @@ public class TestCenterOrchestratorFullLogTests
         var fullLog = ExtractFinalFullLog(svc.Updates);
         // HH:mm:ss.fff-Prefix-Pattern in jeder Log-Zeile
         Assert.Matches(@"\[\d{2}:\d{2}:\d{2}\.\d{3}\]", fullLog);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  Backlog I (v5.3.14): Result-Records werden deterministisch nach
+    //  RunAll geschrieben, nicht mehr per-Test im OnTestCompleted-Event.
+    //  Pin gegen das Befund-1-Symptom (LMApp, Bridge 2026-05-18): ein
+    //  Sync-/Custom-API-Run schrieb 0 jbe_testrunresult-Records. Genau ein
+    //  Result-Record pro Testfall muss entstehen.
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void SingleTestCase_WritesExactlyOneResultRecord()
+    {
+        var svc = new SingleWaitTestCaseService();
+        var orchestrator = new TestCenterOrchestrator(svc, new StandardCrmConfig());
+
+        orchestrator.RunNewTestRun("*", false);
+
+        Assert.Equal(1, svc.Created.Count(e => e == "jbe_testrunresult"));
     }
 }

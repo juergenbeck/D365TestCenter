@@ -31,14 +31,16 @@ public sealed class RunTestsOnStatusChange : IPlugin
     // Dataverse erlaubt max ~8 Depth-Level pro Pipeline. Auch bei Async-Steps zaehlt
     // der Depth hoch (verifiziert auf LM DEV, Session 07). Das bedeutet:
     //   Max Tests = BatchSize x 8
-    // BatchSize=12 -> max 96 Tests in 8 Cascade-Schritten.
+    // BatchSize=5 -> max 40 Tests in 8 Cascade-Schritten.
     //
-    // Risiko: Ein Batch mit 12 komplexen Tests (je 60-90s) würde das 2-Min-Sandbox-
-    // Timeout reissen (FB-16). In der Praxis sind die meisten Tests aber schnell (3-15s).
+    // Risiko: Ein Batch mit 5 komplexen Tests (je 60-90s) würde das 2-Min-Sandbox-
+    // Timeout reißen (FB-16). In der Praxis sind die meisten Tests aber schnell (3-15s).
     // Falls ein Batch timeout, bleibt der Run auf "Running" stehen.
     //
     // Faustregel: BatchSize so wählen dass max_test_dauer * BatchSize < 100s bleibt.
-    private const int BatchSize = 12;
+    // Backlog A (v5.3.14): 12 -> 5. Die LMApp-Cascade hat rund 13 s/Test, womit 12er-Batches
+    // das 2-Min-Sandbox-Timeout rissen (Bridge T6, Lesson Learned 5). 5 x 13 s = 65 s < 100 s.
+    private const int BatchSize = 5;
 
     // ── Entity Names ─────────────────────────────────────────────
     private const string TestRunEntity = "jbe_testrun";
