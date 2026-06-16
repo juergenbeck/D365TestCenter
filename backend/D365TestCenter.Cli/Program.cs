@@ -110,7 +110,17 @@ public static class Program
         { IsRequired = true });
         validateCommand.AddOption(new Option<bool>("--strict", () => false,
             "Exit with code 1 also when only warnings are reported (default: only errors fail)."));
-        validateCommand.Handler = CommandHandler.Create<string, bool>(ValidatePack);
+        // OE-8 Phase 2 (Backlog J): an optional connection enables the
+        // metadata-aware rules (ENTITY_UNKNOWN/FIELD_UNKNOWN) against the target
+        // env. Without --org, validate stays a pure static (Phase-1) lint.
+        validateCommand.AddOption(new Option<string>("--org",
+            "Optional Dataverse org URL. When set, enables metadata-aware checks (entity/field existence)."));
+        validateCommand.AddOption(new Option<string>("--client-id", "Azure AD App Client ID (with --org)"));
+        validateCommand.AddOption(new Option<string>("--client-secret", "Azure AD App Client Secret (with --org)"));
+        validateCommand.AddOption(new Option<string>("--tenant-id", "Azure AD Tenant ID (with --org)"));
+        validateCommand.AddOption(new Option<string>("--token", "Bearer token (alternative to client credentials)"));
+        validateCommand.AddOption(new Option<bool>("--interactive", () => false, "Use interactive browser login (with --org)"));
+        validateCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string, string, bool>(ValidatePack);
         rootCommand.AddCommand(validateCommand);
 
         // ── ui-setup command (ADR-0006) ──────────────────────────
@@ -236,13 +246,15 @@ public static class Program
     //  validate command (OE-6): static pre-run validation
     // ════════════════════════════════════════════════════════════════
 
-    static Task<int> ValidatePack(string pack, bool strict)
+    static Task<int> ValidatePack(string pack, bool strict,
+        string? org, string? clientId, string? clientSecret, string? tenantId, string? token, bool interactive)
     {
         Console.WriteLine();
         Console.WriteLine("============================================================");
-        Console.WriteLine("  D365 Test Center - Pack Validation (OE-6)");
+        Console.WriteLine("  D365 Test Center - Pack Validation (OE-6 / OE-8)");
         Console.WriteLine($"  Pack:   {pack}");
         Console.WriteLine($"  Strict: {strict}");
+        Console.WriteLine($"  Mode:   {(string.IsNullOrWhiteSpace(org) ? "static (Phase 1)" : $"metadata-aware against {org} (Phase 2)")}");
         Console.WriteLine("============================================================");
         Console.WriteLine();
 
@@ -273,11 +285,35 @@ public static class Program
         Console.WriteLine();
 
         var validator = new PackValidator();
-        var report = validator.Validate(testCases);
+        var report = new ValidationReport();
+        ServiceClient? client = null;
+        try
+        {
+            EntityMetadataCache? metadata = null;
+            if (!string.IsNullOrWhiteSpace(org))
+            {
+                client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+                metadata = new EntityMetadataCache(client);
+            }
+            foreach (var tc in testCases)
+            {
+                var r = metadata != null ? validator.ValidateOne(tc, metadata) : validator.ValidateOne(tc);
+                foreach (var f in r.Findings) report.Add(f);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Connection/validation failed: {ex.Message}");
+            return Task.FromResult(2);
+        }
+        finally
+        {
+            client?.Dispose();
+        }
 
         if (report.Findings.Count == 0)
         {
-            Console.WriteLine("  No findings. Pack passes Phase-1 validation.");
+            Console.WriteLine("  No findings. Pack passes validation.");
             return Task.FromResult(0);
         }
 

@@ -3,6 +3,7 @@ using System.Linq;
 using D365TestCenter.Core;
 using D365TestCenter.Core.Validation;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Metadata;
 using Xunit;
 
 namespace D365TestCenter.Tests;
@@ -828,6 +829,103 @@ public class PackValidatorTests
             }
         });
         Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "ALIAS_UNDEFINED");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  ENTITY_UNKNOWN / FIELD_UNKNOWN (OE-8 Phase 2 metadata-aware, Backlog J)
+    // ════════════════════════════════════════════════════════════════
+
+    private static EntityMetadataCache AccountCache() =>
+        EntityMetadataCache.CreateForTesting(new Dictionary<string, Dictionary<string, AttributeTypeCode>>
+        {
+            ["account"] = new Dictionary<string, AttributeTypeCode>
+            {
+                ["name"] = AttributeTypeCode.String,
+                ["telephone1"] = AttributeTypeCode.String,
+                ["statecode"] = AttributeTypeCode.State
+            }
+        });
+
+    [Fact]
+    public void KnownEntityAndFields_WithMetadata_NoMetadataFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["name"] = "x", ["telephone1"] = "555" }
+        });
+        var report = new PackValidator().ValidateOne(tc, AccountCache());
+        Assert.DoesNotContain(report.Findings, f => f.Code == "ENTITY_UNKNOWN" || f.Code == "FIELD_UNKNOWN");
+    }
+
+    [Fact]
+    public void UnknownEntity_WithMetadata_FlagsWarning()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "contact",
+            Fields = new Dictionary<string, object?> { ["lastname"] = "x" }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, AccountCache()), "ENTITY_UNKNOWN");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("contact", finding.Message);
+    }
+
+    [Fact]
+    public void UnknownField_WithMetadata_FlagsWarningWithSuggestion()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["naem"] = "x" }
+        });
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc, AccountCache()), "FIELD_UNKNOWN");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+        Assert.Contains("name", finding.Suggestion);
+    }
+
+    [Fact]
+    public void UnknownField_WithoutMetadata_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["naem"] = "x" }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "FIELD_UNKNOWN");
+    }
+
+    [Fact]
+    public void OdataBindKey_WithMetadata_NotFieldChecked()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "account",
+            Fields = new Dictionary<string, object?> { ["primarycontactid@odata.bind"] = "/contacts(x)" }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, AccountCache()).Findings, f => f.Code == "FIELD_UNKNOWN");
+    }
+
+    [Fact]
+    public void FilterUnknownField_WithMetadata_Flags()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "FindRecord", Entity = "account",
+            Filter = new List<FilterCondition> { new FilterCondition { Field = "naem", Operator = "eq", Value = "x" } }
+        });
+        AssertSingle(new PackValidator().ValidateOne(tc, AccountCache()), "FIELD_UNKNOWN");
+    }
+
+    [Fact]
+    public void EntityPlaceholder_WithMetadata_NotChecked()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "CreateRecord", Entity = "{ROW:entity}",
+            Fields = new Dictionary<string, object?> { ["name"] = "x" }
+        });
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc, AccountCache()).Findings, f => f.Code == "ENTITY_UNKNOWN");
     }
 
     private static TestCase TestCaseWith(params TestStep[] steps) => new TestCase

@@ -115,21 +115,23 @@ public sealed class PackValidator : IPackValidator
         var report = new ValidationReport();
         foreach (var tc in testCases)
         {
-            ValidateOneInto(tc, report);
+            ValidateOneInto(tc, report, null);
         }
         return report;
     }
 
-    public ValidationReport ValidateOne(TestCase testCase)
+    public ValidationReport ValidateOne(TestCase testCase) => ValidateOne(testCase, null);
+
+    public ValidationReport ValidateOne(TestCase testCase, EntityMetadataCache? metadata)
     {
         if (testCase == null) throw new ArgumentNullException(nameof(testCase));
 
         var report = new ValidationReport();
-        ValidateOneInto(testCase, report);
+        ValidateOneInto(testCase, report, metadata);
         return report;
     }
 
-    private void ValidateOneInto(TestCase tc, ValidationReport report)
+    private void ValidateOneInto(TestCase tc, ValidationReport report, EntityMetadataCache? metadata)
     {
         // STEP_NUMBER_DUPLICATE on the test level. Skip stepNumber=0: that is
         // the JSON deserialization default for legacy pack files that did not
@@ -165,7 +167,7 @@ public sealed class PackValidator : IPackValidator
 
         foreach (var step in tc.Steps)
         {
-            ValidateStep(tc, step, report);
+            ValidateStep(tc, step, report, metadata);
         }
 
         // ALIAS_UNDEFINED (OE-6 Phase 2, symbol-table half / Backlog J)
@@ -278,7 +280,7 @@ public sealed class PackValidator : IPackValidator
         foreach (Match m in _aliasRefResult.Matches(json)) yield return (m.Groups[1].Value, "{RESULT:alias.*}");
     }
 
-    private void ValidateStep(TestCase tc, TestStep step, ValidationReport report)
+    private void ValidateStep(TestCase tc, TestStep step, ValidationReport report, EntityMetadataCache? metadata)
     {
         // R1 ACTION_UNKNOWN
         var action = step.Action ?? "";
@@ -432,6 +434,114 @@ public sealed class PackValidator : IPackValidator
                 });
             }
         }
+
+        // ENTITY_UNKNOWN / FIELD_UNKNOWN (OE-8 Phase 2 metadata-aware, Backlog J).
+        // Runs only when a metadata cache for the target env was provided.
+        if (metadata != null)
+        {
+            CheckEntityAndFields(tc, step, report, metadata);
+        }
+    }
+
+    // ── OE-8 Phase 2: metadata-aware checks (Backlog J) ─────────────────────
+    // Entity- and field-existence against the target env's metadata. The cache
+    // is the same shared EntityMetadataCache the engine uses at runtime, so a
+    // metadata-load failure degrades gracefully (no finding) rather than
+    // false-flagging. Severity Warning: a pack may legitimately run on a
+    // different env where the entity/field exists.
+    private static readonly HashSet<string> _entityBearingActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "CreateRecord", "UpdateRecord", "DeleteRecord", "RetrieveRecord",
+        "WaitForRecord", "WaitForNotExists", "FindRecord", "WaitForFieldValue"
+    };
+
+    private static void CheckEntityAndFields(TestCase tc, TestStep step, ValidationReport report, EntityMetadataCache metadata)
+    {
+        var action = step.Action ?? "";
+        var isQueryAssert = string.Equals(action, "Assert", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(step.Target ?? "Query", "Query", StringComparison.OrdinalIgnoreCase);
+        var entityBearing = _entityBearingActions.Contains(action) || isQueryAssert;
+        if (!entityBearing || string.IsNullOrWhiteSpace(step.Entity)) return;
+
+        // Entity references can carry placeholders; skip those (resolved at runtime).
+        if (step.Entity!.Contains('{')) return;
+
+        var logical = metadata.ResolveLogicalName(step.Entity);
+        var info = metadata.GetMetadata(logical);
+        if (info == null)
+        {
+            report.Add(new ValidationFinding
+            {
+                TestId = tc.Id,
+                StepNumber = step.StepNumber,
+                Severity = ValidationSeverity.Warning,
+                Code = "ENTITY_UNKNOWN",
+                Message = $"Entity '{step.Entity}' (resolved logical name '{logical}') has no loadable metadata " +
+                          "on the target env. The step would fail at runtime if the entity does not exist here.",
+                Suggestion = "Check the entity name (EntitySetName plural or LogicalName singular) and that the " +
+                             "solution carrying it is installed on this env."
+            });
+            return; // no field checks without entity metadata
+        }
+
+        // FIELD_UNKNOWN: plain field keys / filter fields / assert field that are
+        // not attributes on the entity. @odata.bind keys are skipped (navigation-
+        // property names differ from logical attributes; covered by LOOKUP_BIND_FORMAT).
+        foreach (var key in CollectFieldNames(step))
+        {
+            if (info.AttributeTypes.ContainsKey(key)) continue;
+            var suggestion = SuggestField(key, info);
+            report.Add(new ValidationFinding
+            {
+                TestId = tc.Id,
+                StepNumber = step.StepNumber,
+                Severity = ValidationSeverity.Warning,
+                Code = "FIELD_UNKNOWN",
+                Message = $"Field '{key}' is not an attribute of '{logical}' on the target env. " +
+                          "It would be silently ignored (Create/Update) or fail the query at runtime.",
+                Suggestion = suggestion != null ? $"Did you mean '{suggestion}'?" : "Check the field logical name."
+            });
+        }
+    }
+
+    private static IEnumerable<string> CollectFieldNames(TestStep step)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var key in step.Fields.Keys)
+        {
+            // Skip lookup-bind keys (navigation property names, not logical attributes).
+            if (key.IndexOf("@odata.bind", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+            if (key.Contains('{')) continue;
+            if (seen.Add(key)) yield return key;
+        }
+
+        if (step.Filter != null)
+        {
+            foreach (var f in step.Filter)
+            {
+                var field = f.Field;
+                if (string.IsNullOrWhiteSpace(field) || field!.Contains('{')) continue;
+                // Skip the OData lookup shape (flagged separately by FILTER_FIELD_NOT_LOGICAL).
+                if (field.StartsWith("_") && field.EndsWith("_value")) continue;
+                if (seen.Add(field)) yield return field;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(step.Field) && !step.Field!.Contains('{') && seen.Add(step.Field))
+            yield return step.Field;
+    }
+
+    private static string? SuggestField(string actual, EntityMetadataInfo info)
+    {
+        if (string.IsNullOrWhiteSpace(actual)) return null;
+        var best = (Name: (string?)null, Distance: int.MaxValue);
+        foreach (var candidate in info.AttributeTypes.Keys)
+        {
+            var d = LevenshteinDistance(actual.ToLowerInvariant(), candidate.ToLowerInvariant());
+            if (d < best.Distance) best = (candidate, d);
+        }
+        return best.Distance <= 2 ? best.Name : null;
     }
 
     private static void CheckFilterField(TestCase tc, TestStep step, FilterCondition f, ValidationReport report)

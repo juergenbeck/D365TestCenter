@@ -211,6 +211,11 @@ public sealed class TestRunner
             // logged for visibility; Error findings abort the test with
             // Outcome=Error so the user does not waste a 44s WaitForRecord
             // timeout on a filter typo or a missing requestName.
+            // Pre-run validation stays free of service calls (the OE-6 value:
+            // catch a filter/name bug WITHOUT a 44s WaitForRecord timeout). The
+            // metadata-aware Phase-2 rules (OE-8/Backlog J), which DO need a
+            // RetrieveEntity call, run only in the explicit CLI `validate --env`
+            // offline-lint path, not here on every run.
             var validation = _validator.ValidateOne(tc);
             LogValidationFindings(validation);
             if (validation.HasErrors)
