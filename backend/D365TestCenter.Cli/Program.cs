@@ -175,6 +175,37 @@ public static class Program
             SyncDocs);
         rootCommand.AddCommand(syncDocsCommand);
 
+        // ── build-pack command (B5 / ADR-0008) ───────────────────
+        var buildPackCommand = new Command("build-pack",
+            "Build an importable suite pack from the Markdown test definitions, documentation included (B5). Offline.");
+        buildPackCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions (searched recursively).") { IsRequired = true });
+        buildPackCommand.AddOption(new Option<string>("--out",
+            "Output file path for the generated pack JSON (UTF-8, no BOM).") { IsRequired = true });
+        buildPackCommand.AddOption(new Option<string?>("--name",
+            "Pack name written into the pack (default: the --defs directory name)."));
+        buildPackCommand.AddOption(new Option<bool>("--strict", () => false,
+            "Exit with code 1 also when only warnings are reported (default: only errors fail)."));
+        buildPackCommand.Handler = CommandHandler.Create<string, string, string?, bool>(BuildPackCmd);
+        rootCommand.AddCommand(buildPackCommand);
+
+        // ── import-pack command (B5 / ADR-0008) ───────────────────
+        var importPackCommand = new Command("import-pack",
+            "Import a suite pack into jbe_testcase (create/update by jbe_testid, incl. jbe_documentation) (B5).");
+        importPackCommand.AddOption(orgOption);
+        importPackCommand.AddOption(clientIdOption);
+        importPackCommand.AddOption(clientSecretOption);
+        importPackCommand.AddOption(tenantIdOption);
+        importPackCommand.AddOption(tokenOption);
+        importPackCommand.AddOption(interactiveOption);
+        importPackCommand.AddOption(new Option<string>("--pack",
+            "Path to the suite pack JSON to import (built by build-pack).") { IsRequired = true });
+        importPackCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        importPackCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string>(
+            ImportPackCmd);
+        rootCommand.AddCommand(importPackCommand);
+
         // ── validate command (OE-6) ──────────────────────────────
         var validateCommand = new Command("validate",
             "Statically validate a pack JSON for schema and pattern mistakes (no Dataverse call).");
@@ -508,6 +539,77 @@ public static class Program
             Console.WriteLine(
                 $"  Fertig: {sum.Updated} jbe_testcase aktualisiert, {sum.WithDoc} mit Doku, " +
                 $"{sum.NotFound} ohne Treffer, {sum.Scanned} Dateien gescannt.");
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return Task.FromResult(1);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  build-pack command (B5 / ADR-0008): build a suite pack from defs
+    // ════════════════════════════════════════════════════════════════
+
+    static int BuildPackCmd(string defs, string @out, string? name, bool strict)
+    {
+        if (!Directory.Exists(defs))
+        {
+            Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+            return 2;
+        }
+
+        var packName = !string.IsNullOrWhiteSpace(name) ? name! : new DirectoryInfo(defs).Name;
+        var result = PackBuild.Build(defs, packName);
+
+        Console.WriteLine();
+        Console.WriteLine($"  build-pack '{packName}': {result.TestCaseCount} Testfälle aus {result.Scanned} Definitionen.");
+        foreach (var f in result.Findings.OrderByDescending(x => x.Severity))
+            Console.WriteLine($"    [{f.Severity,-7}] {f.Source}  {f.Code}: {f.Message}");
+
+        if (result.HasErrors)
+        {
+            Console.WriteLine("  Fehler vorhanden - Pack wurde NICHT geschrieben.");
+            return 1;
+        }
+
+        PackBuild.WritePack(result.Pack, @out);
+        Console.WriteLine($"  Pack geschrieben: {Path.GetFullPath(@out)}");
+
+        if (strict && result.Findings.Any(f => f.Severity == PackLintSeverity.Warning))
+        {
+            Console.WriteLine("  --strict: Warnungen vorhanden -> Exit 1.");
+            return 1;
+        }
+        return 0;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  import-pack command (B5 / ADR-0008): import a suite pack
+    // ════════════════════════════════════════════════════════════════
+
+    static Task<int> ImportPackCmd(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string pack, string config)
+    {
+        try
+        {
+            if (!File.Exists(pack))
+            {
+                Console.WriteLine($"  Pack-Datei nicht gefunden: {pack}");
+                return Task.FromResult(2);
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+
+            Console.WriteLine();
+            Console.WriteLine($"  import-pack {pack} -> {org}:");
+            var sum = ImportPack.Import(client, cfg, pack, Console.WriteLine);
+            Console.WriteLine();
+            Console.WriteLine(
+                $"  Fertig: {sum.Created} erstellt, {sum.Updated} aktualisiert, {sum.Skipped} übersprungen.");
             return Task.FromResult(0);
         }
         catch (Exception ex)

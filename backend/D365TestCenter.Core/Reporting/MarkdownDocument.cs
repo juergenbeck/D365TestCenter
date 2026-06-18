@@ -103,6 +103,76 @@ public static class MarkdownDocument
         return m.Success ? m.Groups["h"].Value.Trim() : null;
     }
 
+    /// <summary>
+    /// Extracts the last fenced ```json … ``` code block (the embedded D365TestCenter
+    /// definition) from a Markdown body. Returns the raw JSON text, or null if there is
+    /// no such block. Matches the Markant tooling (Get-JsonCodeBlock): the closing fence
+    /// anchors the non-greedy body, so a nested object is captured whole. The "last block
+    /// wins" rule mirrors the convention that the test definition is the final code block.
+    /// </summary>
+    public static string? ExtractJsonBlock(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown)) return null;
+        var matches = Regex.Matches(Normalize(markdown), @"```json\s*(\{.*?\})\s*```", RegexOptions.Singleline);
+        if (matches.Count == 0) return null;
+        return matches[matches.Count - 1].Groups[1].Value.Trim();
+    }
+
+    /// <summary>
+    /// Reads a front-matter array value. Supports the inline form
+    /// <c>key: [a, b, c]</c> and the multi-line form (<c>key:</c> followed by
+    /// indented <c>- item</c> lines). Strips quotes and drops empty items. Returns an
+    /// empty list if the key is absent or has no list value. Comment ("#") and blank
+    /// lines between items are skipped; the next top-level "key:" ends a multi-line list.
+    /// </summary>
+    public static List<string> ReadArray(string frontmatter, string key)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrEmpty(frontmatter) || string.IsNullOrEmpty(key)) return result;
+
+        var lines = Normalize(frontmatter).Split('\n');
+        var keyRe = new Regex(@"^[ \t]*" + Regex.Escape(key) + @":[ \t]*(?<rest>.*?)[ \t]*$");
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var m = keyRe.Match(lines[i]);
+            if (!m.Success) continue;
+
+            var rest = m.Groups["rest"].Value.Trim();
+            // Inline array: [a, b, c]
+            if (rest.Length >= 2 && rest[0] == '[' && rest[rest.Length - 1] == ']')
+            {
+                foreach (var part in rest.Substring(1, rest.Length - 2).Split(','))
+                {
+                    var v = StripQuotes(part.Trim());
+                    if (!string.IsNullOrEmpty(v)) result.Add(v);
+                }
+                return result;
+            }
+            // Multi-line array: subsequent "- item" lines.
+            if (rest.Length == 0)
+            {
+                for (int j = i + 1; j < lines.Length; j++)
+                {
+                    var line = lines[j];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    var item = Regex.Match(line, @"^[ \t]*-[ \t]*(?<v>.+?)[ \t]*$");
+                    if (item.Success)
+                    {
+                        var v = StripQuotes(item.Groups["v"].Value.Trim());
+                        if (!string.IsNullOrEmpty(v)) result.Add(v);
+                    }
+                    else break; // next top-level key ends the list
+                }
+                return result;
+            }
+            // Scalar value under an array key: treat as a single-element list.
+            var single = StripQuotes(rest);
+            if (!string.IsNullOrEmpty(single)) result.Add(single);
+            return result;
+        }
+        return result;
+    }
+
     static string StripQuotes(string v)
     {
         if (v.Length >= 2 &&
