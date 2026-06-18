@@ -63,8 +63,16 @@ public static class ImportPack
     /// </summary>
     public static ImportSummary Import(
         IOrganizationService service, ITestCenterConfig cfg, string packFile, Action<string>? log = null)
+        => Import(service, cfg, LoadTestCases(packFile), log);
+
+    /// <summary>
+    /// Imports the given test-case objects into <c>jbe_testcase</c> (create/update by
+    /// <c>jbe_testid</c>). Same logic as the file-based overload but without IO, so the
+    /// create/update contract is unit-testable against a fake service.
+    /// </summary>
+    public static ImportSummary Import(
+        IOrganizationService service, ITestCenterConfig cfg, IReadOnlyList<JObject> testCases, Action<string>? log = null)
     {
-        var testCases = LoadTestCases(packFile);
         var summary = new ImportSummary();
 
         foreach (var tc in testCases)
@@ -81,7 +89,6 @@ public static class ImportPack
             {
                 ["jbe_title"] = tc.Value<string>("title") ?? testId!,
                 ["jbe_definitionjson"] = BuildDefinitionJson(tc),
-                ["jbe_enabled"] = true,
             };
             if (tc["tags"] is JArray tags)
                 fields["jbe_tags"] = string.Join(",", tags.Select(t => t.ToString()));
@@ -93,11 +100,14 @@ public static class ImportPack
             var existingId = FindTestCaseId(service, cfg, testId!);
             if (existingId == null)
             {
-                var e = new Entity(cfg.TestCaseEntity) { ["jbe_testid"] = testId };
+                // New test: default to enabled. jbe_enabled is set only here, never on update -
+                // the pack carries no enabled flag, so an import must not flip the activation
+                // status of an existing test (a deliberately disabled test stays disabled).
+                var e = new Entity(cfg.TestCaseEntity) { ["jbe_testid"] = testId, ["jbe_enabled"] = true };
                 foreach (var kv in fields) e[kv.Key] = kv.Value;
                 service.Create(e);
                 summary.Created++;
-                log?.Invoke($"  CREATE {testId}  ({fields.Count} Felder)");
+                log?.Invoke($"  CREATE {testId}  ({fields.Count + 1} Felder)");
             }
             else
             {
