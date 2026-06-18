@@ -158,6 +158,23 @@ public static class Program
             GenerateReport);
         rootCommand.AddCommand(reportCommand);
 
+        // ── sync-docs command (E1 / ADR-0008) ─────────────────────
+        var syncDocsCommand = new Command("sync-docs",
+            "Write the documentation sections of the Markdown definitions into jbe_testcase.jbe_documentation (E1).");
+        syncDocsCommand.AddOption(orgOption);
+        syncDocsCommand.AddOption(clientIdOption);
+        syncDocsCommand.AddOption(clientSecretOption);
+        syncDocsCommand.AddOption(tenantIdOption);
+        syncDocsCommand.AddOption(tokenOption);
+        syncDocsCommand.AddOption(interactiveOption);
+        syncDocsCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions (searched recursively).") { IsRequired = true });
+        syncDocsCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        syncDocsCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string>(
+            SyncDocs);
+        rootCommand.AddCommand(syncDocsCommand);
+
         // ── validate command (OE-6) ──────────────────────────────
         var validateCommand = new Command("validate",
             "Statically validate a pack JSON for schema and pattern mistakes (no Dataverse call).");
@@ -462,6 +479,41 @@ public static class Program
         {
             Console.WriteLine($"  Fehler: {ex.Message}");
             return 1;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  sync-docs command (E1 / ADR-0008): documentation pass-through
+    // ════════════════════════════════════════════════════════════════
+
+    static Task<int> SyncDocs(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string defs, string config)
+    {
+        try
+        {
+            if (!Directory.Exists(defs))
+            {
+                Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+                return Task.FromResult(2);
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+
+            Console.WriteLine();
+            Console.WriteLine($"  Doku-Sync {defs} -> {org}:");
+            var sum = DocSync.SyncDocumentation(client, cfg, defs, Console.WriteLine);
+            Console.WriteLine();
+            Console.WriteLine(
+                $"  Fertig: {sum.Updated} jbe_testcase aktualisiert, {sum.WithDoc} mit Doku, " +
+                $"{sum.NotFound} ohne Treffer, {sum.Scanned} Dateien gescannt.");
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return Task.FromResult(1);
         }
     }
 

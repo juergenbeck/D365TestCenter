@@ -161,6 +161,15 @@
                         <control id="jbe_definitionjson" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_definitionjson" disabled="false" />
                       </cell>
                     </row>
+                    <row>
+                      <cell id="{7f3e9a21-0d4c-4b8e-a1f6-5c2b9e8d4a17}" colspan="1" rowspan="12">
+                        <labels>
+                          <label description="Documentation" languagecode="1033" />
+                          <label description="Dokumentation" languagecode="1031" />
+                        </labels>
+                        <control id="jbe_documentation" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_documentation" disabled="false" />
+                      </cell>
+                    </row>
                   </rows>
                 </section>
               </sections>

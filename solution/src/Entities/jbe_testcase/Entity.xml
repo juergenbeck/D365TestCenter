@@ -264,6 +264,47 @@
             <Description description="JSON definition of the test case containing preconditions, steps and assertions. Evaluated by the test engine." languagecode="1033" />
           </Descriptions>
         </attribute>
+        <attribute PhysicalName="jbe_Documentation">
+          <Type>ntext</Type>
+          <Name>jbe_documentation</Name>
+          <LogicalName>jbe_documentation</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ImeMode>auto</ImeMode>
+          <ValidForUpdateApi>1</ValidForUpdateApi>
+          <ValidForReadApi>1</ValidForReadApi>
+          <ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField>
+          <IsAuditEnabled>0</IsAuditEnabled>
+          <IsSecured>0</IsSecured>
+          <IntroducedVersion>1.0.0.0</IntroducedVersion>
+          <IsCustomizable>1</IsCustomizable>
+          <IsRenameable>1</IsRenameable>
+          <CanModifySearchSettings>1</CanModifySearchSettings>
+          <CanModifyRequirementLevelSettings>1</CanModifyRequirementLevelSettings>
+          <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+          <SourceType>0</SourceType>
+          <IsGlobalFilterEnabled>0</IsGlobalFilterEnabled>
+          <IsSortableEnabled>0</IsSortableEnabled>
+          <CanModifyGlobalFilterSettings>1</CanModifyGlobalFilterSettings>
+          <CanModifyIsSortableSettings>1</CanModifyIsSortableSettings>
+          <IsDataSourceSecret>0</IsDataSourceSecret>
+          <AutoNumberFormat></AutoNumberFormat>
+          <IsSearchable>0</IsSearchable>
+          <IsFilterable>0</IsFilterable>
+          <IsRetrievable>0</IsRetrievable>
+          <IsLocalizable>0</IsLocalizable>
+          <Format>textarea</Format>
+          <MaxLength>1048576</MaxLength>
+          <displaynames>
+            <displayname description="Dokumentation" languagecode="1031" />
+            <displayname description="Documentation" languagecode="1033" />
+          </displaynames>
+          <Descriptions>
+            <Description description="Fachliche Dokumentation des Testfalls (Markdown): Zweck, Datenkonstellation, Vorbedingungen, Ablauf, Erwartetes Ergebnis. Wird per sync-docs aus den MD-Definitionen gepflegt." languagecode="1031" />
+            <Description description="Functional documentation of the test case (Markdown): purpose, data constellation, preconditions, flow, expected result. Maintained via sync-docs from the MD definitions." languagecode="1033" />
+          </Descriptions>
+        </attribute>
         <attribute PhysicalName="jbe_Enabled">
           <Type>bit</Type>
           <Name>jbe_enabled</Name>

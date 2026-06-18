@@ -115,6 +115,27 @@ public static class MarkdownReportGenerator
         return suite;
     }
 
+    /// <summary>
+    /// E1 (ADR-0008): builds the documentation Markdown for <c>jbe_documentation</c>
+    /// from a parsed definition - the whitelisted doc sections (<see cref="FullSections"/>)
+    /// in order, each as a "## Heading" block. Excludes Ergebnis-Historie, the JSON
+    /// block and Env-Scope (redundant/technical/process). Empty if none are present.
+    /// </summary>
+    public static string BuildDocumentation(DefinitionDoc doc)
+    {
+        if (doc == null) return "";
+        var sb = new StringBuilder();
+        foreach (var name in FullSections)
+        {
+            if (doc.Sections.TryGetValue(name, out var content) && !string.IsNullOrWhiteSpace(content))
+            {
+                if (sb.Length > 0) sb.Append("\n\n");
+                sb.Append("## ").Append(name).Append("\n\n").Append(content.Trim());
+            }
+        }
+        return sb.ToString();
+    }
+
     // ── rendering ────────────────────────────────────────────────────
 
     /// <summary>Renders the run report as Markdown (LF line endings).</summary>
