@@ -148,11 +148,13 @@ public static class Program
             "Output file path for the Markdown report (default: write to stdout)."));
         reportCommand.AddOption(new Option<string>("--detail", () => "full",
             "Detail level: 'compact' (table) or 'full' (per-test sections). Default: full."));
+        reportCommand.AddOption(new Option<string>("--format", () => "md",
+            "Output format: 'md' (default), 'html' or 'pdf'. pdf requires --out and Chromium (Playwright)."));
         reportCommand.AddOption(new Option<string?>("--env",
             "Env label for the report header (default: derived from the --org host)."));
         reportCommand.AddOption(new Option<string>("--config", () => "standard",
             "Config profile: standard, markant"));
-        reportCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string?, string, string?, string>(
+        reportCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string?, string, string, string?, string>(
             GenerateReport);
         rootCommand.AddCommand(reportCommand);
 
@@ -368,22 +370,22 @@ public static class Program
     //  report command (E3 / ADR-0008): Markdown run report
     // ════════════════════════════════════════════════════════════════
 
-    static Task<int> GenerateReport(
+    static async Task<int> GenerateReport(
         string org, string? clientId, string? clientSecret, string? tenantId,
         string? token, bool interactive, string run, string defs, string? @out, string detail,
-        string? env, string config)
+        string format, string? env, string config)
     {
         try
         {
             if (!Guid.TryParse(run, out var runId))
             {
                 Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
-                return Task.FromResult(2);
+                return 2;
             }
             if (!Directory.Exists(defs))
             {
                 Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
-                return Task.FromResult(2);
+                return 2;
             }
             ReportDetail detailLevel;
             switch ((detail ?? "").Trim().ToLowerInvariant())
@@ -393,7 +395,18 @@ public static class Program
                 case "full": detailLevel = ReportDetail.Full; break;
                 default:
                     Console.WriteLine($"  Ungültiger --detail-Wert: '{detail}'. Erlaubt: compact, full.");
-                    return Task.FromResult(2);
+                    return 2;
+            }
+            var fmt = (format ?? "md").Trim().ToLowerInvariant();
+            if (fmt != "md" && fmt != "html" && fmt != "pdf")
+            {
+                Console.WriteLine($"  Ungültiger --format-Wert: '{format}'. Erlaubt: md, html, pdf.");
+                return 2;
+            }
+            if (fmt == "pdf" && string.IsNullOrWhiteSpace(@out))
+            {
+                Console.WriteLine("  --format pdf benötigt --out <datei> (PDF ist binär, kein stdout).");
+                return 2;
             }
 
             using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
@@ -404,34 +417,51 @@ public static class Program
             if (results.Count == 0)
             {
                 Console.WriteLine($"  Keine jbe_testrunresult-Records für Run {runId} gefunden.");
-                return Task.FromResult(1);
+                return 1;
             }
 
             var header = ReportBuilder.LoadRunHeader(client, cfg, runId);
             var model = ReportBuilder.BuildModel(header, results, defs, envLabel, runId, Console.WriteLine);
-            var markdown = MarkdownReportGenerator.Render(model, detailLevel);
+
+            // PDF: render the HTML, then let Playwright write the PDF file.
+            if (fmt == "pdf")
+            {
+                var pdfHtml = HtmlReportRenderer.Render(model, detailLevel);
+                var pdfPath = Path.GetFullPath(@out!);
+                var pdfDir = Path.GetDirectoryName(pdfPath);
+                if (!string.IsNullOrEmpty(pdfDir)) Directory.CreateDirectory(pdfDir);
+                await PdfRenderer.RenderHtmlToPdfAsync(pdfHtml, pdfPath);
+                Console.WriteLine();
+                Console.WriteLine(
+                    $"  PDF-Bericht geschrieben ({detailLevel}, {model.Total} Tests, {model.Passed} PASS): {pdfPath}");
+                return 0;
+            }
+
+            string content = fmt == "html"
+                ? HtmlReportRenderer.Render(model, detailLevel)
+                : MarkdownReportGenerator.Render(model, detailLevel);
 
             if (!string.IsNullOrWhiteSpace(@out))
             {
                 var full = Path.GetFullPath(@out!);
                 var dir = Path.GetDirectoryName(full);
                 if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                File.WriteAllText(full, markdown, new UTF8Encoding(false));
+                File.WriteAllText(full, content, new UTF8Encoding(false));
                 Console.WriteLine();
                 Console.WriteLine(
-                    $"  Bericht geschrieben ({detailLevel}, {model.Total} Tests, {model.Passed} PASS): {full}");
+                    $"  Bericht geschrieben ({fmt}, {detailLevel}, {model.Total} Tests, {model.Passed} PASS): {full}");
             }
             else
             {
                 Console.WriteLine();
-                Console.WriteLine(markdown);
+                Console.WriteLine(content);
             }
-            return Task.FromResult(0);
+            return 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"  Fehler: {ex.Message}");
-            return Task.FromResult(1);
+            return 1;
         }
     }
 
