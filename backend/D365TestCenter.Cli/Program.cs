@@ -189,6 +189,18 @@ public static class Program
         buildPackCommand.Handler = CommandHandler.Create<string, string, string?, bool>(BuildPackCmd);
         rootCommand.AddCommand(buildPackCommand);
 
+        // ── inventory command (E6 / ADR-0008) ────────────────────
+        var inventoryCommand = new Command("inventory",
+            "Build a management inventory (status/domain roll-ups + run trend) from the Markdown test definitions (E6). Offline.");
+        inventoryCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions (searched recursively).") { IsRequired = true });
+        inventoryCommand.AddOption(new Option<string?>("--out",
+            "Output file path for the inventory Markdown (UTF-8, no BOM). Without it the report goes to stdout."));
+        inventoryCommand.AddOption(new Option<string?>("--name",
+            "Inventory title (default: \"Inventar Integrationstests\")."));
+        inventoryCommand.Handler = CommandHandler.Create<string, string?, string?>(InventoryCmd);
+        rootCommand.AddCommand(inventoryCommand);
+
         // ── import-pack command (B5 / ADR-0008) ───────────────────
         var importPackCommand = new Command("import-pack",
             "Import a suite pack into jbe_testcase (create/update by jbe_testid, incl. jbe_documentation) (B5).");
@@ -581,6 +593,35 @@ public static class Program
         {
             Console.WriteLine("  --strict: Warnungen vorhanden -> Exit 1.");
             return 1;
+        }
+        return 0;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  inventory command (E6 / ADR-0008): management overview from defs
+    // ════════════════════════════════════════════════════════════════
+
+    static int InventoryCmd(string defs, string? @out, string? name)
+    {
+        if (!Directory.Exists(defs))
+        {
+            Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+            return 2;
+        }
+
+        var model = Inventory.Build(defs);
+        var title = !string.IsNullOrWhiteSpace(name) ? name! : "Inventar Integrationstests";
+        var md = InventoryBuilder.Render(model, title);
+
+        if (!string.IsNullOrWhiteSpace(@out))
+        {
+            Inventory.WriteReport(md, @out!);
+            Console.WriteLine();
+            Console.WriteLine($"  inventory: {model.Entries.Count} Definitionen -> {Path.GetFullPath(@out)}");
+        }
+        else
+        {
+            Console.WriteLine(md);
         }
         return 0;
     }
