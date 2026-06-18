@@ -4,9 +4,11 @@ using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
+using D365TestCenter.Core.Reporting;
 using D365TestCenter.Core.Validation;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -128,6 +130,31 @@ public static class Program
         syncResultsCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string?, string>(
             SyncResults);
         rootCommand.AddCommand(syncResultsCommand);
+
+        // ── report command (E3 / ADR-0008) ───────────────────────
+        var reportCommand = new Command("report",
+            "Generate a Markdown run report (Durchführungsbericht) from a finished run and the local definitions (E3).");
+        reportCommand.AddOption(orgOption);
+        reportCommand.AddOption(clientIdOption);
+        reportCommand.AddOption(clientSecretOption);
+        reportCommand.AddOption(tenantIdOption);
+        reportCommand.AddOption(tokenOption);
+        reportCommand.AddOption(interactiveOption);
+        reportCommand.AddOption(new Option<string>("--run",
+            "Test run id (jbe_testrun GUID) to report on.") { IsRequired = true });
+        reportCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions (searched recursively).") { IsRequired = true });
+        reportCommand.AddOption(new Option<string?>("--out",
+            "Output file path for the Markdown report (default: write to stdout)."));
+        reportCommand.AddOption(new Option<string>("--detail", () => "full",
+            "Detail level: 'compact' (table) or 'full' (per-test sections). Default: full."));
+        reportCommand.AddOption(new Option<string?>("--env",
+            "Env label for the report header (default: derived from the --org host)."));
+        reportCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        reportCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string?, string, string?, string>(
+            GenerateReport);
+        rootCommand.AddCommand(reportCommand);
 
         // ── validate command (OE-6) ──────────────────────────────
         var validateCommand = new Command("validate",
@@ -328,6 +355,77 @@ public static class Program
             Console.WriteLine();
             Console.WriteLine(
                 $"  Fertig: {sum.Updated} aktualisiert, {sum.Matched} gematcht, {sum.Scanned} Dateien gescannt.");
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return Task.FromResult(1);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  report command (E3 / ADR-0008): Markdown run report
+    // ════════════════════════════════════════════════════════════════
+
+    static Task<int> GenerateReport(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string run, string defs, string? @out, string detail,
+        string? env, string config)
+    {
+        try
+        {
+            if (!Guid.TryParse(run, out var runId))
+            {
+                Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
+                return Task.FromResult(2);
+            }
+            if (!Directory.Exists(defs))
+            {
+                Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+                return Task.FromResult(2);
+            }
+            ReportDetail detailLevel;
+            switch ((detail ?? "").Trim().ToLowerInvariant())
+            {
+                case "compact": detailLevel = ReportDetail.Compact; break;
+                case "":
+                case "full": detailLevel = ReportDetail.Full; break;
+                default:
+                    Console.WriteLine($"  Ungültiger --detail-Wert: '{detail}'. Erlaubt: compact, full.");
+                    return Task.FromResult(2);
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+            var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
+
+            var results = ResultSync.LoadResultsFromRun(client, cfg, runId);
+            if (results.Count == 0)
+            {
+                Console.WriteLine($"  Keine jbe_testrunresult-Records für Run {runId} gefunden.");
+                return Task.FromResult(1);
+            }
+
+            var header = ReportBuilder.LoadRunHeader(client, cfg, runId);
+            var model = ReportBuilder.BuildModel(header, results, defs, envLabel, runId, Console.WriteLine);
+            var markdown = MarkdownReportGenerator.Render(model, detailLevel);
+
+            if (!string.IsNullOrWhiteSpace(@out))
+            {
+                var full = Path.GetFullPath(@out!);
+                var dir = Path.GetDirectoryName(full);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(full, markdown, new UTF8Encoding(false));
+                Console.WriteLine();
+                Console.WriteLine(
+                    $"  Bericht geschrieben ({detailLevel}, {model.Total} Tests, {model.Passed} PASS): {full}");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine(markdown);
+            }
             return Task.FromResult(0);
         }
         catch (Exception ex)

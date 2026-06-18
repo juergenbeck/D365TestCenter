@@ -87,13 +87,16 @@ public static class ResultSync
         return summary;
     }
 
-    /// <summary>Loads the jbe_testrunresult records of a run and maps them to TestCaseResults.</summary>
+    /// <summary>
+    /// Loads the jbe_testrunresult records of a run and maps them to TestCaseResults.
+    /// Includes jbe_errormessage so the E3 report can show the failure reason.
+    /// </summary>
     public static List<TestCaseResult> LoadResultsFromRun(
         IOrganizationService service, ITestCenterConfig cfg, Guid runId)
     {
         var q = new QueryExpression(cfg.TestRunResultEntity)
         {
-            ColumnSet = new ColumnSet("jbe_testid", "jbe_outcome", "jbe_durationms"),
+            ColumnSet = new ColumnSet("jbe_testid", "jbe_outcome", "jbe_durationms", "jbe_errormessage"),
             Criteria = new FilterExpression
             {
                 Conditions = { new ConditionExpression("jbe_testrunid", ConditionOperator.Equal, runId) }
@@ -107,7 +110,8 @@ public static class ResultSync
             {
                 TestId = e.GetAttributeValue<string>("jbe_testid") ?? "",
                 Outcome = MapOutcome(e.GetAttributeValue<OptionSetValue>("jbe_outcome")?.Value, cfg),
-                DurationMs = e.GetAttributeValue<int?>("jbe_durationms") ?? 0
+                DurationMs = e.GetAttributeValue<int?>("jbe_durationms") ?? 0,
+                ErrorMessage = e.GetAttributeValue<string>("jbe_errormessage")
             });
         }
         return list;

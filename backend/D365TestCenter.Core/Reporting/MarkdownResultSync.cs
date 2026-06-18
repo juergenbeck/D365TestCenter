@@ -45,9 +45,9 @@ public static class MarkdownResultSync
     public static string? ReadFrontmatterId(string markdown)
     {
         if (markdown == null) return null;
-        if (!TrySplitFrontmatter(Normalize(markdown), out var fm, out _)) return null;
-        var m = Regex.Match(fm, @"^\s*id:\s*(?<id>\S+)\s*$", RegexOptions.Multiline);
-        return m.Success ? m.Groups["id"].Value.Trim() : null;
+        if (!MarkdownDocument.TrySplitFrontmatter(MarkdownDocument.Normalize(markdown), out var fm, out _))
+            return null;
+        return MarkdownDocument.ReadScalar(fm, "id");
     }
 
     /// <summary>Formats matched per-test results into "p/t STATUS (Ns)".</summary>
@@ -90,9 +90,9 @@ public static class MarkdownResultSync
         if (entry == null) throw new ArgumentNullException(nameof(entry));
 
         bool crlf = markdown.IndexOf("\r\n", StringComparison.Ordinal) >= 0;
-        string md = Normalize(markdown);
+        string md = MarkdownDocument.Normalize(markdown);
 
-        if (!TrySplitFrontmatter(md, out var frontmatter, out var body))
+        if (!MarkdownDocument.TrySplitFrontmatter(md, out var frontmatter, out var body))
             throw new ArgumentException("Markdown has no YAML front-matter block.", nameof(markdown));
 
         var entries = ParseHistory(frontmatter);
@@ -126,25 +126,6 @@ public static class MarkdownResultSync
     }
 
     // ── helpers ──────────────────────────────────────────────────────
-
-    static string Normalize(string s) => s.Replace("\r\n", "\n").Replace("\r", "\n");
-
-    static bool TrySplitFrontmatter(string md, out string frontmatter, out string body)
-    {
-        frontmatter = "";
-        body = "";
-        var lines = md.Split('\n');
-        if (lines.Length < 2 || lines[0].TrimEnd() != "---") return false;
-        int close = -1;
-        for (int i = 1; i < lines.Length; i++)
-        {
-            if (lines[i].TrimEnd() == "---") { close = i; break; }
-        }
-        if (close < 0) return false;
-        frontmatter = string.Join("\n", lines.Skip(1).Take(close - 1));
-        body = string.Join("\n", lines.Skip(close + 1));
-        return true;
-    }
 
     static void Upsert(List<HistoryEntry> entries, HistoryEntry e)
     {
