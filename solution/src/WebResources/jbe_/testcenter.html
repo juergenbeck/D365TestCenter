@@ -963,6 +963,14 @@ body {
 .detail-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
 .detail-tab-content { display: none; }
 .detail-tab-content.active { display: block; }
+.doc-content { font-size: 13px; line-height: 1.6; color: var(--text-secondary); max-width: 760px; }
+.doc-content h4 { font-size: 14px; color: var(--text-primary); margin: 16px 0 4px; }
+.doc-content h4:first-child { margin-top: 0; }
+.doc-content p { margin: 6px 0; }
+.doc-content ul, .doc-content ol { margin: 6px 0; padding-left: 22px; }
+.doc-content li { margin: 2px 0; }
+.doc-content code { background: rgba(127,127,127,0.18); padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12px; }
+.doc-content strong { color: var(--text-primary); }
 
 /* Überblick Bento-Grid */
 .detail-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -1577,6 +1585,7 @@ const CONFIG = {
         tags: "jbe_tags",
         enabled: "jbe_enabled",
         definition_json: "jbe_definitionjson",
+        documentation: "jbe_documentation",
         userstories: "jbe_userstories",
         // TestRun
         teststatus: "jbe_teststatus",
@@ -1971,6 +1980,7 @@ const _sharedIttMeta = {
             { LogicalName: "jbe_tags", DisplayName: { UserLocalizedLabel: { Label: "Tags" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Tags" },
             { LogicalName: "jbe_userstories", DisplayName: { UserLocalizedLabel: { Label: "User Stories" } }, AttributeType: "StringType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_UserStories" },
             { LogicalName: "jbe_definitionjson", DisplayName: { UserLocalizedLabel: { Label: "Definition (JSON)" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_DefinitionJson" },
+            { LogicalName: "jbe_documentation", DisplayName: { UserLocalizedLabel: { Label: "Dokumentation" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Documentation" },
             { LogicalName: "jbe_enabled", DisplayName: { UserLocalizedLabel: { Label: "Aktiv" } }, AttributeType: "BooleanType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_Enabled" }
         ],
         jbe_testrun: [
@@ -6028,7 +6038,7 @@ async function _renderLiveDetail(runId, testId) {
     if (!testCase) {
         try {
             const cases = await API.getMany("jbe_testcases",
-                `$filter=jbe_testid eq '${testId}'&$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_userstories,jbe_definitionjson&$top=1`);
+                `$filter=jbe_testid eq '${testId}'&$select=jbe_testid,jbe_title,jbe_category,jbe_tags,jbe_userstories,jbe_definitionjson,jbe_documentation&$top=1`);
             if (cases.length > 0) {
                 testCase = cases[0];
                 _detailTestCaseCache[testId] = testCase;
@@ -6103,6 +6113,10 @@ async function _renderLiveDetail(runId, testId) {
     // Tab-Leiste
     html += `<div class="detail-tabs">`;
     html += `<div class="detail-tab active" data-tab="overview" onclick="_detailSwitchTab('overview')">Overview</div>`;
+    const hasDoc = !!(testCase && testCase.jbe_documentation && testCase.jbe_documentation.trim());
+    if (hasDoc) {
+        html += `<div class="detail-tab" data-tab="docs" onclick="_detailSwitchTab('docs')">Dokumentation</div>`;
+    }
     html += `<div class="detail-tab" data-tab="steps" onclick="_detailSwitchTab('steps')">Steps</div>`;
     html += `<div class="detail-tab" data-tab="assertions" onclick="_detailSwitchTab('assertions')">Assertions</div>`;
     if (hasGovernance) {
@@ -6190,6 +6204,15 @@ async function _renderLiveDetail(runId, testId) {
     }
     html += `</div>`;
     html += `</div>`; // /dtab-overview
+
+    // ════════════════════════════════════════════
+    // Tab: Dokumentation (E1, fachliche Doku aus jbe_documentation)
+    // ════════════════════════════════════════════
+    if (hasDoc) {
+        html += `<div class="detail-tab-content" id="dtab-docs">`;
+        html += `<div class="doc-content">${renderMarkdown(testCase.jbe_documentation)}</div>`;
+        html += `</div>`; // /dtab-docs
+    }
 
     // ════════════════════════════════════════════
     // Tab 2: Steps & Timeline
@@ -7885,6 +7908,62 @@ window.FlowViz = FlowViz;
 function escapeHtml(s) {
     if (s == null) return "";
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// E1 (ADR-0008): minimaler Markdown-zu-HTML-Renderer fuer jbe_documentation.
+// Zero Dependencies, deckt die fachlichen Doku-Sektionen ab: ## Ueberschriften,
+// Absaetze, ul/ol-Listen (mit eingerueckten Fortsetzungen), inline **bold** /
+// *italic* / `code`. HTML-escaped. Spiegelt die Server-Logik (Core MarkdownToHtml).
+function renderMarkdown(md) {
+    if (!md) return "";
+    const lines = String(md).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    const M = String.fromCharCode(1), T = String.fromCharCode(2);
+    const codeRx = new RegExp(M + "(\\d+)" + T, "g");
+    const inline = (t) => {
+        const codes = [];
+        t = t.replace(/`([^`]+)`/g, (m, c) => { codes.push(c); return M + (codes.length - 1) + T; });
+        t = escapeHtml(t);
+        t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        t = t.replace(codeRx, (m, n) => "<code>" + escapeHtml(codes[+n]) + "</code>");
+        return t;
+    };
+    const isBullet = (l) => /^\s*[-*]\s+/.test(l);
+    const isOrdered = (l) => /^\s*\d+\.\s+/.test(l);
+    const isHeading = (l) => /^#{1,6}\s/.test(l);
+    let html = "";
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+        if (!line.trim()) { i++; continue; }
+        const h = line.match(/^(#{1,6})\s+(.*)$/);
+        if (h) {
+            const level = Math.min(6, h[1].length + 2); // "## " -> h4
+            html += `<h${level}>${inline(h[2].trim())}</h${level}>`;
+            i++;
+            continue;
+        }
+        if (isBullet(line) || isOrdered(line)) {
+            const ordered = isOrdered(line);
+            const tag = ordered ? "ol" : "ul";
+            const items = [];
+            while (i < lines.length) {
+                const m = ordered ? lines[i].match(/^\s*\d+\.\s+(.*)$/) : lines[i].match(/^\s*[-*]\s+(.*)$/);
+                if (m) { items.push(m[1].trim()); i++; }
+                else if (items.length && lines[i].trim() && /^\s/.test(lines[i])) {
+                    items[items.length - 1] += " " + lines[i].trim(); i++;
+                } else break;
+            }
+            html += `<${tag}>` + items.map(it => `<li>${inline(it)}</li>`).join("") + `</${tag}>`;
+            continue;
+        }
+        const parts = [];
+        while (i < lines.length && lines[i].trim() && !isBullet(lines[i]) && !isOrdered(lines[i]) && !isHeading(lines[i])) {
+            parts.push(lines[i].trim()); i++;
+        }
+        html += `<p>${inline(parts.join(" "))}</p>`;
+    }
+    return html;
 }
 
 // ── User Display ────────────────────────────────────────────────
