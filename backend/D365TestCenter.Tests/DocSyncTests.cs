@@ -50,6 +50,26 @@ public class DocSyncTests
     }
 
     [Fact]
+    public void BuildDocumentation_BridgeVocabulary_BeschreibungInPlaceholdersOut()
+    {
+        // Bridge (fg-testtool) defs carry their purpose under "Beschreibung"; their
+        // Vorbereitung/Schritte/Erwartung sections are placeholders and must stay out. (Decision 22)
+        var doc = MarkdownReportGenerator.ParseDefinition(
+            "---\nid: TC01\n---\n\n" +
+            "## Beschreibung\n\nPrüft die Last-Update-Wins-Propagation.\n\n" +
+            "## Vorbereitung\n\nKonkrete Vorbereitungs-Schritte sind im D365TC-JSON kodiert.\n\n" +
+            "## Schritte\n\nSiehe `steps` im D365TC-JSON unten.\n\n" +
+            "## Erwartung\n\nSiehe `assertions` im D365TC-JSON unten.\n");
+        var d = MarkdownReportGenerator.BuildDocumentation(doc);
+
+        Assert.Contains("## Beschreibung", d);
+        Assert.Contains("Last-Update-Wins", d);
+        Assert.DoesNotContain("Vorbereitung", d);
+        Assert.DoesNotContain("Schritte", d);
+        Assert.DoesNotContain("assertions", d);
+    }
+
+    [Fact]
     public void CollectDocumentation_WalksAndFilters()
     {
         var dir = Path.Combine(Path.GetTempPath(), "ds_" + Guid.NewGuid().ToString("N"));

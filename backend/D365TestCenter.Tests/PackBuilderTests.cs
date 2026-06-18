@@ -95,6 +95,30 @@ public class PackBuilderTests
         "\"steps\": [ { \"stepNumber\": 1, \"action\": \"CreateRecord\" } ] }\n" +
         "```\n";
 
+    // Archived fg-testtool suite (old Q2 format): has a JSON block, but a suite, not a test.
+    // Must be skipped before the block is parsed (decision 22).
+    const string ArchivedSuiteDef =
+        "---\n" +
+        "id: create-source\n" +
+        "status: archiviert\n" +
+        "---\n\n" +
+        "## Beschreibung\n\ncreate-source\n\n" +
+        "## D365TestCenter-Definition\n\n```json\n" +
+        "{ \"suiteId\": \"FG-CreateSource\", \"testCases\": [ { \"id\": \"TCC01\", \"steps\": [] } ] }\n" +
+        "```\n";
+
+    [Fact]
+    public void BuildTestCase_Archived_SkippedWithInfoNoError()
+    {
+        var findings = new List<PackLintFinding>();
+        var tc = PackBuilder.BuildTestCase(ArchivedSuiteDef, "create-source.md", findings);
+
+        Assert.Null(tc);
+        Assert.Contains(findings, f => f.Code == "ARCHIVED_SKIPPED" && f.Severity == PackLintSeverity.Info);
+        // The suite block is never parsed, so no JSON/mismatch error is produced.
+        Assert.DoesNotContain(findings, f => f.Severity == PackLintSeverity.Error);
+    }
+
     [Fact]
     public void BuildTestCase_EnrichesWithDocAndUserStories()
     {
@@ -183,6 +207,25 @@ public class PackBuilderTests
         var tcs = (JArray)result.Pack["testCases"]!;
         Assert.Single(tcs);
         Assert.Equal("BR-CS-01", tcs[0]!.Value<string>("testId"));
+    }
+
+    [Fact]
+    public void BuildPack_ExcludesArchivedDefinitions()
+    {
+        var defs = new[]
+        {
+            ("BR-CS-01.md", FullDef),
+            ("create-source.md", ArchivedSuiteDef),   // archived suite -> excluded
+        };
+        var result = PackBuilder.BuildPack(defs, "Bridge");
+
+        Assert.Equal(2, result.Scanned);
+        Assert.Equal(1, result.TestCaseCount);
+        Assert.False(result.HasErrors);
+        var tcs = (JArray)result.Pack["testCases"]!;
+        Assert.Single(tcs);
+        Assert.Equal("BR-CS-01", tcs[0]!.Value<string>("testId"));
+        Assert.Contains(result.Findings, f => f.Code == "ARCHIVED_SKIPPED");
     }
 
     // ── PackBuild (CLI walk + IO) ────────────────────────────────────

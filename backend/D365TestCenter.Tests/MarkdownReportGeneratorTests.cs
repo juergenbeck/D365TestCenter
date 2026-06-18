@@ -159,6 +159,37 @@ public class MarkdownReportGeneratorTests
     }
 
     [Fact]
+    public void Render_Compact_FallsBackToBeschreibungWhenNoZweck()
+    {
+        // Bridge defs have no "Zweck"; the compact purpose column falls back to "Beschreibung". (Decision 22)
+        var doc = MarkdownReportGenerator.ParseDefinition(
+            "---\nid: TC01\ntitel: \"Bridge-Test\"\n---\n\n" +
+            "## Beschreibung\n\nPrüft die FG-Propagation. Zweiter Satz hier.\n");
+        var m = new ReportModel
+        {
+            SuiteTitle = "Bridge",
+            RunDate = "2026-06-19",
+            Total = 1,
+            Passed = 1,
+            DurationSeconds = 5,
+            Items =
+            {
+                new ReportItem
+                {
+                    TestId = "TC01",
+                    Titel = "Bridge-Test",
+                    Outcome = TestOutcome.Passed,
+                    DurationMs = 5000,
+                    Sections = doc.Sections
+                }
+            }
+        };
+        var md = MarkdownReportGenerator.Render(m, ReportDetail.Compact);
+        Assert.Contains("Prüft die FG-Propagation.", md);
+        Assert.DoesNotContain("Zweiter Satz hier", md);   // only the first sentence in the cell
+    }
+
+    [Fact]
     public void Render_Compact_EscapesPipesInCells()
     {
         var m = SampleModel();

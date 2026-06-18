@@ -83,6 +83,17 @@ public static class MarkdownReportGenerator
     public static readonly string[] FullSections =
         { "Zweck", "Datenkonstellation", "Vorbedingungen", "Ablauf", "Erwartetes Ergebnis" };
 
+    /// <summary>
+    /// The doc sections carried into <c>jbe_documentation</c> (E1 sync-docs / B5 build-pack),
+    /// in order. Superset of <see cref="FullSections"/> plus "Beschreibung": the DSGVO/DYN
+    /// definitions document under the rich vocabulary (Zweck/Datenkonstellation/...), the
+    /// Bridge (fg-testtool) definitions carry their purpose under "Beschreibung" (their
+    /// Vorbereitung/Schritte/Erwartung sections are placeholders and stay out). Additive and
+    /// loss-free for DSGVO (no "Beschreibung" there). Decision 22 (Jürgen, 2026-06-19).
+    /// </summary>
+    public static readonly string[] DocSections =
+        { "Zweck", "Beschreibung", "Datenkonstellation", "Vorbedingungen", "Ablauf", "Erwartetes Ergebnis" };
+
     // ── parsing ──────────────────────────────────────────────────────
 
     /// <summary>Parses a test definition Markdown into its doc part (id, titel, sections).</summary>
@@ -117,15 +128,16 @@ public static class MarkdownReportGenerator
 
     /// <summary>
     /// E1 (ADR-0008): builds the documentation Markdown for <c>jbe_documentation</c>
-    /// from a parsed definition - the whitelisted doc sections (<see cref="FullSections"/>)
+    /// from a parsed definition - the whitelisted doc sections (<see cref="DocSections"/>)
     /// in order, each as a "## Heading" block. Excludes Ergebnis-Historie, the JSON
-    /// block and Env-Scope (redundant/technical/process). Empty if none are present.
+    /// block and Env-Scope (redundant/technical/process), and the Bridge placeholder
+    /// sections Vorbereitung/Schritte/Erwartung. Empty if none are present.
     /// </summary>
     public static string BuildDocumentation(DefinitionDoc doc)
     {
         if (doc == null) return "";
         var sb = new StringBuilder();
-        foreach (var name in FullSections)
+        foreach (var name in DocSections)
         {
             if (doc.Sections.TryGetValue(name, out var content) && !string.IsNullOrWhiteSpace(content))
             {
@@ -196,7 +208,10 @@ public static class MarkdownReportGenerator
         sb.Append("|---|---|---|---|---|");
         foreach (var it in m.Items)
         {
+            // Purpose excerpt: "Zweck" (DSGVO/DYN vocabulary), falling back to "Beschreibung"
+            // (Bridge fg-testtool vocabulary) so the compact column is filled for both. (Decision 22)
             it.Sections.TryGetValue("Zweck", out var zweck);
+            if (string.IsNullOrWhiteSpace(zweck)) it.Sections.TryGetValue("Beschreibung", out zweck);
             sb.Append("\n| ").Append(EscapeCell(it.TestId))
               .Append(" | ").Append(EscapeCell(it.Titel))
               .Append(" | ").Append(EscapeCell(FirstSentence(zweck ?? "")))

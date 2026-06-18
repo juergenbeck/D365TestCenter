@@ -50,24 +50,38 @@ public static class PackBuilder
         var norm = MarkdownDocument.Normalize(markdown);
         MarkdownDocument.TrySplitFrontmatter(norm, out var fm, out _);
         var id = MarkdownDocument.ReadScalar(fm, "id");
+        var status = MarkdownDocument.ReadScalar(fm, "status");
+
+        // Archived definitions never go into a pack (decision 22, Jürgen 2026-06-19): in the
+        // Markant bestand the archived defs are exactly the old fg-testtool Q2 suites, which
+        // are not runnable on the ADR-0004 engine and whose runnable equivalents exist as
+        // standalone definitions. Skip before touching the JSON block (a suite has one).
+        if (string.Equals(status, "archiviert", StringComparison.OrdinalIgnoreCase))
+        {
+            findings.Add(new PackLintFinding
+            {
+                Severity = PackLintSeverity.Info,
+                Source = source,
+                Code = "ARCHIVED_SKIPPED",
+                Message = "Archivierte Definition - nicht ins Pack aufgenommen."
+            });
+            return null;
+        }
 
         var jsonBlock = MarkdownDocument.ExtractJsonBlock(norm);
         if (string.IsNullOrWhiteSpace(jsonBlock))
         {
             // A file without both an id and a block is not a test (e.g. a README) and is
             // skipped silently. A test (id present) without a block is a warning, unless draft.
-            if (!string.IsNullOrWhiteSpace(id))
-            {
-                var status = MarkdownDocument.ReadScalar(fm, "status");
-                if (!string.Equals(status, "entwurf", StringComparison.OrdinalIgnoreCase))
-                    findings.Add(new PackLintFinding
-                    {
-                        Severity = PackLintSeverity.Warning,
-                        Source = source,
-                        Code = "JSON_BLOCK_MISSING",
-                        Message = "Keine ```json-Definition - Test wird nicht ins Pack aufgenommen."
-                    });
-            }
+            if (!string.IsNullOrWhiteSpace(id) &&
+                !string.Equals(status, "entwurf", StringComparison.OrdinalIgnoreCase))
+                findings.Add(new PackLintFinding
+                {
+                    Severity = PackLintSeverity.Warning,
+                    Source = source,
+                    Code = "JSON_BLOCK_MISSING",
+                    Message = "Keine ```json-Definition - Test wird nicht ins Pack aufgenommen."
+                });
             return null;
         }
 
