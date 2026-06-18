@@ -269,6 +269,35 @@ public class AssertionEngineTests
     }
 
     [Fact]
+    public void GreaterThanLessThan_DateTimeUnspecifiedKind_IsTreatedAsUtc()
+    {
+        // Dataverse delivers DateTime as Kind=Unspecified. TryCompareOrdered must
+        // treat it as UTC, not run it through ToUniversalTime() (which assumes
+        // local time and shifts by the TZ offset, FB-44). actual and expected
+        // denote the SAME instant, so neither GreaterThan nor LessThan may pass.
+        // The drift only surfaces where TimeZoneInfo.Local has a nonzero offset
+        // (e.g. CEST); on a UTC host the comparison is correct either way.
+        var instant = new DateTime(2026, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+        var actual = DateTime.SpecifyKind(instant, DateTimeKind.Unspecified);
+        var expected = instant.ToString("O");
+
+        Assert.False(EvalOperator("GreaterThan", actual, expected).Passed);
+        Assert.False(EvalOperator("LessThan", actual, expected).Passed);
+    }
+
+    [Fact]
+    public void GreaterThanLessThan_DateTimeStringUnspecifiedKind_IsTreatedAsUtc()
+    {
+        // String fallback path: an ISO value without 'Z' parses as
+        // Kind=Unspecified and must likewise be treated as UTC, not local.
+        var actual = "2026-06-10T12:00:00";    // no 'Z' => Unspecified
+        var expected = "2026-06-10T12:00:00Z"; // 'Z'    => Utc, same instant
+
+        Assert.False(EvalOperator("GreaterThan", actual, expected).Passed);
+        Assert.False(EvalOperator("LessThan", actual, expected).Passed);
+    }
+
+    [Fact]
     public void DateSetRecently_RecentDate_Passes()
     {
         // DateSetRecently nutzt fest 120 Sekunden Toleranz

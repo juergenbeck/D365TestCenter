@@ -322,16 +322,9 @@ public sealed class AssertionEngine
     {
         if (actual is DateTime dt)
         {
-            // Dataverse returns DateTime values in UTC. A value arriving with
-            // Kind=Unspecified must be treated as UTC; ToUniversalTime() would
-            // interpret it as local time and subtract the offset a second time
-            // (observed as +7200s drift in CEST, Markant bug report 2026-06-10).
-            var utcDt = dt.Kind switch
-            {
-                DateTimeKind.Utc => dt,
-                DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
-                _ => dt.ToUniversalTime()
-            };
+            // Dataverse returns DateTime values in UTC. See NormalizeToUtc for
+            // why Kind=Unspecified must not go through ToUniversalTime() (FB-44).
+            var utcDt = NormalizeToUtc(dt);
             var diffSeconds = (DateTime.UtcNow - utcDt).TotalSeconds;
             result.Passed = diffSeconds >= 0 && diffSeconds <= withinSeconds;
             result.ExpectedDisplay = $"Innerhalb der letzten {withinSeconds}s";
@@ -351,6 +344,21 @@ public sealed class AssertionEngine
     // ---------------------------------------------------------------
     //  Hilfsmethoden
     // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Normalisiert einen DateTime auf UTC. Dataverse liefert Zeitwerte mit
+    /// Kind=Unspecified; diese sind bereits UTC und dürfen NICHT über
+    /// ToUniversalTime() laufen, das sie als Lokalzeit interpretiert und den
+    /// Offset abzieht (beobachtet als +7200s-Drift in CEST, FB-44). Nur echte
+    /// Local-Werte werden umgerechnet. Einzige Quelle für alle zeitbasierten
+    /// Operatoren (DateSetRecently, GreaterThan/LessThan).
+    /// </summary>
+    private static DateTime NormalizeToUtc(DateTime dt) => dt.Kind switch
+    {
+        DateTimeKind.Utc => dt,
+        DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+        _ => dt.ToUniversalTime()
+    };
 
     /// <summary>
     /// Geordneter Vergleich für GreaterThan/LessThan. Versucht nacheinander:
@@ -387,9 +395,7 @@ public sealed class AssertionEngine
         if (actual is DateTime actualDt
             && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expectedDt))
         {
-            var au = actualDt.Kind == DateTimeKind.Utc ? actualDt : actualDt.ToUniversalTime();
-            var eu = expectedDt.Kind == DateTimeKind.Utc ? expectedDt : expectedDt.ToUniversalTime();
-            comparison = au.CompareTo(eu);
+            comparison = NormalizeToUtc(actualDt).CompareTo(NormalizeToUtc(expectedDt));
             return true;
         }
 
@@ -407,9 +413,7 @@ public sealed class AssertionEngine
         if (DateTime.TryParse(actualStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ad)
             && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ed))
         {
-            var au = ad.Kind == DateTimeKind.Utc ? ad : ad.ToUniversalTime();
-            var eu = ed.Kind == DateTimeKind.Utc ? ed : ed.ToUniversalTime();
-            comparison = au.CompareTo(eu);
+            comparison = NormalizeToUtc(ad).CompareTo(NormalizeToUtc(ed));
             return true;
         }
 
