@@ -81,7 +81,13 @@ public static class Program
             "Browser locale for UI tests"));
         runCommand.AddOption(new Option<string?>("--browser-trace",
             "Path to write Playwright trace.zip (default: skip tracing)"));
-        runCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, bool, string, string?, bool, string, string?>(
+        // E2 (ADR-0008): after the run, write results back into the Markdown
+        // test definitions under --sync-defs (front-matter ergebnis_historie SSOT).
+        runCommand.AddOption(new Option<string?>("--sync-defs",
+            "After the run, sync results into the Markdown test definitions under this directory (E2 round-trip)."));
+        runCommand.AddOption(new Option<string?>("--env",
+            "Env label for the synced history entry (default: derived from the --org host)."));
+        runCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, bool, string, string?, bool, string, string?, string?, string?>(
             RunTests);
         rootCommand.AddCommand(runCommand);
 
@@ -101,6 +107,27 @@ public static class Program
         statusCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, int, string>(
             ShowStatus);
         rootCommand.AddCommand(statusCommand);
+
+        // ── sync-results command (E2 / ADR-0008) ─────────────────
+        var syncResultsCommand = new Command("sync-results",
+            "Write the results of a finished test run back into the Markdown test definitions (E2 round-trip).");
+        syncResultsCommand.AddOption(orgOption);
+        syncResultsCommand.AddOption(clientIdOption);
+        syncResultsCommand.AddOption(clientSecretOption);
+        syncResultsCommand.AddOption(tenantIdOption);
+        syncResultsCommand.AddOption(tokenOption);
+        syncResultsCommand.AddOption(interactiveOption);
+        syncResultsCommand.AddOption(new Option<string>("--run",
+            "Test run id (jbe_testrun GUID) whose results are synced.") { IsRequired = true });
+        syncResultsCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions to update (searched recursively).") { IsRequired = true });
+        syncResultsCommand.AddOption(new Option<string?>("--env",
+            "Env label for the history entry (default: derived from the --org host)."));
+        syncResultsCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        syncResultsCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string?, string>(
+            SyncResults);
+        rootCommand.AddCommand(syncResultsCommand);
 
         // ── validate command (OE-6) ──────────────────────────────
         var validateCommand = new Command("validate",
@@ -143,7 +170,8 @@ public static class Program
     static Task<int> RunTests(
         string org, string? clientId, string? clientSecret, string? tenantId,
         string? token, bool interactive, string filter, bool keepRecords, string config,
-        string? browserState, bool browserHeaded, string browserLocale, string? browserTrace)
+        string? browserState, bool browserHeaded, string browserLocale, string? browserTrace,
+        string? syncDefs, string? env)
     {
         WriteHeader(org, filter, config);
 
@@ -179,6 +207,26 @@ public static class Program
                 browser: browser);
 
             var result = orchestrator.RunNewTestRun(filter, keepRecords);
+
+            // E2 (ADR-0008): optional result round-trip into the Markdown definitions.
+            if (!string.IsNullOrWhiteSpace(syncDefs))
+            {
+                var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
+                Console.WriteLine();
+                Console.WriteLine($"  Ergebnis-Sync -> {syncDefs} (env={envLabel}):");
+                try
+                {
+                    var sum = ResultSync.SyncDefinitions(
+                        result.Results, syncDefs!, DateTime.Now, envLabel, Console.WriteLine);
+                    Console.WriteLine(
+                        $"  Sync fertig: {sum.Updated} aktualisiert, {sum.Matched} gematcht, {sum.Scanned} gescannt.");
+                }
+                catch (Exception syncEx)
+                {
+                    // Ein Sync-Fehler darf den Testlauf-Exit-Code nicht verfälschen.
+                    Console.WriteLine($"  Ergebnis-Sync fehlgeschlagen: {syncEx.Message}");
+                }
+            }
 
             // Exit-Code: 0 = alle grün, 1 = mind. ein Failure/Error, 2 = fataler Fehler
             if (result.FailedCount == 0 && result.ErrorCount == 0)
@@ -233,6 +281,53 @@ public static class Program
                     $"Filter:{filter}");
             }
 
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return Task.FromResult(1);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  sync-results command (E2 / ADR-0008): result round-trip
+    // ════════════════════════════════════════════════════════════════
+
+    static Task<int> SyncResults(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string run, string defs, string? env, string config)
+    {
+        try
+        {
+            if (!Guid.TryParse(run, out var runId))
+            {
+                Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
+                return Task.FromResult(2);
+            }
+            if (!Directory.Exists(defs))
+            {
+                Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+                return Task.FromResult(2);
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+            var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
+
+            var results = ResultSync.LoadResultsFromRun(client, cfg, runId);
+            if (results.Count == 0)
+            {
+                Console.WriteLine($"  Keine jbe_testrunresult-Records für Run {runId} gefunden.");
+                return Task.FromResult(1);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine($"  Sync {results.Count} Ergebnisse aus Run {runId} -> {defs} (env={envLabel}):");
+            var sum = ResultSync.SyncDefinitions(results, defs, DateTime.Now, envLabel, Console.WriteLine);
+            Console.WriteLine();
+            Console.WriteLine(
+                $"  Fertig: {sum.Updated} aktualisiert, {sum.Matched} gematcht, {sum.Scanned} Dateien gescannt.");
             return Task.FromResult(0);
         }
         catch (Exception ex)

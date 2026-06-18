@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\D365TestCenter.Core\D365TestCenter.Core.csproj" />
+    <!-- E2 (ADR-0008): tests for the CLI-side ResultSync (IO + Dataverse mapping). -->
+    <ProjectReference Include="..\D365TestCenter.Cli\D365TestCenter.Cli.csproj" />
   </ItemGroup>
 
 </Project>
