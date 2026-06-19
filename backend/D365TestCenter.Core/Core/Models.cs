@@ -612,6 +612,12 @@ public sealed class TrackedRecord
 
     [JsonProperty("alias")]
     public string? Alias { get; set; }
+
+    /// <summary>Primary-Name des Records (z.B. account.name, contact.fullname,
+    /// lead.subject). Nur im CLI-run-Pfad erfasst (OE-10, CaptureRecordNames);
+    /// null in den Plugin-Pfaden und wenn die Metadaten nicht ladbar waren.</summary>
+    [JsonProperty("name")]
+    public string? Name { get; set; }
 }
 
 /// <summary>

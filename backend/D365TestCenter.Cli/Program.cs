@@ -325,6 +325,10 @@ public static class Program
                 cfg,
                 log: Console.WriteLine,
                 browser: browser);
+            // OE-10: nur der CLI-run-Pfad erfasst die Primary-Namen der angelegten
+            // Records (fuer den sync-zephyr-Audit-Kommentar). Die Plugin-Pfade nicht
+            // (Sandbox-Waechter-Regel).
+            orchestrator.CaptureRecordNames = true;
 
             var result = orchestrator.RunNewTestRun(filter, keepRecords);
 

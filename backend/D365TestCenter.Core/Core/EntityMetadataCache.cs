@@ -89,7 +89,9 @@ public sealed class EntityMetadataCache
             var request = new RetrieveEntityRequest
             {
                 LogicalName = entityLogicalName,
-                EntityFilters = EntityFilters.Attributes
+                // OE-10: Entity-Level-Metadaten (PrimaryNameAttribute) zusaetzlich zu den
+                // Attribut-Metadaten laden; beides kommt in einem RetrieveEntity-Roundtrip.
+                EntityFilters = EntityFilters.Entity | EntityFilters.Attributes
             };
 
             var response = (RetrieveEntityResponse)_service.Execute(request);
@@ -208,6 +210,11 @@ public sealed class EntityMetadataInfo
     public Dictionary<string, AttributeTypeCode> AttributeTypes { get; set; }
         = new Dictionary<string, AttributeTypeCode>(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Logischer Name des Primary-Name-Attributs (z.B. "name", "fullname",
+    /// "subject"). Vom CLI-run-Pfad genutzt, um Record-Namen fuer den
+    /// TrackedRecords-Audit zu erfassen (OE-10). Null, wenn nicht ladbar.</summary>
+    public string? PrimaryNameAttribute { get; set; }
+
     /// <summary>attributeName -> first targetEntityLogicalName (for Lookups only).
     /// Kept for backward compatibility with the runtime @odata.bind resolution that
     /// only needs a single target. Polymorph-aware callers use <see cref="LookupAllTargets"/>.</summary>
@@ -230,6 +237,7 @@ public sealed class EntityMetadataInfo
     public static EntityMetadataInfo FromMetadata(EntityMetadata entityMetadata)
     {
         var info = new EntityMetadataInfo();
+        info.PrimaryNameAttribute = entityMetadata.PrimaryNameAttribute;
 
         if (entityMetadata.Attributes == null)
             return info;

@@ -82,7 +82,10 @@ public static class ZephyrSync
                     ZephyrKey = zk,
                     Outcome = r.Outcome,
                     DurationMs = r.DurationMs,
-                    Comment = string.IsNullOrWhiteSpace(r.ErrorMessage) ? null : r.ErrorMessage
+                    // OE-10: Audit-Kommentar aus angelegten Records (mit Namen, CLI-run-Pfad)
+                    // + Asserts; macht auch den PASS-Fall selbsterklärend (früher nur ErrorMessage).
+                    Comment = ZephyrResultBuilder.BuildAuditComment(
+                        r.TrackedRecords, r.StepResults, r.ErrorMessage)
                 };
                 if (stepsByTestId != null
                     && stepsByTestId.TryGetValue(r.TestId, out var steps) && steps.Count > 0)

@@ -138,6 +138,13 @@ public sealed class TestCenterOrchestrator
     }
 
     /// <summary>
+    /// OE-10: an den TestRunner durchgereicht. Nur der CLI-run-Pfad setzt das auf true
+    /// (Primary-Namen der angelegten Records fuer den sync-zephyr-Audit erfassen); die
+    /// Plugin-Pfade lassen es false (Sandbox-Waechter). Default false.
+    /// </summary>
+    public bool CaptureRecordNames { get; set; }
+
+    /// <summary>
     /// Führt einen kompletten Testlauf aus: Legt einen TestRun-Record an,
     /// lädt Tests, führt sie aus, schreibt Ergebnisse.
     ///
@@ -280,7 +287,11 @@ public sealed class TestCenterOrchestrator
 
     private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases, bool keepRecords)
     {
-        var runner = new TestRunner(_service, _browser) { KeepRecords = keepRecords };
+        var runner = new TestRunner(_service, _browser)
+        {
+            KeepRecords = keepRecords,
+            CaptureRecordNames = CaptureRecordNames
+        };
 
         // Live-Progress pro Testfall: Konsolen-/fulllog-Zeile plus leichtgewichtiges
         // Fortschritts-Update auf jbe_testrun. Das Schreiben der Result-Records

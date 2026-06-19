@@ -221,6 +221,10 @@ sync-zephyr --org <url> <auth> --run <guid> --defs <dir>
   Test Centers (CreateRecord/Assert/Wait/Cleanup) entsprechen nur dann den Zephyr-Script-Steps, wenn der
   Test-Case sie strukturell spiegelt - deshalb ist das Flag opt-in. Ohne das Flag wird der Gesamt-Status pro
   Testfall übertragen.
+- **Audit-Kommentar pro Testfall:** Der hochgeladene `comment` belegt, was der Test getan hat - die angelegten
+  Records (mit Primary-Name) und die geprüften Asserts, plus ggf. die Fehlermeldung. So ist auch ein
+  bestandener Test selbsterklärend. Die **Primary-Namen** werden nur erfasst, wenn der Lauf über `run` erzeugt
+  wurde (nicht über den CRUD-Trigger im Plugin); die Asserts immer.
 - **JSON-Body UTF-8 ohne BOM** (Umlaut-/Mojibake-Sicherheit).
 
 ---

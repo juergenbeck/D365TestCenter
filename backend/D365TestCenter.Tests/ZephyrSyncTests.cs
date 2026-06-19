@@ -46,7 +46,8 @@ public class ZephyrSyncTests
         Assert.Equal(5000, plan.Inputs[0].DurationMs);
         Assert.Null(plan.Inputs[0].Comment);
         Assert.Equal("DYN-T2", plan.Inputs[1].ZephyrKey);
-        Assert.Equal("Assert fehlgeschlagen", plan.Inputs[1].Comment);    // errormessage -> comment
+        // OE-10: errormessage now rides in the audit comment under a "Fehler:" line
+        Assert.Equal("Fehler: Assert fehlgeschlagen", plan.Inputs[1].Comment);
         Assert.Single(plan.SkippedNoKey);
         Assert.Equal("DYN10000-TC9", plan.SkippedNoKey[0]);
     }

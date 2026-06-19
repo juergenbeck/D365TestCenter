@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using D365TestCenter.Core;
@@ -136,4 +137,63 @@ public class ZephyrResultBuilderTests
         Assert.Equal("Not Executed", (string?)arr[1]["status"]);
         Assert.True(arr.All(x => (string?)x["environment"] == "TEST"));
     }
+
+    // ── OE-10: audit comment (tracked records with names + assert steps) ───
+
+    [Fact]
+    public void BuildAuditComment_RecordsWithNamesAndAsserts_RendersBothLines()
+    {
+        var tracked = new List<TrackedRecord>
+        {
+            new() { Entity = "account", Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    Alias = "acc", Name = "JBE Test GmbH" },
+            new() { Entity = "lead", Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    Alias = "lead" }   // no name
+        };
+        var asserts = new List<StepResult>
+        {
+            new() { Action = "Assert", Description = "Firma abgeleitet", Success = true, ActualDisplay = "JBE Test GmbH" },
+            new() { Action = "CreateRecord", Description = "non-assert ignored", Success = true },
+            new() { Action = "Assert", Description = "companyname gesetzt", Success = false, ActualDisplay = "leer" }
+        };
+
+        var c = ZephyrResultBuilder.BuildAuditComment(tracked, asserts, null);
+
+        Assert.NotNull(c);
+        Assert.Contains("Angelegt:", c);
+        Assert.Contains("account \"JBE Test GmbH\" [acc]", c);
+        Assert.Contains("lead [lead]", c);                 // no name -> entity + alias only
+        Assert.Contains("Geprüft:", c);
+        Assert.Contains("Firma abgeleitet = JBE Test GmbH (OK)", c);
+        Assert.Contains("companyname gesetzt = leer (FAIL)", c);
+        Assert.DoesNotContain("non-assert ignored", c);    // non-assert step skipped
+    }
+
+    [Fact]
+    public void BuildAuditComment_PassWithRecordsOnly_DocumentsInsteadOfBlank()
+    {
+        // The PASS case that used to upload an empty comment now documents what ran.
+        var tracked = new List<TrackedRecord>
+        {
+            new() { Entity = "contact", Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                    Alias = "con", Name = "JBE Test, Max" }
+        };
+
+        var c = ZephyrResultBuilder.BuildAuditComment(tracked, null, null);
+
+        Assert.NotNull(c);
+        Assert.Contains("contact \"JBE Test, Max\" [con]", c!);
+        Assert.DoesNotContain("Geprüft", c!);              // no asserts
+        Assert.DoesNotContain("Fehler", c!);
+    }
+
+    [Fact]
+    public void BuildAuditComment_NothingToSay_ReturnsNull()
+        => Assert.Null(ZephyrResultBuilder.BuildAuditComment(
+            new List<TrackedRecord>(), new List<StepResult>(), null));
+
+    [Fact]
+    public void BuildAuditComment_ErrorOnly_RendersFehlerLine()
+        => Assert.Equal("Fehler: OrganizationServiceFault [0x80040217]",
+            ZephyrResultBuilder.BuildAuditComment(null, null, "OrganizationServiceFault [0x80040217]"));
 }

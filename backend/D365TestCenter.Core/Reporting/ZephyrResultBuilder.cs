@@ -145,4 +145,52 @@ public static class ZephyrResultBuilder
             arr.Add(BuildResult(input, environment));
         return arr;
     }
+
+    /// <summary>
+    /// OE-10: builds a human-readable audit comment for a Zephyr result from the
+    /// tracked records (with primary names, CLI-run path) and the assert steps.
+    /// Makes every upload self-explanatory - even a PASS, where the failure message
+    /// is empty and the comment would otherwise be blank. Returns null when there is
+    /// nothing to say. Capped at 1500 chars. Pure: no IO.
+    /// </summary>
+    public static string? BuildAuditComment(
+        IReadOnlyList<TrackedRecord>? trackedRecords,
+        IReadOnlyList<StepResult>? assertSteps,
+        string? errorMessage)
+    {
+        var lines = new List<string>();
+
+        if (trackedRecords != null && trackedRecords.Count > 0)
+        {
+            var parts = trackedRecords.Select(t =>
+            {
+                var label = string.IsNullOrWhiteSpace(t.Name) ? t.Entity : $"{t.Entity} \"{t.Name}\"";
+                if (!string.IsNullOrWhiteSpace(t.Alias)) label += $" [{t.Alias}]";
+                return $"{label} ({t.Id})";
+            });
+            lines.Add("Angelegt: " + string.Join(", ", parts));
+        }
+
+        var asserts = (assertSteps ?? Array.Empty<StepResult>())
+            .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (asserts.Count > 0)
+        {
+            var parts = asserts.Select(a =>
+            {
+                var what = string.IsNullOrWhiteSpace(a.Description) ? a.AssertField : a.Description;
+                var val = !string.IsNullOrWhiteSpace(a.ActualDisplay) ? a.ActualDisplay : a.ExpectedDisplay;
+                var ok = a.Success ? "OK" : "FAIL";
+                return string.IsNullOrWhiteSpace(val) ? $"{what} ({ok})" : $"{what} = {val} ({ok})";
+            });
+            lines.Add("Geprüft: " + string.Join("; ", parts));
+        }
+
+        if (!string.IsNullOrWhiteSpace(errorMessage))
+            lines.Add("Fehler: " + errorMessage);
+
+        if (lines.Count == 0) return null;
+        var comment = string.Join("\n", lines);
+        return comment.Length > 1500 ? comment.Substring(0, 1500) + "..." : comment;
+    }
 }

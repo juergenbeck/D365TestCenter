@@ -40,6 +40,15 @@ public sealed class TestRunner
     public bool KeepRecords { get; set; }
 
     /// <summary>
+    /// OE-10: Wenn true, wird nach jedem Testfall der Primary-Name jedes angelegten
+    /// Records per Retrieve erfasst und in TrackedRecord.Name abgelegt (fuer den
+    /// sync-zephyr-Audit-Kommentar). NUR vom CLI-run-Pfad gesetzt — die
+    /// Plugin-Sandbox-Pfade lassen es false, weil ein zusaetzlicher Service-Call mit
+    /// try/catch dort die Sandbox-Waechter-Regel verletzen wuerde. Default false.
+    /// </summary>
+    public bool CaptureRecordNames { get; set; }
+
+    /// <summary>
     /// Wird nach jedem Testfall aufgerufen (index, total, result).
     /// Ermöglicht Fortschritts-Updates im TestRun-Record.
     /// </summary>
@@ -269,6 +278,11 @@ public sealed class TestRunner
                     })
                     .ToList();
 
+                // OE-10: Primary-Namen der angelegten Records erfassen — VOR dem Cleanup,
+                // sonst sind die Records geloescht. Nur im CLI-run-Pfad (CaptureRecordNames).
+                if (CaptureRecordNames)
+                    CaptureTrackedRecordNames(tcResult.TrackedRecords);
+
                 try
                 {
                     Log("  Cleanup...");
@@ -292,6 +306,34 @@ public sealed class TestRunner
         }
 
         return tcResult;
+    }
+
+    /// <summary>
+    /// OE-10: Befuellt TrackedRecord.Name mit dem Primary-Name jedes angelegten
+    /// Records. Ein Retrieve pro Record (die Records existieren noch, Cleanup kommt
+    /// danach). Graceful: ein nicht ladbarer Name bleibt null. Nur im CLI-run-Pfad
+    /// aufgerufen (CaptureRecordNames), daher ist das try/catch um den Service-Call
+    /// hier zulaessig — kein Plugin-Sandbox-Kontext, in dem ein gefangener Fault die
+    /// Transaktion vergiften wuerde.
+    /// </summary>
+    private void CaptureTrackedRecordNames(List<TrackedRecord> tracked)
+    {
+        foreach (var tr in tracked)
+        {
+            try
+            {
+                var logical = _entityMetadata.ResolveLogicalName(tr.Entity);
+                var primaryName = _entityMetadata.GetMetadata(logical)?.PrimaryNameAttribute;
+                if (string.IsNullOrWhiteSpace(primaryName)) continue;
+                var rec = _service.Retrieve(logical, tr.Id, new ColumnSet(primaryName));
+                tr.Name = rec.GetAttributeValue<string>(primaryName);
+            }
+            catch
+            {
+                // Name ist optional fuer den Audit-Kommentar; ein Fehler (Record vom
+                // Plugin geloescht, Berechtigung, ...) darf den Lauf nicht stoeren.
+            }
+        }
     }
 
     /// <summary>
