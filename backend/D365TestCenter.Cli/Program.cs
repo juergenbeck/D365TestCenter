@@ -178,12 +178,14 @@ public static class Program
         syncZephyrCommand.AddOption(new Option<string>("--zephyr-pat",
             "Jira Personal Access Token (Bearer). Pass from a TokenVault wrapper; the CLI stays secret-agnostic.") { IsRequired = true });
         syncZephyrCommand.AddOption(new Option<string?>("--env",
-            "Env label for the Zephyr result environment field (default: derived from the --org host)."));
+            "Exact Zephyr environment name for the result (project-configured, e.g. \"DEV Umgebung\"). Omitted when not set - a non-matching value is rejected by Zephyr with HTTP 400, so there is no host-derived default."));
         syncZephyrCommand.AddOption(new Option<string?>("--cycle-name",
             "Name of the Zephyr Test-Run/cycle to create (default: derived from env + run date + run id)."));
+        syncZephyrCommand.AddOption(new Option<bool>("--script-results",
+            "Also upload per-step results (scriptResults[]). Off by default: only sensible when the Zephyr test-case's script steps mirror the D365TestCenter execution steps (Decision 25)."));
         syncZephyrCommand.AddOption(new Option<string>("--config", () => "standard",
             "Config profile: standard, markant"));
-        syncZephyrCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string, string, string, string?, string?, string>(
+        syncZephyrCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string, string, string, string?, string?, bool, string>(
             SyncZephyr);
         rootCommand.AddCommand(syncZephyrCommand);
 
@@ -561,7 +563,8 @@ public static class Program
     static async Task<int> SyncZephyr(
         string org, string? clientId, string? clientSecret, string? tenantId,
         string? token, bool interactive, string run, string defs, string server,
-        string project, string zephyrPat, string? env, string? cycleName, string config)
+        string project, string zephyrPat, string? env, string? cycleName,
+        bool scriptResults, string config)
     {
         try
         {
@@ -583,12 +586,18 @@ public static class Program
 
             using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
             var cfg = GetConfig(config);
-            var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
+            // No DeriveEnv default here (Decision 26): the Zephyr environment field is
+            // a project-configured value (e.g. "DEV Umgebung"), not free text, so a
+            // derived "dev"/"test" label would be rejected with HTTP 400. Without an
+            // explicit --env we omit the field; the Markant wrapper maps org -> env.
+            var envLabel = string.IsNullOrWhiteSpace(env) ? null : env!.Trim();
 
             Console.WriteLine();
-            Console.WriteLine($"  sync-zephyr Run {runId} -> {server} (Projekt {project}, env={envLabel}):");
+            Console.WriteLine($"  sync-zephyr Run {runId} -> {server} (Projekt {project}, " +
+                $"env={(envLabel ?? "(ohne environment-Feld)")}, scriptResults={(scriptResults ? "an" : "aus")}):");
             var sum = await ZephyrSync.SyncAsync(
-                client, cfg, runId, defs, server, project, zephyrPat, envLabel, cycleName, Console.WriteLine);
+                client, cfg, runId, defs, server, project, zephyrPat, envLabel, cycleName,
+                scriptResults, Console.WriteLine);
 
             Console.WriteLine();
             Console.WriteLine(

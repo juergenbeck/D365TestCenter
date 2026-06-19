@@ -10,6 +10,7 @@ using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
 using D365TestCenter.Core.Reporting;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -58,10 +59,14 @@ public static class ZephyrSync
     /// Pure plan builder: maps each result to its zephyr_key (by testId), turning it
     /// into a <see cref="ZephyrResultBuilder.ResultInput"/>. Results whose definition
     /// has no zephyr_key go to the skip list. The failure reason (jbe_errormessage)
-    /// rides along as the result comment.
+    /// rides along as the result comment. When <paramref name="stepsByTestId"/> is
+    /// supplied (opt-in --script-results, Decision 25), the per-step results for the
+    /// matching testId are attached as <c>scriptResults[]</c>. Stays Dataverse-free:
+    /// the step dictionary is loaded by the IO seam (<see cref="LoadStepResultsByTestId"/>).
     /// </summary>
     public static SyncPlan BuildPlan(
-        IReadOnlyList<TestCaseResult> results, IReadOnlyDictionary<string, string> zephyrKeys)
+        IReadOnlyList<TestCaseResult> results, IReadOnlyDictionary<string, string> zephyrKeys,
+        IReadOnlyDictionary<string, IReadOnlyList<ZephyrResultBuilder.ScriptResultInput>>? stepsByTestId = null)
     {
         if (results == null) throw new ArgumentNullException(nameof(results));
         if (zephyrKeys == null) throw new ArgumentNullException(nameof(zephyrKeys));
@@ -72,13 +77,19 @@ public static class ZephyrSync
             if (string.IsNullOrWhiteSpace(r.TestId)) continue;
             if (zephyrKeys.TryGetValue(r.TestId, out var zk) && !string.IsNullOrWhiteSpace(zk))
             {
-                plan.Inputs.Add(new ZephyrResultBuilder.ResultInput
+                var input = new ZephyrResultBuilder.ResultInput
                 {
                     ZephyrKey = zk,
                     Outcome = r.Outcome,
                     DurationMs = r.DurationMs,
                     Comment = string.IsNullOrWhiteSpace(r.ErrorMessage) ? null : r.ErrorMessage
-                });
+                };
+                if (stepsByTestId != null
+                    && stepsByTestId.TryGetValue(r.TestId, out var steps) && steps.Count > 0)
+                {
+                    input.ScriptResults = steps;
+                }
+                plan.Inputs.Add(input);
             }
             else
             {
@@ -86,6 +97,64 @@ public static class ZephyrSync
             }
         }
         return plan;
+    }
+
+    /// <summary>
+    /// E5 Phase 2 (Decision 25, opt-in): loads the jbe_teststep records of a run and
+    /// groups them by the parent result's jbe_testid, mapped to
+    /// <see cref="ZephyrResultBuilder.ScriptResultInput"/> in step-number order with a
+    /// 0-based running index. One LinkEntity query (jbe_teststep -> jbe_testrunresult,
+    /// filtered on jbe_testrunid). The step status is binary in Dataverse (Passed/Failed),
+    /// the failure text (jbe_errormessage) becomes the per-step comment.
+    ///
+    /// Note: these are the D365TestCenter execution steps; they only line up with the
+    /// Zephyr test-case's manual script steps when the case mirrors them - hence opt-in.
+    /// </summary>
+    public static Dictionary<string, IReadOnlyList<ZephyrResultBuilder.ScriptResultInput>>
+        LoadStepResultsByTestId(IOrganizationService service, ITestCenterConfig cfg, Guid runId)
+    {
+        var q = new QueryExpression(cfg.TestStepEntity)
+        {
+            ColumnSet = new ColumnSet("jbe_stepnumber", "jbe_stepstatus", "jbe_errormessage"),
+            Orders = { new OrderExpression("jbe_stepnumber", OrderType.Ascending) }
+        };
+        var link = q.AddLink(
+            cfg.TestRunResultEntity, "jbe_testrunresultid", cfg.TestRunResultEntity + "id");
+        link.LinkCriteria.AddCondition("jbe_testrunid", ConditionOperator.Equal, runId);
+        link.Columns = new ColumnSet("jbe_testid");
+        link.EntityAlias = "res";
+
+        // Collect raw per testId, then assign a contiguous 0-based index in step order.
+        var raw = new Dictionary<string, List<(int num, TestOutcome outcome, string? comment)>>(
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var e in service.RetrieveMultiple(q).Entities)
+        {
+            var testId = e.GetAttributeValue<AliasedValue>("res.jbe_testid")?.Value as string;
+            if (string.IsNullOrWhiteSpace(testId)) continue;
+            var num = e.GetAttributeValue<int?>("jbe_stepnumber") ?? 0;
+            var outcome = ResultSync.MapOutcome(
+                e.GetAttributeValue<OptionSetValue>("jbe_stepstatus")?.Value, cfg);
+            var err = e.GetAttributeValue<string>("jbe_errormessage");
+            if (!raw.TryGetValue(testId!, out var list)) { list = new(); raw[testId!] = list; }
+            list.Add((num, outcome, string.IsNullOrWhiteSpace(err) ? null : err));
+        }
+
+        var result = new Dictionary<string, IReadOnlyList<ZephyrResultBuilder.ScriptResultInput>>(
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in raw)
+        {
+            var ordered = kv.Value.OrderBy(x => x.num).ToList();
+            var srs = new List<ZephyrResultBuilder.ScriptResultInput>(ordered.Count);
+            for (int i = 0; i < ordered.Count; i++)
+                srs.Add(new ZephyrResultBuilder.ScriptResultInput
+                {
+                    Index = i,
+                    Outcome = ordered[i].outcome,
+                    Comment = ordered[i].comment
+                });
+            result[kv.Key] = srs;
+        }
+        return result;
     }
 
     /// <summary>
@@ -119,8 +188,8 @@ public static class ZephyrSync
     /// </summary>
     public static async Task<SyncSummary> SyncAsync(
         IOrganizationService service, ITestCenterConfig cfg, Guid runId, string defsDir,
-        string serverUrl, string projectKey, string pat, string env, string? cycleName,
-        Action<string>? log = null)
+        string serverUrl, string projectKey, string pat, string? env, string? cycleName,
+        bool includeScriptResults = false, Action<string>? log = null)
     {
         var results = ResultSync.LoadResultsFromRun(service, cfg, runId);
         var summary = new SyncSummary { Total = results.Count };
@@ -131,7 +200,13 @@ public static class ZephyrSync
         }
 
         var keys = LoadZephyrKeys(defsDir);
-        var plan = BuildPlan(results, keys);
+        IReadOnlyDictionary<string, IReadOnlyList<ZephyrResultBuilder.ScriptResultInput>>? steps = null;
+        if (includeScriptResults)
+        {
+            steps = LoadStepResultsByTestId(service, cfg, runId);
+            log?.Invoke($"  scriptResults: an ({steps.Count} Testfälle mit Step-Daten geladen)");
+        }
+        var plan = BuildPlan(results, keys, steps);
         summary.Mapped = plan.Inputs.Count;
         summary.SkippedNoKey = plan.SkippedNoKey.Count;
         summary.SkippedIds.AddRange(plan.SkippedNoKey);
@@ -145,11 +220,14 @@ public static class ZephyrSync
         }
 
         // Cycle name: explicit override, otherwise derived from env + run date + run id.
+        // env is optional (Decision 26): drop it from the default name when absent
+        // instead of leaving a double space.
         var header = ReportBuilder.LoadRunHeader(service, cfg, runId);
         var date = header?.StartedOn?.ToLocalTime() ?? DateTime.Now;
+        var envPart = string.IsNullOrWhiteSpace(env) ? "" : env!.Trim() + " ";
         var name = !string.IsNullOrWhiteSpace(cycleName)
             ? cycleName!
-            : $"D365TestCenter {env} {date:yyyy-MM-dd HH:mm} ({runId.ToString().Substring(0, 8)})";
+            : $"D365TestCenter {envPart}{date:yyyy-MM-dd HH:mm} ({runId.ToString().Substring(0, 8)})";
 
         using var http = new HttpClient();
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat);
