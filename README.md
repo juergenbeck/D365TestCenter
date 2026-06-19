@@ -14,6 +14,7 @@ A single C# core engine (`D365TestCenter.Core`) is invoked from three callers (S
 - **Async plugin polling** waits for plugin chains to complete before assertions
 - **Negative-path tests** with `expectFailure` / `expectException` and sandbox-safe error capture (ADR-0005)
 - **UI tests via Microsoft.Playwright** as `BrowserAction` steps in the CLI flow (ADR-0006)
+- **Documentation & reporting lifecycle** (ADR-0008): documentation pass-through into the test center, result round-trip back into the Markdown SSOT, run reports (Markdown / HTML / PDF), result upload to Zephyr Scale, pack build/import, and a management inventory — all driven by the CLI
 - **Visual test editor** with drag-drop, templates, alias autocomplete
 - **Dashboard** with trend sparklines, regression detection, flaky test detection
 - **Demo mode** works outside Dynamics 365 with generated mock data
@@ -82,7 +83,7 @@ dotnet backend\D365TestCenter.Cli\bin\Debug\net8.0\D365TestCenter.Cli.dll run `
     --filter "MGR*"
 ```
 
-The CLI does not have the 2-minute plugin sandbox limit, so it is the recommended path for large suites (>30 tests).
+The CLI does not have the 2-minute plugin sandbox limit, so it is the recommended path for large suites (>30 tests). See the full [CLI reference](docs/08_cli-referenz.md) for all commands (`run`, `status`, `validate`, `report`, `sync-results`, `sync-docs`, `sync-zephyr`, `build-pack`, `import-pack`, `inventory`, `ui-setup`) and the [documentation & reporting lifecycle](docs/09_doku-und-reporting.md).
 
 ### 5. Try the Demo Mode
 
@@ -204,7 +205,7 @@ Both are retrievable via the Web API `/jbe_testrunresults(<id>)/jbe_screenshot/$
 
 | Entity | Description |
 |--------|-------------|
-| `jbe_testcase` | Test case definition (JSON in `jbe_definitionjson`) |
+| `jbe_testcase` | Test case definition (JSON in `jbe_definitionjson`; business documentation in `jbe_documentation`, rendered in the client's docs tab) |
 | `jbe_testrun` | A test run; `jbe_fulllog` carries engine + plugin trace logs |
 | `jbe_testrunresult` | Result per test case; `jbe_trackedrecords`, `jbe_screenshot`, `jbe_uitrace` |
 | `jbe_teststep` | Individual step log entry |

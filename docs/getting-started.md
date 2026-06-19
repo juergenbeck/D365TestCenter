@@ -178,3 +178,5 @@ Set `waitForAsync: true` on test steps that trigger async plugins.
 - Explore the [Test Case Specification](04_testfall-spezifikation.md)
 - Check the [Deployment Guide](05_deployment-handbuch.md)
 - See [Customization Guide](07_customization.md) for adapting demo metadata
+- Use the [CLI Reference](08_cli-referenz.md) for all headless commands (run, report, sync, build/import-pack, inventory)
+- Understand the [documentation & reporting lifecycle](09_doku-und-reporting.md) (ADR-0008)
