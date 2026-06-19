@@ -158,6 +158,35 @@ public static class Program
             GenerateReport);
         rootCommand.AddCommand(reportCommand);
 
+        // ── sync-zephyr command (E5 / ADR-0008) ───────────────────
+        var syncZephyrCommand = new Command("sync-zephyr",
+            "Upload the results of a finished run to Zephyr Scale (DC / ATM 1.0): create a new Test-Run (cycle) and bulk-post the results (E5). Writes to Zephyr - approval-gated.");
+        syncZephyrCommand.AddOption(orgOption);
+        syncZephyrCommand.AddOption(clientIdOption);
+        syncZephyrCommand.AddOption(clientSecretOption);
+        syncZephyrCommand.AddOption(tenantIdOption);
+        syncZephyrCommand.AddOption(tokenOption);
+        syncZephyrCommand.AddOption(interactiveOption);
+        syncZephyrCommand.AddOption(new Option<string>("--run",
+            "Test run id (jbe_testrun GUID) whose results are uploaded to Zephyr.") { IsRequired = true });
+        syncZephyrCommand.AddOption(new Option<string>("--defs",
+            "Directory with the Markdown test definitions (searched recursively) - source of the zephyr_key front-matter.") { IsRequired = true });
+        syncZephyrCommand.AddOption(new Option<string>("--server",
+            "Zephyr/Jira server base URL, e.g. https://www.mnet.markant.de/jira (ATM 1.0 paths are appended).") { IsRequired = true });
+        syncZephyrCommand.AddOption(new Option<string>("--project",
+            "Zephyr/Jira project key, e.g. DYN.") { IsRequired = true });
+        syncZephyrCommand.AddOption(new Option<string>("--zephyr-pat",
+            "Jira Personal Access Token (Bearer). Pass from a TokenVault wrapper; the CLI stays secret-agnostic.") { IsRequired = true });
+        syncZephyrCommand.AddOption(new Option<string?>("--env",
+            "Env label for the Zephyr result environment field (default: derived from the --org host)."));
+        syncZephyrCommand.AddOption(new Option<string?>("--cycle-name",
+            "Name of the Zephyr Test-Run/cycle to create (default: derived from env + run date + run id)."));
+        syncZephyrCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        syncZephyrCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string, string, string, string?, string?, string>(
+            SyncZephyr);
+        rootCommand.AddCommand(syncZephyrCommand);
+
         // ── sync-docs command (E1 / ADR-0008) ─────────────────────
         var syncDocsCommand = new Command("sync-docs",
             "Write the documentation sections of the Markdown definitions into jbe_testcase.jbe_documentation (E1).");
@@ -517,6 +546,56 @@ public static class Program
                 Console.WriteLine(content);
             }
             return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return 1;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  sync-zephyr command (E5 / ADR-0008): upload results to Zephyr Scale
+    // ════════════════════════════════════════════════════════════════
+
+    static async Task<int> SyncZephyr(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string run, string defs, string server,
+        string project, string zephyrPat, string? env, string? cycleName, string config)
+    {
+        try
+        {
+            if (!Guid.TryParse(run, out var runId))
+            {
+                Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
+                return 2;
+            }
+            if (!Directory.Exists(defs))
+            {
+                Console.WriteLine($"  Definitions-Verzeichnis nicht gefunden: {defs}");
+                return 2;
+            }
+            if (string.IsNullOrWhiteSpace(zephyrPat))
+            {
+                Console.WriteLine("  --zephyr-pat fehlt (Jira PAT als Bearer). Vom TokenVault-Wrapper übergeben.");
+                return 2;
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+            var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
+
+            Console.WriteLine();
+            Console.WriteLine($"  sync-zephyr Run {runId} -> {server} (Projekt {project}, env={envLabel}):");
+            var sum = await ZephyrSync.SyncAsync(
+                client, cfg, runId, defs, server, project, zephyrPat, envLabel, cycleName, Console.WriteLine);
+
+            Console.WriteLine();
+            Console.WriteLine(
+                $"  Fertig: {sum.Uploaded} Ergebnisse hochgeladen" +
+                (sum.RunKey != null ? $" (Zephyr Test-Run {sum.RunKey})" : "") +
+                $", {sum.Mapped} gemappt, {sum.SkippedNoKey} ohne zephyr_key, {sum.Total} im Run.");
+            return sum.Uploaded > 0 ? 0 : 1;
         }
         catch (Exception ex)
         {
