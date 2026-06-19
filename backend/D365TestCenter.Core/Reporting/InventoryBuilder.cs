@@ -16,6 +16,13 @@ public sealed class InventoryEntry
     public List<string> SuiteTags { get; set; } = new();
     public string Ticket { get; set; } = "";          // ticket + weitere_tickets, comma-joined
     public string LaufStatus { get; set; } = "";       // d365tc_lauf_status
+    // Additive front-matter facts (parity with Markant Build-Inventar.ps1). Empty when the
+    // definition carries no such field - generic, optional metadata (ADR-0002).
+    public string Stufe { get; set; } = "";            // stufe (tier/level)
+    public string Verantwortlich { get; set; } = "";   // verantwortlich (owner)
+    public string GeschaetztMin { get; set; } = "";    // geschaetzt_min (estimated minutes)
+    public string Quelle { get; set; } = "";           // quelle (source)
+    public string Datei { get; set; } = "";            // relative path to the definition file
     public List<HistoryEntry> History { get; set; } = new();
 }
 
@@ -64,6 +71,11 @@ public static class InventoryBuilder
             SuiteTags = MarkdownDocument.ReadArray(fm, "suite_tags"),
             Ticket = string.Join(", ", ticket),
             LaufStatus = MarkdownDocument.ReadScalar(fm, "d365tc_lauf_status") ?? "",
+            Stufe = MarkdownDocument.ReadScalar(fm, "stufe") ?? "",
+            Verantwortlich = MarkdownDocument.ReadScalar(fm, "verantwortlich") ?? "",
+            GeschaetztMin = MarkdownDocument.ReadScalar(fm, "geschaetzt_min") ?? "",
+            Quelle = MarkdownDocument.ReadScalar(fm, "quelle") ?? "",
+            Datei = source ?? "",
             History = MarkdownResultSync.ParseHistory(fm)
         };
     }
@@ -100,17 +112,22 @@ public static class InventoryBuilder
         foreach (var domain in model.Entries.GroupBy(e => Blank(e.Domaene)).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
             sb.Append("\n## ").Append(domain.Key).Append("\n\n");
-            sb.Append("| ID | Titel | Status | Suite-Tags | Ticket | Letzter Lauf | Trend |\n");
-            sb.Append("|---|---|---|---|---|---|---|");
+            sb.Append("| ID | Titel | Stufe | Status | Suite-Tags | Ticket | Verantw. | Min | Quelle | Letzter Lauf | Trend | Datei |\n");
+            sb.Append("|---|---|---|---|---|---|---|---|---|---|---|---|");
             foreach (var e in domain.OrderBy(x => x.Id, StringComparer.Ordinal))
             {
                 sb.Append("\n| ").Append(Cell(e.Id))
                   .Append(" | ").Append(Cell(e.Titel))
+                  .Append(" | ").Append(Cell(e.Stufe))
                   .Append(" | ").Append(Cell(e.Status))
                   .Append(" | ").Append(Cell(string.Join(", ", e.SuiteTags)))
                   .Append(" | ").Append(Cell(e.Ticket))
+                  .Append(" | ").Append(Cell(e.Verantwortlich))
+                  .Append(" | ").Append(Cell(e.GeschaetztMin))
+                  .Append(" | ").Append(Cell(e.Quelle))
                   .Append(" | ").Append(Cell(LastRun(e.History)))
-                  .Append(" | ").Append(Cell(Trend(e.History))).Append(" |");
+                  .Append(" | ").Append(Cell(Trend(e.History)))
+                  .Append(" | ").Append(FileLink(e.Datei)).Append(" |");
             }
             sb.Append("\n");
         }
@@ -179,5 +196,18 @@ public static class InventoryBuilder
         if (string.IsNullOrEmpty(text)) return "";
         var flat = Regex.Replace(text.Replace("\r", " ").Replace("\n", " "), @"\s+", " ").Trim();
         return flat.Replace("|", "\\|");
+    }
+
+    /// <summary>
+    /// Renders the definition's relative path as a Markdown link (parity with
+    /// Build-Inventar.ps1). The link resolves when the inventory is written into the
+    /// definitions root (the common case); empty when no path is known.
+    /// </summary>
+    static string FileLink(string source)
+    {
+        if (string.IsNullOrWhiteSpace(source)) return "";
+        var path = source.Replace('\\', '/').Trim();
+        var target = path.Replace(" ", "%20").Replace("(", "%28").Replace(")", "%29");
+        return $"[{Cell(path)}]({target})";
     }
 }

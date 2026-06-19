@@ -95,14 +95,60 @@ public class InventoryBuilderTests
         Assert.Contains("## Status-Verteilung", md);
         Assert.Contains("## Domänen-Verteilung", md);
         Assert.Contains("## Lauf-Status-Verteilung", md);          // present: one def carries d365tc_lauf_status
-        Assert.Contains("| ID | Titel | Status | Suite-Tags | Ticket | Letzter Lauf | Trend |", md);
+        Assert.Contains("| ID | Titel | Stufe | Status | Suite-Tags | Ticket | Verantw. | Min | Quelle | Letzter Lauf | Trend | Datei |", md);
         Assert.Contains("2x PASS", md);                            // DSGVO def with history
         Assert.Contains("DCC-CONTACT-01", md);
         Assert.Contains("TC01", md);
 
-        // additive: the Bridge def (no history) shows "-" in the trend cell
+        // additive: the Bridge def (no history) shows "-" in the trend cells, then the file link
         var tc01Row = md.Split('\n').First(l => l.StartsWith("| TC01 "));
-        Assert.EndsWith("| - | - |", tc01Row.TrimEnd());
+        Assert.EndsWith("| - | - | [fieldgovernance/TC01.md](fieldgovernance/TC01.md) |", tc01Row.TrimEnd());
+    }
+
+    const string FullMetaDef =
+        "---\n" +
+        "id: BR-CS-01\n" +
+        "titel: \"Bridge CS\"\n" +
+        "domaene: bridge\n" +
+        "stufe: 2\n" +
+        "status: aktiv\n" +
+        "suite_tags: [regression-bridge]\n" +
+        "verantwortlich: jbe\n" +
+        "geschaetzt_min: 5\n" +
+        "quelle: DYN-10000\n" +
+        "---\n\n## Beschreibung\n\nx\n";
+
+    [Fact]
+    public void BuildEntry_ParsesAdditiveMarkantFields()
+    {
+        var e = InventoryBuilder.BuildEntry(FullMetaDef, "bridge/BR-CS-01.md")!;
+        Assert.Equal("2", e.Stufe);
+        Assert.Equal("jbe", e.Verantwortlich);
+        Assert.Equal("5", e.GeschaetztMin);
+        Assert.Equal("DYN-10000", e.Quelle);
+        Assert.Equal("bridge/BR-CS-01.md", e.Datei);
+    }
+
+    [Fact]
+    public void Render_AdditiveColumns_FilledAndEmpty()
+    {
+        var model = InventoryBuilder.Build(new[]
+        {
+            ("bridge/BR-CS-01.md", FullMetaDef),
+            ("fieldgovernance/TC01.md", BridgeDef),   // carries none of the extra fields
+        });
+        var md = InventoryBuilder.Render(model);
+
+        var brRow = md.Split('\n').First(l => l.StartsWith("| BR-CS-01 "));
+        Assert.Contains("| 2 |", brRow);              // Stufe
+        Assert.Contains("| jbe |", brRow);            // Verantwortlich
+        Assert.Contains("| 5 |", brRow);              // Min
+        Assert.Contains("| DYN-10000 |", brRow);      // Quelle
+        Assert.Contains("[bridge/BR-CS-01.md](bridge/BR-CS-01.md)", brRow);   // Datei-Link
+
+        // additive: the def without these fields renders empty cells, still has its file link
+        var tc01Row = md.Split('\n').First(l => l.StartsWith("| TC01 "));
+        Assert.Contains("[fieldgovernance/TC01.md](fieldgovernance/TC01.md)", tc01Row);
     }
 
     [Fact]
