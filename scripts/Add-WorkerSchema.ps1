@@ -82,8 +82,20 @@ function Invoke-Read([string]$url) {
 }
 function Invoke-Write([string]$url, $bodyObj) {
     $json = $bodyObj | ConvertTo-Json -Depth 20 -Compress
-    return Invoke-RestMethod -Uri $url -Headers $writeH -Method Post `
-        -Body ([System.Text.Encoding]::UTF8.GetBytes($json)) -ErrorAction Stop
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    # Retry: direkt nach einem Entity-Create wirft das Attribut-Anlegen gern den transienten
+    # 0x80040216 ("unexpected error", Metadaten-Propagation). Bis zu 4 Versuche mit Backoff.
+    for ($attempt = 1; ; $attempt++) {
+        try {
+            return Invoke-RestMethod -Uri $url -Headers $writeH -Method Post -Body $bytes -ErrorAction Stop
+        } catch {
+            $msg = "$($_.ErrorDetails.Message)$($_.Exception.Message)"
+            $transient = $msg -match "0x80040216" -or $msg -match "unexpected error" -or $msg -match "0x80044150"
+            if ($attempt -ge 4 -or -not $transient) { throw }
+            Write-Host "    (transient, Versuch $attempt -> Retry in 5s)" -ForegroundColor DarkYellow
+            Start-Sleep -Seconds 5
+        }
+    }
 }
 function New-Label([string]$text) {
     return @{
