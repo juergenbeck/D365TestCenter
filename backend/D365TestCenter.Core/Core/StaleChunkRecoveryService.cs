@@ -63,75 +63,84 @@ public sealed class StaleChunkRecoveryService
     }
 
     /// <summary>
-    /// Sweept alle Laeufe in Status "Laeuft" (Running) und recovert deren stale "Laeuft"-Chunks.
+    /// Sweept stale "Laeuft"-Chunks (laenger als <paramref name="staleSeconds"/> ohne Re-Claim) in
+    /// laufenden Laeufen und recovert sie. Strategie: EINE Chunk-Query (Status "Laeuft") + EIN
+    /// Running-Run-Filter statt pro-Lauf-Iteration -- auf einer Org mit vielen Alt-Laeufen, die
+    /// dauerhaft in Status Running stehen (Alt-Batch-Cascade ohne Chunks), waeren pro-Lauf-Queries
+    /// reine Verschwendung. Nur Laeufe mit tatsaechlich stale Chunks werden angefasst.
     /// </summary>
     public RecoverySweepResult Sweep(int staleSeconds, int maxRecoveries, Func<DateTime>? clock = null)
     {
         var now = clock ?? (() => DateTime.UtcNow);
         var result = new RecoverySweepResult();
 
-        var runIds = LoadRunningRunIds();
-        result.RunsScanned = runIds.Count;
-
-        foreach (var runId in runIds)
+        var runningRunIds = new HashSet<Guid>(LoadRunningRunIds());
+        result.RunsScanned = runningRunIds.Count;
+        if (runningRunIds.Count == 0)
         {
-            var (recovered, poisoned) = RecoverRun(runId, staleSeconds, maxRecoveries, now);
+            _log?.Invoke("Stale-Chunk-Recovery: keine laufenden Laeufe.");
+            return result;
+        }
+
+        var staleChunks = LoadRunningChunks()
+            .Where(c => IsStaleInRunningRun(c, runningRunIds, staleSeconds, now))
+            .ToList();
+
+        var affectedRuns = new HashSet<Guid>();
+        foreach (var chunk in staleChunks)
+        {
+            var runId = chunk.GetAttributeValue<EntityReference>(WorkerSchema.ChunkTestRunId)!.Id;
+            var (recovered, poisoned) = RecoverChunk(chunk.Id, maxRecoveries, now);
             result.ChunksRecovered += recovered;
             result.ChunksPoisoned += poisoned;
+            if (recovered + poisoned > 0) affectedRuns.Add(runId);
+        }
 
-            // Je Lauf das Plateau pruefen: ein Poison-Chunk kann es ausloesen, und ein zuvor
-            // verpasster Abschluss (Race/Fehler in einem frueheren Sweep) wird nachgeholt.
+        // Plateau je betroffenem Lauf pruefen: ein Poison-Chunk kann es ausloesen.
+        foreach (var runId in affectedRuns)
             if (new RunCompletionService(_service, _log).TryComplete(runId, now))
                 result.RunsCompleted++;
-        }
 
         _log?.Invoke($"Stale-Chunk-Recovery: {result}");
         return result;
     }
 
-    private (int recovered, int poisoned) RecoverRun(
-        Guid runId, int staleSeconds, int maxRecoveries, Func<DateTime> now)
+    private static bool IsStaleInRunningRun(
+        Entity chunk, HashSet<Guid> runningRunIds, int staleSeconds, Func<DateTime> now)
     {
-        int recovered = 0, poisoned = 0;
+        var runRef = chunk.GetAttributeValue<EntityReference>(WorkerSchema.ChunkTestRunId);
+        if (runRef == null || !runningRunIds.Contains(runRef.Id))
+            return false; // Chunk gehoert keinem laufenden Lauf -> nicht anfassen
+        var anchor = chunk.GetAttributeValue<DateTime?>(WorkerSchema.ChunkLastClaimedOn)
+                     ?? chunk.GetAttributeValue<DateTime?>(WorkerSchema.ChunkStartedOn);
+        if (anchor == null)
+            return false; // kein Zeit-Anker -> nicht messbar, in Ruhe lassen
+        return (now() - anchor.Value).TotalSeconds > staleSeconds; // sonst frisch (lebender Worker)
+    }
 
-        foreach (var candidate in LoadRunningChunks(runId))
+    private (int recovered, int poisoned) RecoverChunk(Guid chunkId, int maxRecoveries, Func<DateTime> now)
+    {
+        // Frische Sicht + RowVersion direkt vor dem OC-Reset holen.
+        Entity fresh;
+        try
         {
-            var anchor = candidate.GetAttributeValue<DateTime?>(WorkerSchema.ChunkLastClaimedOn)
-                         ?? candidate.GetAttributeValue<DateTime?>(WorkerSchema.ChunkStartedOn);
-            if (anchor == null)
-                continue; // kein Zeit-Anker -> nicht messbar, in Ruhe lassen
-            if ((now() - anchor.Value).TotalSeconds <= staleSeconds)
-                continue; // noch frisch -> ein lebender Worker haelt den Claim
-
-            // Frische Sicht + RowVersion direkt vor dem OC-Reset holen.
-            Entity fresh;
-            try
-            {
-                fresh = _service.Retrieve(WorkerSchema.TestChunkEntity, candidate.Id,
-                    new ColumnSet(WorkerSchema.ChunkStatus, WorkerSchema.ChunkRecoveryCount));
-            }
-            catch
-            {
-                continue; // Chunk inzwischen geloescht o.ae. -> ueberspringen
-            }
-            if (fresh.GetAttributeValue<OptionSetValue>(WorkerSchema.ChunkStatus)?.Value
-                != WorkerSchema.ChunkRunning)
-                continue; // inzwischen geflippt (lebender/spaeter Worker) -> nicht anfassen
-
-            var prevRecoveryCount = fresh.GetAttributeValue<int?>(WorkerSchema.ChunkRecoveryCount) ?? 0;
-            var newRecoveryCount = prevRecoveryCount + 1;
-
-            if (newRecoveryCount > maxRecoveries)
-            {
-                if (PoisonStale(fresh, prevRecoveryCount, now)) poisoned++;
-            }
-            else
-            {
-                if (ResetStale(fresh, newRecoveryCount)) recovered++;
-            }
+            fresh = _service.Retrieve(WorkerSchema.TestChunkEntity, chunkId,
+                new ColumnSet(WorkerSchema.ChunkStatus, WorkerSchema.ChunkRecoveryCount));
         }
+        catch
+        {
+            return (0, 0); // Chunk inzwischen geloescht o.ae. -> ueberspringen
+        }
+        if (fresh.GetAttributeValue<OptionSetValue>(WorkerSchema.ChunkStatus)?.Value
+            != WorkerSchema.ChunkRunning)
+            return (0, 0); // inzwischen geflippt (lebender/spaeter Worker) -> nicht anfassen
 
-        return (recovered, poisoned);
+        var prevRecoveryCount = fresh.GetAttributeValue<int?>(WorkerSchema.ChunkRecoveryCount) ?? 0;
+        var newRecoveryCount = prevRecoveryCount + 1;
+
+        if (newRecoveryCount > maxRecoveries)
+            return PoisonStale(fresh, prevRecoveryCount, now) ? (0, 1) : (0, 0);
+        return ResetStale(fresh, newRecoveryCount) ? (1, 0) : (0, 0);
     }
 
     /// <summary>Reset "Laeuft" -> "Fortsetzen" per OC; der Worker resumed ab jbe_group_cursor.</summary>
@@ -198,16 +207,15 @@ public sealed class StaleChunkRecoveryService
         return _service.RetrieveMultiple(query).Entities.Select(e => e.Id).ToList();
     }
 
-    private List<Entity> LoadRunningChunks(Guid runId)
+    private List<Entity> LoadRunningChunks()
     {
         var query = new QueryExpression(WorkerSchema.TestChunkEntity)
         {
             ColumnSet = new ColumnSet(
-                WorkerSchema.ChunkStatus, WorkerSchema.ChunkLastClaimedOn,
+                WorkerSchema.ChunkStatus, WorkerSchema.ChunkTestRunId, WorkerSchema.ChunkLastClaimedOn,
                 WorkerSchema.ChunkStartedOn, WorkerSchema.ChunkRecoveryCount),
             NoLock = true
         };
-        query.Criteria.AddCondition(WorkerSchema.ChunkTestRunId, ConditionOperator.Equal, runId);
         query.Criteria.AddCondition(
             WorkerSchema.ChunkStatus, ConditionOperator.Equal, WorkerSchema.ChunkRunning);
 

@@ -23,20 +23,29 @@ The sweep runs as an **asynchronous** step behind the global custom API `jbe_Rec
 2. Plugin package deployed (`Deploy-PluginPackage.ps1`) with the `RecoverStaleChunks` plugin type.
 3. Custom API + async step registered (`Register-RecoveryApi.ps1`).
 
-## Create the recurrence flow
+## Create the recurrence flow (scripted)
 
-In Power Automate (same environment as the org):
+The flow is a `workflow` record (`category=5`) and is created, added to the solution and activated
+fully via the Web API by `scripts/Create-RecurrenceFlow.ps1` -- no Maker Portal needed:
 
-1. **New > Scheduled cloud flow.**
-2. Recurrence: every **5 minutes** (any interval clearly above the stale threshold works; 5 min is a
-   good default backstop).
-3. Add action: **Microsoft Dataverse > Perform an unbound action.**
-   - **Action Name:** `jbe_RecoverStaleChunks`
-   - No parameters.
-4. Save and turn the flow **On**.
+```
+pwsh ./scripts/Create-RecurrenceFlow.ps1 -OrgUrl https://<org>-dev.crm4.dynamics.com `
+    -ClientId <id> -ClientSecret <secret> -TenantId <tenant> `
+    -ConnectionReferenceLogicalName <sp-owned-cr-logicalname>
+```
 
-That is the entire flow: a timer that invokes the custom API. All recovery logic lives in the
-tested C# core (`StaleChunkRecoveryService`), not in the flow.
+The flow is a timer that invokes the custom API (concurrency = 1). All recovery logic lives in the
+tested C# core (`StaleChunkRecoveryService`), not in the flow. The script is idempotent (skips if a
+flow with the same name exists) and goes into the solution (`MSCRM.SolutionUniqueName`).
+
+### Connection reference (important)
+
+The flow needs a Dataverse connection reference (`shared_commondataserviceforapps`). Pass its logical
+name via `-ConnectionReferenceLogicalName`. The activating identity must be able to use it; if
+activation fails with `ConnectionAuthorizationFailed`, pick the connection reference owned by / usable
+by the deploying service principal. On every target environment a usable connection reference must
+exist before activation. The script pre-checks the reference exists and heals `InvalidOpenApiFlow`
+(custom API not yet published) by running `PublishAllXml` then retrying activation.
 
 ### Alternative without Power Automate
 
