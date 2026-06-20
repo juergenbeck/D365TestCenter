@@ -20,7 +20,7 @@ namespace D365TestCenter.Cli;
 /// E5 (ADR-0008) CLI wiring for the Zephyr Scale result upload (Decision 24).
 /// The payload/mapping logic lives in the Core (<see cref="ZephyrResultBuilder"/>);
 /// this class owns the IO the Core must not do: reading the run results from
-/// Dataverse (reusing <see cref="ResultSync.LoadResultsFromRun"/>), walking the
+/// Dataverse (reusing <see cref="RunResultLoader.LoadResultsFromRun"/>), walking the
 /// Markdown definitions for the <c>zephyr_key</c> front-matter, and the two HTTP
 /// POSTs against the Zephyr Scale Data Center ATM 1.0 API.
 ///
@@ -135,7 +135,7 @@ public static class ZephyrSync
             var testId = e.GetAttributeValue<AliasedValue>("res.jbe_testid")?.Value as string;
             if (string.IsNullOrWhiteSpace(testId)) continue;
             var num = e.GetAttributeValue<int?>("jbe_stepnumber") ?? 0;
-            var outcome = ResultSync.MapOutcome(
+            var outcome = RunResultLoader.MapOutcome(
                 e.GetAttributeValue<OptionSetValue>("jbe_stepstatus")?.Value, cfg);
             var err = e.GetAttributeValue<string>("jbe_errormessage");
             if (!raw.TryGetValue(testId!, out var list)) { list = new(); raw[testId!] = list; }
@@ -194,7 +194,7 @@ public static class ZephyrSync
         string serverUrl, string projectKey, string pat, string? env, string? cycleName,
         bool includeScriptResults = false, Action<string>? log = null)
     {
-        var results = ResultSync.LoadResultsFromRun(service, cfg, runId);
+        var results = RunResultLoader.LoadResultsFromRun(service, cfg, runId);
         var summary = new SyncSummary { Total = results.Count };
         if (results.Count == 0)
         {

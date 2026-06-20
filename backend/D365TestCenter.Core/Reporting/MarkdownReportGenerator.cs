@@ -148,6 +148,72 @@ public static class MarkdownReportGenerator
         return sb.ToString();
     }
 
+    // ── model assembly ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Assembles a <see cref="ReportModel"/> from a run's facts, its per-test results and the
+    /// matching definition docs (keyed by testId, case-insensitive). Source-agnostic: the CLI
+    /// feeds docs/suite parsed from the local Markdown tree, the <c>jbe_GenerateReport</c> Custom
+    /// API (ADR-0009 Phase 4) feeds docs built from <c>jbe_testcase</c>. KPIs are counted from the
+    /// listed items so the summary always matches the listing; the duration is the run wall-clock
+    /// when available (completedOn &gt; startedOn), otherwise the sum of the per-test durations.
+    /// Items are ordered by testId (ordinal) for a stable report.
+    /// </summary>
+    public static ReportModel BuildModel(
+        DateTime? startedOn, DateTime? completedOn, string? filter,
+        IReadOnlyList<TestCaseResult> results,
+        IReadOnlyDictionary<string, DefinitionDoc> docs, SuiteDoc? suite,
+        string? env, Guid runId, Action<string>? log = null)
+    {
+        if (results == null) throw new ArgumentNullException(nameof(results));
+        if (docs == null) throw new ArgumentNullException(nameof(docs));
+
+        var model = new ReportModel
+        {
+            SuiteTitle = suite?.Titel ?? "",
+            SuiteIntro = suite?.Intro,
+            SuiteCarrier = suite?.Carrier,
+            Env = env ?? "",
+            RunId = runId,
+            Filter = filter ?? "",
+            RunDate = startedOn?.ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""
+        };
+
+        foreach (var r in results.OrderBy(x => x.TestId, StringComparer.Ordinal))
+        {
+            var item = new ReportItem
+            {
+                TestId = r.TestId,
+                Outcome = r.Outcome,
+                DurationMs = r.DurationMs,
+                ErrorMessage = r.ErrorMessage
+            };
+            if (docs.TryGetValue(r.TestId, out var doc))
+            {
+                item.Titel = doc.Titel;
+                foreach (var kv in doc.Sections) item.Sections[kv.Key] = kv.Value;
+            }
+            else
+            {
+                log?.Invoke($"  (keine Definition/Doku fuer {r.TestId})");
+            }
+            model.Items.Add(item);
+        }
+
+        model.Total = model.Items.Count;
+        model.Passed = model.Items.Count(i => i.Outcome == TestOutcome.Passed);
+        model.Failed = model.Items.Count(i => i.Outcome == TestOutcome.Failed);
+        model.Errored = model.Items.Count(i => i.Outcome == TestOutcome.Error);
+        model.Skipped = model.Items.Count(i => i.Outcome == TestOutcome.Skipped);
+
+        if (startedOn != null && completedOn != null && completedOn > startedOn)
+            model.DurationSeconds = (long)Math.Round((completedOn.Value - startedOn.Value).TotalSeconds);
+        else
+            model.DurationSeconds = (long)Math.Round(results.Sum(r => r.DurationMs) / 1000.0);
+
+        return model;
+    }
+
     // ── rendering ────────────────────────────────────────────────────
 
     /// <summary>Renders the run report as Markdown (LF line endings).</summary>

@@ -4,6 +4,7 @@ using System.IO;
 using D365TestCenter.Cli;
 using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
+using D365TestCenter.Core.Reporting;
 using Xunit;
 
 namespace D365TestCenter.Tests;
@@ -78,12 +79,12 @@ public class ResultSyncTests
     public void MapOutcome_MapsAllCodes()
     {
         var cfg = new StandardCrmConfig();
-        Assert.Equal(TestOutcome.Passed, ResultSync.MapOutcome(cfg.OutcomePassed, cfg));
-        Assert.Equal(TestOutcome.Failed, ResultSync.MapOutcome(cfg.OutcomeFailed, cfg));
-        Assert.Equal(TestOutcome.Skipped, ResultSync.MapOutcome(cfg.OutcomeSkipped, cfg));
-        Assert.Equal(TestOutcome.Error, ResultSync.MapOutcome(cfg.OutcomeError, cfg));
-        Assert.Equal(TestOutcome.Error, ResultSync.MapOutcome(999999, cfg));
-        Assert.Equal(TestOutcome.Error, ResultSync.MapOutcome(null, cfg));
+        Assert.Equal(TestOutcome.Passed, RunResultLoader.MapOutcome(cfg.OutcomePassed, cfg));
+        Assert.Equal(TestOutcome.Failed, RunResultLoader.MapOutcome(cfg.OutcomeFailed, cfg));
+        Assert.Equal(TestOutcome.Skipped, RunResultLoader.MapOutcome(cfg.OutcomeSkipped, cfg));
+        Assert.Equal(TestOutcome.Error, RunResultLoader.MapOutcome(cfg.OutcomeError, cfg));
+        Assert.Equal(TestOutcome.Error, RunResultLoader.MapOutcome(999999, cfg));
+        Assert.Equal(TestOutcome.Error, RunResultLoader.MapOutcome(null, cfg));
     }
 
     [Theory]

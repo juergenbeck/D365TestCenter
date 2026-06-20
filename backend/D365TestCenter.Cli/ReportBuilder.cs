@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
 using D365TestCenter.Core.Reporting;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
 
 namespace D365TestCenter.Cli;
 
@@ -16,7 +13,7 @@ namespace D365TestCenter.Cli;
 /// the Core (<see cref="MarkdownReportGenerator"/>); this class owns the IO: it
 /// reads the run header (jbe_testrun KPIs/timing) from Dataverse, walks the local
 /// Markdown definitions + README, and assembles the <see cref="ReportModel"/>.
-/// The per-test results are loaded via <see cref="ResultSync.LoadResultsFromRun"/>.
+/// The per-test results are loaded via <see cref="RunResultLoader.LoadResultsFromRun"/>.
 /// </summary>
 public static class ReportBuilder
 {
@@ -28,17 +25,13 @@ public static class ReportBuilder
         public string Filter { get; set; } = "";
     }
 
-    /// <summary>Reads the run header (started/completed timestamps, filter) from jbe_testrun.</summary>
+    /// <summary>Reads the run header (started/completed timestamps, filter) from jbe_testrun.
+    /// Delegates the read to the Core <see cref="DataverseReportSource"/> (shared with the
+    /// jbe_GenerateReport Custom API).</summary>
     public static RunHeader LoadRunHeader(IOrganizationService service, ITestCenterConfig cfg, Guid runId)
     {
-        var e = service.Retrieve(cfg.TestRunEntity, runId,
-            new ColumnSet("jbe_startedon", "jbe_completedon", "jbe_testcasefilter"));
-        return new RunHeader
-        {
-            StartedOn = e.GetAttributeValue<DateTime?>("jbe_startedon"),
-            CompletedOn = e.GetAttributeValue<DateTime?>("jbe_completedon"),
-            Filter = e.GetAttributeValue<string>("jbe_testcasefilter") ?? ""
-        };
+        var (startedOn, completedOn, filter) = DataverseReportSource.LoadRunHeaderFacts(service, cfg, runId);
+        return new RunHeader { StartedOn = startedOn, CompletedOn = completedOn, Filter = filter };
     }
 
     /// <summary>
@@ -72,50 +65,8 @@ public static class ReportBuilder
                 docs[doc.Id!] = doc;
         }
 
-        var model = new ReportModel
-        {
-            SuiteTitle = suite?.Titel ?? "",
-            SuiteIntro = suite?.Intro,
-            SuiteCarrier = suite?.Carrier,
-            Env = env ?? "",
-            RunId = runId,
-            Filter = header?.Filter ?? "",
-            RunDate = header?.StartedOn?.ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""
-        };
-
-        foreach (var r in results.OrderBy(x => x.TestId, StringComparer.Ordinal))
-        {
-            var item = new ReportItem
-            {
-                TestId = r.TestId,
-                Outcome = r.Outcome,
-                DurationMs = r.DurationMs,
-                ErrorMessage = r.ErrorMessage
-            };
-            if (docs.TryGetValue(r.TestId, out var doc))
-            {
-                item.Titel = doc.Titel;
-                foreach (var kv in doc.Sections) item.Sections[kv.Key] = kv.Value;
-            }
-            else
-            {
-                log?.Invoke($"  (keine MD-Definition für {r.TestId} unter {defsDir})");
-            }
-            model.Items.Add(item);
-        }
-
-        model.Total = model.Items.Count;
-        model.Passed = model.Items.Count(i => i.Outcome == TestOutcome.Passed);
-        model.Failed = model.Items.Count(i => i.Outcome == TestOutcome.Failed);
-        model.Errored = model.Items.Count(i => i.Outcome == TestOutcome.Error);
-        model.Skipped = model.Items.Count(i => i.Outcome == TestOutcome.Skipped);
-
-        if (header?.StartedOn != null && header.CompletedOn != null && header.CompletedOn > header.StartedOn)
-            model.DurationSeconds =
-                (long)Math.Round((header.CompletedOn.Value - header.StartedOn.Value).TotalSeconds);
-        else
-            model.DurationSeconds = (long)Math.Round(results.Sum(r => r.DurationMs) / 1000.0);
-
-        return model;
+        return MarkdownReportGenerator.BuildModel(
+            header?.StartedOn, header?.CompletedOn, header?.Filter,
+            results, docs, suite, env, runId, log);
     }
 }

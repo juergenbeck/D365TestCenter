@@ -439,7 +439,7 @@ public static class Program
             var cfg = GetConfig(config);
             var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
 
-            var results = ResultSync.LoadResultsFromRun(client, cfg, runId);
+            var results = RunResultLoader.LoadResultsFromRun(client, cfg, runId);
             if (results.Count == 0)
             {
                 Console.WriteLine($"  Keine jbe_testrunresult-Records für Run {runId} gefunden.");
@@ -508,7 +508,7 @@ public static class Program
             var cfg = GetConfig(config);
             var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
 
-            var results = ResultSync.LoadResultsFromRun(client, cfg, runId);
+            var results = RunResultLoader.LoadResultsFromRun(client, cfg, runId);
             if (results.Count == 0)
             {
                 Console.WriteLine($"  Keine jbe_testrunresult-Records für Run {runId} gefunden.");

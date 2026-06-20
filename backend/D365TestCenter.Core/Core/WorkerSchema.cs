@@ -81,6 +81,36 @@ public static class WorkerSchema
     public const string TcTitle = "jbe_title";
     public const string TcDefinition = "jbe_definitionjson";
     public const string TcEnabled = "jbe_enabled";
+    public const string TcCategory = "jbe_category";
+    public const string TcTags = "jbe_tags";
+    public const string TcUserStories = "jbe_userstories";
+    /// <summary>E1-Doku-Markdown (## Zweck/Beschreibung/...) ohne Frontmatter; Quelle fuer den Dataverse-Report.</summary>
+    public const string TcDocumentation = "jbe_documentation";
+
+    // ── jbe_testcase: neue Metadaten-Felder (MVP-2, Plan Phase 0 / ADR-0009 A.1) ──
+    /// <summary>Picklist: entwurf/aktiv/instabil/historisch/archiviert (Migration aus Frontmatter `status`).</summary>
+    public const string TcLifecycleStatus = "jbe_lifecyclestatus";
+    /// <summary>Picklist (global): Fachdomaene (Migration aus `domaene`).</summary>
+    public const string TcDomain = "jbe_domain";
+    /// <summary>Int: Teststufe (Migration aus `stufe`).</summary>
+    public const string TcTestLevel = "jbe_testlevel";
+    /// <summary>String: Verantwortlich (Migration aus `verantwortlich`).</summary>
+    public const string TcOwner = "jbe_owner";
+    /// <summary>String/CSV: Ticket + weitere_tickets.</summary>
+    public const string TcTickets = "jbe_tickets";
+    /// <summary>String/CSV: env_scope.</summary>
+    public const string TcEnvScope = "jbe_envscope";
+    /// <summary>Int: geschaetzte Dauer in Minuten (Migration aus `geschaetzt_min`).</summary>
+    public const string TcEstimatedMinutes = "jbe_estimatedminutes";
+    /// <summary>String: Zephyr-Key (Feld vorhanden, Zephyr-Feature out-of-scope).</summary>
+    public const string TcZephyrKey = "jbe_zephyrkey";
+
+    // ── jbe_lifecyclestatus OptionSet (global, 105710xxx) ────────
+    public const int LifecycleDraft = 105710000;       // Entwurf
+    public const int LifecycleActive = 105710001;      // Aktiv
+    public const int LifecycleUnstable = 105710002;    // Instabil
+    public const int LifecycleHistoric = 105710003;    // Historisch
+    public const int LifecycleArchived = 105710004;    // Archiviert
 
     // ── jbe_testrunresult: Felder + Alternate Key ────────────────
     public const string ResultTestId = "jbe_testid";
