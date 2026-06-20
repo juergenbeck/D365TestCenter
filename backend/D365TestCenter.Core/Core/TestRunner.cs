@@ -101,55 +101,7 @@ public sealed class TestRunner
         foreach (var (tc, dataRow) in expandedTests)
         {
             index++;
-
-            if (!tc.Enabled)
-            {
-                var skipped = new TestCaseResult
-                {
-                    TestId = tc.Id,
-                    Title = tc.Title,
-                    Outcome = TestOutcome.Skipped
-                };
-                result.Results.Add(skipped);
-                Log($"-- [{index}/{expandedTests.Count}] [{tc.Id}] {tc.Title} -> ÜBERSPRUNGEN (deaktiviert) --");
-                OnTestCompleted?.Invoke(index, expandedTests.Count, skipped);
-                continue;
-            }
-
-            // dependsOn: überspringen wenn eine Abhängigkeit nicht bestanden hat
-            if (tc.DependsOn != null && tc.DependsOn.Count > 0)
-            {
-                var missingDeps = tc.DependsOn.Where(dep => !_passedTestIds.Contains(dep)).ToList();
-                if (missingDeps.Count > 0)
-                {
-                    var depSkipped = new TestCaseResult
-                    {
-                        TestId = tc.Id,
-                        Title = tc.Title,
-                        Outcome = TestOutcome.Skipped,
-                        ErrorMessage = $"Abhängigkeit nicht erfüllt: {string.Join(", ", missingDeps)}"
-                    };
-                    result.Results.Add(depSkipped);
-                    Log($"-- [{index}/{expandedTests.Count}] [{tc.Id}] ÜBERSPRUNGEN (dependsOn: {string.Join(", ", missingDeps)}) --");
-                    OnTestCompleted?.Invoke(index, expandedTests.Count, depSkipped);
-                    continue;
-                }
-            }
-
-            var tcResult = ExecuteSingleTest(tc, index, expandedTests.Count, dataRow);
-            result.Results.Add(tcResult);
-
-            if (tcResult.Outcome == TestOutcome.Passed)
-                _passedTestIds.Add(tc.Id);
-
-            switch (tcResult.Outcome)
-            {
-                case TestOutcome.Passed: result.PassedCount++; break;
-                case TestOutcome.Failed: result.FailedCount++; break;
-                case TestOutcome.Error: result.ErrorCount++; break;
-            }
-
-            OnTestCompleted?.Invoke(index, expandedTests.Count, tcResult);
+            RunExpandedTest(tc, dataRow, index, expandedTests.Count, result);
         }
 
         result.CompletedAt = DateTime.UtcNow;
@@ -158,6 +110,125 @@ public sealed class TestRunner
 
         result.FullLog = _log.ToString();
         return result;
+    }
+
+    /// <summary>
+    /// Zeitbudgetierte Gruppen-Schleife (ADR-0009 Phase 1, Befund 3). Verarbeitet die
+    /// Abhaengigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) ab
+    /// <paramref name="startGroupIndex"/>, prueft das Zeitbudget VOR jeder Gruppe und
+    /// fuehrt mindestens eine Gruppe pro Aufruf aus (-> Cursor schreitet garantiert fort,
+    /// Terminierung gesichert). Eine Gruppe wird immer KOMPLETT ausgefuehrt (atomar) --
+    /// so baut eine frische Worker-Instanz den dependsOn-Zustand (_passedTestIds)
+    /// gruppenintern selbst auf, ohne Re-Seed (Gruppen-Grenzen-Continuation).
+    /// Datengetriebene Tests werden pro Gruppe beim Lauf expandiert.
+    /// <paramref name="clock"/> ist injizierbar fuer deterministische Mock-Budget-Tests.
+    /// </summary>
+    public BudgetedRunResult RunGroupsBudgeted(
+        List<List<TestCase>> groups, int startGroupIndex, int budgetSeconds,
+        Func<DateTime>? clock = null)
+    {
+        if (groups == null) throw new ArgumentNullException(nameof(groups));
+        var now = clock ?? (() => DateTime.UtcNow);
+        var startTime = now();
+
+        var result = new TestRunResult { StartedAt = startTime };
+        Log("=== GRUPPEN-LAUF (zeitbudgetiert) ===");
+        Log($"Gruppen: {groups.Count}, Start-Index: {startGroupIndex}, Budget: {budgetSeconds}s");
+
+        var gi = startGroupIndex < 0 ? 0 : startGroupIndex;
+        var ranThisCall = 0;
+        for (; gi < groups.Count; gi++)
+        {
+            // Budget-Check VOR jeder Gruppe -- aber mindestens eine Gruppe pro Aufruf,
+            // damit der Cursor garantiert fortschreitet (Terminierung gesichert).
+            if (ranThisCall > 0 && (now() - startTime).TotalSeconds >= budgetSeconds)
+            {
+                Log($"Budget {budgetSeconds}s erreicht vor Gruppe {gi} -> Continuation.");
+                break;
+            }
+
+            // Gruppe atomar: komplett ausfuehren. Datengetriebene Tests pro Gruppe
+            // beim Lauf expandieren (deterministisch -> stabiler Gruppen-Cursor).
+            var expanded = ExpandDataDrivenTests(groups[gi]);
+            Log($"-- Gruppe {gi}: {expanded.Count} Test(s) --");
+            var idx = 0;
+            foreach (var (tc, dataRow) in expanded)
+            {
+                idx++;
+                RunExpandedTest(tc, dataRow, idx, expanded.Count, result);
+            }
+            ranThisCall++;
+        }
+
+        result.CompletedAt = now();
+        result.TotalCount = result.Results.Count;
+        result.FullLog = _log.ToString();
+
+        var done = gi >= groups.Count;
+        Log($"=== GRUPPEN-LAUF Ende: {ranThisCall} Gruppe(n) gelaufen, NextGroupIndex={gi}, Done={done} ===");
+
+        return new BudgetedRunResult { NextGroupIndex = gi, Done = done, Run = result };
+    }
+
+    /// <summary>
+    /// Fuehrt einen bereits expandierten Testfall aus: enabled-/dependsOn-Skip,
+    /// <see cref="ExecuteSingleTest"/>, Zaehler + <c>_passedTestIds</c> aktualisieren,
+    /// <see cref="OnTestCompleted"/> feuern. Gemeinsamer Kern von <see cref="RunAll"/> und
+    /// <see cref="RunGroupsBudgeted"/> -- so verhalten sich beide Pfade identisch
+    /// (dependsOn ueber <c>_passedTestIds</c>, gleiche Skip-Semantik).
+    /// </summary>
+    private void RunExpandedTest(
+        TestCase tc, Dictionary<string, object?>? dataRow,
+        int index, int total, TestRunResult result)
+    {
+        if (!tc.Enabled)
+        {
+            var skipped = new TestCaseResult
+            {
+                TestId = tc.Id,
+                Title = tc.Title,
+                Outcome = TestOutcome.Skipped
+            };
+            result.Results.Add(skipped);
+            Log($"-- [{index}/{total}] [{tc.Id}] {tc.Title} -> ÜBERSPRUNGEN (deaktiviert) --");
+            OnTestCompleted?.Invoke(index, total, skipped);
+            return;
+        }
+
+        // dependsOn: überspringen wenn eine Abhängigkeit nicht bestanden hat
+        if (tc.DependsOn != null && tc.DependsOn.Count > 0)
+        {
+            var missingDeps = tc.DependsOn.Where(dep => !_passedTestIds.Contains(dep)).ToList();
+            if (missingDeps.Count > 0)
+            {
+                var depSkipped = new TestCaseResult
+                {
+                    TestId = tc.Id,
+                    Title = tc.Title,
+                    Outcome = TestOutcome.Skipped,
+                    ErrorMessage = $"Abhängigkeit nicht erfüllt: {string.Join(", ", missingDeps)}"
+                };
+                result.Results.Add(depSkipped);
+                Log($"-- [{index}/{total}] [{tc.Id}] ÜBERSPRUNGEN (dependsOn: {string.Join(", ", missingDeps)}) --");
+                OnTestCompleted?.Invoke(index, total, depSkipped);
+                return;
+            }
+        }
+
+        var tcResult = ExecuteSingleTest(tc, index, total, dataRow);
+        result.Results.Add(tcResult);
+
+        if (tcResult.Outcome == TestOutcome.Passed)
+            _passedTestIds.Add(tc.Id);
+
+        switch (tcResult.Outcome)
+        {
+            case TestOutcome.Passed: result.PassedCount++; break;
+            case TestOutcome.Failed: result.FailedCount++; break;
+            case TestOutcome.Error: result.ErrorCount++; break;
+        }
+
+        OnTestCompleted?.Invoke(index, total, tcResult);
     }
 
     /// <summary>

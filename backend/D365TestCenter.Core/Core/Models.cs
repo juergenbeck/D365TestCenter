@@ -567,6 +567,26 @@ public sealed class TestRunResult
 }
 
 /// <summary>
+/// Ergebnis eines zeitbudgetierten Gruppen-Laufs (ADR-0009 Phase 1, Befund 3,
+/// Gruppen-Grenzen-Continuation). <see cref="TestRunner.RunGroupsBudgeted"/> verarbeitet
+/// Abhaengigkeits-Gruppen ab <c>startGroupIndex</c> bis das Zeitbudget reisst, immer
+/// mindestens eine Gruppe pro Aufruf. <see cref="NextGroupIndex"/> ist der Cursor fuer
+/// die naechste Continuation-Welle; <see cref="Done"/> ist true, wenn alle Gruppen
+/// abgearbeitet sind. <see cref="Run"/> traegt die Ergebnisse dieser Welle.
+/// </summary>
+public sealed class BudgetedRunResult
+{
+    /// <summary>Index der naechsten un-gelaufenen Gruppe (Continuation-Cursor). == Gruppen-Anzahl bei Done.</summary>
+    public int NextGroupIndex { get; set; }
+
+    /// <summary>True, wenn alle Gruppen abgearbeitet sind (kein weiterer Self-Trigger noetig).</summary>
+    public bool Done { get; set; }
+
+    /// <summary>Ergebnisse + Zaehler + Log der in dieser Welle gelaufenen Gruppen.</summary>
+    public TestRunResult Run { get; set; } = new TestRunResult();
+}
+
+/// <summary>
 /// Ergebnis eines einzelnen Testfalls. Seit ADR-0004 gibt es keine separate
 /// Assertions-Liste mehr; Assert-Steps sind in StepResults enthalten.
 /// </summary>
