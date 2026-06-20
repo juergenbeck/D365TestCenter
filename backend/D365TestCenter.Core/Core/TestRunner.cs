@@ -372,6 +372,47 @@ public sealed class TestRunner
         return rootOrder.Select(r => byRoot[r]).ToList();
     }
 
+    /// <summary>
+    /// Packt Abhaengigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) in Chunks der
+    /// Zielgroesse <paramref name="chunkSize"/> Tests, OHNE je eine Gruppe zu trennen
+    /// (ADR-0009 Phase 2, Koordinator). Greedy in Reihenfolge: eine Gruppe kommt in den
+    /// aktuellen Chunk, solange sie hineinpasst; sonst beginnt ein neuer Chunk. Eine
+    /// Gruppe, die allein groesser als <paramref name="chunkSize"/> ist, bildet ihren
+    /// eigenen (uebergrossen) Chunk -- sie kann nicht geteilt werden (dependsOn-Affinitaet).
+    ///
+    /// Jeder Chunk ist die Konkatenation seiner Gruppen (flache Testliste). Der Worker
+    /// re-deriviert die Gruppen aus den Chunk-Test-IDs deterministisch neu
+    /// (<see cref="BuildDependencyGroups"/> auf der Chunk-Teilmenge liefert dieselben
+    /// Connected Components, weil ein Chunk nur VOLLSTAENDIGE Komponenten enthaelt).
+    /// <paramref name="chunkSize"/> &lt; 1 wird auf 1 geklemmt.
+    /// </summary>
+    public static List<List<TestCase>> BuildChunks(List<List<TestCase>> groups, int chunkSize)
+    {
+        if (groups == null) throw new ArgumentNullException(nameof(groups));
+        if (chunkSize < 1) chunkSize = 1;
+
+        var chunks = new List<List<TestCase>>();
+        List<TestCase>? current = null;
+
+        foreach (var group in groups)
+        {
+            if (group.Count == 0) continue; // leere Gruppe defensiv ueberspringen
+
+            // Neuer Chunk, wenn keiner offen ist ODER die Gruppe nicht mehr hineinpasst.
+            // Eine uebergrosse Einzelgruppe landet so allein in einem frischen Chunk
+            // (sie kann nicht geteilt werden) und der naechste Gruppe-Add oeffnet wieder
+            // einen neuen Chunk.
+            if (current == null || current.Count + group.Count > chunkSize)
+            {
+                current = new List<TestCase>();
+                chunks.Add(current);
+            }
+            current.AddRange(group);
+        }
+
+        return chunks;
+    }
+
     private TestCaseResult ExecuteSingleTest(
         TestCase tc, int index, int total,
         Dictionary<string, object?>? dataRow = null)
