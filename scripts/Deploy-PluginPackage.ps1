@@ -109,9 +109,12 @@ if ($existing.value.Count -gt 0) {
     Write-Host "Existing package found: $packageId (old version $($existing.value[0].version))"
     Write-Host "Updating package content..."
 
+    # Nur content patchen: Dataverse leitet die Version aus dem nupkg-Inhalt ab und lehnt
+    # ein direktes Update des version-Feldes ab (0x80040265 "PluginPackage version cannot be
+    # updated"). Das erklaert die FB-36-Drift (pluginpackage.version-Anzeige bleibt stehen,
+    # massgeblich ist pluginassemblies.version). Cache-Invalidierung erfolgt beim content-Update.
     $patchBody = @{
         content = $packageContent
-        version = $packageVersion
     } | ConvertTo-Json
 
     Invoke-DataverseApi -Method Patch -Uri "$BaseUrl/pluginpackages($packageId)" `

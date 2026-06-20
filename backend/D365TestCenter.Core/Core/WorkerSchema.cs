@@ -145,7 +145,13 @@ public static class WorkerSchema
 
     /// <summary>
     /// Default-Zeitbudget in Sekunden ab Ausfuehrungsbeginn, ab dem die Self-Trigger-Continuation
-    /// greift (Watchdog). 80 s laesst ~40 s Sicherheitsabstand zum 120-s-Sandbox-Limit (DB-Vorbild).
+    /// greift (Watchdog). Headroom zum 120-s-Sandbox-Limit muss den langsamsten EINZELtest plus
+    /// Result-Write-Overhead abdecken: das Budget wird VOR jeder Gruppe geprueft, die letzte Gruppe
+    /// kann also bis ~budget+maxTest laufen. Der DB-Vorbild-Wert 80 (ms-grosse Items) ist fuer
+    /// Test-Center-Tests (Sekunden bis ~1 min) zu hoch -- S39-Volumentest zeigte 120-s-Timeouts bei
+    /// chunkSize 8 + langsamen Tests. Default daher 60; langsame Suiten per EnvVar weiter senken
+    /// (jbe_worker_budget_seconds) und kleinere chunkSize waehlen. Siehe Fehlerbildkatalog
+    /// (Stuck-Chunk-on-Timeout) -- ein Hard-Timeout laesst den Chunk in "Laeuft" haengen.
     /// </summary>
-    public const int DefaultBudgetSeconds = 80;
+    public const int DefaultBudgetSeconds = 60;
 }
