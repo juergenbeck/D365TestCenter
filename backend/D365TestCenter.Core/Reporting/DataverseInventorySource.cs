@@ -46,9 +46,10 @@ public static class DataverseInventorySource
     }
 
     /// <summary>
-    /// Maps one jbe_testcase record to an <see cref="InventoryEntry"/>. Picklist labels
-    /// (jbe_domain, jbe_lifecyclestatus) come from the record's FormattedValues (the user-language
-    /// label), scalar metadata from the dedicated fields. Returns null if the record has no jbe_testid.
+    /// Maps one jbe_testcase record to an <see cref="InventoryEntry"/>. The lifecycle status label
+    /// comes from the record's FormattedValues (picklist, user-language label); the domain and the
+    /// other scalar metadata come straight from the dedicated fields (jbe_domain is a free-text
+    /// field, generic across projects). Returns null if the record has no jbe_testid.
     /// </summary>
     public static InventoryEntry? MapEntry(Entity e)
     {
@@ -60,7 +61,7 @@ public static class DataverseInventorySource
         {
             Id = id!,
             Titel = e.GetAttributeValue<string>(WorkerSchema.TcTitle) ?? "",
-            Domaene = FormattedOrEmpty(e, WorkerSchema.TcDomain),
+            Domaene = e.GetAttributeValue<string>(WorkerSchema.TcDomain) ?? "",
             Status = FormattedOrEmpty(e, WorkerSchema.TcLifecycleStatus),
             SuiteTags = SplitCsv(e.GetAttributeValue<string>(WorkerSchema.TcTags)),
             Ticket = e.GetAttributeValue<string>(WorkerSchema.TcTickets) ?? "",

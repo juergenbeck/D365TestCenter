@@ -12,7 +12,7 @@ namespace D365TestCenter.Tests;
 /// </summary>
 public class DataverseInventorySourceTests
 {
-    static Entity TestCase(string id, string title, string? domainLabel = null,
+    static Entity TestCase(string id, string title, string? domain = null,
         string? statusLabel = null, string? tags = null, string? tickets = null,
         int? level = null, string? owner = null, int? estMin = null)
     {
@@ -24,8 +24,9 @@ public class DataverseInventorySourceTests
         if (level.HasValue) e["jbe_testlevel"] = level.Value;
         if (owner != null) e["jbe_owner"] = owner;
         if (estMin.HasValue) e["jbe_estimatedminutes"] = estMin.Value;
-        // Picklists: stored value + the user-language label in FormattedValues (as Dataverse returns it).
-        if (domainLabel != null) { e["jbe_domain"] = new OptionSetValue(1); e.FormattedValues["jbe_domain"] = domainLabel; }
+        // jbe_domain is a free-text field; jbe_lifecyclestatus is a picklist whose label
+        // comes back in FormattedValues (as Dataverse returns it).
+        if (domain != null) e["jbe_domain"] = domain;
         if (statusLabel != null) { e["jbe_lifecyclestatus"] = new OptionSetValue(105710001); e.FormattedValues["jbe_lifecyclestatus"] = statusLabel; }
         return e;
     }
@@ -33,7 +34,7 @@ public class DataverseInventorySourceTests
     [Fact]
     public void MapEntry_MapsFieldsAndPicklistLabels()
     {
-        var e = TestCase("DYN-TC8", "Achter", domainLabel: "DSGVO", statusLabel: "Aktiv",
+        var e = TestCase("DYN-TC8", "Achter", domain: "DSGVO", statusLabel: "Aktiv",
             tags: "smoke, tier-1", tickets: "DYN-1, DYN-2", level: 2, owner: "Jane", estMin: 5);
 
         var entry = DataverseInventorySource.MapEntry(e);
@@ -41,8 +42,8 @@ public class DataverseInventorySourceTests
         Assert.NotNull(entry);
         Assert.Equal("DYN-TC8", entry!.Id);
         Assert.Equal("Achter", entry.Titel);
-        Assert.Equal("DSGVO", entry.Domaene);                 // from FormattedValues
-        Assert.Equal("Aktiv", entry.Status);                  // from FormattedValues
+        Assert.Equal("DSGVO", entry.Domaene);                 // free-text field
+        Assert.Equal("Aktiv", entry.Status);                  // picklist label from FormattedValues
         Assert.Equal(new[] { "smoke", "tier-1" }, entry.SuiteTags);
         Assert.Equal("DYN-1, DYN-2", entry.Ticket);
         Assert.Equal("2", entry.Stufe);
@@ -85,7 +86,7 @@ public class DataverseInventorySourceTests
     public void MatchesFilter_Vocabulary(string? filter, bool expected)
     {
         var entry = DataverseInventorySource.MapEntry(
-            TestCase("DYN-TC8", "Achter", domainLabel: "DSGVO", tags: "smoke, tier-1"))!;
+            TestCase("DYN-TC8", "Achter", domain: "DSGVO", tags: "smoke, tier-1"))!;
         Assert.Equal(expected, DataverseInventorySource.MatchesFilter(entry, filter));
     }
 

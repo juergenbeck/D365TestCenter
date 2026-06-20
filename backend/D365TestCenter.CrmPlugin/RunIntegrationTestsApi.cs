@@ -1,6 +1,4 @@
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
 using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
 
@@ -67,7 +65,7 @@ public sealed class RunIntegrationTestsApi : IPlugin
             // (mit AutoDateFields, Governance-Polling). Sonst StandardCrmConfig.
             // Dies garantiert korrektes Verhalten auf Markant DEV/TEST/DATATEST
             // und bleibt generisch für LM, ZastrPay etc.
-            ITestCenterConfig config = DetectConfig(service, tracingService);
+            ITestCenterConfig config = ConfigDetector.Detect(service, tracingService);
 
             // ── Orchestrator aufrufen ───────────────────────────────
             var orchestrator = new TestCenterOrchestrator(
@@ -102,31 +100,4 @@ public sealed class RunIntegrationTestsApi : IPlugin
         }
     }
 
-    /// <summary>
-    /// Ermittelt die passende Config anhand der Metadata.
-    /// Wenn die Entity 'markant_cdhcontactsource' existiert, ist es eine Markant-
-    /// Umgebung (CDH Field Governance). Sonst Standard.
-    /// </summary>
-    private static ITestCenterConfig DetectConfig(
-        IOrganizationService service, ITracingService trace)
-    {
-        try
-        {
-            var req = new RetrieveEntityRequest
-            {
-                LogicalName = "markant_cdhcontactsource",
-                EntityFilters = EntityFilters.Entity,
-                RetrieveAsIfPublished = false
-            };
-            service.Execute(req);
-            trace.Trace("Config: MarkantConfig (CDH-Entity erkannt)");
-            return new MarkantConfig();
-        }
-        catch
-        {
-            // Entity existiert nicht - Standard-Umgebung
-            trace.Trace("Config: StandardCrmConfig (keine CDH-Entity)");
-            return new StandardCrmConfig();
-        }
-    }
 }

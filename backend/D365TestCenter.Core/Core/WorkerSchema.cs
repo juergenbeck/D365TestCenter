@@ -90,7 +90,7 @@ public static class WorkerSchema
     // ── jbe_testcase: neue Metadaten-Felder (MVP-2, Plan Phase 0 / ADR-0009 A.1) ──
     /// <summary>Picklist: entwurf/aktiv/instabil/historisch/archiviert (Migration aus Frontmatter `status`).</summary>
     public const string TcLifecycleStatus = "jbe_lifecyclestatus";
-    /// <summary>Picklist (global): Fachdomaene (Migration aus `domaene`).</summary>
+    /// <summary>String: Fachdomaene (Migration aus `domaene`); freitext, projekt-generisch.</summary>
     public const string TcDomain = "jbe_domain";
     /// <summary>Int: Teststufe (Migration aus `stufe`).</summary>
     public const string TcTestLevel = "jbe_testlevel";
