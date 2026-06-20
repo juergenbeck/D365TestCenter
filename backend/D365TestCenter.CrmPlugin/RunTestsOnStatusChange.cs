@@ -129,6 +129,14 @@ public sealed class RunTestsOnStatusChange : IPlugin
         if (context.PrimaryEntityName != TestRunEntity)
             return;
 
+        // Engine-Mutex (ADR-0009 C-08): im Worker-Modus uebernimmt RunCoordinator/RunChunkWorker.
+        // Genau ein Pfad pro Run -- die alte Batch-Cascade kehrt dann sofort zurueck.
+        if (WorkerEnvironment.ReadBool(service, WorkerSchema.EnvUseWorker, false))
+        {
+            tracingService.Trace("RunTests: jbe_use_worker == true -> Worker-Modell aktiv, skip Cascade.");
+            return;
+        }
+
         // Depth-Check: Safety-Limit gegen echte Rekursion. Dataverse-Max ist 8.
         // WICHTIG: Die Self-Trigger-Kaskade (jeder Test updated jbe_batchoffset,
         // was das Update-Plugin triggert) bleibt oft in derselben Pipeline und
