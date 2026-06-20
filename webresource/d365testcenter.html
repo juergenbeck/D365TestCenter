@@ -1568,8 +1568,8 @@ body {
 // Passen Sie diese Werte an Ihren Dataverse-Publisher an.
 // Standard-Prefix: "jbe" (Integration Test Tool)
 const CONFIG = {
-    version: "5.3.17",                 // Bei jedem Deployment hochzählen
-    buildDate: "2026-06-19",          // Build-Date
+    version: "5.3.20",                 // Bei jedem Deployment hochzählen
+    buildDate: "2026-06-21",          // Build-Date
     prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
     optionSetBase: 100570000,         // Basis für OptionSet-Werte (Publisher 10571 * 10000)
     entities: {
@@ -5197,6 +5197,44 @@ async function renderTestCaseEditor(id) {
         </div>
     </div>
 
+    <div class="ve-meta-row">
+        <div class="form-group" style="flex:0 0 150px">
+            <label class="form-label">Lifecycle Status</label>
+            <select class="form-select" id="tc-lifecyclestatus" style="width:150px">
+                <option value="">-</option>
+                <option value="105710000" ${tc?.jbe_lifecyclestatus==105710000?'selected':''}>Entwurf</option>
+                <option value="105710001" ${tc?.jbe_lifecyclestatus==105710001?'selected':''}>Aktiv</option>
+                <option value="105710002" ${tc?.jbe_lifecyclestatus==105710002?'selected':''}>Instabil</option>
+                <option value="105710003" ${tc?.jbe_lifecyclestatus==105710003?'selected':''}>Historisch</option>
+                <option value="105710004" ${tc?.jbe_lifecyclestatus==105710004?'selected':''}>Archiviert</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex:0 0 140px">
+            <label class="form-label">Domäne</label>
+            <input class="form-input" id="tc-domain" value="${escapeHtml(tc?.jbe_domain)}" placeholder="z.B. DSGVO">
+        </div>
+        <div class="form-group" style="flex:0 0 80px">
+            <label class="form-label">Stufe</label>
+            <input class="form-input" type="number" id="tc-testlevel" value="${tc?.jbe_testlevel ?? ''}" min="0">
+        </div>
+        <div class="form-group" style="flex:0 0 130px">
+            <label class="form-label">Verantwortlich</label>
+            <input class="form-input" id="tc-owner" value="${escapeHtml(tc?.jbe_owner)}">
+        </div>
+        <div class="form-group" style="flex:0 0 140px">
+            <label class="form-label">Tickets</label>
+            <input class="form-input" id="tc-tickets" value="${escapeHtml(tc?.jbe_tickets)}" placeholder="kommagetrennt">
+        </div>
+        <div class="form-group" style="flex:0 0 120px">
+            <label class="form-label">Env-Scope</label>
+            <input class="form-input" id="tc-envscope" value="${escapeHtml(tc?.jbe_envscope)}" placeholder="dev,test">
+        </div>
+        <div class="form-group" style="flex:0 0 80px">
+            <label class="form-label">Min</label>
+            <input class="form-input" type="number" id="tc-estimatedminutes" value="${tc?.jbe_estimatedminutes ?? ''}" min="0">
+        </div>
+    </div>
+
     <div class="ve-mode-bar" id="ve-mode-bar">
         <button class="ve-mode-btn active" data-mode="visual">${LANG.editor_visual}</button>
         <button class="ve-mode-btn" data-mode="json">${LANG.editor_json}</button>
@@ -5341,6 +5379,13 @@ window.saveTestCase = async function(id) {
         jbe_tags: $("#tc-tags").value,
         jbe_userstories: $("#tc-userstories").value,
         jbe_enabled: $("#tc-enabled").checked,
+        jbe_lifecyclestatus: parseInt($("#tc-lifecyclestatus").value) || null,
+        jbe_domain: $("#tc-domain").value,
+        jbe_testlevel: parseInt($("#tc-testlevel").value) || null,
+        jbe_owner: $("#tc-owner").value,
+        jbe_tickets: $("#tc-tickets").value,
+        jbe_envscope: $("#tc-envscope").value,
+        jbe_estimatedminutes: parseInt($("#tc-estimatedminutes").value) || null,
         jbe_definitionjson: definitionJson
     };
 
@@ -5381,6 +5426,13 @@ window.saveTestCaseAsCopy = async function(originalId) {
         jbe_tags: $("#tc-tags").value,
         jbe_userstories: $("#tc-userstories").value,
         jbe_enabled: $("#tc-enabled").checked,
+        jbe_lifecyclestatus: parseInt($("#tc-lifecyclestatus").value) || null,
+        jbe_domain: $("#tc-domain").value,
+        jbe_testlevel: parseInt($("#tc-testlevel").value) || null,
+        jbe_owner: $("#tc-owner").value,
+        jbe_tickets: $("#tc-tickets").value,
+        jbe_envscope: $("#tc-envscope").value,
+        jbe_estimatedminutes: parseInt($("#tc-estimatedminutes").value) || null,
         jbe_definitionjson: definitionJson
     };
 
