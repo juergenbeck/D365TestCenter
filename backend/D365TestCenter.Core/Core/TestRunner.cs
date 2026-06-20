@@ -413,6 +413,53 @@ public sealed class TestRunner
         return chunks;
     }
 
+    /// <summary>
+    /// Rechnet das Run-Aggregat einmal am Plateau aus den Result-Records (ADR-0009 B.5,
+    /// Plan Phase 3). Outcome-Split (Total/Passed/Failed/Errored/Skipped), Dauer-Verteilung
+    /// (avg/median/min/max/slowest) ueber die ausgefuehrten Tests (Outcome != Skipped) und
+    /// die Summe der getrackten angelegten Records. Pure -> testbar. Median wie die
+    /// Cold-Start-Heuristik (<c>sorted[count/2]</c>).
+    /// </summary>
+    public static RunAggregate ComputeRunAggregate(IEnumerable<TestCaseResult> results)
+    {
+        if (results == null) throw new ArgumentNullException(nameof(results));
+        var list = results as IList<TestCaseResult> ?? results.ToList();
+
+        var agg = new RunAggregate { Total = list.Count };
+        foreach (var r in list)
+        {
+            switch (r.Outcome)
+            {
+                case TestOutcome.Passed: agg.Passed++; break;
+                case TestOutcome.Failed: agg.Failed++; break;
+                case TestOutcome.Error: agg.Errored++; break;
+                case TestOutcome.Skipped: agg.Skipped++; break;
+            }
+            agg.RecordsCreated += r.TrackedRecords?.Count ?? 0;
+        }
+
+        // Dauer-Verteilung NUR ueber die ausgefuehrten Tests (Outcome != Skipped);
+        // Skipped haben Dauer 0 und wuerden Min/Avg/Median verzerren.
+        var executed = list.Where(r => r.Outcome != TestOutcome.Skipped).ToList();
+        if (executed.Count > 0)
+        {
+            var durations = executed.Select(r => r.DurationMs).OrderBy(d => d).ToList();
+            agg.TotalTestMs = durations.Sum();
+            agg.AvgTestMs = (int)(agg.TotalTestMs / executed.Count);
+            agg.MedianTestMs = (int)durations[durations.Count / 2]; // obere Mitte, wie Cold-Start
+            agg.MinTestMs = (int)durations[0];
+            agg.MaxTestMs = (int)durations[durations.Count - 1];
+
+            // Langsamster Test: hoechste Dauer, erster bei Gleichstand.
+            var slowest = executed[0];
+            foreach (var r in executed)
+                if (r.DurationMs > slowest.DurationMs) slowest = r;
+            agg.SlowestTestId = slowest.TestId;
+        }
+
+        return agg;
+    }
+
     private TestCaseResult ExecuteSingleTest(
         TestCase tc, int index, int total,
         Dictionary<string, object?>? dataRow = null)

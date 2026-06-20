@@ -587,6 +587,37 @@ public sealed class BudgetedRunResult
 }
 
 /// <summary>
+/// Run-Aggregat, einmal am Plateau aus den Result-Records gerechnet (ADR-0009 B.5,
+/// Plan Phase 3). Outcome-Split + Dauer-Verteilung + angelegte Records. Die Verteilung
+/// (avg/median/min/max/slowest) wird ueber die AUSGEFUEHRTEN Tests gerechnet
+/// (Outcome != Skipped); Skipped-Tests (Dauer 0) verzerren sie sonst. Median-Konvention
+/// wie die Cold-Start-Heuristik (<c>sorted[count/2]</c>, obere Mitte bei gerader Anzahl).
+/// Wall-Clock (<c>jbe_durationms</c>) und Chunk-Zaehler kommen NICHT von hier
+/// (Timestamps bzw. Chunk-Records) -- das rechnet der Worker inline.
+/// </summary>
+public sealed class RunAggregate
+{
+    public int Total { get; set; }
+    public int Passed { get; set; }
+    public int Failed { get; set; }
+    public int Errored { get; set; }
+    public int Skipped { get; set; }
+
+    /// <summary>Summe der Per-Test-Dauern der ausgefuehrten Tests (Rechenzeit).</summary>
+    public long TotalTestMs { get; set; }
+    public int AvgTestMs { get; set; }
+    public int MedianTestMs { get; set; }
+    public int MinTestMs { get; set; }
+    public int MaxTestMs { get; set; }
+
+    /// <summary>Test-ID mit der hoechsten Dauer (Triage/Hotspot). Null wenn nichts ausgefuehrt.</summary>
+    public string? SlowestTestId { get; set; }
+
+    /// <summary>Summe der getrackten angelegten Records ueber alle Ergebnisse.</summary>
+    public int RecordsCreated { get; set; }
+}
+
+/// <summary>
 /// Ergebnis eines einzelnen Testfalls. Seit ADR-0004 gibt es keine separate
 /// Assertions-Liste mehr; Assert-Steps sind in StepResults enthalten.
 /// </summary>
