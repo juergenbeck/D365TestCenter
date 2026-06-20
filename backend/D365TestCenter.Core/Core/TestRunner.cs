@@ -202,6 +202,105 @@ public sealed class TestRunner
         return expanded;
     }
 
+    /// <summary>
+    /// Bildet Abhaengigkeits-Gruppen (Connected Components) ueber die Tests, damit der
+    /// Fan-Out-Koordinator jede Gruppe komplett in EINEN Chunk legt und der Worker den
+    /// Continuation-Cursor auf Gruppen-Grenzen setzen kann (ADR-0009, Befund 3,
+    /// Gruppen-Grenzen-Continuation). Eine frische Worker-Instanz, die an einer
+    /// Gruppen-Grenze startet, baut den dependsOn-Zustand (_passedTestIds) gruppenintern
+    /// selbst auf -- kein Re-Seed noetig.
+    ///
+    /// Kanten: (1) jeder dependsOn-Verweis auf einen Test IM SET; (2) gemeinsamer,
+    /// nicht-leerer sharedContext (defensive Affinitaets-Kante -- heute kein
+    /// Laufzeit-Effekt, _sharedContexts ist totes Feld, aber vorausschauend gefuehrt).
+    /// Ein dependsOn auf einen Test AUSSERHALB des Sets erzeugt KEINE Kante (der Test
+    /// wird zur Laufzeit ohnehin uebersprungen, _passedTestIds enthaelt ihn nie).
+    ///
+    /// Reihenfolge (deterministisch -> stabiler Cursor-Anker ueber Continuations):
+    /// Gruppen nach dem kleinsten Eingabe-Index ihrer Mitglieder; innerhalb einer
+    /// Gruppe die Eingabe-Reihenfolge (Ausfuehrungsreihenfolge, dependsOn-Ziel vor dem
+    /// Abhaengigen). ID-Vergleich case-insensitive (wie _passedTestIds).
+    /// </summary>
+    public static List<List<TestCase>> BuildDependencyGroups(List<TestCase> tests)
+    {
+        if (tests == null) throw new ArgumentNullException(nameof(tests));
+        var n = tests.Count;
+        if (n == 0) return new List<List<TestCase>>();
+
+        // Union-Find ueber die Eingabe-Indizes.
+        var parent = new int[n];
+        for (var i = 0; i < n; i++) parent[i] = i;
+
+        int Find(int x)
+        {
+            while (parent[x] != x)
+            {
+                parent[x] = parent[parent[x]]; // Pfad-Halbierung
+                x = parent[x];
+            }
+            return x;
+        }
+
+        void Union(int a, int b)
+        {
+            var ra = Find(a);
+            var rb = Find(b);
+            if (ra == rb) return;
+            // Kleinerer Index wird Wurzel -> haelt die Min-Index-Reihenfolge stabil.
+            if (ra < rb) parent[rb] = ra; else parent[ra] = rb;
+        }
+
+        // ID -> erster Index (case-insensitive, wie _passedTestIds).
+        var idToIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < n; i++)
+        {
+            var id = tests[i].Id;
+            if (!string.IsNullOrEmpty(id) && !idToIndex.ContainsKey(id))
+                idToIndex[id] = i;
+        }
+
+        // Kante 1: dependsOn auf einen Test IM SET.
+        for (var i = 0; i < n; i++)
+        {
+            var deps = tests[i].DependsOn;
+            if (deps == null) continue;
+            foreach (var dep in deps)
+            {
+                if (!string.IsNullOrEmpty(dep) && idToIndex.TryGetValue(dep, out var j))
+                    Union(i, j);
+            }
+        }
+
+        // Kante 2: gemeinsamer, nicht-leerer sharedContext (defensive Affinitaets-Kante).
+        var firstInContext = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < n; i++)
+        {
+            var ctx = tests[i].SharedContext;
+            if (string.IsNullOrWhiteSpace(ctx)) continue;
+            if (firstInContext.TryGetValue(ctx, out var first))
+                Union(i, first);
+            else
+                firstInContext[ctx] = i;
+        }
+
+        // Komponenten nach Wurzel sammeln; Mitglieder in Eingabe-Reihenfolge (i aufsteigend).
+        var byRoot = new Dictionary<int, List<TestCase>>();
+        var rootOrder = new List<int>(); // Wurzeln in Reihenfolge ihres ersten Auftretens (= Min-Index)
+        for (var i = 0; i < n; i++)
+        {
+            var root = Find(i);
+            if (!byRoot.TryGetValue(root, out var members))
+            {
+                members = new List<TestCase>();
+                byRoot[root] = members;
+                rootOrder.Add(root);
+            }
+            members.Add(tests[i]);
+        }
+
+        return rootOrder.Select(r => byRoot[r]).ToList();
+    }
+
     private TestCaseResult ExecuteSingleTest(
         TestCase tc, int index, int total,
         Dictionary<string, object?>? dataRow = null)
