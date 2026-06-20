@@ -225,6 +225,63 @@ public class ChunkWorkerOrchestratorTests
     }
 
     [Fact]
+    public void Claim_SetsLastClaimedOn_StaleAnchor()
+    {
+        var fake = new FakeDataverse();
+        var runId = SeedRun(fake, 1);
+        SeedTestCase(fake, "TC1");
+        var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1" });
+
+        new ChunkWorkerOrchestrator(fake).Run(chunkId, 80, SeqClock(T0));
+
+        // Der Stale-Anker (FB-46/OE-12) wird beim OC-Claim gesetzt.
+        var chunk = fake.Get(WorkerSchema.TestChunkEntity, chunkId);
+        Assert.Equal(T0, chunk.GetAttributeValue<DateTime>(WorkerSchema.ChunkLastClaimedOn));
+    }
+
+    [Fact]
+    public void GracefulProcessed_ResetsRecoveryCount()
+    {
+        var fake = new FakeDataverse();
+        var runId = SeedRun(fake, 1);
+        SeedTestCase(fake, "TC1");
+        var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1" });
+        // Eine vorangegangene Recovery hatte den Zaehler erhoeht.
+        fake.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
+        {
+            [WorkerSchema.ChunkRecoveryCount] = 2
+        });
+
+        new ChunkWorkerOrchestrator(fake).Run(chunkId, 80, SeqClock(T0));
+
+        // Fortschritt -> Loop-Breaker-Zaehler zurueckgesetzt.
+        Assert.Equal(0, fake.Get(WorkerSchema.TestChunkEntity, chunkId)
+            .GetAttributeValue<int>(WorkerSchema.ChunkRecoveryCount));
+    }
+
+    [Fact]
+    public void BudgetContinuation_ResetsRecoveryCount()
+    {
+        var fake = new FakeDataverse();
+        var runId = SeedRun(fake, 1);
+        SeedTestCase(fake, "TC1");
+        SeedTestCase(fake, "TC2"); // 2 Gruppen
+        var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1", "TC2" });
+        fake.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
+        {
+            [WorkerSchema.ChunkRecoveryCount] = 2
+        });
+
+        var outcome = new ChunkWorkerOrchestrator(fake)
+            .Run(chunkId, 80, SeqClock(T0, T0, T0.AddSeconds(100)));
+
+        Assert.Equal(ChunkWorkerOutcome.Continued, outcome);
+        // Auch eine graceful Continuation ist Fortschritt -> Zaehler zurueckgesetzt.
+        Assert.Equal(0, fake.Get(WorkerSchema.TestChunkEntity, chunkId)
+            .GetAttributeValue<int>(WorkerSchema.ChunkRecoveryCount));
+    }
+
+    [Fact]
     public void OcClaimLost_DoubleFireLoser_Skips()
     {
         var fake = new FakeDataverse();

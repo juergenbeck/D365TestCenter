@@ -80,7 +80,11 @@ public sealed class ChunkWorkerOrchestrator
         // ── OC-Claim: Neu/Fortsetzen -> Laeuft ──────────────────────
         var claim = new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
-            [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkRunning)
+            [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkRunning),
+            // Stale-Anker (FB-46/OE-12): bei JEDEM Claim (erster Pickup + Resume) gesetzt, damit die
+            // Recovery "wie lange in Laeuft" messen kann -- jbe_startedon (erster Start) taugt nicht,
+            // ein gesund mehrwelliger Chunk waere sonst faelschlich stale.
+            [WorkerSchema.ChunkLastClaimedOn] = startTime
         };
         if (isFirstPickup) claim[WorkerSchema.ChunkStartedOn] = startTime;
         claim.RowVersion = chunk.RowVersion;
@@ -156,7 +160,10 @@ public sealed class ChunkWorkerOrchestrator
                 [WorkerSchema.ChunkFailedCount] = prevFailed + waveFailed,
                 [WorkerSchema.ChunkCompletedOn] = completedOn,
                 [WorkerSchema.ChunkDurationMs] =
-                    (int)Math.Max(0, (completedOn - chunkStartedOn).TotalMilliseconds)
+                    (int)Math.Max(0, (completedOn - chunkStartedOn).TotalMilliseconds),
+                // Fortschritt -> Loop-Breaker-Zaehler zuruecksetzen (OE-12): nur wiederholte
+                // Recoveries OHNE Fortschritt sollen Richtung Poison akkumulieren.
+                [WorkerSchema.ChunkRecoveryCount] = 0
             };
             _service.Update(update);
             _log?.Invoke($"Worker: Chunk verarbeitet ({prevProcessed + waveProcessed} Test(s), " +
@@ -167,14 +174,16 @@ public sealed class ChunkWorkerOrchestrator
             return ChunkWorkerOutcome.Processed;
         }
 
-        // Budget gerissen -> Self-Trigger (Fortsetzen).
+        // Budget gerissen -> Self-Trigger (Fortsetzen). Mindestens eine Gruppe lief (Budget-Check
+        // vor jeder Gruppe) -> Fortschritt -> Loop-Breaker-Zaehler zuruecksetzen (OE-12).
         _service.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
             [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkResume),
             [WorkerSchema.ChunkGroupCursor] = budget.NextGroupIndex,
             [WorkerSchema.ChunkProcessedCount] = prevProcessed + waveProcessed,
             [WorkerSchema.ChunkFailedCount] = prevFailed + waveFailed,
-            [WorkerSchema.ChunkContinuations] = prevContinuations + 1
+            [WorkerSchema.ChunkContinuations] = prevContinuations + 1,
+            [WorkerSchema.ChunkRecoveryCount] = 0
         });
         _log?.Invoke($"Worker: Budget {budgetSeconds}s gerissen bei Gruppe {budget.NextGroupIndex} " +
                      "-> Cursor persistiert, Self-Trigger (Fortsetzen).");

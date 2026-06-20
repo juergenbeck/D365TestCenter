@@ -258,6 +258,9 @@ Add-Attribute "jbe_testchunk" (New-DateTimeAttr "jbe_completedon"    "Completed 
 Add-Attribute "jbe_testchunk" (New-IntegerAttr  "jbe_durationms"     "Duration (ms)"    0 2147483647)
 Add-Attribute "jbe_testchunk" (New-IntegerAttr  "jbe_continuations"  "Continuations"    0 100000)
 Add-Attribute "jbe_testchunk" (New-MemoAttr     "jbe_errordetails"   "Error Details"    1000000)
+# Stale-Chunk-Recovery (FB-46 / OE-12): Anker fuer "wie lange in Laeuft" + Loop-Breaker-Zaehler
+Add-Attribute "jbe_testchunk" (New-DateTimeAttr "jbe_lastclaimedon"  "Last Claimed On")
+Add-Attribute "jbe_testchunk" (New-IntegerAttr  "jbe_recoverycount"  "Recovery Count"   0 100000)
 
 # 3c. Picklist jbe_chunkstatus (an globales OptionSet gebunden)
 if (Test-AttributeExists "jbe_testchunk" "jbe_chunkstatus") {

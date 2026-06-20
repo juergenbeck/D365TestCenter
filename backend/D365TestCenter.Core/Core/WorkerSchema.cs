@@ -70,6 +70,11 @@ public static class WorkerSchema
     public const string ChunkDurationMs = "jbe_durationms";
     public const string ChunkContinuations = "jbe_continuations";
     public const string ChunkErrorDetails = "jbe_errordetails";
+    // Stale-Chunk-Recovery (FB-46, OE-12): Anker fuer "wie lange in Laeuft" (bei JEDEM OC-Claim
+    // gesetzt, erster Pickup + Resume) + Loop-Breaker-Zaehler (vom Worker bei Fortschritt auf 0,
+    // von der Recovery erhoeht; ueber jbe_max_recoveries -> Chunk auf Fehler statt Endlos-Resume).
+    public const string ChunkLastClaimedOn = "jbe_lastclaimedon";
+    public const string ChunkRecoveryCount = "jbe_recoverycount";
 
     // ── jbe_testcase: Felder ─────────────────────────────────────
     public const string TcTestId = "jbe_testid";
@@ -135,6 +140,10 @@ public static class WorkerSchema
     public const string EnvChunkSize = "jbe_chunksize";
     /// <summary>Int-EnvVar: Worker-/Koordinator-Zeitbudget in Sekunden (Default <see cref="DefaultBudgetSeconds"/>).</summary>
     public const string EnvBudgetSeconds = "jbe_worker_budget_seconds";
+    /// <summary>Int-EnvVar: Schwelle in Sekunden, ab der ein "Laeuft"-Chunk als stale gilt (FB-46/OE-12, Default <see cref="DefaultStaleChunkSeconds"/>).</summary>
+    public const string EnvStaleChunkSeconds = "jbe_stale_chunk_seconds";
+    /// <summary>Int-EnvVar: maximale Recoveries pro Chunk ohne Fortschritt, danach Poison (Default <see cref="DefaultMaxRecoveries"/>).</summary>
+    public const string EnvMaxRecoveries = "jbe_max_recoveries";
 
     /// <summary>
     /// Default-Chunkgroesse, wenn weder jbe_testrun.jbe_chunksize noch die EnvVar jbe_chunksize
@@ -154,4 +163,22 @@ public static class WorkerSchema
     /// (Stuck-Chunk-on-Timeout) -- ein Hard-Timeout laesst den Chunk in "Laeuft" haengen.
     /// </summary>
     public const int DefaultBudgetSeconds = 60;
+
+    /// <summary>
+    /// Default-Schwelle in Sekunden, ab der ein in "Laeuft" eingefrorener Chunk als stale gilt
+    /// (FB-46/OE-12). Muss sicher ueber dem 120-s-Sandbox-Limit liegen: ein lebender Worker haelt
+    /// "Laeuft" hoechstens 120 s (dann flippt er auf Verarbeitet/Fortsetzen), also ist ein Chunk,
+    /// der laenger als 180 s in "Laeuft" steht, provabel tot. 60 s Headroom gegen Clock-Skew +
+    /// Sweep-Latenz. Per EnvVar (jbe_stale_chunk_seconds) anpassbar.
+    /// </summary>
+    public const int DefaultStaleChunkSeconds = 180;
+
+    /// <summary>
+    /// Default-Obergrenze fuer Recoveries eines Chunks OHNE Fortschritt (Loop-Breaker, OE-12). Der
+    /// Worker setzt jbe_recoverycount bei jeder Fortschritts-Welle auf 0; die Recovery erhoeht ihn.
+    /// Uebersteigt er diesen Wert, wird der Chunk auf Fehler gesetzt statt erneut fortgesetzt --
+    /// verhindert den Livelock beim irreduziblen Rest (ein Einzeltest > Wellen-Budget, ADR
+    /// Entscheidung 7 vertagt). Per EnvVar (jbe_max_recoveries) anpassbar.
+    /// </summary>
+    public const int DefaultMaxRecoveries = 3;
 }
