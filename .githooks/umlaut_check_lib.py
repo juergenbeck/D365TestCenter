@@ -29,7 +29,7 @@ UMLAUT_WHITELIST = [
     'Failed', 'Issue', 'kongruent', 'Layer', 'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2',
     'Payload', 'Pipeline', 'Plugin', 'Process', 'pruef', 'Queue', 'Rescue', 'Sandbox',
     'Schedule', 'Session', 'Source', 'Stage', 'Status', 'Trace', 'Ueber', 'User',
-    'Value',
+    'Value', 'vorausschauend',
 ]
 # <<< AUTO-GENERATED:UMLAUT-DATA
 

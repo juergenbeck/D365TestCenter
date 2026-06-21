@@ -33,7 +33,7 @@ fi
 #      (User, Queue, Status, Plugin, ...) und Code-Bezeichner nicht falsch matchen
 STRIPPED=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
 
-WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|Address|ausfuehrungs_modi|Azure|bfuer|Class|Daemon|Failed|Issue|kongruent|Layer|loesch|over|overall|ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2|Payload|Pipeline|Plugin|Process|pruef|Queue|Rescue|Sandbox|Schedule|Session|Source|Stage|Status|Trace|Ueber|User|Value)\b'
+WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|Address|ausfuehrungs_modi|Azure|bfuer|Class|Daemon|Failed|Issue|kongruent|Layer|loesch|over|overall|ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2|Payload|Pipeline|Plugin|Process|pruef|Queue|Rescue|Sandbox|Schedule|Session|Source|Stage|Status|Trace|Ueber|User|Value|vorausschauend)\b'
 if [ -n "$WHITELIST_REGEX" ]; then
     STRIPPED=$(echo "$STRIPPED" | sed -E "s/$WHITELIST_REGEX//g")
 fi
