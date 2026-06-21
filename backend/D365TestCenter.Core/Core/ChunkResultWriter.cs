@@ -109,8 +109,7 @@ public sealed class ChunkResultWriter
                     [WorkerSchema.StepAction] = Truncate(stepResult.Action ?? "", 100),
                     [WorkerSchema.StepDuration] = (int)stepResult.DurationMs,
                     [WorkerSchema.StepError] = Truncate(stepResult.Message, 4000),
-                    [WorkerSchema.StepStatus] = new OptionSetValue(
-                        stepResult.Success ? WorkerSchema.StepPassed : WorkerSchema.StepFailed),
+                    [WorkerSchema.StepStatus] = new OptionSetValue(WorkerSchema.MapStepStatus(stepResult)),
                     [WorkerSchema.StepRunResult] = resultRef
                 };
                 if (!string.IsNullOrEmpty(stepResult.Alias))
@@ -147,7 +146,8 @@ public sealed class ChunkResultWriter
                 .Select(s => new
                 {
                     description = s.Description,
-                    passed = s.Success,
+                    passed = s.Success && !s.Skipped,
+                    skipped = s.Skipped,
                     message = s.Message,
                     expectedDisplay = s.ExpectedDisplay,
                     actualDisplay = s.ActualDisplay

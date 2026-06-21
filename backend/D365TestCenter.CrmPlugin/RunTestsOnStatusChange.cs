@@ -99,14 +99,17 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const int StatusFailed = 105710003;
 
     // ── Outcome OptionSet Values ─────────────────────────────────
+    // Echtes globales jbe_testoutcome (FB-50): Skipped=...002, Error=...003.
+    // Vorher vertauscht -> Worker/Cascade schrieb Error/Skipped falsch.
     private const int OutcomePassed = 105710000;
     private const int OutcomeFailed = 105710001;
-    private const int OutcomeError = 105710002;
-    private const int OutcomeSkipped = 105710003;
+    private const int OutcomeSkipped = 105710002;
+    private const int OutcomeError = 105710003;
 
     // ── Step Status OptionSet (ADR-0004: Phase entfaellt) ────────
     private const int StepPassed = 105710000;
     private const int StepFailed = 105710001;
+    private const int StepSkipped = 105710002; // ADR-0011
 
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
@@ -530,7 +533,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
                     .Select(s => new
                     {
                         description = s.Description,
-                        passed = s.Success,
+                        passed = s.Success && !s.Skipped,
+                        skipped = s.Skipped,
                         message = s.Message,
                         expectedDisplay = s.ExpectedDisplay,
                         actualDisplay = s.ActualDisplay
@@ -580,7 +584,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
                         [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
                         [FldStepDuration] = (int)stepResult.DurationMs,
                         [FldStepError] = Truncate(stepResult.Message, 4000),
-                        [FldStepStatus] = new OptionSetValue(stepResult.Success ? StepPassed : StepFailed),
+                        [FldStepStatus] = new OptionSetValue(
+                            stepResult.Skipped ? StepSkipped : stepResult.Success ? StepPassed : StepFailed),
                         [FldStepRunResult] = resultRef
                     };
                     if (!string.IsNullOrEmpty(stepResult.Alias))

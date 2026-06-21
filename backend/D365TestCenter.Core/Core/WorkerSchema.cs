@@ -184,14 +184,27 @@ public static class WorkerSchema
     public const int ChunkError = 105710004;      // Fehler / Error (Poison-Chunk, kein Re-Trigger)
 
     // ── jbe_outcome OptionSet (Result) ───────────────────────────
+    // Exakt das echte globale jbe_testoutcome (Markant DEV verifiziert 2026-06-21,
+    // FB-50): Skipped=...002, Error=...003. Vorher waren Error/Skipped hier vertauscht,
+    // wodurch der Worker-Pfad (ChunkResultWriter) Error/Skipped falsch schrieb und
+    // RunResultLoader (korrektes Config-Mapping) sie vertauscht zurueck las.
     public const int OutcomePassed = 105710000;
     public const int OutcomeFailed = 105710001;
-    public const int OutcomeError = 105710002;
-    public const int OutcomeSkipped = 105710003;
+    public const int OutcomeSkipped = 105710002;
+    public const int OutcomeError = 105710003;
 
-    // ── jbe_stepstatus OptionSet ─────────────────────────────────
+    // ── jbe_stepstatus OptionSet (global; Skipped=...002 existiert bereits, FB-50) ──
     public const int StepPassed = 105710000;
     public const int StepFailed = 105710001;
+    public const int StepSkipped = 105710002;
+
+    /// <summary>
+    /// Mappt einen StepResult auf den jbe_stepstatus-OptionSet-Wert. Eine Quelle der
+    /// Wahrheit fuer alle Result-Writer (ADR-0011): Skipped vor Passed/Failed.
+    /// </summary>
+    public static int MapStepStatus(StepResult stepResult) => stepResult.Skipped
+        ? StepSkipped
+        : stepResult.Success ? StepPassed : StepFailed;
 
     // ── Environment Variables (Engine-Mutex + Tuning) ────────────
     /// <summary>Bool-EnvVar: true -> Worker-Modell (Koordinator/Worker), false/leer -> alte Batch-Cascade. C-08.</summary>

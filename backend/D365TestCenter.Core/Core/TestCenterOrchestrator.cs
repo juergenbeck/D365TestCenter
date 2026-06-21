@@ -628,7 +628,8 @@ public sealed class TestCenterOrchestrator
                 .Select(s => new
                 {
                     description = s.Description,
-                    passed = s.Success,
+                    passed = s.Success && !s.Skipped,
+                    skipped = s.Skipped,
                     message = s.Message,
                     expectedDisplay = s.ExpectedDisplay,
                     actualDisplay = s.ActualDisplay
@@ -708,7 +709,11 @@ public sealed class TestCenterOrchestrator
                     [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
                     [FldStepDuration] = (int)stepResult.DurationMs,
                     [FldStepError] = Truncate(stepResult.Message ?? "", 4000),
-                    [FldStepStatus] = new OptionSetValue(stepResult.Success ? _config.OutcomePassed : _config.OutcomeFailed),
+                    // jbe_stepstatus ist global (105710xxx), unabhaengig vom publisher-
+                    // spezifischen Outcome-Config -> zentraler Helper statt _config.Outcome*
+                    // (FB-50: die alte Nutzung war numerisch ok fuer 0/1, aber semantisch
+                    // falsch und haette Skipped nie korrekt geschrieben).
+                    [FldStepStatus] = new OptionSetValue(WorkerSchema.MapStepStatus(stepResult)),
                     [FldStepRunResult] = resultRef
                 };
                 if (!string.IsNullOrEmpty(stepResult.Alias))
