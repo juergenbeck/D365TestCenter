@@ -112,6 +112,36 @@ public static class WorkerSchema
     public const int LifecycleHistoric = 105710003;    // Historisch
     public const int LifecycleArchived = 105710004;    // Archiviert
 
+    /// <summary>
+    /// Maps a front-matter lifecycle status keyword (entwurf/aktiv/instabil/historisch/archiviert,
+    /// case-insensitive) to the global jbe_lifecyclestatus OptionSet value, or null when unknown.
+    /// SSOT for the forward direction (import-pack) and, with <see cref="LifecycleKeywordFromValue"/>,
+    /// the reverse (export-defs) - the two are exact inverses.
+    /// </summary>
+    public static int? LifecycleValueFromKeyword(string? keyword) => (keyword ?? "").Trim().ToLowerInvariant() switch
+    {
+        "entwurf" => LifecycleDraft,
+        "aktiv" => LifecycleActive,
+        "instabil" => LifecycleUnstable,
+        "historisch" => LifecycleHistoric,
+        "archiviert" => LifecycleArchived,
+        _ => null
+    };
+
+    /// <summary>
+    /// Maps a jbe_lifecyclestatus OptionSet value back to its front-matter keyword (the inverse of
+    /// <see cref="LifecycleValueFromKeyword"/>), or null when the value is not a known lifecycle code.
+    /// </summary>
+    public static string? LifecycleKeywordFromValue(int value) => value switch
+    {
+        LifecycleDraft => "entwurf",
+        LifecycleActive => "aktiv",
+        LifecycleUnstable => "instabil",
+        LifecycleHistoric => "historisch",
+        LifecycleArchived => "archiviert",
+        _ => null
+    };
+
     // ── jbe_testrunresult: Felder + Alternate Key ────────────────
     public const string ResultTestId = "jbe_testid";
     public const string ResultOutcome = "jbe_outcome";

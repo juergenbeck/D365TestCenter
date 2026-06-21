@@ -39,6 +39,18 @@ public sealed class PackBuildResult
 public static class PackBuilder
 {
     /// <summary>
+    /// Pack/test-case properties that have their own jbe_testcase column and therefore must NOT appear
+    /// in the executable definition JSON (jbe_definitionjson). SSOT shared by import-pack (strip before
+    /// storing) and export-defs (strip when rendering the embedded block), so the block stays the pure
+    /// engine definition and never duplicates column-backed data.
+    /// </summary>
+    public static readonly string[] ColumnBackedProperties =
+    {
+        "userStories", "documentation",
+        "status", "domaene", "stufe", "verantwortlich", "geschaetzt_min", "zephyr_key", "env_scope", "tickets",
+    };
+
+    /// <summary>
     /// Builds a single test case object from a definition's Markdown, or null if the
     /// definition has no usable ```json block (a draft without a block is skipped with a
     /// warning; an unparsable block is an error). Appends lint findings to <paramref name="findings"/>.
@@ -144,9 +156,24 @@ public static class PackBuilder
         if (block["category"] != null) tc["category"] = block["category"]!.DeepClone();
         if (block["tags"] != null) tc["tags"] = block["tags"]!.DeepClone();
 
-        var userStories = block.Value<string>("userStories") ?? BuildUserStories(fm);
+        var userStories = BlockScalarOrCsv(block, "userStories") ?? BuildUserStories(fm);
         if (!string.IsNullOrWhiteSpace(userStories)) tc["userStories"] = userStories;
         if (!string.IsNullOrWhiteSpace(documentation)) tc["documentation"] = documentation;
+
+        // MVP-3 Phase 6a (ADR-0009): the dedicated metadata from the front-matter (A.1 mapping).
+        // These keys live only in the front-matter (not the JSON block), so import-pack can map them
+        // onto the jbe_testcase columns (jbe_lifecyclestatus/jbe_domain/...). Only non-empty values
+        // are written so the pack stays lean; BuildDefinitionJson drops them again so they do not
+        // leak into jbe_definitionjson (each has its own column). env_scope may be a YAML list, so it
+        // is read as an array and comma-joined; tickets reuses the ticket + weitere_tickets CSV.
+        SetIfPresent(tc, "status", MarkdownDocument.ReadScalar(fm, "status"));
+        SetIfPresent(tc, "domaene", MarkdownDocument.ReadScalar(fm, "domaene"));
+        SetIfPresent(tc, "stufe", MarkdownDocument.ReadScalar(fm, "stufe"));
+        SetIfPresent(tc, "verantwortlich", MarkdownDocument.ReadScalar(fm, "verantwortlich"));
+        SetIfPresent(tc, "geschaetzt_min", MarkdownDocument.ReadScalar(fm, "geschaetzt_min"));
+        SetIfPresent(tc, "zephyr_key", MarkdownDocument.ReadScalar(fm, "zephyr_key"));
+        SetIfPresent(tc, "env_scope", string.Join(",", MarkdownDocument.ReadArray(fm, "env_scope")));
+        SetIfPresent(tc, "tickets", BuildUserStories(fm));   // ticket + weitere_tickets, comma-joined
 
         foreach (var p in block.Properties())
             if (tc[p.Name] == null) tc[p.Name] = p.Value.DeepClone();
@@ -176,6 +203,25 @@ public static class PackBuilder
             ["testCases"] = testCases
         };
         return result;
+    }
+
+    /// <summary>Sets a string property on the pack test case only when the value is non-empty (trimmed).</summary>
+    static void SetIfPresent(JObject tc, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value)) tc[key] = value!.Trim();
+    }
+
+    /// <summary>
+    /// Reads a block property as a scalar string, tolerating a JSON array (joined with commas) - some
+    /// stored/edited definitions carry userStories as an array. Null when absent or json-null. Avoids
+    /// the InvalidCastException that <c>JToken.Value&lt;string&gt;</c> throws on a JArray.
+    /// </summary>
+    static string? BlockScalarOrCsv(JObject block, string key)
+    {
+        var tok = block[key];
+        if (tok == null || tok.Type == JTokenType.Null) return null;
+        if (tok is JArray arr) return string.Join(",", arr.Select(t => t.ToString()));
+        return tok.ToString();
     }
 
     /// <summary>Builds the userStories CSV from the front-matter ticket + weitere_tickets.</summary>

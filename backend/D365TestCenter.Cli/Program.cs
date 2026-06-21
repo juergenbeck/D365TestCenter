@@ -86,7 +86,7 @@ public static class Program
         // E2 (ADR-0008): after the run, write results back into the Markdown
         // test definitions under --sync-defs (front-matter ergebnis_historie SSOT).
         runCommand.AddOption(new Option<string?>("--sync-defs",
-            "After the run, sync results into the Markdown test definitions under this directory (E2 round-trip)."));
+            "(DEPRECATED, MVP-3/ADR-0009) After the run, sync results into the Markdown test definitions under this directory (E2 round-trip). The run history now lives in Dataverse; this option will be removed."));
         runCommand.AddOption(new Option<string?>("--env",
             "Env label for the synced history entry (default: derived from the --org host)."));
         runCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, bool, string, string?, bool, string, string?, string?, string?>(
@@ -112,7 +112,7 @@ public static class Program
 
         // ── sync-results command (E2 / ADR-0008) ─────────────────
         var syncResultsCommand = new Command("sync-results",
-            "Write the results of a finished test run back into the Markdown test definitions (E2 round-trip).");
+            "(DEPRECATED, MVP-3/ADR-0009) Write the results of a finished test run back into the Markdown test definitions (E2 round-trip). The run history now lives in Dataverse (jbe_testrun/-result); this command will be removed in a later version.");
         syncResultsCommand.AddOption(orgOption);
         syncResultsCommand.AddOption(clientIdOption);
         syncResultsCommand.AddOption(clientSecretOption);
@@ -249,6 +249,25 @@ public static class Program
             ImportPackCmd);
         rootCommand.AddCommand(importPackCommand);
 
+        // ── export-defs command (MVP-3 / ADR-0009 Phase 6b) ───────
+        var exportDefsCommand = new Command("export-defs",
+            "Export the jbe_testcase landscape from Dataverse into a derived Markdown mirror (front-matter + documentation + json block), grouped by domain. Backup/Git-review of the Dataverse SSOT.");
+        exportDefsCommand.AddOption(orgOption);
+        exportDefsCommand.AddOption(clientIdOption);
+        exportDefsCommand.AddOption(clientSecretOption);
+        exportDefsCommand.AddOption(tenantIdOption);
+        exportDefsCommand.AddOption(tokenOption);
+        exportDefsCommand.AddOption(interactiveOption);
+        exportDefsCommand.AddOption(new Option<string>("--out",
+            "Output directory for the Markdown mirror (created if missing; one <domaene>/<testId>.md per test).") { IsRequired = true });
+        exportDefsCommand.AddOption(new Option<string>("--filter", () => "*",
+            "Test case filter (tag:..., domain:..., comma-separated ids with trailing *, or * for all)."));
+        exportDefsCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant"));
+        exportDefsCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string>(
+            ExportDefsCmd);
+        rootCommand.AddCommand(exportDefsCommand);
+
         // ── validate command (OE-6) ──────────────────────────────
         var validateCommand = new Command("validate",
             "Statically validate a pack JSON for schema and pattern mistakes (no Dataverse call).");
@@ -337,6 +356,7 @@ public static class Program
             {
                 var envLabel = !string.IsNullOrWhiteSpace(env) ? env! : ResultSync.DeriveEnv(org);
                 Console.WriteLine();
+                WriteDeprecationNotice("run --sync-defs");
                 Console.WriteLine($"  Ergebnis-Sync -> {syncDefs} (env={envLabel}):");
                 try
                 {
@@ -424,6 +444,7 @@ public static class Program
     {
         try
         {
+            WriteDeprecationNotice("sync-results");
             if (!Guid.TryParse(run, out var runId))
             {
                 Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
@@ -753,6 +774,43 @@ public static class Program
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  export-defs command (MVP-3 / ADR-0009 Phase 6b): Dataverse -> MD mirror
+    // ════════════════════════════════════════════════════════════════
+
+    static Task<int> ExportDefsCmd(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string @out, string filter, string config)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(@out))
+            {
+                Console.WriteLine("  --out <verzeichnis> fehlt.");
+                return Task.FromResult(2);
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+            var outDir = Path.GetFullPath(@out);
+
+            Console.WriteLine();
+            Console.WriteLine($"  export-defs {org} -> {outDir} (Filter: {filter}):");
+            var sum = ExportDefs.Export(client, cfg, outDir, filter, Console.WriteLine);
+            Console.WriteLine();
+            Console.WriteLine(
+                $"  Fertig: {sum.Written} Definitionen geschrieben, {sum.Skipped} ohne testId übersprungen, " +
+                $"{sum.Domains.Count} Domänen" +
+                (sum.Collisions.Count > 0 ? $", {sum.Collisions.Count} Kollisionen" : "") + ".");
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return Task.FromResult(1);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  validate command (OE-6): static pre-run validation
     // ════════════════════════════════════════════════════════════════
 
@@ -957,6 +1015,18 @@ public static class Program
         if (code == cfg.StatusCompleted) return "Abgeschlossen";
         if (code == cfg.StatusFailed) return "Fehlgeschlagen";
         return $"? ({code})";
+    }
+
+    /// <summary>
+    /// MVP-3 (ADR-0009 Phase 6c): one-line deprecation banner for the Markdown result round-trip
+    /// (sync-results / run --sync-defs). The SSOT moved to Dataverse (jbe_testrun/-result), so writing
+    /// the history back into the Markdown defs is obsolete. The feature still works (reversible
+    /// deprecation); it will be removed in a later version.
+    /// </summary>
+    static void WriteDeprecationNotice(string what)
+    {
+        Console.WriteLine($"  [DEPRECATED] {what}: die Lauf-Historie lebt jetzt in Dataverse " +
+            "(jbe_testrun/-result). Dieser Pfad wird in einer späteren Version entfernt.");
     }
 
     static void WriteHeader(string org, string filter, string config)

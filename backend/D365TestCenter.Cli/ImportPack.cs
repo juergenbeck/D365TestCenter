@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using D365TestCenter.Core;
 using D365TestCenter.Core.Config;
+using D365TestCenter.Core.Reporting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
@@ -50,8 +52,7 @@ public static class ImportPack
         var def = (JObject)testCase.DeepClone();
         var testId = def.Value<string>("testId") ?? def.Value<string>("id") ?? "";
         def.Remove("testId");
-        def.Remove("userStories");
-        def.Remove(PackDocProperty);
+        foreach (var p in PackBuilder.ColumnBackedProperties) def.Remove(p);
         def["id"] = testId;
         return def.ToString(Formatting.None);
     }
@@ -96,6 +97,7 @@ public static class ImportPack
             if (!string.IsNullOrWhiteSpace(userStories)) fields["jbe_userstories"] = userStories!;
             var documentation = tc.Value<string>(PackDocProperty);
             if (!string.IsNullOrWhiteSpace(documentation)) fields[DocumentationField] = documentation!;
+            AddMetadataFields(tc, fields, log);
 
             var existingId = FindTestCaseId(service, cfg, testId!);
             if (existingId == null)
@@ -121,6 +123,54 @@ public static class ImportPack
         }
         return summary;
     }
+
+    /// <summary>
+    /// Maps the MVP-3 (ADR-0009 Phase 6a) metadata pack properties onto their dedicated jbe_testcase
+    /// columns (A.1 mapping, field names from <see cref="WorkerSchema"/>). Only properties present in
+    /// the pack are written - an absent key leaves the existing column untouched, consistent with the
+    /// create/update contract (a deliberately set value is not cleared by a later partial pack). The
+    /// two int columns parse defensively (a non-numeric value is skipped with a log, never throws); the
+    /// lifecycle status maps its keyword to the global OptionSet value.
+    /// </summary>
+    static void AddMetadataFields(JObject tc, IDictionary<string, object> fields, Action<string>? log)
+    {
+        AddString(tc, "domaene", WorkerSchema.TcDomain, fields);
+        AddString(tc, "verantwortlich", WorkerSchema.TcOwner, fields);
+        AddString(tc, "tickets", WorkerSchema.TcTickets, fields);
+        AddString(tc, "env_scope", WorkerSchema.TcEnvScope, fields);
+        AddString(tc, "zephyr_key", WorkerSchema.TcZephyrKey, fields);
+        AddInt(tc, "stufe", WorkerSchema.TcTestLevel, fields, log);
+        AddInt(tc, "geschaetzt_min", WorkerSchema.TcEstimatedMinutes, fields, log);
+
+        var status = tc.Value<string>("status");
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var code = MapLifecycle(status!);
+            if (code.HasValue) fields[WorkerSchema.TcLifecycleStatus] = new OptionSetValue(code.Value);
+            else log?.Invoke($"  (unbekannter status '{status}' - {WorkerSchema.TcLifecycleStatus} uebersprungen)");
+        }
+    }
+
+    static void AddString(JObject tc, string packKey, string column, IDictionary<string, object> fields)
+    {
+        var v = tc.Value<string>(packKey);
+        if (!string.IsNullOrWhiteSpace(v)) fields[column] = v!.Trim();
+    }
+
+    static void AddInt(JObject tc, string packKey, string column, IDictionary<string, object> fields, Action<string>? log)
+    {
+        var v = tc.Value<string>(packKey);
+        if (string.IsNullOrWhiteSpace(v)) return;
+        if (int.TryParse(v!.Trim(), out var n)) fields[column] = n;
+        else log?.Invoke($"  ({packKey}='{v}' nicht numerisch - {column} uebersprungen)");
+    }
+
+    /// <summary>
+    /// Maps a front-matter lifecycle status keyword to the global jbe_lifecyclestatus OptionSet value,
+    /// or null when unknown. Thin delegate to <see cref="WorkerSchema.LifecycleValueFromKeyword"/>
+    /// (the SSOT shared with export-defs); public for unit testing the keyword map.
+    /// </summary>
+    public static int? MapLifecycle(string statusKeyword) => WorkerSchema.LifecycleValueFromKeyword(statusKeyword);
 
     static Guid? FindTestCaseId(IOrganizationService service, ITestCenterConfig cfg, string testId)
     {

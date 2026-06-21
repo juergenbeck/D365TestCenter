@@ -188,6 +188,66 @@ public class PackBuilderTests
         Assert.Equal("STORY-9", tc!.Value<string>("userStories"));
     }
 
+    [Fact]
+    public void BuildTestCase_BlockUserStoriesArray_JoinedToCsvNoThrow()
+    {
+        // Some stored/edited definitions carry userStories as a JSON array. Value<string> would throw
+        // InvalidCastException; the defensive read joins it to a CSV instead (surfaced by export-defs).
+        var def = "---\nid: X\n---\n\n```json\n{ \"testId\": \"X\", \"userStories\": [\"DYN-1\", \"DYN-2\"], \"steps\": [] }\n```\n";
+        var tc = PackBuilder.BuildTestCase(def, "X.md", new List<PackLintFinding>());
+        Assert.Equal("DYN-1,DYN-2", tc!.Value<string>("userStories"));
+    }
+
+    // ── MVP-3 Phase 6a: dedicated metadata extraction ────────────────
+
+    const string MetaDef =
+        "---\n" +
+        "id: META-01\n" +
+        "status: aktiv\n" +
+        "domaene: DSGVO\n" +
+        "stufe: 2\n" +
+        "verantwortlich: Jürgen\n" +
+        "geschaetzt_min: 15\n" +
+        "zephyr_key: DYN-T994\n" +
+        "env_scope: [dev, test]\n" +
+        "ticket: DYN-9149\n" +
+        "weitere_tickets: [DYN-9558]\n" +
+        "---\n\n" +
+        "## Zweck\n\nx\n\n" +
+        "## D365TestCenter-Definition\n\n```json\n" +
+        "{ \"testId\": \"META-01\", \"steps\": [] }\n" +
+        "```\n";
+
+    [Fact]
+    public void BuildTestCase_ExtractsMetadataFromFrontmatter()
+    {
+        var tc = PackBuilder.BuildTestCase(MetaDef, "META-01.md", new List<PackLintFinding>());
+
+        Assert.NotNull(tc);
+        Assert.Equal("aktiv", tc!.Value<string>("status"));
+        Assert.Equal("DSGVO", tc.Value<string>("domaene"));
+        Assert.Equal("2", tc.Value<string>("stufe"));
+        Assert.Equal("Jürgen", tc.Value<string>("verantwortlich"));
+        Assert.Equal("15", tc.Value<string>("geschaetzt_min"));
+        Assert.Equal("DYN-T994", tc.Value<string>("zephyr_key"));
+        Assert.Equal("dev,test", tc.Value<string>("env_scope"));          // YAML list -> comma-joined
+        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("tickets"));   // ticket + weitere_tickets
+    }
+
+    [Fact]
+    public void BuildTestCase_AbsentMetadata_Omitted()
+    {
+        // FullDef carries status + tickets but no domaene/stufe/env_scope/zephyr_key -> those stay absent.
+        var tc = PackBuilder.BuildTestCase(FullDef, "BR-CS-01.md", new List<PackLintFinding>());
+
+        Assert.Equal("aktiv", tc!.Value<string>("status"));
+        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("tickets"));
+        Assert.Null(tc["domaene"]);
+        Assert.Null(tc["stufe"]);
+        Assert.Null(tc["env_scope"]);
+        Assert.Null(tc["zephyr_key"]);
+    }
+
     // ── PackBuilder.BuildPack ────────────────────────────────────────
 
     [Fact]
