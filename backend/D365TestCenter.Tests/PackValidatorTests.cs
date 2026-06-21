@@ -1277,13 +1277,22 @@ public class PackValidatorTests
             All = new List<StepConditionClause> { new StepConditionClause { Left = "a", Operator = "Equals", Right = "b" } },
             Any = new List<StepConditionClause> { new StepConditionClause { Left = "c", Operator = "Equals", Right = "d" } }
         }));
-        AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
     }
 
     [Fact]
     public void Condition_EmptyAll_IsError()
     {
         var tc = TestCaseWith(ConditionalWait(new StepCondition { All = new List<StepConditionClause>() }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void Condition_EmptyAny_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Any = new List<StepConditionClause>() }));
         var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
         Assert.Equal(ValidationSeverity.Error, finding.Severity);
     }
