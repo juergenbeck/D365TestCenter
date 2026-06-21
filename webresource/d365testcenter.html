@@ -1636,10 +1636,12 @@ const CONFIG = {
         chunkProcessed: 105710003,
         chunkError: 105710004,
         // Outcome (jbe_testoutcome) - Prefix 10571
+        // FB-50: echtes globales OptionSet ist Skipped=...002, Error=...003 (auf Markant DEV verifiziert).
+        // Vorher waren Error/Skipped hier vertauscht -> History-Anzeige zeigte Error als "Skipped" und umgekehrt.
         outcomePassed: 105710000,
         outcomeFailed: 105710001,
-        outcomeError: 105710002,
-        outcomeSkipped: 105710003,
+        outcomeSkipped: 105710002,
+        outcomeError: 105710003,
         outcomeNotImpl: 105710004,
         // Category (jbe_testcategory) - Prefix 10571
         catUpdateSource: 105710000,
@@ -4688,7 +4690,7 @@ async function renderDashboard() {
         // KPIs
         const totalCases = await API.count("jbe_testcases", "jbe_enabled eq true");
         const runs = await API.getMany("jbe_testruns",
-            "$select=jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_testsummary" +
+            "$select=jbe_teststatus,jbe_passed,jbe_failed,jbe_skipped,jbe_total,jbe_startedon,jbe_testsummary" +
             "&$orderby=jbe_startedon desc&$top=20");
 
         const totalRuns = runs.length;
@@ -4732,7 +4734,7 @@ async function renderDashboard() {
             $("#result-chart").innerHTML = Charts.pie([
                 { label: "Passed", value: lastRun.jbe_passed || 0, color: "var(--accent-green)" },
                 { label: "Failed", value: lastRun.jbe_failed || 0, color: "var(--accent-red)" },
-                { label: "Skipped", value: Math.max(0, (lastRun.jbe_total||0) - (lastRun.jbe_passed||0) - (lastRun.jbe_failed||0)), color: "var(--text-muted)" }
+                { label: "Skipped", value: lastRun.jbe_skipped || 0, color: "var(--text-muted)" }
             ]);
         }
 
@@ -5650,14 +5652,16 @@ let _liveResultsCache = [];
 async function _updateLiveView(runId) {
     try {
         const run = await API.getOne("jbe_testruns", runId,
-            "jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_completedon,jbe_testsummary,jbe_fulllog,jbe_testcasefilter,jbe_keeprecords");
+            "jbe_teststatus,jbe_passed,jbe_failed,jbe_skipped,jbe_total,jbe_startedon,jbe_completedon,jbe_testsummary,jbe_fulllog,jbe_testcasefilter,jbe_keeprecords");
         const isActive = run.jbe_teststatus === CONFIG.optionSets.statusRunning
             || run.jbe_teststatus === CONFIG.optionSets.statusPlanned
             || run.jbe_teststatus === CONFIG.optionSets.statusSplitting;   // Worker-Modell: Koordinator teilt noch auf
         const passed = run.jbe_passed || 0;
         const failed = run.jbe_failed || 0;
+        const skipped = run.jbe_skipped || 0;
         const total = run.jbe_total || LiveRunState.testCaseList.length || 0;
-        const done = passed + failed;
+        // jbe_failed enthält bereits Errored; Skipped fehlte hier -> Fortschritt/ETA blieben bei Skips unter 100%.
+        const done = passed + failed + skipped;
         const pct = total > 0 ? Math.round(done / total * 100) : 0;
 
         // Header
@@ -5666,7 +5670,7 @@ async function _updateLiveView(runId) {
 
         // Counters
         const cEl = document.getElementById("live-counters");
-        if (cEl) cEl.innerHTML = `<span style="color:var(--accent-green)">${passed} Passed</span><span style="color:var(--accent-red)">${failed} Failed</span><span>${done}/${total}</span>`;
+        if (cEl) cEl.innerHTML = `<span style="color:var(--accent-green)">${passed} Passed</span><span style="color:var(--accent-red)">${failed} Failed</span>${skipped > 0 ? `<span style="color:var(--text-muted)">${skipped} Skipped</span>` : ""}<span>${done}/${total}</span>`;
 
         // ETA
         const etaEl = document.getElementById("live-eta");
