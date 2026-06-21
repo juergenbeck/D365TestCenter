@@ -8,11 +8,11 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer <see cref="StaleChunkRecoveryService"/> (FB-46 / OE-12). Pinnt: frischer Chunk wird
-/// in Ruhe gelassen, stale Chunk wird auf "Fortsetzen" zurueckgesetzt, Fallback-Anker
-/// jbe_startedon, Nicht-Running-Laeufe + Nicht-Laeuft-Chunks ignoriert, OC-Race (Chunk inzwischen
-/// geflippt) ueberspringt, Loop-Breaker poisont nach K Recoveries, und der FB-46-Deadlock wird
-/// end-to-end aufgeloest (Reset -> Worker resumed -> Plateau).
+/// Tests für <see cref="StaleChunkRecoveryService"/> (FB-46 / OE-12). Pinnt: frischer Chunk wird
+/// in Ruhe gelassen, stale Chunk wird auf "Fortsetzen" zurückgesetzt, Fallback-Anker
+/// jbe_startedon, Nicht-Running-Läufe + Nicht-Läuft-Chunks ignoriert, OC-Race (Chunk inzwischen
+/// geflippt) überspringt, Loop-Breaker poisont nach K Recoveries, und der FB-46-Deadlock wird
+/// end-to-end aufgelöst (Reset -> Worker resumed -> Plateau).
 /// </summary>
 public class StaleChunkRecoveryServiceTests
 {
@@ -127,7 +127,7 @@ public class StaleChunkRecoveryServiceTests
     public void NonRunningRun_NotScanned()
     {
         var fake = new FakeDataverse();
-        // Lauf in "Aufteilung laeuft" mit stale Laeuft-Chunk -> der Sweep scannt nur Running-Laeufe.
+        // Lauf in "Aufteilung läuft" mit stale Läuft-Chunk -> der Sweep scannt nur Running-Läufe.
         var runId = SeedRun(fake, 1, status: WorkerSchema.StatusSplitting);
         var chunkId = SeedRunningChunk(fake, runId, lastClaimedOn: T0.AddSeconds(-300));
 
@@ -143,7 +143,7 @@ public class StaleChunkRecoveryServiceTests
     {
         var fake = new FakeDataverse();
         var runId = SeedRun(fake, 1);
-        var chunkId = SeedProcessedChunk(fake, runId); // Verarbeitet, nicht Laeuft
+        var chunkId = SeedProcessedChunk(fake, runId); // Verarbeitet, nicht Läuft
 
         var r = new StaleChunkRecoveryService(fake).Sweep(Stale, MaxRecov, () => T0);
 
@@ -158,7 +158,7 @@ public class StaleChunkRecoveryServiceTests
         var runId = SeedRun(fake, 1);
         var chunkId = SeedRunningChunk(fake, runId, lastClaimedOn: T0.AddSeconds(-300));
 
-        // Simuliere einen spaeten Worker, der den Chunk GENAU zwischen frischem Retrieve und
+        // Simuliere einen späten Worker, der den Chunk GENAU zwischen frischem Retrieve und
         // OC-Reset flippt: beim ersten Chunk-Retrieve den Store auf Verarbeitet drehen (RowVersion
         // steigt) -> der OC-Reset mit der vorher gelesenen RowVersion scheitert.
         bool bumped = false;
@@ -203,7 +203,7 @@ public class StaleChunkRecoveryServiceTests
     public void LoopBreaker_ExceedsMax_Poisons_AndCompletesRunAtPlateau()
     {
         var fake = new FakeDataverse();
-        var runId = SeedRun(fake, 1); // einziger Chunk -> Poison schliesst das Plateau
+        var runId = SeedRun(fake, 1); // einziger Chunk -> Poison schließt das Plateau
         // recoveryCount 3, max 3 -> newCount 4 > 3 -> Poison.
         var chunkId = SeedRunningChunk(fake, runId, lastClaimedOn: T0.AddSeconds(-300),
             recoveryCount: 3);
@@ -213,7 +213,7 @@ public class StaleChunkRecoveryServiceTests
         Assert.Equal(0, r.ChunksRecovered);
         Assert.Equal(1, r.ChunksPoisoned);
         Assert.Equal(WorkerSchema.ChunkError, ChunkStatusOf(fake, chunkId));
-        // Der Fehler-Chunk zaehlt zum Plateau -> Lauf abgeschlossen (kein Deadlock).
+        // Der Fehler-Chunk zählt zum Plateau -> Lauf abgeschlossen (kein Deadlock).
         Assert.Equal(1, r.RunsCompleted);
         Assert.Equal(WorkerSchema.StatusCompleted, RunStatusOf(fake, runId));
         Assert.Equal(1, fake.Get(WorkerSchema.TestRunEntity, runId)
@@ -223,7 +223,7 @@ public class StaleChunkRecoveryServiceTests
     [Fact]
     public void Fb46Deadlock_RecoveredEndToEnd_ResumeWorkerReachesPlateau()
     {
-        // Reproduziert FB-46: ein Run mit zwei Chunks, einer Verarbeitet, einer in "Laeuft"
+        // Reproduziert FB-46: ein Run mit zwei Chunks, einer Verarbeitet, einer in "Läuft"
         // eingefroren (Hard-Timeout). Ohne Recovery bleibt das Plateau (1/2) unerreicht -> Deadlock.
         var fake = new FakeDataverse();
         var runId = SeedRun(fake, 2);
@@ -233,7 +233,7 @@ public class StaleChunkRecoveryServiceTests
         var stuckId = SeedRunningChunk(fake, runId, lastClaimedOn: T0.AddSeconds(-300),
             testIds: new[] { "TC1" }, groupCursor: 0);
 
-        // Vorbedingung: Lauf haengt (noch Running, Plateau nicht erreicht).
+        // Vorbedingung: Lauf hängt (noch Running, Plateau nicht erreicht).
         Assert.Equal(WorkerSchema.StatusRunning, RunStatusOf(fake, runId));
 
         // Sweep -> Stuck-Chunk auf Fortsetzen.
@@ -245,7 +245,7 @@ public class StaleChunkRecoveryServiceTests
         // Der re-getriggerte Worker resumed ab group_cursor und erreicht das Plateau.
         var outcome = new ChunkWorkerOrchestrator(fake).Run(stuckId, 80, () => T0);
         Assert.Equal(ChunkWorkerOutcome.Processed, outcome);
-        Assert.Equal(WorkerSchema.StatusCompleted, RunStatusOf(fake, runId)); // Deadlock aufgeloest
+        Assert.Equal(WorkerSchema.StatusCompleted, RunStatusOf(fake, runId)); // Deadlock aufgelöst
     }
 
     private static void SeedTestCase(FakeDataverse fake, string id)

@@ -41,7 +41,7 @@ public static class DataverseInventorySource
             if (entry != null && MatchesFilter(entry, filter))
                 model.Entries.Add(entry);
         }
-        log?.Invoke($"DataverseInventorySource: {model.Entries.Count} Eintraege (Filter: {filter ?? "*"})");
+        log?.Invoke($"DataverseInventorySource: {model.Entries.Count} Einträge (Filter: {filter ?? "*"})");
         return model;
     }
 
@@ -70,7 +70,7 @@ public static class DataverseInventorySource
             GeschaetztMin = e.GetAttributeValue<int?>(WorkerSchema.TcEstimatedMinutes)?.ToString() ?? ""
             // LaufStatus / History / Quelle / Datei: leer in dieser Quelle (kein Repo-Pfad, kein
             // Frontmatter-ergebnis_historie in Dataverse). Der Per-Test-Lauftrend ist ein additiver
-            // Folge-Ausbau (groupby jbe_testid ueber jbe_testrunresult).
+            // Folge-Ausbau (groupby jbe_testid über jbe_testrunresult).
         };
     }
 

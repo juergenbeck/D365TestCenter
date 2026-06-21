@@ -8,7 +8,7 @@ namespace D365TestCenter.Tests;
 /// Pinnt die jbe_testoutcome- und jbe_stepstatus-OptionSet-Werte in WorkerSchema gegen
 /// das ECHTE globale OptionSet (Markant DEV verifiziert 2026-06-21, FB-50). Vorher waren
 /// Error/Skipped in WorkerSchema vertauscht (Worker-Pfad schrieb Error/Skipped falsch).
-/// Dieser Test haette FB-50 gefangen.
+/// Dieser Test hätte FB-50 gefangen.
 /// </summary>
 public class WorkerSchemaOutcomeTests
 {
@@ -33,7 +33,7 @@ public class WorkerSchemaOutcomeTests
     public void WorkerSchema_And_Config_OutcomesAgree()
     {
         // Welt A (Config/RunResultLoader) und Welt B (WorkerSchema/ChunkResultWriter)
-        // muessen dasselbe Mapping verwenden, sonst kippen Error/Skipped pfaduebergreifend.
+        // müssen dasselbe Mapping verwenden, sonst kippen Error/Skipped pfadübergreifend.
         var cfg = new MarkantConfig();
         Assert.Equal(cfg.OutcomePassed, WorkerSchema.OutcomePassed);
         Assert.Equal(cfg.OutcomeFailed, WorkerSchema.OutcomeFailed);

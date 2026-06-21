@@ -7,7 +7,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer expectFailure / expectException (1b).
+/// Tests für expectFailure / expectException (1b).
 /// Siehe D365TestCenter-Workspace/03_implementation/expectfailure-feature.md.
 /// </summary>
 public class ExpectFailureTests
@@ -115,7 +115,7 @@ public class ExpectFailureTests
 
         var (ok, reason) = TestRunner.EvaluateExpectException(spec, ex);
         Assert.False(ok);
-        Assert.Contains("Ungueltiger Regex", reason);
+        Assert.Contains("Ungültiger Regex", reason);
     }
 
     [Fact]
@@ -261,7 +261,7 @@ public class ExpectFailureTests
     }
 
     // ================================================================
-    //  Reflection-Helpers fuer die privaten/static-Methoden in TestRunner
+    //  Reflection-Helpers für die privaten/static-Methoden in TestRunner
     // ================================================================
 
     private static Exception InvokeFaultToException(Microsoft.Xrm.Sdk.OrganizationServiceFault fault)

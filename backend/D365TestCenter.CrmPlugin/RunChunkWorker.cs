@@ -4,14 +4,14 @@ using D365TestCenter.Core;
 namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
-/// Async-Plugin auf <c>jbe_testchunk</c> (ADR-0009 Phase 3). Worker des Fan-Out-Modells: fuehrt die
+/// Async-Plugin auf <c>jbe_testchunk</c> (ADR-0009 Phase 3). Worker des Fan-Out-Modells: führt die
 /// Tests eines Chunks ab dem Gruppen-Cursor aus, schreibt die Ergebnisse idempotent und rettet sich
-/// per Self-Trigger-Continuation vor dem 120-s-Sandbox-Limit; der den letzten Chunk schliessende
+/// per Self-Trigger-Continuation vor dem 120-s-Sandbox-Limit; der den letzten Chunk schließende
 /// Worker aggregiert den Lauf am Plateau.
 ///
 /// Die gesamte testbare Logik liegt in <see cref="ChunkWorkerOrchestrator"/> (Core, mit Fake-Service
-/// unit-getestet); dieses Plugin ist nur die duenne Glue. Ein Engine-Mutex-Check eruebrigt sich:
-/// jbe_testchunk-Records entstehen ausschliesslich im Worker-Modus (durch den Koordinator).
+/// unit-getestet); dieses Plugin ist nur die dünne Glue. Ein Engine-Mutex-Check erübrigt sich:
+/// jbe_testchunk-Records entstehen ausschließlich im Worker-Modus (durch den Koordinator).
 ///
 /// Registrierung:
 ///   Entity:              jbe_testchunk
@@ -29,7 +29,7 @@ public sealed class RunChunkWorker : IPlugin
             .GetService(typeof(ITracingService));
         var factory = (IOrganizationServiceFactory)serviceProvider
             .GetService(typeof(IOrganizationServiceFactory));
-        // SYSTEM-Kontext (null): Zugriff auf alle Testfaelle/Results unabhaengig von der Rolle.
+        // SYSTEM-Kontext (null): Zugriff auf alle Testfälle/Results unabhängig von der Rolle.
         var service = factory.CreateOrganizationService(null);
 
         if (context.PrimaryEntityName != WorkerSchema.TestChunkEntity)

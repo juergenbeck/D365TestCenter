@@ -1,15 +1,15 @@
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Schema-Konstanten-Vertrag fuer die ADR-0009 Worker-Ausfuehrung (Koordinator + Worker).
+/// Schema-Konstanten-Vertrag für die ADR-0009 Worker-Ausführung (Koordinator + Worker).
 ///
-/// Single Source of Truth fuer alle Entity-/Feld-/OptionSet-Namen und EnvVar-Defaults, die
-/// <see cref="CoordinatorOrchestrator"/>, <see cref="ChunkWorkerOrchestrator"/> und die duennen
+/// Single Source of Truth für alle Entity-/Feld-/OptionSet-Namen und EnvVar-Defaults, die
+/// <see cref="CoordinatorOrchestrator"/>, <see cref="ChunkWorkerOrchestrator"/> und die dünnen
 /// IPlugin-Wrapper (RunCoordinator/RunChunkWorker) verdrahten. Die Werte sind exakt die aus der
 /// deploy-fertigen Schema-Spezifikation (Workspace 03_implementation/schema-adr0009-phase0.md);
 /// Drift hier bricht die Plugins gegen das angelegte Schema.
 ///
-/// Prefix durchgaengig 105710xxx (NICHT die in Create-TestingEntities.ps1 veralteten 595300xxx,
+/// Prefix durchgängig 105710xxx (NICHT die in Create-TestingEntities.ps1 veralteten 595300xxx,
 /// Goldene Regel 10). Die bereits bestehenden jbe_testrun-/jbe_testrunresult-Felder und die
 /// jbe_teststatus/Outcome-OptionSet-Werte sind hier mit aufgenommen, damit Orchestrator und
 /// Result-Writer eine einzige Konstantenquelle haben.
@@ -60,7 +60,7 @@ public static class WorkerSchema
     public const string ChunkIndex = "jbe_chunkindex";
     public const string ChunkTestIds = "jbe_testids";
     public const string ChunkStatus = "jbe_chunkstatus";
-    // Worker-Continuation: Index der naechsten un-gelaufenen GRUPPE (Befund 3,
+    // Worker-Continuation: Index der nächsten un-gelaufenen GRUPPE (Befund 3,
     // Gruppen-Grenzen-Continuation). Passt zu TestRunner.RunGroupsBudgeted(startGroupIndex).
     public const string ChunkGroupCursor = "jbe_group_cursor";
     public const string ChunkProcessedCount = "jbe_processedcount";
@@ -70,9 +70,9 @@ public static class WorkerSchema
     public const string ChunkDurationMs = "jbe_durationms";
     public const string ChunkContinuations = "jbe_continuations";
     public const string ChunkErrorDetails = "jbe_errordetails";
-    // Stale-Chunk-Recovery (FB-46, OE-12): Anker fuer "wie lange in Laeuft" (bei JEDEM OC-Claim
-    // gesetzt, erster Pickup + Resume) + Loop-Breaker-Zaehler (vom Worker bei Fortschritt auf 0,
-    // von der Recovery erhoeht; ueber jbe_max_recoveries -> Chunk auf Fehler statt Endlos-Resume).
+    // Stale-Chunk-Recovery (FB-46, OE-12): Anker für "wie lange in Läuft" (bei JEDEM OC-Claim
+    // gesetzt, erster Pickup + Resume) + Loop-Breaker-Zähler (vom Worker bei Fortschritt auf 0,
+    // von der Recovery erhöht; über jbe_max_recoveries -> Chunk auf Fehler statt Endlos-Resume).
     public const string ChunkLastClaimedOn = "jbe_lastclaimedon";
     public const string ChunkRecoveryCount = "jbe_recoverycount";
 
@@ -84,13 +84,13 @@ public static class WorkerSchema
     public const string TcCategory = "jbe_category";
     public const string TcTags = "jbe_tags";
     public const string TcUserStories = "jbe_userstories";
-    /// <summary>E1-Doku-Markdown (## Zweck/Beschreibung/...) ohne Frontmatter; Quelle fuer den Dataverse-Report.</summary>
+    /// <summary>E1-Doku-Markdown (## Zweck/Beschreibung/...) ohne Frontmatter; Quelle für den Dataverse-Report.</summary>
     public const string TcDocumentation = "jbe_documentation";
 
     // ── jbe_testcase: neue Metadaten-Felder (MVP-2, Plan Phase 0 / ADR-0009 A.1) ──
     /// <summary>Picklist: entwurf/aktiv/instabil/historisch/archiviert (Migration aus Frontmatter `status`).</summary>
     public const string TcLifecycleStatus = "jbe_lifecyclestatus";
-    /// <summary>String: Fachdomaene (Migration aus `domaene`); freitext, projekt-generisch.</summary>
+    /// <summary>String: Fachdomäne (Migration aus `domaene`); freitext, projekt-generisch.</summary>
     public const string TcDomain = "jbe_domain";
     /// <summary>Int: Teststufe (Migration aus `stufe`).</summary>
     public const string TcTestLevel = "jbe_testlevel";
@@ -100,7 +100,7 @@ public static class WorkerSchema
     public const string TcTickets = "jbe_tickets";
     /// <summary>String/CSV: env_scope.</summary>
     public const string TcEnvScope = "jbe_envscope";
-    /// <summary>Int: geschaetzte Dauer in Minuten (Migration aus `geschaetzt_min`).</summary>
+    /// <summary>Int: geschätzte Dauer in Minuten (Migration aus `geschaetzt_min`).</summary>
     public const string TcEstimatedMinutes = "jbe_estimatedminutes";
     /// <summary>String: Zephyr-Key (Feld vorhanden, Zephyr-Feature out-of-scope).</summary>
     public const string TcZephyrKey = "jbe_zephyrkey";
@@ -171,14 +171,14 @@ public static class WorkerSchema
 
     // ── jbe_teststatus OptionSet (Run-Status, global, 105710xxx) ──
     public const int StatusPlanned = 105710000;   // Geplant / Pending (Koordinator-Trigger)
-    public const int StatusRunning = 105710001;   // Laeuft / Running
+    public const int StatusRunning = 105710001;   // Läuft / Running
     public const int StatusCompleted = 105710002; // Abgeschlossen / Completed
     public const int StatusError = 105710003;     // Fehler / Error
-    public const int StatusSplitting = 105710004;  // Aufteilung laeuft / Splitting (Koordinator-Busy/Continuation-Flip)
+    public const int StatusSplitting = 105710004;  // Aufteilung läuft / Splitting (Koordinator-Busy/Continuation-Flip)
 
     // ── jbe_chunkstatus OptionSet (global, 105710xxx) ────────────
     public const int ChunkNew = 105710000;        // Neu / New (Create-Trigger)
-    public const int ChunkRunning = 105710001;    // Laeuft / Running (per OC-Claim aufgenommen)
+    public const int ChunkRunning = 105710001;    // Läuft / Running (per OC-Claim aufgenommen)
     public const int ChunkResume = 105710002;     // Fortsetzen / Resume (Self-Trigger, Update)
     public const int ChunkProcessed = 105710003;  // Verarbeitet / Processed
     public const int ChunkError = 105710004;      // Fehler / Error (Poison-Chunk, kein Re-Trigger)
@@ -187,7 +187,7 @@ public static class WorkerSchema
     // Exakt das echte globale jbe_testoutcome (Markant DEV verifiziert 2026-06-21,
     // FB-50): Skipped=...002, Error=...003. Vorher waren Error/Skipped hier vertauscht,
     // wodurch der Worker-Pfad (ChunkResultWriter) Error/Skipped falsch schrieb und
-    // RunResultLoader (korrektes Config-Mapping) sie vertauscht zurueck las.
+    // RunResultLoader (korrektes Config-Mapping) sie vertauscht zurück las.
     public const int OutcomePassed = 105710000;
     public const int OutcomeFailed = 105710001;
     public const int OutcomeSkipped = 105710002;
@@ -200,7 +200,7 @@ public static class WorkerSchema
 
     /// <summary>
     /// Mappt einen StepResult auf den jbe_stepstatus-OptionSet-Wert. Eine Quelle der
-    /// Wahrheit fuer alle Result-Writer (ADR-0011): Skipped vor Passed/Failed.
+    /// Wahrheit für alle Result-Writer (ADR-0011): Skipped vor Passed/Failed.
     /// </summary>
     public static int MapStepStatus(StepResult stepResult) => stepResult.Skipped
         ? StepSkipped
@@ -209,47 +209,47 @@ public static class WorkerSchema
     // ── Environment Variables (Engine-Mutex + Tuning) ────────────
     /// <summary>Bool-EnvVar: true -> Worker-Modell (Koordinator/Worker), false/leer -> alte Batch-Cascade. C-08.</summary>
     public const string EnvUseWorker = "jbe_use_worker";
-    /// <summary>Int-EnvVar: Ziel-Chunkgroesse in Tests (Default <see cref="DefaultChunkSize"/>). jbe_testrun.jbe_chunksize ueberschreibt pro Run.</summary>
+    /// <summary>Int-EnvVar: Ziel-Chunkgröße in Tests (Default <see cref="DefaultChunkSize"/>). jbe_testrun.jbe_chunksize überschreibt pro Run.</summary>
     public const string EnvChunkSize = "jbe_chunksize";
     /// <summary>Int-EnvVar: Worker-/Koordinator-Zeitbudget in Sekunden (Default <see cref="DefaultBudgetSeconds"/>).</summary>
     public const string EnvBudgetSeconds = "jbe_worker_budget_seconds";
-    /// <summary>Int-EnvVar: Schwelle in Sekunden, ab der ein "Laeuft"-Chunk als stale gilt (FB-46/OE-12, Default <see cref="DefaultStaleChunkSeconds"/>).</summary>
+    /// <summary>Int-EnvVar: Schwelle in Sekunden, ab der ein "Läuft"-Chunk als stale gilt (FB-46/OE-12, Default <see cref="DefaultStaleChunkSeconds"/>).</summary>
     public const string EnvStaleChunkSeconds = "jbe_stale_chunk_seconds";
     /// <summary>Int-EnvVar: maximale Recoveries pro Chunk ohne Fortschritt, danach Poison (Default <see cref="DefaultMaxRecoveries"/>).</summary>
     public const string EnvMaxRecoveries = "jbe_max_recoveries";
 
     /// <summary>
-    /// Default-Chunkgroesse, wenn weder jbe_testrun.jbe_chunksize noch die EnvVar jbe_chunksize
+    /// Default-Chunkgröße, wenn weder jbe_testrun.jbe_chunksize noch die EnvVar jbe_chunksize
     /// gesetzt ist. ~5-10 laut Plan (Skeptiker A-03): Test-Center-Tests dauern Sekunden, nicht ms
     /// wie Markants Records; 8 ist die Mitte (genug Fan-Out, ohne AsyncOp-Flut). NICHT 100.
     /// </summary>
     public const int DefaultChunkSize = 8;
 
     /// <summary>
-    /// Default-Zeitbudget in Sekunden ab Ausfuehrungsbeginn, ab dem die Self-Trigger-Continuation
+    /// Default-Zeitbudget in Sekunden ab Ausführungsbeginn, ab dem die Self-Trigger-Continuation
     /// greift (Watchdog). Headroom zum 120-s-Sandbox-Limit muss den langsamsten EINZELtest plus
-    /// Result-Write-Overhead abdecken: das Budget wird VOR jeder Gruppe geprueft, die letzte Gruppe
-    /// kann also bis ~budget+maxTest laufen. Der DB-Vorbild-Wert 80 (ms-grosse Items) ist fuer
+    /// Result-Write-Overhead abdecken: das Budget wird VOR jeder Gruppe geprüft, die letzte Gruppe
+    /// kann also bis ~budget+maxTest laufen. Der DB-Vorbild-Wert 80 (ms-große Items) ist für
     /// Test-Center-Tests (Sekunden bis ~1 min) zu hoch -- S39-Volumentest zeigte 120-s-Timeouts bei
     /// chunkSize 8 + langsamen Tests. Default daher 60; langsame Suiten per EnvVar weiter senken
-    /// (jbe_worker_budget_seconds) und kleinere chunkSize waehlen. Siehe Fehlerbildkatalog
-    /// (Stuck-Chunk-on-Timeout) -- ein Hard-Timeout laesst den Chunk in "Laeuft" haengen.
+    /// (jbe_worker_budget_seconds) und kleinere chunkSize wählen. Siehe Fehlerbildkatalog
+    /// (Stuck-Chunk-on-Timeout) -- ein Hard-Timeout lässt den Chunk in "Läuft" hängen.
     /// </summary>
     public const int DefaultBudgetSeconds = 60;
 
     /// <summary>
-    /// Default-Schwelle in Sekunden, ab der ein in "Laeuft" eingefrorener Chunk als stale gilt
-    /// (FB-46/OE-12). Muss sicher ueber dem 120-s-Sandbox-Limit liegen: ein lebender Worker haelt
-    /// "Laeuft" hoechstens 120 s (dann flippt er auf Verarbeitet/Fortsetzen), also ist ein Chunk,
-    /// der laenger als 180 s in "Laeuft" steht, provabel tot. 60 s Headroom gegen Clock-Skew +
+    /// Default-Schwelle in Sekunden, ab der ein in "Läuft" eingefrorener Chunk als stale gilt
+    /// (FB-46/OE-12). Muss sicher über dem 120-s-Sandbox-Limit liegen: ein lebender Worker hält
+    /// "Läuft" höchstens 120 s (dann flippt er auf Verarbeitet/Fortsetzen), also ist ein Chunk,
+    /// der länger als 180 s in "Läuft" steht, provabel tot. 60 s Headroom gegen Clock-Skew +
     /// Sweep-Latenz. Per EnvVar (jbe_stale_chunk_seconds) anpassbar.
     /// </summary>
     public const int DefaultStaleChunkSeconds = 180;
 
     /// <summary>
-    /// Default-Obergrenze fuer Recoveries eines Chunks OHNE Fortschritt (Loop-Breaker, OE-12). Der
-    /// Worker setzt jbe_recoverycount bei jeder Fortschritts-Welle auf 0; die Recovery erhoeht ihn.
-    /// Uebersteigt er diesen Wert, wird der Chunk auf Fehler gesetzt statt erneut fortgesetzt --
+    /// Default-Obergrenze für Recoveries eines Chunks OHNE Fortschritt (Loop-Breaker, OE-12). Der
+    /// Worker setzt jbe_recoverycount bei jeder Fortschritts-Welle auf 0; die Recovery erhöht ihn.
+    /// Übersteigt er diesen Wert, wird der Chunk auf Fehler gesetzt statt erneut fortgesetzt --
     /// verhindert den Livelock beim irreduziblen Rest (ein Einzeltest > Wellen-Budget, ADR
     /// Entscheidung 7 vertagt). Per EnvVar (jbe_max_recoveries) anpassbar.
     /// </summary>

@@ -20,7 +20,7 @@ public sealed class PlaceholderEngine
     private static readonly Regex AliasFieldPattern = new(@"\{(\w+)\.fields\.(\w+)\}", RegexOptions.Compiled);
     private static readonly Regex RowPattern = new(@"\{ROW:(\w+)\}", RegexOptions.Compiled);
     // A4: ExecuteRequest-Output via outputAlias. Mit optionalem [type=...]-Filter
-    // fuer EntityReferenceCollection.
+    // für EntityReferenceCollection.
     private static readonly Regex OutputAliasPattern = new(
         @"\{(\w+)\.outputs\.(\w+)(?:\[type=(\w+)\])?\}", RegexOptions.Compiled);
 
@@ -56,7 +56,7 @@ public sealed class PlaceholderEngine
             .Replace("{NOW_UTC}", now.ToString("O"))
             .Replace("{NOW_MINUS_1H}", now.AddHours(-1).ToString("O"));
 
-        // Legacy-Aliase {CONTACT_ID} und {ACCOUNT_ID} für JS-Engine-Kompatibilitaet:
+        // Legacy-Aliase {CONTACT_ID} und {ACCOUNT_ID} für JS-Engine-Kompatibilität:
         // Erster registrierter Record vom entsprechenden Typ wird genutzt.
         // Neue Testfälle sollten {alias.id} verwenden.
         if (result.Contains("{CONTACT_ID}"))
@@ -92,7 +92,7 @@ public sealed class PlaceholderEngine
         });
 
         // {alias.outputs.fieldname} -> ExecuteRequest-Output (A4). Optional [type=X]-Filter
-        // fuer EntityReferenceCollection. VOR den anderen alias-Pattern weil sonst
+        // für EntityReferenceCollection. VOR den anderen alias-Pattern weil sonst
         // {alias.fields.X} oder {alias.id} potentiell den Output-Token vorzeitig fressen
         // (matched aber wegen .outputs nicht — trotzdem Reihenfolge stabil halten).
         result = OutputAliasPattern.Replace(result, m =>
@@ -101,7 +101,7 @@ public sealed class PlaceholderEngine
             var key = m.Groups[2].Value;
             var typeFilter = m.Groups[3].Success ? m.Groups[3].Value : null;
             if (!ctx.OutputAliases.TryGetValue(alias, out var outputs))
-                return m.Value; // Alias unbekannt: unveraendert lassen
+                return m.Value; // Alias unbekannt: unverändert lassen
             if (!outputs.TryGetValue(key, out var raw))
                 throw new InvalidOperationException(
                     $"Platzhalter '{m.Value}': Output-Key '{key}' nicht im outputAlias '{alias}'. " +
@@ -121,8 +121,8 @@ public sealed class PlaceholderEngine
                     return match.Id.ToString();
                 }
                 throw new InvalidOperationException(
-                    $"Platzhalter '{m.Value}': type-Filter nur bei EntityReferenceCollection unterstuetzt. " +
-                    $"Tatsaechlicher Typ: {raw?.GetType().Name ?? "null"}");
+                    $"Platzhalter '{m.Value}': type-Filter nur bei EntityReferenceCollection unterstützt. " +
+                    $"Tatsächlicher Typ: {raw?.GetType().Name ?? "null"}");
             }
 
             return FormatValueForPlaceholder(raw);

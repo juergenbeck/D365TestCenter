@@ -30,7 +30,7 @@ public sealed class EntityMetadataCache
     /// Test-Helper: erzeugt einen Cache mit vorgegebenen Attribute-Typen, ohne
     /// echte Metadata-Abfrage. Damit lassen sich type-aware-Pfade unit-testen
     /// ohne FakeOrgService mit RetrieveEntityRequest-Implementierung.
-    /// Nicht fuer Produktiv-Code gedacht — Naming-Suffix "ForTesting" macht das
+    /// Nicht für Produktiv-Code gedacht — Naming-Suffix "ForTesting" macht das
     /// explizit.
     /// </summary>
     public static EntityMetadataCache CreateForTesting(
@@ -89,7 +89,7 @@ public sealed class EntityMetadataCache
             var request = new RetrieveEntityRequest
             {
                 LogicalName = entityLogicalName,
-                // OE-10: Entity-Level-Metadaten (PrimaryNameAttribute) zusaetzlich zu den
+                // OE-10: Entity-Level-Metadaten (PrimaryNameAttribute) zusätzlich zu den
                 // Attribut-Metadaten laden; beides kommt in einem RetrieveEntity-Roundtrip.
                 EntityFilters = EntityFilters.Entity | EntityFilters.Attributes
             };
@@ -211,7 +211,7 @@ public sealed class EntityMetadataInfo
         = new Dictionary<string, AttributeTypeCode>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Logischer Name des Primary-Name-Attributs (z.B. "name", "fullname",
-    /// "subject"). Vom CLI-run-Pfad genutzt, um Record-Namen fuer den
+    /// "subject"). Vom CLI-run-Pfad genutzt, um Record-Namen für den
     /// TrackedRecords-Audit zu erfassen (OE-10). Null, wenn nicht ladbar.</summary>
     public string? PrimaryNameAttribute { get; set; }
 

@@ -9,15 +9,15 @@ using Newtonsoft.Json;
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Idempotente Schreibstelle fuer ein <see cref="TestCaseResult"/> (ADR-0009 H1/H3).
+/// Idempotente Schreibstelle für ein <see cref="TestCaseResult"/> (ADR-0009 H1/H3).
 ///
-/// Der Worker ist nicht idempotent in der Test-AUSFUEHRUNG (eine atomar neu gestartete Gruppe
-/// re-laeuft ihre Tests, ein Doppel-Fire kann denselben Chunk zweimal anstossen). Korrektheit
-/// traegt darum die idempotente RESULT-Schreibung: pro <c>(jbe_testrunid, jbe_testid)</c> wird die
-/// <c>jbe_testrunresult</c>-Zeile per <see cref="UpsertRequest"/> ueber den Alternate Key
+/// Der Worker ist nicht idempotent in der Test-AUSFÜHRUNG (eine atomar neu gestartete Gruppe
+/// re-läuft ihre Tests, ein Doppel-Fire kann denselben Chunk zweimal anstoßen). Korrektheit
+/// trägt darum die idempotente RESULT-Schreibung: pro <c>(jbe_testrunid, jbe_testid)</c> wird die
+/// <c>jbe_testrunresult</c>-Zeile per <see cref="UpsertRequest"/> über den Alternate Key
 /// <see cref="WorkerSchema.ResultAlternateKey"/> ge-upsertet (vorhandene Zeile ersetzt statt
-/// dupliziert) und die zugehoerigen <c>jbe_teststep</c>-Records werden vor dem Neuschreiben
-/// geloescht. So erzeugt ein Resume/Doppel-Fire weder Doppelzeilen noch Doppelschritte.
+/// dupliziert) und die zugehörigen <c>jbe_teststep</c>-Records werden vor dem Neuschreiben
+/// gelöscht. So erzeugt ein Resume/Doppel-Fire weder Doppelzeilen noch Doppelschritte.
 ///
 /// H3-Konsolidierung: EINE idempotente Schreibstelle (statt der dritten Variante neben
 /// <c>RunTestsOnStatusChange.WriteResultRecords</c> und
@@ -42,16 +42,16 @@ public sealed class ChunkResultWriter
     }
 
     /// <summary>
-    /// Upsertet die Result-Zeile fuer <paramref name="tcResult"/> unter dem Lauf
+    /// Upsertet die Result-Zeile für <paramref name="tcResult"/> unter dem Lauf
     /// <paramref name="testRunId"/> und schreibt ihre Steps idempotent neu. Gibt die Id der
-    /// (neu angelegten oder ersetzten) Result-Zeile zurueck.
+    /// (neu angelegten oder ersetzten) Result-Zeile zurück.
     /// </summary>
     public Guid UpsertResult(Guid testRunId, TestCaseResult tcResult)
     {
         var testRunRef = new EntityReference(WorkerSchema.TestRunEntity, testRunId);
 
         var result = new Entity(WorkerSchema.TestRunResultEntity);
-        // Alternate Key (jbe_testrunid, jbe_testid) identifiziert die Zeile fuer den Upsert.
+        // Alternate Key (jbe_testrunid, jbe_testid) identifiziert die Zeile für den Upsert.
         result.KeyAttributes[WorkerSchema.ResultTestRun] = testRunRef;
         result.KeyAttributes[WorkerSchema.ResultTestId] = tcResult.TestId;
 
@@ -69,7 +69,7 @@ public sealed class ChunkResultWriter
         var resp = (UpsertResponse)_service.Execute(new UpsertRequest { Target = result });
         var resultId = resp.Target.Id;
 
-        // Steps idempotent: bestehende dieser Result-Zeile loeschen, dann frisch schreiben.
+        // Steps idempotent: bestehende dieser Result-Zeile löschen, dann frisch schreiben.
         // Bei einer neu angelegten Zeile (RecordCreated) gibt es keine -> Query liefert leer.
         if (!resp.RecordCreated)
             DeleteStepsOf(resultId);

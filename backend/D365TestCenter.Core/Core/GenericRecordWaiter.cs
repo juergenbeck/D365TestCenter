@@ -194,12 +194,12 @@ public sealed class GenericRecordWaiter
                 if (string.IsNullOrEmpty(token)) continue;
                 var parts = token.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
-                    throw new InvalidOperationException($"Ungueltiger orderBy-Token: '{token}'");
+                    throw new InvalidOperationException($"Ungültiger orderBy-Token: '{token}'");
                 var field = parts[0];
                 var desc = parts.Length > 1 && parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
                 if (parts.Length > 1 && !desc && !parts[1].Equals("asc", StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException(
-                        $"Ungueltige Sortierrichtung '{parts[1]}' in orderBy-Token '{token}'. Erlaubt: asc, desc.");
+                        $"Ungültige Sortierrichtung '{parts[1]}' in orderBy-Token '{token}'. Erlaubt: asc, desc.");
                 query.AddOrder(field, desc ? OrderType.Descending : OrderType.Ascending);
             }
         }

@@ -9,35 +9,35 @@ using Newtonsoft.Json;
 
 namespace D365TestCenter.Core;
 
-/// <summary>Ergebnis eines Koordinator-Laufs (fuer Tests + Trace).</summary>
+/// <summary>Ergebnis eines Koordinator-Laufs (für Tests + Trace).</summary>
 public enum CoordinatorOutcome
 {
     /// <summary>Nicht der Trigger-Status (Busy/Running/Completed-Fire) oder OC-Claim verloren.</summary>
     Skipped,
-    /// <summary>Keine Testfaelle -> Lauf direkt auf Completed.</summary>
+    /// <summary>Keine Testfälle -> Lauf direkt auf Completed.</summary>
     NoTests,
-    /// <summary>Watchdog gerissen: Cursor persistiert, Status zurueck auf Geplant (Self-Trigger).</summary>
+    /// <summary>Watchdog gerissen: Cursor persistiert, Status zurück auf Geplant (Self-Trigger).</summary>
     Continued,
-    /// <summary>Alle Chunks angelegt, Lauf auf Running (Worker uebernehmen).</summary>
+    /// <summary>Alle Chunks angelegt, Lauf auf Running (Worker übernehmen).</summary>
     ChunksCreated
 }
 
 /// <summary>
 /// Testbarer Kern des RunCoordinator-Plugins (ADR-0009 Phase 2, async auf <c>jbe_testrun</c>).
-/// Ersetzt die depth-begrenzte Batch-Cascade durch Fan-Out: laedt die aktiven Testfaelle, bildet
-/// Abhaengigkeits-Gruppen, packt sie in Chunks und legt je Chunk einen <c>jbe_testchunk</c> (Neu) an;
-/// die Worker uebernehmen die Ausfuehrung. Minimal-Regel: KEINE Test-Ausfuehrung im Koordinator.
+/// Ersetzt die depth-begrenzte Batch-Cascade durch Fan-Out: lädt die aktiven Testfälle, bildet
+/// Abhängigkeits-Gruppen, packt sie in Chunks und legt je Chunk einen <c>jbe_testchunk</c> (Neu) an;
+/// die Worker übernehmen die Ausführung. Minimal-Regel: KEINE Test-Ausführung im Koordinator.
 ///
 /// Eigenschaften:
 ///   - <b>OC-Claim</b> Planned -> Splitting (IfRowVersionMatches): ein Doppel-Fire-Verlierer skippt.
 ///   - <b>H2 (DeleteOldResults genau einmal):</b> alte Results UND alte Chunks werden nur auf der
-///     ersten Welle (coordinator_cursor == 0) geloescht, nie auf einer Continuation.
+///     ersten Welle (coordinator_cursor == 0) gelöscht, nie auf einer Continuation.
 ///   - <b>Eingefrorener Snapshot (C-10):</b> die (rohen) Test-IDs werden in die Chunk-Records
 ///     geschrieben; eine Continuation re-deriviert dieselbe Chunk-Aufteilung deterministisch.
-///   - <b>chunks_total frueh</b> (vor den Chunk-Creates) gesetzt: ein fruehzeitig fertiger Worker
+///   - <b>chunks_total früh</b> (vor den Chunk-Creates) gesetzt: ein frühzeitig fertiger Worker
 ///     erkennt das Plateau korrekt (kein Race/Deadlock).
-///   - <b>Watchdog:</b> reisst das Zeitbudget waehrend der Chunk-Creates, wird der Cursor
-///     persistiert und der Status auf Geplant zurueckgesetzt (Self-Trigger), mindestens ein Create
+///   - <b>Watchdog:</b> reißt das Zeitbudget während der Chunk-Creates, wird der Cursor
+///     persistiert und der Status auf Geplant zurückgesetzt (Self-Trigger), mindestens ein Create
 ///     pro Welle (Terminierung gesichert).
 /// </summary>
 public sealed class CoordinatorOrchestrator
@@ -110,7 +110,7 @@ public sealed class CoordinatorOrchestrator
             return CoordinatorOutcome.Skipped;
         }
 
-        // ── H2: alte Results + Chunks NUR auf der ersten Welle loeschen ──
+        // ── H2: alte Results + Chunks NUR auf der ersten Welle löschen ──
         if (isFirstFire)
         {
             DeleteOldResults(testRunId);
@@ -122,7 +122,7 @@ public sealed class CoordinatorOrchestrator
         var tests = TestCaseLoader.LoadEnabled(_service, filter, _log);
         if (tests.Count == 0)
         {
-            var msg = $"Keine Testfaelle gefunden (Filter: {filter ?? "*"})";
+            var msg = $"Keine Testfälle gefunden (Filter: {filter ?? "*"})";
             _service.Update(new Entity(WorkerSchema.TestRunEntity, testRunId)
             {
                 [WorkerSchema.RunStatus] = new OptionSetValue(WorkerSchema.StatusCompleted),
@@ -142,7 +142,7 @@ public sealed class CoordinatorOrchestrator
         _log?.Invoke($"Koordinator: {tests.Count} Test(s) -> {groups.Count} Gruppe(n) -> " +
                      $"{chunks.Count} Chunk(s) (chunkSize {effectiveChunkSize}), ab Cursor {cursor}.");
 
-        // chunks_total FRUEH setzen (vor den Creates), damit ein schnell fertiger Worker das
+        // chunks_total FRÜH setzen (vor den Creates), damit ein schnell fertiger Worker das
         // Plateau korrekt erkennt. Deterministisch gleich auf jeder Welle.
         _service.Update(new Entity(WorkerSchema.TestRunEntity, testRunId)
         {
@@ -177,7 +177,7 @@ public sealed class CoordinatorOrchestrator
         });
         _log?.Invoke($"Koordinator: alle {chunks.Count} Chunk(s) angelegt, Lauf auf Running.");
 
-        // Safety-Net: falls alle Chunks bereits fertig sind (sehr schnelle Worker), Plateau pruefen.
+        // Safety-Net: falls alle Chunks bereits fertig sind (sehr schnelle Worker), Plateau prüfen.
         new RunCompletionService(_service, _log).TryComplete(testRunId, now);
 
         return CoordinatorOutcome.ChunksCreated;
@@ -225,7 +225,7 @@ public sealed class CoordinatorOrchestrator
         }
 
         if (results.Count > 0)
-            _log?.Invoke($"Koordinator: {results.Count} alte Result(s) geloescht (H2, erste Welle).");
+            _log?.Invoke($"Koordinator: {results.Count} alte Result(s) gelöscht (H2, erste Welle).");
     }
 
     private void DeleteOldChunks(Guid testRunId)
@@ -242,6 +242,6 @@ public sealed class CoordinatorOrchestrator
             _service.Delete(WorkerSchema.TestChunkEntity, chunk.Id);
 
         if (chunks.Count > 0)
-            _log?.Invoke($"Koordinator: {chunks.Count} alte Chunk(s) geloescht (Re-Run, erste Welle).");
+            _log?.Invoke($"Koordinator: {chunks.Count} alte Chunk(s) gelöscht (Re-Run, erste Welle).");
     }
 }

@@ -6,9 +6,9 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer TestRunner.BuildChunks (ADR-0009 Phase 2, Koordinator-Chunking).
-/// Packt Abhaengigkeits-Gruppen in Chunks der Zielgroesse, ohne je eine Gruppe zu
-/// trennen (dependsOn-Affinitaet). Greedy in Reihenfolge, deterministisch.
+/// Tests für TestRunner.BuildChunks (ADR-0009 Phase 2, Koordinator-Chunking).
+/// Packt Abhängigkeits-Gruppen in Chunks der Zielgröße, ohne je eine Gruppe zu
+/// trennen (dependsOn-Affinität). Greedy in Reihenfolge, deterministisch.
 /// </summary>
 public class ChunkPlanningTests
 {
@@ -48,7 +48,7 @@ public class ChunkPlanningTests
     [Fact]
     public void OversizedSingleGroup_FormsOwnChunk()
     {
-        // Eine Gruppe groesser als chunkSize kann nicht geteilt werden -> eigener Chunk.
+        // Eine Gruppe größer als chunkSize kann nicht geteilt werden -> eigener Chunk.
         var groups = new List<List<TestCase>> { Group(0, 8) };
 
         var chunks = TestRunner.BuildChunks(groups, 5);
@@ -60,7 +60,7 @@ public class ChunkPlanningTests
     [Fact]
     public void GroupsNeverSplit_AcrossChunks()
     {
-        // [2,2,2], chunkSize 3: jede weitere Gruppe wuerde 4 > 3 ergeben -> 3 Chunks von 2.
+        // [2,2,2], chunkSize 3: jede weitere Gruppe würde 4 > 3 ergeben -> 3 Chunks von 2.
         var groups = new List<List<TestCase>> { Group(0, 2), Group(1, 2), Group(2, 2) };
 
         var chunks = TestRunner.BuildChunks(groups, 3);

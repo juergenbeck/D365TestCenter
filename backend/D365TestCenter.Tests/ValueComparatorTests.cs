@@ -6,11 +6,11 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer den geteilten <see cref="ValueComparator"/> (ADR-0011). Pinnt die
+/// Tests für den geteilten <see cref="ValueComparator"/> (ADR-0011). Pinnt die
 /// Operator-Semantik, die Assert UND Step-Condition teilen: jeder feldbasierte
-/// Operator gegen native Dataverse-Werte UND gegen bereits aufgeloeste Strings
+/// Operator gegen native Dataverse-Werte UND gegen bereits aufgelöste Strings
 /// (der Condition-Pfad liefert Strings aus der PlaceholderEngine). Insbesondere
-/// der ADR-0011-Korrektur-2-Fall: ein Boolean wird als "True"/"False" (gross)
+/// der ADR-0011-Korrektur-2-Fall: ein Boolean wird als "True"/"False" (groß)
 /// formatiert und muss case-insensitiv gegen "true"/"false" matchen.
 /// </summary>
 public class ValueComparatorTests
@@ -46,11 +46,11 @@ public class ValueComparatorTests
     [Fact]
     public void Equals_BooleanFormat_IsCaseInsensitive_AdrKorrektur2()
     {
-        // {alias.fields.x} liefert "True"/"False" (gross); der Vergleich gegen
+        // {alias.fields.x} liefert "True"/"False" (groß); der Vergleich gegen
         // "true"/"false" MUSS case-insensitiv matchen (ADR-0011 Korrektur 2).
         Assert.True(Eval("Equals", true, "true"));     // nativer bool -> "True"
         Assert.True(Eval("Equals", false, "false"));
-        Assert.True(Eval("Equals", "True", "true"));   // bereits aufgeloester String (Condition-Pfad)
+        Assert.True(Eval("Equals", "True", "true"));   // bereits aufgelöster String (Condition-Pfad)
         Assert.True(Eval("Equals", "False", "false"));
         Assert.False(Eval("Equals", true, "false"));
     }
@@ -133,7 +133,7 @@ public class ValueComparatorTests
     [Fact]
     public void UnknownOrAssertOnlyOperators_NotHandled()
     {
-        // DateSetRecently/Exists/RecordCount + unbekannte Operatoren gehoeren NICHT
+        // DateSetRecently/Exists/RecordCount + unbekannte Operatoren gehören NICHT
         // in den geteilten Comparator: TryEvaluate liefert false (Aufrufer entscheidet).
         Assert.False(ValueComparator.TryEvaluate("DateSetRecently", DateTime.UtcNow, "120", out _));
         Assert.False(ValueComparator.TryEvaluate("Exists", null, null, out _));

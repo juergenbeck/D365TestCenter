@@ -101,7 +101,7 @@ public sealed class SandboxSafeOrganizationService : IOrganizationService
         if (emResp.Responses == null || emResp.Responses.Count == 0)
         {
             throw new InvalidPluginExecutionException(
-                $"SandboxSafe: ExecuteMultipleResponse hatte keine Responses fuer Request '{request.RequestName}'.");
+                $"SandboxSafe: ExecuteMultipleResponse hatte keine Responses für Request '{request.RequestName}'.");
         }
 
         var first = emResp.Responses[0];
@@ -112,7 +112,7 @@ public sealed class SandboxSafeOrganizationService : IOrganizationService
 
         return first.Response
             ?? throw new InvalidPluginExecutionException(
-                $"SandboxSafe: ExecuteMultipleResponse hatte weder Response noch Fault fuer Request '{request.RequestName}'.");
+                $"SandboxSafe: ExecuteMultipleResponse hatte weder Response noch Fault für Request '{request.RequestName}'.");
     }
 
     public void Associate(string entityName, Guid entityId, Relationship relationship,

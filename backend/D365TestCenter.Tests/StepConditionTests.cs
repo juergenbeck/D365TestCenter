@@ -9,17 +9,17 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer die Step-Condition (ADR-0011, konditionale Step-Ausfuehrung). Pinnt
-/// das Verhalten durch die ECHTE Wirkung (Regel 11 / Test prueft echte Aenderung):
+/// Tests für die Step-Condition (ADR-0011, konditionale Step-Ausführung). Pinnt
+/// das Verhalten durch die ECHTE Wirkung (Regel 11 / Test prüft echte Änderung):
 /// ein geskippter CreateRecord-Step fasst den Service NICHT an (CreateCount bleibt 0),
-/// ein ausgefuehrter Step legt an (CreateCount steigt). Deckt: Skip-bei-false,
-/// Run-bei-true, unaufgeloester Platzhalter -> Error, all/any, all-Asserts-skipped
+/// ein ausgeführter Step legt an (CreateCount steigt). Deckt: Skip-bei-false,
+/// Run-bei-true, unaufgelöster Platzhalter -> Error, all/any, all-Asserts-skipped
 /// -> Outcome=Skipped, Skipped-Flag/SkipReason.
 /// </summary>
 public class StepConditionTests
 {
     // CreateRecord mit leeren fields umgeht den Metadata-Pfad; entity "accounts"
-    // mappt ueber KnownEntitySetNames ohne Service-Call zu "account".
+    // mappt über KnownEntitySetNames ohne Service-Call zu "account".
     private static TestCase CreateRecordWith(StepCondition? condition) => new()
     {
         Id = "COND-CREATE",
@@ -34,7 +34,7 @@ public class StepConditionTests
     private static StepConditionClause Clause(string? left, string op, string? right)
         => new() { Left = left, Operator = op, Right = right };
 
-    // ── Einfachklausel: Skip vs. Run (Wirkungsnachweis ueber CreateCount) ──
+    // ── Einfachklausel: Skip vs. Run (Wirkungsnachweis über CreateCount) ──
 
     [Fact]
     public void Condition_False_SkipsStep_ServiceUntouched()
@@ -81,7 +81,7 @@ public class StepConditionTests
         Assert.False(result.Results[0].StepResults[0].Skipped);
     }
 
-    // ── Festlegung 3: unaufgeloester Platzhalter -> harter Fehler (kein stiller Skip) ──
+    // ── Festlegung 3: unaufgelöster Platzhalter -> harter Fehler (kein stiller Skip) ──
 
     [Fact]
     public void Condition_UnresolvedPlaceholder_IsError_NotSilentSkip()
@@ -89,7 +89,7 @@ public class StepConditionTests
         var svc = new StubOrgService();
         var runner = new TestRunner(svc);
 
-        // Unbekannter Alias bleibt woertlich stehen (PlaceholderEngine wirft dort nicht).
+        // Unbekannter Alias bleibt wörtlich stehen (PlaceholderEngine wirft dort nicht).
         var result = runner.RunAll(new List<TestCase>
         {
             CreateRecordWith(new StepCondition
@@ -100,7 +100,7 @@ public class StepConditionTests
 
         Assert.Equal(1, result.ErrorCount);
         Assert.Equal(TestOutcome.Error, result.Results[0].Outcome);
-        Assert.Equal(0, svc.CreateCount); // weder ausgefuehrt noch still uebersprungen
+        Assert.Equal(0, svc.CreateCount); // weder ausgeführt noch still übersprungen
         Assert.False(result.Results[0].StepResults[0].Skipped);
     }
 
@@ -161,7 +161,7 @@ public class StepConditionTests
         Assert.Equal(0, svcSkip.CreateCount);
     }
 
-    // ── Test-Outcome: alle Asserts condition-geskippt -> Skipped (nicht falsch-gruen) ──
+    // ── Test-Outcome: alle Asserts condition-geskippt -> Skipped (nicht falsch-grün) ──
 
     [Fact]
     public void Outcome_AllAssertsSkipped_IsSkipped_NotPassed()
@@ -197,15 +197,15 @@ public class StepConditionTests
     [Fact]
     public void Outcome_OneAssertRuns_OneSkipped_IsPassed_PartialCoverage()
     {
-        // Ein Assert laeuft (condition true, Query trifft), einer ist geskippt.
-        // Mind. ein Assert ausgefuehrt -> Passed (bewusste Teilabdeckung), NICHT Skipped.
+        // Ein Assert läuft (condition true, Query trifft), einer ist geskippt.
+        // Mind. ein Assert ausgeführt -> Passed (bewusste Teilabdeckung), NICHT Skipped.
         var svc = new StubOrgService { QueryResult = MakeAccount("Hit") };
         var runner = new TestRunner(svc);
 
         var test = new TestCase
         {
             Id = "COND-PARTIAL",
-            Title = "Ein Assert laeuft, einer geskippt",
+            Title = "Ein Assert läuft, einer geskippt",
             Enabled = true,
             Steps = new List<TestStep>
             {
@@ -255,8 +255,8 @@ public class StepConditionTests
         public EntityCollection RetrieveMultiple(QueryBase query)
         {
             var ec = new EntityCollection();
-            // Nur fuer Assert-Query-Tests: plugintracelog-Queries (Cleanup-Diagnostik)
-            // bleiben leer, damit sie das Ergebnis nicht stoeren.
+            // Nur für Assert-Query-Tests: plugintracelog-Queries (Cleanup-Diagnostik)
+            // bleiben leer, damit sie das Ergebnis nicht stören.
             var entityName = (query as QueryExpression)?.EntityName;
             if (QueryResult != null && entityName != "plugintracelog")
                 ec.Entities.Add(QueryResult);

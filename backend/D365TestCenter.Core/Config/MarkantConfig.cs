@@ -21,8 +21,8 @@ namespace D365TestCenter.Core.Config
         public string? GovernanceLoggingEntity => "markant_fg_loggings";
         public string? GovernanceContactLookup => "markant_contactid";
         public string? GovernanceSourceSystemField => "markant_fg_sourcesystemcode";
-        // ACHTUNG: Custom API wurde am 2026-04-21 geloescht. Neu-Deployment offen
-        // (CDH-20260421-001). Solange die API fehlt, schlaegt GovernanceApi-
+        // ACHTUNG: Custom API wurde am 2026-04-21 gelöscht. Neu-Deployment offen
+        // (CDH-20260421-001). Solange die API fehlt, schlägt GovernanceApi-
         // basierter Code fehl. Workaround: markant_fg_requestcode auf contact setzen.
         public string? GovernanceApiName => "markant_RunFieldGovernanceForContact";
 

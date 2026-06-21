@@ -9,9 +9,9 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer <see cref="ChunkWorkerOrchestrator"/> (ADR-0009 Phase 3). Pinnt: Trigger-Gate,
+/// Tests für <see cref="ChunkWorkerOrchestrator"/> (ADR-0009 Phase 3). Pinnt: Trigger-Gate,
 /// OC-Claim (Doppel-Fire-Verlierer skippt), Poison-Chunk (Status Fehler, kein Re-Trigger),
-/// Ausfuehrung + idempotente Result-Schreibung, Chunk-Zaehler, Budget-Continuation (Self-Trigger,
+/// Ausführung + idempotente Result-Schreibung, Chunk-Zähler, Budget-Continuation (Self-Trigger,
 /// H1: Results VOR Cursor), Resume ab Gruppen-Cursor, Plateau-Abschluss genau am letzten Chunk.
 /// </summary>
 public class ChunkWorkerOrchestratorTests
@@ -163,7 +163,7 @@ public class ChunkWorkerOrchestratorTests
         Assert.Equal(ChunkWorkerOutcome.Poison, outcome);
         Assert.Equal(WorkerSchema.ChunkError, ChunkStatusOf(fake, chunk.Id));
         Assert.Equal(0, ResultCount(fake));
-        // Ein Fehler-Chunk zaehlt zum Plateau -> Lauf wird (mit 0 Tests) abgeschlossen.
+        // Ein Fehler-Chunk zählt zum Plateau -> Lauf wird (mit 0 Tests) abgeschlossen.
         var run = fake.Get(WorkerSchema.TestRunEntity, runId);
         Assert.Equal(WorkerSchema.StatusCompleted,
             run.GetAttributeValue<OptionSetValue>(WorkerSchema.RunStatus).Value);
@@ -176,7 +176,7 @@ public class ChunkWorkerOrchestratorTests
         var fake = new FakeDataverse();
         var runId = SeedRun(fake, 1);
         SeedTestCase(fake, "TC1");
-        SeedTestCase(fake, "TC2"); // unabhaengig -> 2 Gruppen
+        SeedTestCase(fake, "TC2"); // unabhängig -> 2 Gruppen
         var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1", "TC2" });
 
         // Worker-startTime=T0; RunGroupsBudgeted-startTime=T0; Check vor Gruppe 2 -> T0+100 (>=80) -> stop.
@@ -187,7 +187,7 @@ public class ChunkWorkerOrchestratorTests
         Assert.Equal(WorkerSchema.ChunkResume, ChunkStatusOf(fake, chunkId));
 
         var chunk = fake.Get(WorkerSchema.TestChunkEntity, chunkId);
-        Assert.Equal(1, chunk.GetAttributeValue<int>(WorkerSchema.ChunkGroupCursor)); // naechste Gruppe
+        Assert.Equal(1, chunk.GetAttributeValue<int>(WorkerSchema.ChunkGroupCursor)); // nächste Gruppe
         Assert.Equal(1, chunk.GetAttributeValue<int>(WorkerSchema.ChunkProcessedCount));
         Assert.Equal(1, chunk.GetAttributeValue<int>(WorkerSchema.ChunkContinuations));
         // H1: das Result der gelaufenen Gruppe ist VOR dem Cursor-Flip committet (genau 1 da).
@@ -220,7 +220,7 @@ public class ChunkWorkerOrchestratorTests
         Assert.Equal(ChunkWorkerOutcome.Processed, outcome);
         var chunk = fake.Get(WorkerSchema.TestChunkEntity, chunkId);
         Assert.Equal(2, chunk.GetAttributeValue<int>(WorkerSchema.ChunkProcessedCount)); // 1 + 1
-        // TC2 jetzt zusaetzlich -> 2 Result-Zeilen insgesamt.
+        // TC2 jetzt zusätzlich -> 2 Result-Zeilen insgesamt.
         Assert.Equal(2, ResultCount(fake));
     }
 
@@ -246,7 +246,7 @@ public class ChunkWorkerOrchestratorTests
         var runId = SeedRun(fake, 1);
         SeedTestCase(fake, "TC1");
         var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1" });
-        // Eine vorangegangene Recovery hatte den Zaehler erhoeht.
+        // Eine vorangegangene Recovery hatte den Zähler erhöht.
         fake.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
             [WorkerSchema.ChunkRecoveryCount] = 2
@@ -254,7 +254,7 @@ public class ChunkWorkerOrchestratorTests
 
         new ChunkWorkerOrchestrator(fake).Run(chunkId, 80, SeqClock(T0));
 
-        // Fortschritt -> Loop-Breaker-Zaehler zurueckgesetzt.
+        // Fortschritt -> Loop-Breaker-Zähler zurückgesetzt.
         Assert.Equal(0, fake.Get(WorkerSchema.TestChunkEntity, chunkId)
             .GetAttributeValue<int>(WorkerSchema.ChunkRecoveryCount));
     }
@@ -276,7 +276,7 @@ public class ChunkWorkerOrchestratorTests
             .Run(chunkId, 80, SeqClock(T0, T0, T0.AddSeconds(100)));
 
         Assert.Equal(ChunkWorkerOutcome.Continued, outcome);
-        // Auch eine graceful Continuation ist Fortschritt -> Zaehler zurueckgesetzt.
+        // Auch eine graceful Continuation ist Fortschritt -> Zähler zurückgesetzt.
         Assert.Equal(0, fake.Get(WorkerSchema.TestChunkEntity, chunkId)
             .GetAttributeValue<int>(WorkerSchema.ChunkRecoveryCount));
     }
@@ -289,7 +289,7 @@ public class ChunkWorkerOrchestratorTests
         SeedTestCase(fake, "TC1");
         var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1" });
 
-        // Simuliere einen konkurrierenden Gewinner: direkt nach dem Retrieve des Chunks uebernimmt
+        // Simuliere einen konkurrierenden Gewinner: direkt nach dem Retrieve des Chunks übernimmt
         // ein anderer Fire den Chunk (RowVersion steigt) -> dieser Claim mit veralteter RowVersion scheitert.
         bool bumped = false;
         fake.OnRetrieve = (logical, id) =>

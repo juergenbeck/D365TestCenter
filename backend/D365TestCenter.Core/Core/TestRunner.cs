@@ -41,10 +41,10 @@ public sealed class TestRunner
 
     /// <summary>
     /// OE-10: Wenn true, wird nach jedem Testfall der Primary-Name jedes angelegten
-    /// Records per Retrieve erfasst und in TrackedRecord.Name abgelegt (fuer den
+    /// Records per Retrieve erfasst und in TrackedRecord.Name abgelegt (für den
     /// sync-zephyr-Audit-Kommentar). NUR vom CLI-run-Pfad gesetzt — die
-    /// Plugin-Sandbox-Pfade lassen es false, weil ein zusaetzlicher Service-Call mit
-    /// try/catch dort die Sandbox-Waechter-Regel verletzen wuerde. Default false.
+    /// Plugin-Sandbox-Pfade lassen es false, weil ein zusätzlicher Service-Call mit
+    /// try/catch dort die Sandbox-Wächter-Regel verletzen würde. Default false.
     /// </summary>
     public bool CaptureRecordNames { get; set; }
 
@@ -115,14 +115,14 @@ public sealed class TestRunner
 
     /// <summary>
     /// Zeitbudgetierte Gruppen-Schleife (ADR-0009 Phase 1, Befund 3). Verarbeitet die
-    /// Abhaengigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) ab
-    /// <paramref name="startGroupIndex"/>, prueft das Zeitbudget VOR jeder Gruppe und
-    /// fuehrt mindestens eine Gruppe pro Aufruf aus (-> Cursor schreitet garantiert fort,
-    /// Terminierung gesichert). Eine Gruppe wird immer KOMPLETT ausgefuehrt (atomar) --
+    /// Abhängigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) ab
+    /// <paramref name="startGroupIndex"/>, prüft das Zeitbudget VOR jeder Gruppe und
+    /// führt mindestens eine Gruppe pro Aufruf aus (-> Cursor schreitet garantiert fort,
+    /// Terminierung gesichert). Eine Gruppe wird immer KOMPLETT ausgeführt (atomar) --
     /// so baut eine frische Worker-Instanz den dependsOn-Zustand (_passedTestIds)
     /// gruppenintern selbst auf, ohne Re-Seed (Gruppen-Grenzen-Continuation).
     /// Datengetriebene Tests werden pro Gruppe beim Lauf expandiert.
-    /// <paramref name="clock"/> ist injizierbar fuer deterministische Mock-Budget-Tests.
+    /// <paramref name="clock"/> ist injizierbar für deterministische Mock-Budget-Tests.
     /// </summary>
     public BudgetedRunResult RunGroupsBudgeted(
         List<List<TestCase>> groups, int startGroupIndex, int budgetSeconds,
@@ -148,7 +148,7 @@ public sealed class TestRunner
                 break;
             }
 
-            // Gruppe atomar: komplett ausfuehren. Datengetriebene Tests pro Gruppe
+            // Gruppe atomar: komplett ausführen. Datengetriebene Tests pro Gruppe
             // beim Lauf expandieren (deterministisch -> stabiler Gruppen-Cursor).
             var expanded = ExpandDataDrivenTests(groups[gi]);
             Log($"-- Gruppe {gi}: {expanded.Count} Test(s) --");
@@ -172,11 +172,11 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Fuehrt einen bereits expandierten Testfall aus: enabled-/dependsOn-Skip,
-    /// <see cref="ExecuteSingleTest"/>, Zaehler + <c>_passedTestIds</c> aktualisieren,
+    /// Führt einen bereits expandierten Testfall aus: enabled-/dependsOn-Skip,
+    /// <see cref="ExecuteSingleTest"/>, Zähler + <c>_passedTestIds</c> aktualisieren,
     /// <see cref="OnTestCompleted"/> feuern. Gemeinsamer Kern von <see cref="RunAll"/> und
     /// <see cref="RunGroupsBudgeted"/> -- so verhalten sich beide Pfade identisch
-    /// (dependsOn ueber <c>_passedTestIds</c>, gleiche Skip-Semantik).
+    /// (dependsOn über <c>_passedTestIds</c>, gleiche Skip-Semantik).
     /// </summary>
     private void RunExpandedTest(
         TestCase tc, Dictionary<string, object?>? dataRow,
@@ -276,23 +276,23 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Bildet Abhaengigkeits-Gruppen (Connected Components) ueber die Tests, damit der
+    /// Bildet Abhängigkeits-Gruppen (Connected Components) über die Tests, damit der
     /// Fan-Out-Koordinator jede Gruppe komplett in EINEN Chunk legt und der Worker den
     /// Continuation-Cursor auf Gruppen-Grenzen setzen kann (ADR-0009, Befund 3,
     /// Gruppen-Grenzen-Continuation). Eine frische Worker-Instanz, die an einer
     /// Gruppen-Grenze startet, baut den dependsOn-Zustand (_passedTestIds) gruppenintern
-    /// selbst auf -- kein Re-Seed noetig.
+    /// selbst auf -- kein Re-Seed nötig.
     ///
     /// Kanten: (1) jeder dependsOn-Verweis auf einen Test IM SET; (2) gemeinsamer,
-    /// nicht-leerer sharedContext (defensive Affinitaets-Kante -- heute kein
-    /// Laufzeit-Effekt, _sharedContexts ist totes Feld, aber vorausschauend gefuehrt).
+    /// nicht-leerer sharedContext (defensive Affinitäts-Kante -- heute kein
+    /// Laufzeit-Effekt, _sharedContexts ist totes Feld, aber vorausschauend geführt).
     /// Ein dependsOn auf einen Test AUSSERHALB des Sets erzeugt KEINE Kante (der Test
-    /// wird zur Laufzeit ohnehin uebersprungen, _passedTestIds enthaelt ihn nie).
+    /// wird zur Laufzeit ohnehin übersprungen, _passedTestIds enthält ihn nie).
     ///
-    /// Reihenfolge (deterministisch -> stabiler Cursor-Anker ueber Continuations):
+    /// Reihenfolge (deterministisch -> stabiler Cursor-Anker über Continuations):
     /// Gruppen nach dem kleinsten Eingabe-Index ihrer Mitglieder; innerhalb einer
-    /// Gruppe die Eingabe-Reihenfolge (Ausfuehrungsreihenfolge, dependsOn-Ziel vor dem
-    /// Abhaengigen). ID-Vergleich case-insensitive (wie _passedTestIds).
+    /// Gruppe die Eingabe-Reihenfolge (Ausführungsreihenfolge, dependsOn-Ziel vor dem
+    /// Abhängigen). ID-Vergleich case-insensitive (wie _passedTestIds).
     /// </summary>
     public static List<List<TestCase>> BuildDependencyGroups(List<TestCase> tests)
     {
@@ -300,7 +300,7 @@ public sealed class TestRunner
         var n = tests.Count;
         if (n == 0) return new List<List<TestCase>>();
 
-        // Union-Find ueber die Eingabe-Indizes.
+        // Union-Find über die Eingabe-Indizes.
         var parent = new int[n];
         for (var i = 0; i < n; i++) parent[i] = i;
 
@@ -319,7 +319,7 @@ public sealed class TestRunner
             var ra = Find(a);
             var rb = Find(b);
             if (ra == rb) return;
-            // Kleinerer Index wird Wurzel -> haelt die Min-Index-Reihenfolge stabil.
+            // Kleinerer Index wird Wurzel -> hält die Min-Index-Reihenfolge stabil.
             if (ra < rb) parent[rb] = ra; else parent[ra] = rb;
         }
 
@@ -344,7 +344,7 @@ public sealed class TestRunner
             }
         }
 
-        // Kante 2: gemeinsamer, nicht-leerer sharedContext (defensive Affinitaets-Kante).
+        // Kante 2: gemeinsamer, nicht-leerer sharedContext (defensive Affinitäts-Kante).
         var firstInContext = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         for (var i = 0; i < n; i++)
         {
@@ -375,17 +375,17 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Packt Abhaengigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) in Chunks der
-    /// Zielgroesse <paramref name="chunkSize"/> Tests, OHNE je eine Gruppe zu trennen
+    /// Packt Abhängigkeits-Gruppen (aus <see cref="BuildDependencyGroups"/>) in Chunks der
+    /// Zielgröße <paramref name="chunkSize"/> Tests, OHNE je eine Gruppe zu trennen
     /// (ADR-0009 Phase 2, Koordinator). Greedy in Reihenfolge: eine Gruppe kommt in den
     /// aktuellen Chunk, solange sie hineinpasst; sonst beginnt ein neuer Chunk. Eine
-    /// Gruppe, die allein groesser als <paramref name="chunkSize"/> ist, bildet ihren
-    /// eigenen (uebergrossen) Chunk -- sie kann nicht geteilt werden (dependsOn-Affinitaet).
+    /// Gruppe, die allein größer als <paramref name="chunkSize"/> ist, bildet ihren
+    /// eigenen (übergroßen) Chunk -- sie kann nicht geteilt werden (dependsOn-Affinität).
     ///
     /// Jeder Chunk ist die Konkatenation seiner Gruppen (flache Testliste). Der Worker
     /// re-deriviert die Gruppen aus den Chunk-Test-IDs deterministisch neu
     /// (<see cref="BuildDependencyGroups"/> auf der Chunk-Teilmenge liefert dieselben
-    /// Connected Components, weil ein Chunk nur VOLLSTAENDIGE Komponenten enthaelt).
+    /// Connected Components, weil ein Chunk nur VOLLSTÄNDIGE Komponenten enthält).
     /// <paramref name="chunkSize"/> &lt; 1 wird auf 1 geklemmt.
     /// </summary>
     public static List<List<TestCase>> BuildChunks(List<List<TestCase>> groups, int chunkSize)
@@ -398,11 +398,11 @@ public sealed class TestRunner
 
         foreach (var group in groups)
         {
-            if (group.Count == 0) continue; // leere Gruppe defensiv ueberspringen
+            if (group.Count == 0) continue; // leere Gruppe defensiv überspringen
 
             // Neuer Chunk, wenn keiner offen ist ODER die Gruppe nicht mehr hineinpasst.
-            // Eine uebergrosse Einzelgruppe landet so allein in einem frischen Chunk
-            // (sie kann nicht geteilt werden) und der naechste Gruppe-Add oeffnet wieder
+            // Eine übergroße Einzelgruppe landet so allein in einem frischen Chunk
+            // (sie kann nicht geteilt werden) und der nächste Gruppe-Add öffnet wieder
             // einen neuen Chunk.
             if (current == null || current.Count + group.Count > chunkSize)
             {
@@ -418,7 +418,7 @@ public sealed class TestRunner
     /// <summary>
     /// Rechnet das Run-Aggregat einmal am Plateau aus den Result-Records (ADR-0009 B.5,
     /// Plan Phase 3). Outcome-Split (Total/Passed/Failed/Errored/Skipped), Dauer-Verteilung
-    /// (avg/median/min/max/slowest) ueber die ausgefuehrten Tests (Outcome != Skipped) und
+    /// (avg/median/min/max/slowest) über die ausgeführten Tests (Outcome != Skipped) und
     /// die Summe der getrackten angelegten Records. Pure -> testbar. Median wie die
     /// Cold-Start-Heuristik (<c>sorted[count/2]</c>).
     /// </summary>
@@ -440,8 +440,8 @@ public sealed class TestRunner
             agg.RecordsCreated += r.TrackedRecords?.Count ?? 0;
         }
 
-        // Dauer-Verteilung NUR ueber die ausgefuehrten Tests (Outcome != Skipped);
-        // Skipped haben Dauer 0 und wuerden Min/Avg/Median verzerren.
+        // Dauer-Verteilung NUR über die ausgeführten Tests (Outcome != Skipped);
+        // Skipped haben Dauer 0 und würden Min/Avg/Median verzerren.
         var executed = list.Where(r => r.Outcome != TestOutcome.Skipped).ToList();
         if (executed.Count > 0)
         {
@@ -452,7 +452,7 @@ public sealed class TestRunner
             agg.MinTestMs = (int)durations[0];
             agg.MaxTestMs = (int)durations[durations.Count - 1];
 
-            // Langsamster Test: hoechste Dauer, erster bei Gleichstand.
+            // Langsamster Test: höchste Dauer, erster bei Gleichstand.
             var slowest = executed[0];
             foreach (var r in executed)
                 if (r.DurationMs > slowest.DurationMs) slowest = r;
@@ -493,7 +493,7 @@ public sealed class TestRunner
                 tcResult.ErrorMessage = FormatValidationErrors(validation);
                 sw.Stop();
                 tcResult.DurationMs = sw.ElapsedMilliseconds;
-                Log($"  -> FEHLER: Pre-Run-Validation hat {validation.ErrorCount} Error-Befund(e). Test wird nicht ausgefuehrt.");
+                Log($"  -> FEHLER: Pre-Run-Validation hat {validation.ErrorCount} Error-Befund(e). Test wird nicht ausgeführt.");
                 return tcResult;
             }
 
@@ -504,16 +504,16 @@ public sealed class TestRunner
             ExecuteSteps(tc, ctx, tcResult);
 
             // Outcome-Bestimmung (ADR-0004):
-            //  - Exception in einem Step mit OnError="stop" (Default fuer Non-Assert)
-            //    fuehrt zu Outcome=Error (catch-Zweig unten).
+            //  - Exception in einem Step mit OnError="stop" (Default für Non-Assert)
+            //    führt zu Outcome=Error (catch-Zweig unten).
             //  - Kein Step hat Success=false → Passed.
             //  - Mindestens ein Step hat Success=false → Failed. Das umfasst:
             //    Assert-Failure (OnError=continue per Default) und Non-Assert-
             //    Step-Failure mit explizitem OnError=continue.
-            // ADR-0011: Skipped-Steps (condition nicht erfuellt) zaehlen NICHT als
+            // ADR-0011: Skipped-Steps (condition nicht erfüllt) zählen NICHT als
             // Failure. Outcome=Skipped, wenn der Test Assert-Steps DEFINIERT, aber
-            // KEINER ausgefuehrt wurde (alle condition-geskippt) -- sonst waere er
-            // gruen ohne Pruefung. Bestandstests ohne condition sind unberuehrt:
+            // KEINER ausgeführt wurde (alle condition-geskippt) -- sonst wäre er
+            // grün ohne Prüfung. Bestandstests ohne condition sind unberührt:
             // dort wird nie geskippt (anyAssertExecuted == hasAsserts), und ein
             // assert-loser Smoke (hasAsserts=false) bleibt Passed.
             var anyFailed = tcResult.StepResults.Any(s => !s.Success && !s.Skipped);
@@ -545,7 +545,7 @@ public sealed class TestRunner
             if (ctx != null)
             {
                 // B5: TrackedRecords aus ctx.CreatedEntities VOR dem Cleanup
-                // einfrieren — danach werden sie ggf. geloescht.
+                // einfrieren — danach werden sie ggf. gelöscht.
                 tcResult.TrackedRecords = ctx.CreatedEntities
                     .Select(e => new TrackedRecord
                     {
@@ -559,7 +559,7 @@ public sealed class TestRunner
                     .ToList();
 
                 // OE-10: Primary-Namen der angelegten Records erfassen — VOR dem Cleanup,
-                // sonst sind die Records geloescht. Nur im CLI-run-Pfad (CaptureRecordNames).
+                // sonst sind die Records gelöscht. Nur im CLI-run-Pfad (CaptureRecordNames).
                 if (CaptureRecordNames)
                     CaptureTrackedRecordNames(tcResult.TrackedRecords);
 
@@ -574,7 +574,7 @@ public sealed class TestRunner
                 }
 
                 // A7: Plugin-Trace-Logs seit Test-Start in das Log einbinden,
-                // damit jbe_fulllog Plugin-Diagnostik enthaelt. Schreib-Plugin
+                // damit jbe_fulllog Plugin-Diagnostik enthält. Schreib-Plugin
                 // (PluginTraceLogSetting=All oder Exception) muss aktiv sein,
                 // sonst sind keine Records vorhanden — kein Fehler, nur leer.
                 CapturePluginTraceLogs(testStartUtc, tc.Id);
@@ -589,12 +589,12 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// OE-10: Befuellt TrackedRecord.Name mit dem Primary-Name jedes angelegten
+    /// OE-10: Befüllt TrackedRecord.Name mit dem Primary-Name jedes angelegten
     /// Records. Ein Retrieve pro Record (die Records existieren noch, Cleanup kommt
     /// danach). Graceful: ein nicht ladbarer Name bleibt null. Nur im CLI-run-Pfad
     /// aufgerufen (CaptureRecordNames), daher ist das try/catch um den Service-Call
-    /// hier zulaessig — kein Plugin-Sandbox-Kontext, in dem ein gefangener Fault die
-    /// Transaktion vergiften wuerde.
+    /// hier zulässig — kein Plugin-Sandbox-Kontext, in dem ein gefangener Fault die
+    /// Transaktion vergiften würde.
     /// </summary>
     private void CaptureTrackedRecordNames(List<TrackedRecord> tracked)
     {
@@ -610,8 +610,8 @@ public sealed class TestRunner
             }
             catch
             {
-                // Name ist optional fuer den Audit-Kommentar; ein Fehler (Record vom
-                // Plugin geloescht, Berechtigung, ...) darf den Lauf nicht stoeren.
+                // Name ist optional für den Audit-Kommentar; ein Fehler (Record vom
+                // Plugin gelöscht, Berechtigung, ...) darf den Lauf nicht stören.
             }
         }
     }
@@ -619,7 +619,7 @@ public sealed class TestRunner
     /// <summary>
     /// A7 / ZastrPay-Feedback: Plugin-Trace-Logs seit Test-Start aus der
     /// plugintracelog-Tabelle holen und in den runner-internen Log-Builder
-    /// schreiben. Im Sync-Plugin laeuft das via SandboxSafeOrganizationService
+    /// schreiben. Im Sync-Plugin läuft das via SandboxSafeOrganizationService
     /// (Wrapper, ADR-0005). Funktioniert nur wenn PluginTraceLogSetting auf
     /// All oder Exception steht — sonst leeres Ergebnis (kein Fehler).
     /// </summary>
@@ -643,18 +643,18 @@ public sealed class TestRunner
             var results = _service.RetrieveMultiple(query);
             if (results.Entities.Count == 0)
             {
-                Log($"      Plugin-Trace-Logs: 0 Eintraege seit Teststart " +
+                Log($"      Plugin-Trace-Logs: 0 Einträge seit Teststart " +
                     $"(PluginTraceLogSetting evtl. inaktiv).");
                 return;
             }
-            Log($"      Plugin-Trace-Logs ({results.Entities.Count} Eintraege seit Teststart):");
+            Log($"      Plugin-Trace-Logs ({results.Entities.Count} Einträge seit Teststart):");
             foreach (var e in results.Entities)
             {
                 var typeName = e.GetAttributeValue<string>("typename") ?? "<?>";
                 var createdOn = e.GetAttributeValue<DateTime>("createdon");
                 var duration = e.GetAttributeValue<int?>("performanceexecutionduration") ?? 0;
                 var msg = e.GetAttributeValue<string>("messageblock") ?? "";
-                // Zur Begrenzung der Log-Groesse: Plugin-Trace-Body auf 2000 Zeichen kuerzen.
+                // Zur Begrenzung der Log-Größe: Plugin-Trace-Body auf 2000 Zeichen kürzen.
                 if (msg.Length > 2000) msg = msg.Substring(0, 2000) + "...[truncated]";
                 Log($"      [{createdOn:HH:mm:ss.fff}] {typeName} ({duration}ms)");
                 foreach (var line in msg.Split('\n'))
@@ -667,8 +667,8 @@ public sealed class TestRunner
         {
             // Trace-Capture darf den Test nicht scheitern lassen. Mit
             // SandboxSafe-Wrapper (v5.3.4) wird das eine managed
-            // Exception, kein Sandbox-Wachter-Verstoss.
-            Log($"      Plugin-Trace-Capture nicht moeglich: {ex.Message}");
+            // Exception, kein Sandbox-Wachter-Verstoß.
+            Log($"      Plugin-Trace-Capture nicht möglich: {ex.Message}");
         }
     }
 
@@ -717,11 +717,11 @@ public sealed class TestRunner
     // ================================================================
 
     /// <summary>
-    /// Ausfuehrung aller Steps in JSON-Reihenfolge. Pro Step wird ein
-    /// StepResult angehaengt (Erfolg oder Fehler). Fehlerverhalten:
-    /// onError="stop" (Default fuer Non-Assert) wirft weiter und beendet
-    /// den Test mit Outcome=Error. onError="continue" (Default fuer Assert,
-    /// override sonst) schluckt die Exception — Test laeuft weiter und ist
+    /// Ausführung aller Steps in JSON-Reihenfolge. Pro Step wird ein
+    /// StepResult angehängt (Erfolg oder Fehler). Fehlerverhalten:
+    /// onError="stop" (Default für Non-Assert) wirft weiter und beendet
+    /// den Test mit Outcome=Error. onError="continue" (Default für Assert,
+    /// override sonst) schluckt die Exception — Test läuft weiter und ist
     /// am Ende Failed, wenn mindestens ein Step nicht Success=true war.
     /// </summary>
     private void ExecuteSteps(TestCase tc, TestContext ctx, TestCaseResult tcResult)
@@ -745,10 +745,10 @@ public sealed class TestRunner
             };
             var stepSw = Stopwatch.StartNew();
 
-            // ADR-0011: Lauf-Bedingung VOR jeder Ausfuehrung pruefen (auch vor dem
-            // sandbox-safe expectFailure-Pfad). Nicht erfuellt -> Step uebersprungen
-            // (Skipped, kein Failure). Unaufgeloester Platzhalter oder unbekannter
-            // Operator -> harter Fehler (Outcome=Error, KEIN stiller Skip), unabhaengig
+            // ADR-0011: Lauf-Bedingung VOR jeder Ausführung prüfen (auch vor dem
+            // sandbox-safe expectFailure-Pfad). Nicht erfüllt -> Step übersprungen
+            // (Skipped, kein Failure). Unaufgelöster Platzhalter oder unbekannter
+            // Operator -> harter Fehler (Outcome=Error, KEIN stiller Skip), unabhängig
             // von onError: eine kaputte Bedingung ist ein Test-Defekt.
             if (step.Condition != null)
             {
@@ -772,7 +772,7 @@ public sealed class TestRunner
                 if (!conditionMet)
                 {
                     stepResult.Skipped = true;
-                    stepResult.Success = true; // Skipped zaehlt nicht als Failure (Outcome-Logik filtert Skipped)
+                    stepResult.Success = true; // Skipped zählt nicht als Failure (Outcome-Logik filtert Skipped)
                     stepResult.SkipReason = conditionDesc;
                     stepResult.Message = $"Übersprungen (condition nicht erfüllt): {conditionDesc}";
                     Log($"      SKIP (condition): {conditionDesc}");
@@ -785,10 +785,10 @@ public sealed class TestRunner
             }
 
             // ADR-0005 (FB-31): Steps mit expectFailure/expectException auf primitiven
-            // Service-Aktionen (Create/Update/Delete/ExecuteRequest) laufen ueber den
+            // Service-Aktionen (Create/Update/Delete/ExecuteRequest) laufen über den
             // sandbox-sicheren Pfad. ExecuteMultipleRequest mit ContinueOnError=true
             // verhindert, dass der Sandbox-Wachter "ISV reduced transaction count"
-            // (0x80040265) wirft, weil das Plugin keine Service-Exception faengt —
+            // (0x80040265) wirft, weil das Plugin keine Service-Exception fängt —
             // Faults landen in ExecuteMultipleResponse.Responses[0].Fault.
             var isAssertOuter = step.Action.Equals("Assert", StringComparison.OrdinalIgnoreCase);
             var hasExpectFailureOuter = !isAssertOuter &&
@@ -999,9 +999,9 @@ public sealed class TestRunner
                     stepResult.ActualDisplay = actualSummary;
                     stepResult.Message = ok
                         ? $"OK: Expected exception caught — {actualSummary}"
-                        : $"expectException-Match fehlgeschlagen. {reason} | Tatsaechlich: {actualSummary}";
+                        : $"expectException-Match fehlgeschlagen. {reason} | Tatsächlich: {actualSummary}";
                     Log($"      expectFailure: {(ok ? "OK" : "MISMATCH")} -- {actualSummary}");
-                    continue; // zum naechsten Step, StepResult wird im finally geschrieben
+                    continue; // zum nächsten Step, StepResult wird im finally geschrieben
                 }
 
                 stepResult.Success = false;
@@ -1037,7 +1037,7 @@ public sealed class TestRunner
 
     private void StepAssert(TestStep step, TestContext ctx, StepResult stepResult)
     {
-        // TestStep → internes TestAssertion-Objekt fuer die AssertionEngine.
+        // TestStep → internes TestAssertion-Objekt für die AssertionEngine.
         // Entity ist im JSON typischerweise als EntitySetName (Plural, Web-API-Form)
         // angegeben, z.B. "markant_fg_contactsources". Die AssertionEngine arbeitet
         // mit QueryExpression/IOrganizationService und braucht den LogicalName
@@ -1060,7 +1060,7 @@ public sealed class TestRunner
 
         var assertResult = _assertionEngine.Evaluate(assertion, ctx, _service);
 
-        // Ergebnis in StepResult uebertragen
+        // Ergebnis in StepResult übertragen
         stepResult.Success = assertResult.Passed;
         stepResult.Message = assertResult.Message;
         stepResult.AssertField = assertion.Field;
@@ -1074,7 +1074,7 @@ public sealed class TestRunner
     }
 
     // ================================================================
-    //  Step-Condition (ADR-0011): config-adaptives Ueberspringen
+    //  Step-Condition (ADR-0011): config-adaptives Überspringen
     // ================================================================
 
     private static readonly System.Text.RegularExpressions.Regex _unresolvedPlaceholder =
@@ -1083,7 +1083,7 @@ public sealed class TestRunner
     /// <summary>
     /// Wertet eine Step-Condition aus (ADR-0011). Genau eine Form, Vorrang
     /// all (AND) vor any (OR) vor Einfachklausel. <paramref name="description"/>
-    /// traegt eine lesbare Zusammenfassung (Skip-Grund). Wirft bei unaufgeloestem
+    /// trägt eine lesbare Zusammenfassung (Skip-Grund). Wirft bei unaufgelöstem
     /// Platzhalter oder unbekanntem Operator (-> Outcome=Error, kein stiller Skip).
     /// </summary>
     private bool EvaluateStepCondition(StepCondition cond, TestContext ctx, out string description)
@@ -1106,9 +1106,9 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Wertet eine einzelne Vergleichsklausel ueber den geteilten
-    /// <see cref="ValueComparator"/> aus. left/right werden aufgeloest (mit
-    /// Unaufgeloest-Pruefung); unbekannter Operator wirft.
+    /// Wertet eine einzelne Vergleichsklausel über den geteilten
+    /// <see cref="ValueComparator"/> aus. left/right werden aufgelöst (mit
+    /// Unaufgelöst-Prüfung); unbekannter Operator wirft.
     /// </summary>
     private bool EvaluateClause(StepConditionClause c, TestContext ctx)
     {
@@ -1122,11 +1122,11 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Loest einen condition-Wert (left/right) ueber die PlaceholderEngine auf und
-    /// erzwingt, dass kein Platzhalter ueberbleibt. Ein unbekannter/falsch
-    /// geschriebener Alias laesst {x.fields.y} woertlich stehen (die PlaceholderEngine
-    /// wirft dort NICHT, ADR-0011 Korrektur 3) -- das wuerde sonst zu einem stillen,
-    /// falsch-gruenen Skip fuehren. Darum hier hart pruefen und werfen.
+    /// Löst einen condition-Wert (left/right) über die PlaceholderEngine auf und
+    /// erzwingt, dass kein Platzhalter überbleibt. Ein unbekannter/falsch
+    /// geschriebener Alias lässt {x.fields.y} wörtlich stehen (die PlaceholderEngine
+    /// wirft dort NICHT, ADR-0011 Korrektur 3) -- das würde sonst zu einem stillen,
+    /// falsch-grünen Skip führen. Darum hier hart prüfen und werfen.
     /// </summary>
     private string ResolveConditionSide(string? raw, TestContext ctx)
     {
@@ -1134,9 +1134,9 @@ public sealed class TestRunner
         var resolved = _placeholderEngine.Resolve(raw, ctx);
         if (_unresolvedPlaceholder.IsMatch(resolved))
             throw new InvalidOperationException(
-                $"condition: Platzhalter nicht aufgeloest: '{raw}' -> '{resolved}'. " +
+                $"condition: Platzhalter nicht aufgelöst: '{raw}' -> '{resolved}'. " +
                 "Ein unbekannter oder falsch geschriebener Alias macht den Vergleich sonst " +
-                "still falsch (ADR-0011: kein falsch-gruener Skip durch Alias-Tippfehler).");
+                "still falsch (ADR-0011: kein falsch-grüner Skip durch Alias-Tippfehler).");
         return resolved;
     }
 
@@ -1336,10 +1336,10 @@ public sealed class TestRunner
     private void StepExecuteRequest(
         TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
     {
-        // ADR-0007 Fallback-Kette fuer den SDK-Message-Namen.
+        // ADR-0007 Fallback-Kette für den SDK-Message-Namen.
         // RequestName ist kanonisch; ActionName/ApiName sind Legacy-Aliasse;
         // Entity wird als letzter Fallback akzeptiert, um Pre-v5.3.7
-        // CallCustomApi-Packs ohne Migration weiter zu unterstuetzen.
+        // CallCustomApi-Packs ohne Migration weiter zu unterstützen.
         var requestName = step.RequestName
             ?? step.ActionName
             ?? step.ApiName
@@ -1350,14 +1350,14 @@ public sealed class TestRunner
 
         // ADR-0007 Parameter-Map: Wenn 'parameters' gesetzt ist, gewinnt
         // es gegen 'fields' (Legacy-Schema). Sonst die in ExecuteSteps
-        // bereits aufgeloesten Fields-Werte.
+        // bereits aufgelösten Fields-Werte.
         var parameterMap = (step.Parameters != null && step.Parameters.Count > 0)
             ? _dataFactory.ResolveTemplateData(step.Parameters, ctx)
             : resolvedFields;
 
         var request = new OrganizationRequest(requestName);
 
-        // Felder als typisierte Parameter aufloesen
+        // Felder als typisierte Parameter auflösen
         foreach (var kvp in parameterMap)
         {
             if (kvp.Value == null) continue;
@@ -1373,7 +1373,7 @@ public sealed class TestRunner
     private void HandleExecuteRequestResponse(TestStep step, TestContext ctx, OrganizationResponse response)
     {
         // A4 / ZastrPay-Feedback: outputAlias macht den OrganizationResponse
-        // mit nativen Typen unter Alias verfuegbar fuer {alias.outputs.X}
+        // mit nativen Typen unter Alias verfügbar für {alias.outputs.X}
         // und {alias.outputs.X[type=Y]}-Platzhalter.
         if (!string.IsNullOrEmpty(step.OutputAlias) && response.Results.Count > 0)
         {
@@ -1386,8 +1386,8 @@ public sealed class TestRunner
             Log($"      Response: {response.Results.Count} Output-Werte unter outputAlias='{step.OutputAlias}' gespeichert");
         }
 
-        // Backward-Compat: bestehender Alias-Pfad legt String-Repraesentationen
-        // in GeneratedValues ab (alte Tests nutzen das ggf. ueber {alias.response.X}-
+        // Backward-Compat: bestehender Alias-Pfad legt String-Repräsentationen
+        // in GeneratedValues ab (alte Tests nutzen das ggf. über {alias.response.X}-
         // Pattern, das aber keine offizielle Resolver-Syntax hatte).
         if (!string.IsNullOrEmpty(step.Alias) && response.Results.Count > 0)
         {
@@ -1543,7 +1543,7 @@ public sealed class TestRunner
         if (!ctx.Records.TryGetValue(alias, out var record))
             throw new InvalidOperationException(
                 $"RetrieveRecord: Alias '{alias}' nicht im Kontext gefunden. " +
-                $"Verfuegbar: [{string.Join(", ", ctx.Records.Keys)}]");
+                $"Verfügbar: [{string.Join(", ", ctx.Records.Keys)}]");
 
         var columns = step.Columns;
         var columnSet = (columns != null && columns.Count > 0)
@@ -1587,12 +1587,12 @@ public sealed class TestRunner
                 "Erlaubt: effective, currentValue, defaultValue.")
         };
 
-        // Snapshot fuer Auto-Restore — IMMER erstellen (FB-30 Fix, Plugin v5.3.1).
-        // Vorher wurde der Snapshot nur bei gesetztem alias erstellt; das fuehrte
-        // dazu dass Tests ohne alias den EnvVar-Wert dauerhaft veraenderten und
+        // Snapshot für Auto-Restore — IMMER erstellen (FB-30 Fix, Plugin v5.3.1).
+        // Vorher wurde der Snapshot nur bei gesetztem alias erstellt; das führte
+        // dazu dass Tests ohne alias den EnvVar-Wert dauerhaft veränderten und
         // nachfolgende Tests kippten (Markant-Pack `gdpr-dyn9148.json`,
-        // `markant_gdpr_pseudonym_enabled` blieb auf 'false' haengen).
-        // alias ist nur noch fuer explizites Referenzieren des Snapshot-Objekts
+        // `markant_gdpr_pseudonym_enabled` blieb auf 'false' hängen).
+        // alias ist nur noch für explizites Referenzieren des Snapshot-Objekts
         // in nachfolgenden Steps relevant; das Auto-Restore selbst ist Default.
         var snap = new EnvVarSnapshot
         {
@@ -1638,7 +1638,7 @@ public sealed class TestRunner
         }
 
         Log($"      SetEnvironmentVariable [{schemaName}] target={resolvedTarget} value='{value}'" +
-            (snap != null ? " (Snapshot fuer Auto-Restore erzeugt)" : ""));
+            (snap != null ? " (Snapshot für Auto-Restore erzeugt)" : ""));
     }
 
     private void StepRetrieveEnvironmentVariable(TestStep step, TestContext ctx)
@@ -1690,7 +1690,7 @@ public sealed class TestRunner
         }
 
         // Virtuelles Entity ins FoundRecords-Registry legen damit
-        // {alias.fields.value} als Platzhalter aufloesbar ist.
+        // {alias.fields.value} als Platzhalter auflösbar ist.
         var virt = new Entity("environmentvariablevalue");
         if (valueRecord != null) virt.Id = valueRecord.Id;
         virt["value"] = resolvedValue;
@@ -1729,9 +1729,9 @@ public sealed class TestRunner
     // ================================================================
 
     /// <summary>
-    /// Prueft ob die tatsaechlich gefangene Exception der expectException-Spec
+    /// Prüft ob die tatsächlich gefangene Exception der expectException-Spec
     /// entspricht. Ohne Spec ("irgendein Fehler reicht") liefert immer (true, "").
-    /// Mehrere gesetzte Felder werden mit AND verknuepft.
+    /// Mehrere gesetzte Felder werden mit AND verknüpft.
     /// messageContains und messageMatches sind exklusiv (Validation).
     /// </summary>
     public static (bool Ok, string Reason) EvaluateExpectException(
@@ -1743,14 +1743,14 @@ public sealed class TestRunner
             !string.IsNullOrEmpty(spec.MessageMatches))
         {
             return (false,
-                "expectException: messageContains und messageMatches koennen nicht gleichzeitig gesetzt sein.");
+                "expectException: messageContains und messageMatches können nicht gleichzeitig gesetzt sein.");
         }
 
         if (!string.IsNullOrEmpty(spec.MessageContains))
         {
             if ((ex.Message ?? "").IndexOf(spec.MessageContains, StringComparison.OrdinalIgnoreCase) < 0)
                 return (false,
-                    $"Exception-Message enthaelt '{spec.MessageContains}' nicht. Actual: '{Truncate(ex.Message ?? "", 200)}'");
+                    $"Exception-Message enthält '{spec.MessageContains}' nicht. Actual: '{Truncate(ex.Message ?? "", 200)}'");
         }
 
         if (!string.IsNullOrEmpty(spec.MessageMatches))
@@ -1767,7 +1767,7 @@ public sealed class TestRunner
             }
             catch (ArgumentException regexEx)
             {
-                return (false, $"Ungueltiger Regex in expectException.messageMatches: {regexEx.Message}");
+                return (false, $"Ungültiger Regex in expectException.messageMatches: {regexEx.Message}");
             }
         }
 
@@ -1810,7 +1810,7 @@ public sealed class TestRunner
                 }
             }
 
-            // Fallback: Message enthaelt oft "0x8004...":
+            // Fallback: Message enthält oft "0x8004...":
             var match = System.Text.RegularExpressions.Regex.Match(
                 cur.Message ?? "", @"0x[0-9A-Fa-f]{8}");
             if (match.Success) return match.Value;
@@ -1823,7 +1823,7 @@ public sealed class TestRunner
     /// <summary>
     /// Zieht einen HTTP-Status aus einer Web-API-basierten Exception.
     /// Bei SDK-Calls meist null. Wir lesen die StatusCode-Property per
-    /// Reflection (kommt erst mit .NET 5 auf HttpRequestException, waehrend
+    /// Reflection (kommt erst mit .NET 5 auf HttpRequestException, während
     /// D365TestCenter.Core ein netstandard2.0-Assembly ist).
     /// Fallback: Message-Scan nach "HTTP XXX" oder "Status Code: XXX".
     /// </summary>
@@ -1862,8 +1862,8 @@ public sealed class TestRunner
     // ================================================================
 
     /// <summary>
-    /// Aktionstypen die im Sandbox-safe-Pfad als Single-Service-Call ausgefuehrt
-    /// werden koennen. ADR-0005 (FB-31): expectFailure/expectException auf diesen
+    /// Aktionstypen die im Sandbox-safe-Pfad als Single-Service-Call ausgeführt
+    /// werden können. ADR-0005 (FB-31): expectFailure/expectException auf diesen
     /// Aktionen wird via ExecuteMultipleRequest gewrappt.
     /// </summary>
     private static bool IsSandboxSafeAction(string action)
@@ -1875,10 +1875,10 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Fuehrt einen Step mit expectFailure/expectException sandbox-sicher aus.
-    /// Der eigentliche Service-Call laeuft via ExecuteMultipleRequest mit
+    /// Führt einen Step mit expectFailure/expectException sandbox-sicher aus.
+    /// Der eigentliche Service-Call läuft via ExecuteMultipleRequest mit
     /// ContinueOnError=true — der Sandbox-Wachter "ISV reduced transaction count"
-    /// wirft nicht, weil das Plugin keine Service-Exception faengt. Faults
+    /// wirft nicht, weil das Plugin keine Service-Exception fängt. Faults
     /// landen als ExecuteMultipleResponse.Responses[0].Fault und werden gegen
     /// die ExpectExceptionSpec gematcht.
     /// </summary>
@@ -1904,7 +1904,7 @@ public sealed class TestRunner
                 break;
             default:
                 throw new InvalidOperationException(
-                    $"ExecuteStepInSandboxBoundary: Action '{step.Action}' wird im Sandbox-Pfad nicht unterstuetzt.");
+                    $"ExecuteStepInSandboxBoundary: Action '{step.Action}' wird im Sandbox-Pfad nicht unterstützt.");
         }
 
         var (response, fault) = ExecuteSandboxSafe(req);
@@ -1913,7 +1913,7 @@ public sealed class TestRunner
         {
             // Erwartete Exception ist eingetreten — Fault gegen Spec matchen.
             // Wrap als InvalidPluginExecutionException mit eingebettetem Error-Code,
-            // damit EvaluateExpectException + ExtractErrorCode greifen koennen.
+            // damit EvaluateExpectException + ExtractErrorCode greifen können.
             var faultException = FaultToException(fault);
             var (ok, reason) = EvaluateExpectException(step.ExpectException, faultException);
             var actualSummary = $"OrganizationServiceFault [0x{fault.ErrorCode:X8}]: {Truncate(fault.Message ?? "", 300)}";
@@ -1925,7 +1925,7 @@ public sealed class TestRunner
             stepResult.ActualDisplay = actualSummary;
             stepResult.Message = ok
                 ? $"OK: Expected exception caught (sandbox-safe) — {actualSummary}"
-                : $"expectException-Match fehlgeschlagen. {reason} | Tatsaechlich: {actualSummary}";
+                : $"expectException-Match fehlgeschlagen. {reason} | Tatsächlich: {actualSummary}";
             Log($"      expectFailure (sandbox-safe): {(ok ? "OK" : "MISMATCH")} -- {actualSummary}");
         }
         else
@@ -1942,25 +1942,25 @@ public sealed class TestRunner
     }
 
     /// <summary>
-    /// Fuehrt einen einzelnen OrganizationRequest in einem ExecuteMultipleRequest-
+    /// Führt einen einzelnen OrganizationRequest in einem ExecuteMultipleRequest-
     /// Envelope aus. Fehler aus dem inneren Request landen NORMALERWEISE als Fault
-    /// in der ExecuteMultipleResponse-Slot, nicht als Exception — das Plugin faengt
+    /// in der ExecuteMultipleResponse-Slot, nicht als Exception — das Plugin fängt
     /// nichts und der Sandbox-Wachter wirft keinen 0x80040265 (ADR-0005).
     ///
     /// AUSNAHME (Markant Session 13, 2026-05-16): Bei Custom-APIs mit Pattern 1
-    /// (PluginType direkt am customapi.plugintypeid verknuepft, Stage 30
+    /// (PluginType direkt am customapi.plugintypeid verknüpft, Stage 30
     /// MainOperation) wrappt die Plattform den Plugin-Fault als
     /// FaultException&lt;OrganizationServiceFault&gt; am ExecuteMultipleRequest-
     /// Endpoint und propagiert ihn als Exception, statt in den Fault-Slot der
     /// ExecuteMultipleResponse zu legen. Diese Variante fangen wir hier explizit
     /// und konvertieren sie in den normalen Fault-Slot-Pfad, damit
     /// ExecuteStepInSandboxBoundary den expectException-Matcher korrekt
-    /// aufruft (statt dass die Exception ins aeussere Catch propagiert und
+    /// aufruft (statt dass die Exception ins äußere Catch propagiert und
     /// Outcome=Error meldet).
     ///
     /// Andere Exception-Typen (Netzwerk, Timeout, generische Plattform-Fehler)
     /// werden bewusst NICHT gefangen — sie sollen weiter propagieren und vom
-    /// aeusseren Catch als echter Test-Fehler behandelt werden.
+    /// äußeren Catch als echter Test-Fehler behandelt werden.
     /// </summary>
     private (OrganizationResponse? Response, OrganizationServiceFault? Fault) ExecuteSandboxSafe(
         OrganizationRequest req)
@@ -1999,7 +1999,7 @@ public sealed class TestRunner
 
     /// <summary>
     /// Baut einen OrganizationServiceFault in eine Exception um, die
-    /// EvaluateExpectException + ExtractErrorCode konsumieren koennen. Der
+    /// EvaluateExpectException + ExtractErrorCode konsumieren können. Der
     /// ErrorCode wird in die Message eingebettet, damit der Regex-Fallback in
     /// ExtractErrorCode greift (cur.Detail ist hier nicht gesetzt, weil wir
     /// bewusst keine FaultException-Hierarchie aufbauen — D365TestCenter.Core
@@ -2025,7 +2025,7 @@ public sealed class TestRunner
     {
         var alias = step.RecordRef ?? step.Alias
             ?? throw new InvalidOperationException(
-                "UpdateRecord (sandbox-safe) benoetigt 'recordRef' oder 'alias'.");
+                "UpdateRecord (sandbox-safe) benötigt 'recordRef' oder 'alias'.");
         if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
@@ -2041,7 +2041,7 @@ public sealed class TestRunner
     {
         var alias = step.RecordRef ?? step.Alias
             ?? throw new InvalidOperationException(
-                "DeleteRecord (sandbox-safe) benoetigt 'recordRef' oder 'alias'.");
+                "DeleteRecord (sandbox-safe) benötigt 'recordRef' oder 'alias'.");
         if (alias.StartsWith("{RECORD:", StringComparison.OrdinalIgnoreCase) && alias.EndsWith("}"))
             alias = alias.Substring("{RECORD:".Length, alias.Length - "{RECORD:".Length - 1);
 
@@ -2246,7 +2246,7 @@ public sealed class TestRunner
 
         // 1 StepResult pro Test-Cleanup-Phase (nicht pro Record), damit der
         // Steps-Tab die Cleanup-Zusammenfassung als eine Zeile zeigt statt
-        // einer potentiell langen Liste von Delete-Eintraegen.
+        // einer potentiell langen Liste von Delete-Einträgen.
         var cleanupResult = new StepResult
         {
             StepNumber = 9000,
@@ -2257,7 +2257,7 @@ public sealed class TestRunner
 
         // KeepRecords=true: Testdaten bewusst behalten. Cleanup-StepResult
         // trotzdem schreiben, damit die Cleanup-Zeile im Steps-Tab sichtbar
-        // bleibt und dokumentiert, warum nichts geloescht wurde.
+        // bleibt und dokumentiert, warum nichts gelöscht wurde.
         if (KeepRecords)
         {
             sw.Stop();
@@ -2332,7 +2332,7 @@ public sealed class TestRunner
         {
             if (snap.ValueRecordExistedBefore)
             {
-                // Wert auf Original zurueckschreiben
+                // Wert auf Original zurückschreiben
                 if (!snap.ValueRecordId.HasValue)
                     throw new InvalidOperationException(
                         $"Snapshot {snap.SchemaName}: ValueRecordId fehlt trotz ValueRecordExistedBefore.");
@@ -2342,19 +2342,19 @@ public sealed class TestRunner
             }
             else
             {
-                // Neu erstellten Value-Record wieder loeschen
+                // Neu erstellten Value-Record wieder löschen
                 if (snap.ValueRecordId.HasValue)
                     _service.Delete("environmentvariablevalue", snap.ValueRecordId.Value);
             }
         }
         else if (snap.ResolvedTarget == "defaultValue")
         {
-            // DefaultValue auf Original zurueckschreiben. Der Unmanaged Active
-            // Layer auf der Definition bleibt bestehen, enthaelt aber jetzt
+            // DefaultValue auf Original zurückschreiben. Der Unmanaged Active
+            // Layer auf der Definition bleibt bestehen, enthält aber jetzt
             // wieder den Wert des darunter liegenden Managed-Layers (neutralisiert).
-            // Wer den Layer komplett abraeumen will: RemoveActiveCustomization
+            // Wer den Layer komplett abräumen will: RemoveActiveCustomization
             // mit LogicalName=environmentvariabledefinition + Id, aber nicht Teil
-            // des Auto-Cleanups (Nebenwirkungen bei Parallel-Aenderungen).
+            // des Auto-Cleanups (Nebenwirkungen bei Parallel-Änderungen).
             var upd = new Entity("environmentvariabledefinition", snap.DefinitionId);
             upd["defaultvalue"] = snap.OriginalDefaultValue;
             _service.Update(upd);

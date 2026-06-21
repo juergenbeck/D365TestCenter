@@ -5,7 +5,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer die JSON-Deserialisierung der Testfall-Modelle.
+/// Tests für die JSON-Deserialisierung der Testfall-Modelle.
 /// ADR-0004: Preconditions und Assertions als separate JSON-Arrays entfallen —
 /// alles ist ein Step.
 /// </summary>
@@ -169,7 +169,7 @@ public class ModelsJsonTests
     [Fact]
     public void StepResult_HasAllRelevantFields()
     {
-        // Neue StepResult-Struktur ab ADR-0004: universelle Form fuer alle
+        // Neue StepResult-Struktur ab ADR-0004: universelle Form für alle
         // Action-Typen, ohne Phase-Property.
         var sr = new StepResult
         {

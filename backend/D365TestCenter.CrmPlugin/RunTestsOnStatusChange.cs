@@ -28,7 +28,7 @@ namespace D365TestCenter.CrmPlugin;
 public sealed class RunTestsOnStatusChange : IPlugin
 {
     // BatchSize: Anzahl Tests pro Plugin-Execution (Self-Trigger-Cascade).
-    // Dataverse erlaubt max ~8 Depth-Level pro Pipeline. Auch bei Async-Steps zaehlt
+    // Dataverse erlaubt max ~8 Depth-Level pro Pipeline. Auch bei Async-Steps zählt
     // der Depth hoch (verifiziert auf LM DEV, Session 07). Das bedeutet:
     //   Max Tests = BatchSize x 8
     // BatchSize=5 -> max 40 Tests in 8 Cascade-Schritten.
@@ -106,7 +106,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
     private const int OutcomeSkipped = 105710002;
     private const int OutcomeError = 105710003;
 
-    // ── Step Status OptionSet (ADR-0004: Phase entfaellt) ────────
+    // ── Step Status OptionSet (ADR-0004: Phase entfällt) ────────
     private const int StepPassed = 105710000;
     private const int StepFailed = 105710001;
     private const int StepSkipped = 105710002; // ADR-0011
@@ -132,8 +132,8 @@ public sealed class RunTestsOnStatusChange : IPlugin
         if (context.PrimaryEntityName != TestRunEntity)
             return;
 
-        // Engine-Mutex (ADR-0009 C-08): im Worker-Modus uebernimmt RunCoordinator/RunChunkWorker.
-        // Genau ein Pfad pro Run -- die alte Batch-Cascade kehrt dann sofort zurueck.
+        // Engine-Mutex (ADR-0009 C-08): im Worker-Modus übernimmt RunCoordinator/RunChunkWorker.
+        // Genau ein Pfad pro Run -- die alte Batch-Cascade kehrt dann sofort zurück.
         if (WorkerEnvironment.ReadBool(service, WorkerSchema.EnvUseWorker, false))
         {
             tracingService.Trace("RunTests: jbe_use_worker == true -> Worker-Modell aktiv, skip Cascade.");
@@ -524,7 +524,7 @@ public sealed class RunTestsOnStatusChange : IPlugin
         foreach (var tcResult in result.Results)
         {
             // jbe_assertionresults aus den Assert-StepResults generieren
-            // (Kompat fuer UI-Code der den JSON-Blob parst).
+            // (Kompat für UI-Code der den JSON-Blob parst).
             string assertionsJson = "[]";
             try
             {

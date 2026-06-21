@@ -9,17 +9,17 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer TestRunner.RunGroupsBudgeted (ADR-0009 Phase 1, Befund 3,
+/// Tests für TestRunner.RunGroupsBudgeted (ADR-0009 Phase 1, Befund 3,
 /// Gruppen-Grenzen-Continuation). Pinnt: Budget-Check vor jeder Gruppe, mindestens
 /// eine Gruppe pro Aufruf (Cursor schreitet fort), Resume ab Cursor, atomare Gruppe,
-/// und dass eine frische Instanz gruppeninternes dependsOn korrekt aufloest (KEIN
-/// Re-Seed noetig). Zeitquelle (clock) injiziert fuer deterministisches Mock-Budget.
+/// und dass eine frische Instanz gruppeninternes dependsOn korrekt auflöst (KEIN
+/// Re-Seed nötig). Zeitquelle (clock) injiziert für deterministisches Mock-Budget.
 /// </summary>
 public class RunGroupsBudgetedTests
 {
     private static readonly DateTime T0 = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    /// <summary>Clock, die die uebergebenen Zeitstempel der Reihe nach liefert (letzter wiederholt sich).</summary>
+    /// <summary>Clock, die die übergebenen Zeitstempel der Reihe nach liefert (letzter wiederholt sich).</summary>
     private static Func<DateTime> SeqClock(params DateTime[] times)
     {
         int i = 0;
@@ -108,7 +108,7 @@ public class RunGroupsBudgetedTests
             new[] { WaitTest("B") },
             new[] { WaitTest("C") });
 
-        // Resume ab Gruppe 1 (Gruppe 0 lief in einer frueheren Welle).
+        // Resume ab Gruppe 1 (Gruppe 0 lief in einer früheren Welle).
         var r = NewRunner().RunGroupsBudgeted(groups, 1, budgetSeconds: 1000, clock: SeqClock(T0));
 
         Assert.True(r.Done);
@@ -120,8 +120,8 @@ public class RunGroupsBudgetedTests
     public void GroupWithDependsOn_FreshInstance_DependentRuns_NotSkipped()
     {
         // DER Kern-Korrektheitstest: eine frische Instanz, die eine Gruppe [A, B(dep A)]
-        // ausfuehrt, ueberspringt B NICHT -- A laeuft zuerst, _passedTestIds bekommt A,
-        // B laeuft. Kein Re-Seed noetig (Gruppen-Grenzen-Continuation).
+        // ausführt, überspringt B NICHT -- A läuft zuerst, _passedTestIds bekommt A,
+        // B läuft. Kein Re-Seed nötig (Gruppen-Grenzen-Continuation).
         var groups = Groups(new[] { WaitTest("A"), WaitTest("B", dependsOn: new[] { "A" }) });
 
         var r = NewRunner().RunGroupsBudgeted(groups, 0, budgetSeconds: 1000, clock: SeqClock(T0));
@@ -141,9 +141,9 @@ public class RunGroupsBudgetedTests
         Assert.Empty(r.Run.Results);
     }
 
-    /// <summary>Minimaler IOrganizationService-Stub: liefert leere Treffer (fuer den
+    /// <summary>Minimaler IOrganizationService-Stub: liefert leere Treffer (für den
     /// Plugin-Trace-Log-Retrieve am Testende), alle anderen Operationen werden von den
-    /// Wait-only-Testfaellen nie aufgerufen.</summary>
+    /// Wait-only-Testfällen nie aufgerufen.</summary>
     private sealed class StubOrgService : IOrganizationService
     {
         public EntityCollection RetrieveMultiple(QueryBase query) => new EntityCollection();

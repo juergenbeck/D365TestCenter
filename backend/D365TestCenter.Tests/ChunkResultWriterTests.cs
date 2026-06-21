@@ -9,8 +9,8 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer <see cref="ChunkResultWriter"/> (ADR-0009 H1/H3, idempotenter Result-Upsert).
-/// Pinnt: erstes Schreiben legt Zeile+Steps an; Wiederholung fuer dasselbe (run,testid) erzeugt
+/// Tests für <see cref="ChunkResultWriter"/> (ADR-0009 H1/H3, idempotenter Result-Upsert).
+/// Pinnt: erstes Schreiben legt Zeile+Steps an; Wiederholung für dasselbe (run,testid) erzeugt
 /// KEINE Doppelzeile und KEINE Doppelschritte (Alternate-Key-Upsert + Step-Ersatz); Feld-Mapping;
 /// getrennte Zeilen je Test-Id.
 /// </summary>
@@ -90,7 +90,7 @@ public class ChunkResultWriterTests
             Step(1, "CreateRecord", true), Step(2, "Assert", false)));
         Assert.Equal(2, StepCount(fake));
 
-        // Re-Lauf der Gruppe: 3 Steps. Alte 2 muessen weg sein.
+        // Re-Lauf der Gruppe: 3 Steps. Alte 2 müssen weg sein.
         writer.UpsertResult(RunId, Result("TC1", TestOutcome.Passed, 90,
             Step(1, "CreateRecord", true), Step(2, "UpdateRecord", true), Step(3, "Assert", true)));
 

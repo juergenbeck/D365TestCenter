@@ -147,7 +147,7 @@ public static class ImportPack
         {
             var code = MapLifecycle(status!);
             if (code.HasValue) fields[WorkerSchema.TcLifecycleStatus] = new OptionSetValue(code.Value);
-            else log?.Invoke($"  (unbekannter status '{status}' - {WorkerSchema.TcLifecycleStatus} uebersprungen)");
+            else log?.Invoke($"  (unbekannter status '{status}' - {WorkerSchema.TcLifecycleStatus} übersprungen)");
         }
     }
 
@@ -162,7 +162,7 @@ public static class ImportPack
         var v = tc.Value<string>(packKey);
         if (string.IsNullOrWhiteSpace(v)) return;
         if (int.TryParse(v!.Trim(), out var n)) fields[column] = n;
-        else log?.Invoke($"  ({packKey}='{v}' nicht numerisch - {column} uebersprungen)");
+        else log?.Invoke($"  ({packKey}='{v}' nicht numerisch - {column} übersprungen)");
     }
 
     /// <summary>

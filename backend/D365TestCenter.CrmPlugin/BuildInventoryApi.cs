@@ -34,7 +34,7 @@ public sealed class BuildInventoryApi : IPlugin
 
             context.OutputParameters["Inventory"] = markdown;
             context.OutputParameters["Count"] = model.Entries.Count;
-            trace.Trace("BuildInventoryApi: {0} Eintraege", model.Entries.Count);
+            trace.Trace("BuildInventoryApi: {0} Einträge", model.Entries.Count);
         }
         catch (Exception ex)
         {

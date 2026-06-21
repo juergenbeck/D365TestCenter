@@ -37,7 +37,7 @@ public sealed class ValidatePackApi : IPlugin
 
             context.OutputParameters["Findings"] = JsonConvert.SerializeObject(report);
             context.OutputParameters["ErrorCount"] = report.ErrorCount;
-            trace.Trace("ValidatePackApi: {0} Findings ({1} Errors) ueber {2} Testfaelle",
+            trace.Trace("ValidatePackApi: {0} Findings ({1} Errors) über {2} Testfälle",
                 report.Findings.Count, report.ErrorCount, testCases.Count);
         }
         catch (Exception ex)

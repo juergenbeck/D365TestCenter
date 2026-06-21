@@ -5,18 +5,18 @@ namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
 /// Async-Step auf der Custom-API-Message <c>jbe_RecoverStaleChunks</c> (FB-46 / OE-12).
-/// Stale-"Laeuft"-Chunk-Recovery: setzt Chunks, die laenger als <c>jbe_stale_chunk_seconds</c> in
-/// "Laeuft" stehen (provabel tot nach dem 120-s-Hard-Timeout), auf "Fortsetzen" zurueck -> der Worker
-/// resumed ab <c>jbe_group_cursor</c>. Loop-Breaker ueber <c>jbe_recoverycount</c>/<c>jbe_max_recoveries</c>.
+/// Stale-"Läuft"-Chunk-Recovery: setzt Chunks, die länger als <c>jbe_stale_chunk_seconds</c> in
+/// "Läuft" stehen (provabel tot nach dem 120-s-Hard-Timeout), auf "Fortsetzen" zurück -> der Worker
+/// resumed ab <c>jbe_group_cursor</c>. Loop-Breaker über <c>jbe_recoverycount</c>/<c>jbe_max_recoveries</c>.
 ///
 /// Getaktet von einem Power-Automate-Recurrence-Flow, der die Custom API aufruft (ADR-0009
-/// Takt-Option b, hier fuer Recovery). Die gesamte testbare Logik liegt in
+/// Takt-Option b, hier für Recovery). Die gesamte testbare Logik liegt in
 /// <see cref="StaleChunkRecoveryService"/> (Core, mit Fake-Service unit-getestet); dieses Plugin ist
-/// nur die duenne Glue.
+/// nur die dünne Glue.
 ///
 /// <b>Warum async:</b> Service + RunCompletionService nutzen <c>try/catch</c> um OC-Updates
-/// (IfRowVersionMatches). In einem SYNC-Plugin/sync-Custom-API triggert das den Sandbox-Waechter
-/// (0x80040265, ADR-0005/FB-31); Async-Plugins sind davon nicht betroffen. Darum laeuft die Recovery
+/// (IfRowVersionMatches). In einem SYNC-Plugin/sync-Custom-API triggert das den Sandbox-Wächter
+/// (0x80040265, ADR-0005/FB-31); Async-Plugins sind davon nicht betroffen. Darum läuft die Recovery
 /// als Async-Step (Custom API AllowedCustomProcessingStepType=AsyncOnly, kein Main-Plugin).
 ///
 /// Registrierung:
@@ -32,7 +32,7 @@ public sealed class RecoverStaleChunks : IPlugin
             .GetService(typeof(ITracingService));
         var factory = (IOrganizationServiceFactory)serviceProvider
             .GetService(typeof(IOrganizationServiceFactory));
-        // SYSTEM-Kontext (null): Zugriff auf alle Laeufe/Chunks unabhaengig von der Rolle des Ausloesers.
+        // SYSTEM-Kontext (null): Zugriff auf alle Läufe/Chunks unabhängig von der Rolle des Auslösers.
         var service = factory.CreateOrganizationService(null);
 
         var staleSeconds = WorkerEnvironment.ReadInt(

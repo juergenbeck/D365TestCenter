@@ -13,10 +13,10 @@ namespace D365TestCenter.Core;
 /// -- wer als Letzter beobachtet, dass alle Chunks Verarbeitet/Fehler sind, rechnet das
 /// Run-Aggregat EINMAL aus den Result-Records und setzt <c>jbe_testrun</c> auf Completed.
 ///
-/// Completion-Guard: das finale Update laeuft mit <see cref="ConcurrencyBehavior.IfRowVersionMatches"/>
+/// Completion-Guard: das finale Update läuft mit <see cref="ConcurrencyBehavior.IfRowVersionMatches"/>
 /// -- bei einem Plateau-Race gewinnt genau ein Aufrufer, die Verlierer erhalten eine
-/// Concurrency-Fault und kehren ohne Doppelabschluss zurueck (verhindert Lost-Update / 0x8009000c).
-/// Run-Zaehler werden NICHT inkrementell gefuehrt (kein Shared-Counter-OC), sondern am Plateau
+/// Concurrency-Fault und kehren ohne Doppelabschluss zurück (verhindert Lost-Update / 0x8009000c).
+/// Run-Zähler werden NICHT inkrementell geführt (kein Shared-Counter-OC), sondern am Plateau
 /// aus den Records aggregiert (<see cref="TestRunner.ComputeRunAggregate"/>).
 /// </summary>
 public sealed class RunCompletionService
@@ -31,8 +31,8 @@ public sealed class RunCompletionService
     }
 
     /// <summary>
-    /// Prueft, ob alle Chunks des Laufs Verarbeitet/Fehler sind (Plateau), und schliesst den Lauf
-    /// in dem Fall genau einmal ab. Gibt true zurueck, wenn DIESER Aufruf den Lauf abgeschlossen hat.
+    /// Prüft, ob alle Chunks des Laufs Verarbeitet/Fehler sind (Plateau), und schließt den Lauf
+    /// in dem Fall genau einmal ab. Gibt true zurück, wenn DIESER Aufruf den Lauf abgeschlossen hat.
     /// </summary>
     public bool TryComplete(Guid testRunId, Func<DateTime>? clock = null)
     {
@@ -49,7 +49,7 @@ public sealed class RunCompletionService
         if (total <= 0)
             return false; // Koordinator hat chunks_total noch nicht gesetzt -> kein Plateau
 
-        // Chunk-Status-Verteilung zaehlen.
+        // Chunk-Status-Verteilung zählen.
         var chunks = LoadChunks(testRunId);
         var done = chunks.Count(c => c == WorkerSchema.ChunkProcessed);
         var failed = chunks.Count(c => c == WorkerSchema.ChunkError);
@@ -67,7 +67,7 @@ public sealed class RunCompletionService
             : 0;
 
         var summary = $"{agg.Passed}/{agg.Total} bestanden, {agg.Failed + agg.Errored} fehlgeschlagen" +
-                      (agg.Skipped > 0 ? $", {agg.Skipped} uebersprungen" : "") +
+                      (agg.Skipped > 0 ? $", {agg.Skipped} übersprungen" : "") +
                       $" ({done} Chunks" + (failed > 0 ? $", {failed} fehlerhaft" : "") + ")";
 
         var update = new Entity(WorkerSchema.TestRunEntity, testRunId)
@@ -76,8 +76,8 @@ public sealed class RunCompletionService
             [WorkerSchema.RunCompletedOn] = completedOn,
             [WorkerSchema.RunTotal] = agg.Total,
             [WorkerSchema.RunPassed] = agg.Passed,
-            // jbe_failed bleibt rueckwaerts-kompatibel die Summe failed+errored (UI liest es so);
-            // der Outcome-Split steht zusaetzlich in jbe_errored / jbe_skipped.
+            // jbe_failed bleibt rückwärts-kompatibel die Summe failed+errored (UI liest es so);
+            // der Outcome-Split steht zusätzlich in jbe_errored / jbe_skipped.
             [WorkerSchema.RunFailed] = agg.Failed + agg.Errored,
             [WorkerSchema.RunErrored] = agg.Errored,
             [WorkerSchema.RunSkipped] = agg.Skipped,
@@ -155,8 +155,8 @@ public sealed class RunCompletionService
     }
 
     /// <summary>
-    /// ComputeRunAggregate zaehlt nur die ANZAHL der TrackedRecords (RecordsCreated). Aus dem
-    /// persistierten JSON-Array wird darum nur die Laenge rekonstruiert (Platzhalter-Eintraege).
+    /// ComputeRunAggregate zählt nur die ANZAHL der TrackedRecords (RecordsCreated). Aus dem
+    /// persistierten JSON-Array wird darum nur die Länge rekonstruiert (Platzhalter-Einträge).
     /// </summary>
     private static List<TrackedRecord> BuildTrackedPlaceholder(string? json)
     {

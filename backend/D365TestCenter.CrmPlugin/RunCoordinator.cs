@@ -5,12 +5,12 @@ namespace D365TestCenter.CrmPlugin;
 
 /// <summary>
 /// Async-Plugin auf <c>jbe_testrun</c> (ADR-0009 Phase 2). Koordinator des Worker-Modells:
-/// loest den Lauf in <c>jbe_testchunk</c>-Records auf (Fan-Out), die Worker fuehren sie aus.
+/// löst den Lauf in <c>jbe_testchunk</c>-Records auf (Fan-Out), die Worker führen sie aus.
 /// Ersetzt die depth-begrenzte Batch-Cascade von <see cref="RunTestsOnStatusChange"/> (Engine-Mutex
-/// ueber die EnvVar <c>jbe_use_worker</c>, C-08: genau ein Pfad pro Run).
+/// über die EnvVar <c>jbe_use_worker</c>, C-08: genau ein Pfad pro Run).
 ///
 /// Die gesamte testbare Logik liegt in <see cref="CoordinatorOrchestrator"/> (Core, mit
-/// Fake-Service unit-getestet); dieses Plugin ist nur die duenne Glue: Kontext + EnvVars ziehen,
+/// Fake-Service unit-getestet); dieses Plugin ist nur die dünne Glue: Kontext + EnvVars ziehen,
 /// SYSTEM-Service erzeugen, Orchestrator aufrufen, Fehler im Record dokumentieren (nicht werfen).
 ///
 /// Registrierung:
@@ -29,13 +29,13 @@ public sealed class RunCoordinator : IPlugin
             .GetService(typeof(ITracingService));
         var factory = (IOrganizationServiceFactory)serviceProvider
             .GetService(typeof(IOrganizationServiceFactory));
-        // SYSTEM-Kontext (null): Lese-/Schreibzugriff unabhaengig von der Rolle des Ausloesers.
+        // SYSTEM-Kontext (null): Lese-/Schreibzugriff unabhängig von der Rolle des Auslösers.
         var service = factory.CreateOrganizationService(null);
 
         if (context.PrimaryEntityName != WorkerSchema.TestRunEntity)
             return;
 
-        // Engine-Mutex (C-08): nur im Worker-Modus handeln; sonst laeuft die alte Cascade.
+        // Engine-Mutex (C-08): nur im Worker-Modus handeln; sonst läuft die alte Cascade.
         if (!WorkerEnvironment.ReadBool(service, WorkerSchema.EnvUseWorker, false))
         {
             trace.Trace("RunCoordinator: jbe_use_worker != true -> Worker-Modell inaktiv, skip.");

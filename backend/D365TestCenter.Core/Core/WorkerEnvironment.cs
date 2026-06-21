@@ -7,8 +7,8 @@ namespace D365TestCenter.Core;
 
 /// <summary>
 /// Liest Dataverse-Environment-Variables (jbe_use_worker, jbe_chunksize,
-/// jbe_worker_budget_seconds) fuer die Worker-Plugins. Effektiver Wert = Value-Record, sonst
-/// DefaultValue der Definition, sonst der uebergebene Code-Default. Schlaegt jede Abfrage fehl
+/// jbe_worker_budget_seconds) für die Worker-Plugins. Effektiver Wert = Value-Record, sonst
+/// DefaultValue der Definition, sonst der übergebene Code-Default. Schlägt jede Abfrage fehl
 /// (Feld fehlt o.Ae.), wird still der Code-Default genommen (robust gegen halb-deployte Envs).
 /// </summary>
 public static class WorkerEnvironment

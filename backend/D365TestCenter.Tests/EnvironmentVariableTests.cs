@@ -7,7 +7,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer die EnvironmentVariable-Actions SetEnvironmentVariable und
+/// Tests für die EnvironmentVariable-Actions SetEnvironmentVariable und
 /// RetrieveEnvironmentVariable.
 /// Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md.
 /// </summary>
@@ -211,7 +211,7 @@ public class EnvironmentVariableTests
     public void SetEnvironmentVariable_NoAlias_StillCreatesSnapshot()
     {
         // FB-30 Fix (Plugin v5.3.1): Snapshot wird IMMER erstellt, nicht
-        // nur wenn alias gesetzt ist. Verhindert dauerhafte EnvVar-Aenderungen
+        // nur wenn alias gesetzt ist. Verhindert dauerhafte EnvVar-Änderungen
         // durch Tests die alias vergessen haben.
         var fake = new FakeOrgService();
         var defId = Guid.NewGuid();
@@ -433,7 +433,7 @@ public class EnvironmentVariableTests
 }
 
 // ================================================================
-//  Minimaler Fake-IOrganizationService fuer EnvVar-Handler-Tests
+//  Minimaler Fake-IOrganizationService für EnvVar-Handler-Tests
 // ================================================================
 
 internal sealed class FakeOrgService : IOrganizationService

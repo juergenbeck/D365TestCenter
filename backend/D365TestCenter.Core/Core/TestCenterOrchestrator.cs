@@ -139,8 +139,8 @@ public sealed class TestCenterOrchestrator
 
     /// <summary>
     /// OE-10: an den TestRunner durchgereicht. Nur der CLI-run-Pfad setzt das auf true
-    /// (Primary-Namen der angelegten Records fuer den sync-zephyr-Audit erfassen); die
-    /// Plugin-Pfade lassen es false (Sandbox-Waechter). Default false.
+    /// (Primary-Namen der angelegten Records für den sync-zephyr-Audit erfassen); die
+    /// Plugin-Pfade lassen es false (Sandbox-Wächter). Default false.
     /// </summary>
     public bool CaptureRecordNames { get; set; }
 
@@ -239,7 +239,7 @@ public sealed class TestCenterOrchestrator
         List<TestCase> cases,
         bool keepRecords)
     {
-        // 3a. Leere Tests: sofort abschliessen
+        // 3a. Leere Tests: sofort abschließen
         if (cases.Count == 0)
         {
             Log("Keine Testfälle gefunden.");
@@ -374,9 +374,9 @@ public sealed class TestCenterOrchestrator
     }
 
     /// <summary>
-    /// C5 Cold-Start-Hint: bei mindestens 4 ausgefuehrten Tests den ersten
-    /// gegen den Median der Folge-Tests pruefen. Schwelle 3x, weil bei echtem
-    /// Cold-Start (JIT, Class-Load, Metadata-Cache) der Faktor deutlich darueber
+    /// C5 Cold-Start-Hint: bei mindestens 4 ausgeführten Tests den ersten
+    /// gegen den Median der Folge-Tests prüfen. Schwelle 3x, weil bei echtem
+    /// Cold-Start (JIT, Class-Load, Metadata-Cache) der Faktor deutlich darüber
     /// liegt. Skipped/Errored-Tests ohne DurationMs (0) gehen nicht in den Median.
     /// </summary>
     private static void EmitColdStartHint(TestRunResult result, Action<string> log)
@@ -389,7 +389,7 @@ public sealed class TestCenterOrchestrator
     }
 
     /// <summary>
-    /// Reine Funktion fuer C5: liefert die zwei Hint-Zeilen oder (null, null)
+    /// Reine Funktion für C5: liefert die zwei Hint-Zeilen oder (null, null)
     /// wenn kein Hint angebracht ist. Testbar ohne Konsolen-Hook.
     /// Heuristik: erste Test-Dauer > 3x Median der Folge-Tests, mindestens 3
     /// Folge-Tests mit nicht-null Dauer.
@@ -620,7 +620,7 @@ public sealed class TestCenterOrchestrator
         };
 
         // AssertionResults als JSON (aus den Assert-StepResults gefiltert,
-        // Kompat fuer UI-Code der jbe_assertionresults parst).
+        // Kompat für UI-Code der jbe_assertionresults parst).
         try
         {
             var assertSteps = tcResult.StepResults
@@ -709,10 +709,10 @@ public sealed class TestCenterOrchestrator
                     [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
                     [FldStepDuration] = (int)stepResult.DurationMs,
                     [FldStepError] = Truncate(stepResult.Message ?? "", 4000),
-                    // jbe_stepstatus ist global (105710xxx), unabhaengig vom publisher-
+                    // jbe_stepstatus ist global (105710xxx), unabhängig vom publisher-
                     // spezifischen Outcome-Config -> zentraler Helper statt _config.Outcome*
-                    // (FB-50: die alte Nutzung war numerisch ok fuer 0/1, aber semantisch
-                    // falsch und haette Skipped nie korrekt geschrieben).
+                    // (FB-50: die alte Nutzung war numerisch ok für 0/1, aber semantisch
+                    // falsch und hätte Skipped nie korrekt geschrieben).
                     [FldStepStatus] = new OptionSetValue(WorkerSchema.MapStepStatus(stepResult)),
                     [FldStepRunResult] = resultRef
                 };
@@ -783,7 +783,7 @@ public sealed class TestCenterOrchestrator
     }
 
     /// <summary>
-    /// Liest ein Attribute als String unabhängig vom tatsaechlichen Typ
+    /// Liest ein Attribute als String unabhängig vom tatsächlichen Typ
     /// (String, OptionSetValue, Number, ...). Verhindert InvalidCastExceptions
     /// bei heterogenen Feld-Typen zwischen Umgebungen.
     /// </summary>

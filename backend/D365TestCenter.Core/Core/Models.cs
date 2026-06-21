@@ -36,7 +36,7 @@ public sealed class TestSuiteDefinition
 /// Seit ADR-0004 (2026-04-23): Ein Test ist eine einzige geordnete Liste
 /// von Actions. Es gibt kein getrenntes Preconditions- oder Assertions-
 /// Array mehr — alles ist ein Step. Die JSON-Reihenfolge ist die
-/// Ausfuehrungsreihenfolge. Assert ist ein Step-Action-Typ wie jeder
+/// Ausführungsreihenfolge. Assert ist ein Step-Action-Typ wie jeder
 /// andere.
 /// </summary>
 public sealed class TestCase
@@ -139,7 +139,7 @@ public sealed class FilterCondition
 
 /// <summary>
 /// Einzelner Testschritt. Seit ADR-0004 umfasst TestStep alle Action-Typen
-/// inklusive Assert. Die Properties sind so gewaehlt, dass sie je nach
+/// inklusive Assert. Die Properties sind so gewählt, dass sie je nach
 /// Action-Typ andere Teilmengen benutzen:
 ///
 ///  - CreateRecord:      entity + alias + fields (+ columns)
@@ -168,14 +168,14 @@ public sealed class TestStep
     /// WaitForFieldValue, AssertEnvironment, Assert, SetEnvironmentVariable,
     /// RetrieveEnvironmentVariable, BrowserAction (ADR-0006).
     /// Legacy-Aliasse (ADR-0007): CallCustomApi und ExecuteAction werden auf
-    /// ExecuteRequest gemappt. Aliasse bleiben fuer mind. zwei Plugin-Major-
+    /// ExecuteRequest gemappt. Aliasse bleiben für mind. zwei Plugin-Major-
     /// Versionen erhalten.
     /// </summary>
     [JsonProperty("action")]
     public string Action { get; set; } = "";
 
     // ── BrowserAction-spezifische Properties (ADR-0006) ────────────────────
-    // Die folgenden Felder sind nur fuer Action="BrowserAction" relevant.
+    // Die folgenden Felder sind nur für Action="BrowserAction" relevant.
     // Im Plugin-Pfad (Sandbox) wird BrowserAction als Skipped markiert.
 
     /// <summary>
@@ -263,7 +263,7 @@ public sealed class TestStep
     /// <summary>
     /// Legacy-Alias zu RequestName (ADR-0007). Wird in StepExecuteRequest
     /// via Fallback-Kette RequestName -> ActionName -> ApiName -> Entity
-    /// gelesen. Bleibt fuer mind. zwei Plugin-Major-Versionen erhalten.
+    /// gelesen. Bleibt für mind. zwei Plugin-Major-Versionen erhalten.
     /// </summary>
     [JsonProperty("actionName")]
     public string? ActionName { get; set; }
@@ -284,13 +284,13 @@ public sealed class TestStep
     public Dictionary<string, object?>? Parameters { get; set; }
 
     /// <summary>
-    /// ExecuteRequest-Output als Alias verfuegbar machen (A4 / ZastrPay-Feedback).
+    /// ExecuteRequest-Output als Alias verfügbar machen (A4 / ZastrPay-Feedback).
     /// Wenn gesetzt, werden alle OrganizationResponse-Werte unter diesem Alias
     /// im ctx.OutputAliases-Dict abgelegt und sind via Platzhalter
-    /// {alias.outputs.X} oder {alias.outputs.X[type=Y]} (fuer
+    /// {alias.outputs.X} oder {alias.outputs.X[type=Y]} (für
     /// EntityReferenceCollection-Filter) referenzierbar.
     /// Beispiel: ExecuteRequest QualifyLead mit outputAlias='qres' macht
-    /// {qres.outputs.CreatedEntityReferences[type=account]} verfuegbar.
+    /// {qres.outputs.CreatedEntityReferences[type=account]} verfügbar.
     /// </summary>
     [JsonProperty("outputAlias")]
     public string? OutputAlias { get; set; }
@@ -298,14 +298,14 @@ public sealed class TestStep
     // ── Assert-spezifische Properties ─────────────────────────
 
     /// <summary>
-    /// Kontext-abhaengig (Action bestimmt die Semantik):
+    /// Kontext-abhängig (Action bestimmt die Semantik):
     ///  - Assert: Record, Query, Contact, Account, ContactSource, MembershipSource, BridgeRecord, Logging.
     ///  - SetEnvironmentVariable: effective (Default), currentValue, defaultValue.
     /// </summary>
     [JsonProperty("target")]
     public string? Target { get; set; }
 
-    /// <summary>Assert: zu pruefendes Feld auf dem Ziel-Record.</summary>
+    /// <summary>Assert: zu prüfendes Feld auf dem Ziel-Record.</summary>
     [JsonProperty("field")]
     public string? Field { get; set; }
 
@@ -318,9 +318,9 @@ public sealed class TestStep
     public string? Value { get; set; }
 
     /// <summary>
-    /// Fehlerverhalten fuer diesen Step. "continue" = Exception wird nur
-    /// geloggt, Test laeuft weiter. "stop" = Test wird abgebrochen (Outcome=Error).
-    /// Default ist action-abhaengig: "continue" fuer Assert, "stop" fuer alle
+    /// Fehlerverhalten für diesen Step. "continue" = Exception wird nur
+    /// geloggt, Test läuft weiter. "stop" = Test wird abgebrochen (Outcome=Error).
+    /// Default ist action-abhängig: "continue" für Assert, "stop" für alle
     /// anderen Actions.
     /// </summary>
     [JsonProperty("onError")]
@@ -338,7 +338,7 @@ public sealed class TestStep
 
     // ── EnvironmentVariable-Actions (SetEnvironmentVariable, RetrieveEnvironmentVariable) ──
 
-    /// <summary>schemaname der environmentvariabledefinition (env-unabhaengig).</summary>
+    /// <summary>schemaname der environmentvariabledefinition (env-unabhängig).</summary>
     [JsonProperty("schemaName")]
     public string? SchemaName { get; set; }
 
@@ -349,10 +349,10 @@ public sealed class TestStep
     [JsonProperty("source")]
     public string? Source { get; set; }
 
-    // ── Query-Sortierung fuer FindRecord/WaitForRecord (1c Option A) ──
+    // ── Query-Sortierung für FindRecord/WaitForRecord (1c Option A) ──
 
     /// <summary>
-    /// Sortierung fuer WaitForRecord/FindRecord. Komma-separierter String im
+    /// Sortierung für WaitForRecord/FindRecord. Komma-separierter String im
     /// OData-Stil: "feldname asc|desc, feldname2 asc|desc". Default ist asc
     /// wenn nur Feldname ohne Richtung angegeben.
     /// Beispiel: "modifiedon asc, createdon desc"
@@ -361,9 +361,9 @@ public sealed class TestStep
     public string? OrderBy { get; set; }
 
     /// <summary>
-    /// Maximalzahl Treffer fuer WaitForRecord/FindRecord. Default ist 1 (nimmt
-    /// den ersten Treffer gemaess Sortierung). Stretch-Feature fuer top > 1
-    /// (mehrere Alias-Records) ist aktuell nicht unterstuetzt.
+    /// Maximalzahl Treffer für WaitForRecord/FindRecord. Default ist 1 (nimmt
+    /// den ersten Treffer gemäß Sortierung). Stretch-Feature für top > 1
+    /// (mehrere Alias-Records) ist aktuell nicht unterstützt.
     /// </summary>
     [JsonProperty("top")]
     public int? Top { get; set; }
@@ -374,7 +374,7 @@ public sealed class TestStep
     /// Wenn true: dieser Step darf (muss) eine Exception werfen um als
     /// Passed zu gelten. Ohne Exception wird der Step als Failed markiert
     /// mit Message "Expected exception but action succeeded".
-    /// Fuer Assert-Actions ignoriert (Assert-Failure ist bereits durch
+    /// Für Assert-Actions ignoriert (Assert-Failure ist bereits durch
     /// NotEquals/IsNull/NotExists etc. abgedeckt).
     /// </summary>
     [JsonProperty("expectFailure")]
@@ -384,7 +384,7 @@ public sealed class TestStep
     /// Erweiterte Variante: Spec zum Matchen der erwarteten Exception
     /// (messageContains, messageMatches, errorCode, httpStatus).
     /// expectException impliziert expectFailure=true. Alle gesetzten Felder
-    /// werden mit AND verknuepft.
+    /// werden mit AND verknüpft.
     /// </summary>
     [JsonProperty("expectException")]
     public ExpectExceptionSpec? ExpectException { get; set; }
@@ -402,8 +402,8 @@ public sealed class TestStep
 }
 
 /// <summary>
-/// Match-Spezifikation fuer erwartete Exceptions (expectException).
-/// Mehrere gesetzte Felder werden mit AND verknuepft.
+/// Match-Spezifikation für erwartete Exceptions (expectException).
+/// Mehrere gesetzte Felder werden mit AND verknüpft.
 /// messageContains und messageMatches sind exklusiv — beide zusammen ist
 /// ein Validierungsfehler.
 /// </summary>
@@ -480,7 +480,7 @@ public sealed class StepCondition : StepConditionClause
 }
 
 /// <summary>
-/// Snapshot eines EnvironmentVariable-Zustands fuer Auto-Restore im Cleanup.
+/// Snapshot eines EnvironmentVariable-Zustands für Auto-Restore im Cleanup.
 /// Wird von SetEnvironmentVariable erzeugt wenn alias gesetzt ist.
 /// </summary>
 public sealed class EnvVarSnapshot
@@ -505,9 +505,9 @@ public sealed class EnvVarSnapshot
 }
 
 /// <summary>
-/// Interne Datenstruktur fuer AssertionEngine. Ein Assert-Step wird zur
-/// Ausfuehrung in ein TestAssertion-Objekt uebersetzt, dann evaluiert, und
-/// das Ergebnis wieder in den StepResult zurueckgemappt.
+/// Interne Datenstruktur für AssertionEngine. Ein Assert-Step wird zur
+/// Ausführung in ein TestAssertion-Objekt übersetzt, dann evaluiert, und
+/// das Ergebnis wieder in den StepResult zurückgemappt.
 /// </summary>
 public sealed class TestAssertion
 {
@@ -549,14 +549,14 @@ public sealed class TestContext
     /// <summary>Alle erstellten Entity-IDs für Cleanup nach dem Test.</summary>
     public List<(string EntityName, Guid Id)> CreatedEntities { get; set; } = new List<(string, Guid)>();
 
-    /// <summary>Snapshots fuer EnvironmentVariable-Auto-Restore im Cleanup.</summary>
+    /// <summary>Snapshots für EnvironmentVariable-Auto-Restore im Cleanup.</summary>
     public List<EnvVarSnapshot> EnvVarSnapshots { get; set; } = new List<EnvVarSnapshot>();
 
     /// <summary>
-    /// ExecuteRequest-Output-Werte unter Alias (A4). Aussen: Alias-Name.
+    /// ExecuteRequest-Output-Werte unter Alias (A4). Außen: Alias-Name.
     /// Innen: Output-Name -> nativer Wert (EntityReference, EntityReferenceCollection,
     /// OptionSetValue, Money, Guid, primitive Typen). PlaceholderEngine
-    /// loest {alias.outputs.X} und {alias.outputs.X[type=Y]} hierueber auf.
+    /// löst {alias.outputs.X} und {alias.outputs.X[type=Y]} hierüber auf.
     /// </summary>
     public Dictionary<string, Dictionary<string, object?>> OutputAliases { get; set; }
         = new Dictionary<string, Dictionary<string, object?>>(StringComparer.OrdinalIgnoreCase);
@@ -628,30 +628,30 @@ public sealed class TestRunResult
 /// <summary>
 /// Ergebnis eines zeitbudgetierten Gruppen-Laufs (ADR-0009 Phase 1, Befund 3,
 /// Gruppen-Grenzen-Continuation). <see cref="TestRunner.RunGroupsBudgeted"/> verarbeitet
-/// Abhaengigkeits-Gruppen ab <c>startGroupIndex</c> bis das Zeitbudget reisst, immer
-/// mindestens eine Gruppe pro Aufruf. <see cref="NextGroupIndex"/> ist der Cursor fuer
-/// die naechste Continuation-Welle; <see cref="Done"/> ist true, wenn alle Gruppen
-/// abgearbeitet sind. <see cref="Run"/> traegt die Ergebnisse dieser Welle.
+/// Abhängigkeits-Gruppen ab <c>startGroupIndex</c> bis das Zeitbudget reißt, immer
+/// mindestens eine Gruppe pro Aufruf. <see cref="NextGroupIndex"/> ist der Cursor für
+/// die nächste Continuation-Welle; <see cref="Done"/> ist true, wenn alle Gruppen
+/// abgearbeitet sind. <see cref="Run"/> trägt die Ergebnisse dieser Welle.
 /// </summary>
 public sealed class BudgetedRunResult
 {
-    /// <summary>Index der naechsten un-gelaufenen Gruppe (Continuation-Cursor). == Gruppen-Anzahl bei Done.</summary>
+    /// <summary>Index der nächsten un-gelaufenen Gruppe (Continuation-Cursor). == Gruppen-Anzahl bei Done.</summary>
     public int NextGroupIndex { get; set; }
 
-    /// <summary>True, wenn alle Gruppen abgearbeitet sind (kein weiterer Self-Trigger noetig).</summary>
+    /// <summary>True, wenn alle Gruppen abgearbeitet sind (kein weiterer Self-Trigger nötig).</summary>
     public bool Done { get; set; }
 
-    /// <summary>Ergebnisse + Zaehler + Log der in dieser Welle gelaufenen Gruppen.</summary>
+    /// <summary>Ergebnisse + Zähler + Log der in dieser Welle gelaufenen Gruppen.</summary>
     public TestRunResult Run { get; set; } = new TestRunResult();
 }
 
 /// <summary>
 /// Run-Aggregat, einmal am Plateau aus den Result-Records gerechnet (ADR-0009 B.5,
 /// Plan Phase 3). Outcome-Split + Dauer-Verteilung + angelegte Records. Die Verteilung
-/// (avg/median/min/max/slowest) wird ueber die AUSGEFUEHRTEN Tests gerechnet
+/// (avg/median/min/max/slowest) wird über die AUSGEFÜHRTEN Tests gerechnet
 /// (Outcome != Skipped); Skipped-Tests (Dauer 0) verzerren sie sonst. Median-Konvention
 /// wie die Cold-Start-Heuristik (<c>sorted[count/2]</c>, obere Mitte bei gerader Anzahl).
-/// Wall-Clock (<c>jbe_durationms</c>) und Chunk-Zaehler kommen NICHT von hier
+/// Wall-Clock (<c>jbe_durationms</c>) und Chunk-Zähler kommen NICHT von hier
 /// (Timestamps bzw. Chunk-Records) -- das rechnet der Worker inline.
 /// </summary>
 public sealed class RunAggregate
@@ -662,17 +662,17 @@ public sealed class RunAggregate
     public int Errored { get; set; }
     public int Skipped { get; set; }
 
-    /// <summary>Summe der Per-Test-Dauern der ausgefuehrten Tests (Rechenzeit).</summary>
+    /// <summary>Summe der Per-Test-Dauern der ausgeführten Tests (Rechenzeit).</summary>
     public long TotalTestMs { get; set; }
     public int AvgTestMs { get; set; }
     public int MedianTestMs { get; set; }
     public int MinTestMs { get; set; }
     public int MaxTestMs { get; set; }
 
-    /// <summary>Test-ID mit der hoechsten Dauer (Triage/Hotspot). Null wenn nichts ausgefuehrt.</summary>
+    /// <summary>Test-ID mit der höchsten Dauer (Triage/Hotspot). Null wenn nichts ausgeführt.</summary>
     public string? SlowestTestId { get; set; }
 
-    /// <summary>Summe der getrackten angelegten Records ueber alle Ergebnisse.</summary>
+    /// <summary>Summe der getrackten angelegten Records über alle Ergebnisse.</summary>
     public int RecordsCreated { get; set; }
 }
 
@@ -702,7 +702,7 @@ public sealed class TestCaseResult
 
     /// <summary>
     /// B5 / ZastrPay-Feedback: alle vom Test angelegten Records (Alias plus
-    /// Entity plus Id). Wird vor Cleanup aus ctx.CreatedEntities gefuellt
+    /// Entity plus Id). Wird vor Cleanup aus ctx.CreatedEntities gefüllt
     /// und als JSON in jbe_testrunresult.jbe_trackedrecords persistiert.
     /// Gibt Test-Autoren bei keepRecords=true die Liste zum manuellen Cleanup
     /// und dokumentiert bei normalem Cleanup welche Records es gab.
@@ -711,7 +711,7 @@ public sealed class TestCaseResult
     public List<TrackedRecord> TrackedRecords { get; set; } = new();
 }
 
-/// <summary>Pro TestCase getrackter Record fuer jbe_trackedrecords (B5).</summary>
+/// <summary>Pro TestCase getrackter Record für jbe_trackedrecords (B5).</summary>
 public sealed class TrackedRecord
 {
     [JsonProperty("entity")]
@@ -731,7 +731,7 @@ public sealed class TrackedRecord
 }
 
 /// <summary>
-/// Ergebnis eines einzelnen Testschritts. Universelle Struktur fuer alle
+/// Ergebnis eines einzelnen Testschritts. Universelle Struktur für alle
 /// Action-Typen (CreateRecord/UpdateRecord/Assert/...); Persistenz-Ebene
 /// schreibt pro StepResult einen jbe_teststep-Record.
 /// </summary>
@@ -782,7 +782,7 @@ public sealed class StepResult
 
     // ── Assert-spezifisch ────────────────────────────────────
 
-    /// <summary>Name des geprueften Feldes (nur bei Assert).</summary>
+    /// <summary>Name des geprüften Feldes (nur bei Assert).</summary>
     [JsonProperty("assertField")]
     public string? AssertField { get; set; }
 
@@ -790,13 +790,13 @@ public sealed class StepResult
     [JsonProperty("expectedDisplay")]
     public string? ExpectedDisplay { get; set; }
 
-    /// <summary>Tatsaechlicher Wert in Anzeigeform (nur bei Assert).</summary>
+    /// <summary>Tatsächlicher Wert in Anzeigeform (nur bei Assert).</summary>
     [JsonProperty("actualDisplay")]
     public string? ActualDisplay { get; set; }
 
     // ── Debug / Transparenz ─────────────────────────────────
 
-    /// <summary>Eingabe-Payload als JSON (optional, fuer Replay/Debug).</summary>
+    /// <summary>Eingabe-Payload als JSON (optional, für Replay/Debug).</summary>
     [JsonProperty("inputData")]
     public string? InputData { get; set; }
 
@@ -817,8 +817,8 @@ public sealed class StepResult
 }
 
 /// <summary>
-/// Internes Rueckgabe-Objekt des AssertionEngine. Wird vom TestRunner
-/// nach einem Assert-Step in einen StepResult uebertragen.
+/// Internes Rückgabe-Objekt des AssertionEngine. Wird vom TestRunner
+/// nach einem Assert-Step in einen StepResult übertragen.
 /// </summary>
 public sealed class AssertionResult
 {

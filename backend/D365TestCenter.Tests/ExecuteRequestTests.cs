@@ -137,7 +137,7 @@ public class ExecuteRequestTests
         var boolVal = resolved["PerformParentingChecks"];
         Assert.NotNull(boolVal);
 
-        // Strings werden aufgeloest
+        // Strings werden aufgelöst
         Assert.Equal("Hello TEST01", resolved["SimpleString"]);
     }
 
@@ -228,7 +228,7 @@ public class ExecuteRequestTests
     }
 
     // ================================================================
-    //  Vollstaendiger ExecuteRequest Testcase deserialisiert korrekt
+    //  Vollständiger ExecuteRequest Testcase deserialisiert korrekt
     // ================================================================
 
     [Fact]

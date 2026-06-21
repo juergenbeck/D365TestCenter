@@ -29,7 +29,7 @@ public static class RunResultLoader
         {
             ColumnSet = new ColumnSet(
                 "jbe_testid", "jbe_outcome", "jbe_durationms", "jbe_errormessage",
-                // OE-10: TrackedRecords + AssertionResults fuer den sync-zephyr-Audit-Kommentar.
+                // OE-10: TrackedRecords + AssertionResults für den sync-zephyr-Audit-Kommentar.
                 "jbe_trackedrecords", "jbe_assertionresults"),
             Criteria = new FilterExpression
             {
@@ -81,7 +81,7 @@ public static class RunResultLoader
         catch { return new List<StepResult>(); }
     }
 
-    /// <summary>DTO fuer das jbe_assertionresults-JSON (Orchestrator-Schreibformat).</summary>
+    /// <summary>DTO für das jbe_assertionresults-JSON (Orchestrator-Schreibformat).</summary>
     sealed class AssertResultDto
     {
         public string? description { get; set; }

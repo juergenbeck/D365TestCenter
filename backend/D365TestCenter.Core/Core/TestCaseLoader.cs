@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Laedt <c>jbe_testcase</c>-Definitionen aus Dataverse und deserialisiert sie zu
+/// Lädt <c>jbe_testcase</c>-Definitionen aus Dataverse und deserialisiert sie zu
 /// <see cref="TestCase"/> (ADR-0009). Zwei Pfade:
-///   - <see cref="LoadEnabled"/>: vom Koordinator -- alle aktiven Testfaelle, gefiltert
+///   - <see cref="LoadEnabled"/>: vom Koordinator -- alle aktiven Testfälle, gefiltert
 ///     (* / id-Liste mit *-Suffix / tag: / category:), identisch zur Alt-Cascade-Semantik.
 ///   - <see cref="LoadByIds"/>: vom Worker -- nur die (rohen) Test-IDs des Chunk-Snapshots.
 ///
@@ -24,7 +24,7 @@ public static class TestCaseLoader
         MetadataPropertyHandling = MetadataPropertyHandling.Ignore
     };
 
-    /// <summary>Laedt alle aktiven (jbe_enabled) Testfaelle und wendet den Filter an.</summary>
+    /// <summary>Lädt alle aktiven (jbe_enabled) Testfälle und wendet den Filter an.</summary>
     public static List<TestCase> LoadEnabled(IOrganizationService service, string? filter,
         Action<string>? log = null)
     {
@@ -42,9 +42,9 @@ public static class TestCaseLoader
     }
 
     /// <summary>
-    /// Laedt die Testfaelle zu einer (rohen) Test-ID-Liste (Chunk-Snapshot). Reihenfolge folgt
-    /// der uebergebenen ID-Liste (deterministisch fuer Gruppierung/Cursor). Deaktivierte Faelle
-    /// bleiben enthalten -- der Snapshot wurde beim Anlegen gefiltert; der Runner ueberspringt
+    /// Lädt die Testfälle zu einer (rohen) Test-ID-Liste (Chunk-Snapshot). Reihenfolge folgt
+    /// der übergebenen ID-Liste (deterministisch für Gruppierung/Cursor). Deaktivierte Fälle
+    /// bleiben enthalten -- der Snapshot wurde beim Anlegen gefiltert; der Runner überspringt
     /// deaktivierte ohnehin sauber.
     /// </summary>
     public static List<TestCase> LoadByIds(IOrganizationService service, IList<string> testIds,
@@ -66,7 +66,7 @@ public static class TestCaseLoader
             .GroupBy(tc => tc.Id, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
-        // In der Reihenfolge des Snapshots zurueckgeben (deterministisch).
+        // In der Reihenfolge des Snapshots zurückgeben (deterministisch).
         var ordered = new List<TestCase>();
         foreach (var id in testIds)
             if (byId.TryGetValue(id, out var tc))

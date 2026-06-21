@@ -29,7 +29,7 @@ public sealed class GenerateReportApi : IPlugin
         {
             var runIdStr = GetString(context, "RunId");
             if (string.IsNullOrWhiteSpace(runIdStr) || !Guid.TryParse(runIdStr, out var runId))
-                throw new InvalidPluginExecutionException("Input 'RunId' fehlt oder ist keine gueltige GUID.");
+                throw new InvalidPluginExecutionException("Input 'RunId' fehlt oder ist keine gültige GUID.");
 
             var detail = string.Equals(GetString(context, "Detail"), "full", StringComparison.OrdinalIgnoreCase)
                 ? ReportDetail.Full : ReportDetail.Compact;

@@ -62,7 +62,7 @@ public static class ExportDefs
             if (!writtenPaths.Add(relPath))
             {
                 summary.Collisions.Add(relPath);
-                log?.Invoke($"  KOLLISION {relPath} (ueberschrieben - testId/Domaene-Konflikt)");
+                log?.Invoke($"  KOLLISION {relPath} (überschrieben - testId/Domaene-Konflikt)");
             }
 
             File.WriteAllText(fullPath, DefinitionMdWriter.Render(m), new UTF8Encoding(false));

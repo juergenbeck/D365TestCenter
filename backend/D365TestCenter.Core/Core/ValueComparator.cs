@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 namespace D365TestCenter.Core;
 
 /// <summary>
-/// Geteilter Vergleichskern fuer feldbasierte Operatoren. EINE Quelle der Wahrheit
-/// fuer <see cref="AssertionEngine"/> (Assert-Action) UND die Step-Condition
-/// (ADR-0011, konditionale Step-Ausfuehrung): beide vergleichen denselben Satz
+/// Geteilter Vergleichskern für feldbasierte Operatoren. EINE Quelle der Wahrheit
+/// für <see cref="AssertionEngine"/> (Assert-Action) UND die Step-Condition
+/// (ADR-0011, konditionale Step-Ausführung): beide vergleichen denselben Satz
 /// Operatoren mit identischer Semantik (case-insensitiv, native + String-Inputs).
 ///
 /// Extrahiert aus <see cref="AssertionEngine"/> (Session 2026-06-21). Umfang = exakt die
@@ -16,13 +16,13 @@ namespace D365TestCenter.Core;
 ///  - DateSetRecently: zeit-toleranz-spezifisch, bleibt Assert-only.
 ///  - Exists/NotExists/RecordCount: Query-only, kein Wert-Vergleich.
 ///  - In/NotIn: existieren nur im Filter-Set (GenericRecordWaiter), nie in der
-///    AssertionEngine; sie hier aufzunehmen waere eine zweite Comparator-Quelle.
+///    AssertionEngine; sie hier aufzunehmen wäre eine zweite Comparator-Quelle.
 /// </summary>
 public static class ValueComparator
 {
     /// <summary>
-    /// Die von diesem Comparator unterstuetzten feldbasierten Operatoren (kanonische
-    /// Schreibweise). Quelle fuer den PackValidator-Lint (CONDITION_MALFORMED).
+    /// Die von diesem Comparator unterstützten feldbasierten Operatoren (kanonische
+    /// Schreibweise). Quelle für den PackValidator-Lint (CONDITION_MALFORMED).
     /// </summary>
     public static readonly IReadOnlyCollection<string> SupportedOperators = new[]
     {
@@ -32,9 +32,9 @@ public static class ValueComparator
 
     /// <summary>
     /// Wertet einen feldbasierten Vergleich aus. <paramref name="actual"/> darf ein
-    /// nativer Dataverse-Wert (Assert) oder ein aufgeloester String (Condition) sein;
+    /// nativer Dataverse-Wert (Assert) oder ein aufgelöster String (Condition) sein;
     /// <paramref name="expected"/> ist der erwartete Wert als String (Platzhalter bereits
-    /// aufgeloest). Liefert true, wenn der Operator behandelt wurde (Ergebnis in
+    /// aufgelöst). Liefert true, wenn der Operator behandelt wurde (Ergebnis in
     /// <paramref name="passed"/>), und false bei einem nicht-feldbasierten/unbekannten
     /// Operator -- der Aufrufer entscheidet dann (DateSetRecently in AssertionEngine,
     /// Error in der Condition-Auswertung).
@@ -90,10 +90,10 @@ public static class ValueComparator
 
     /// <summary>
     /// Normalisiert einen DateTime auf UTC. Dataverse liefert Zeitwerte mit
-    /// Kind=Unspecified; diese sind bereits UTC und duerfen NICHT ueber
+    /// Kind=Unspecified; diese sind bereits UTC und dürfen NICHT über
     /// ToUniversalTime() laufen, das sie als Lokalzeit interpretiert und den
     /// Offset abzieht (beobachtet als +7200s-Drift in CEST, FB-44). Nur echte
-    /// Local-Werte werden umgerechnet. Einzige Quelle fuer alle zeitbasierten
+    /// Local-Werte werden umgerechnet. Einzige Quelle für alle zeitbasierten
     /// Operatoren (DateSetRecently in der AssertionEngine, GreaterThan/LessThan hier).
     /// </summary>
     public static DateTime NormalizeToUtc(DateTime dt) => dt.Kind switch
@@ -104,7 +104,7 @@ public static class ValueComparator
     };
 
     /// <summary>
-    /// Geordneter Vergleich fuer GreaterThan/LessThan. Versucht nacheinander:
+    /// Geordneter Vergleich für GreaterThan/LessThan. Versucht nacheinander:
     /// decimal (invariant), DateTime (RoundtripKind, invariant), dann String
     /// (Ordinal, case-insensitive). Liefert false wenn beide Werte null oder
     /// der Actualwert nicht extrahierbar ist. -1 actual&lt;expected, 0 gleich,
@@ -115,7 +115,7 @@ public static class ValueComparator
         comparison = 0;
         if (actual == null || expected == null) return false;
 
-        // Money/OptionSetValue/int direkt behandeln (kein Umweg ueber ExtractString-String-Format).
+        // Money/OptionSetValue/int direkt behandeln (kein Umweg über ExtractString-String-Format).
         decimal? actualNum = actual switch
         {
             Money m => m.Value,
@@ -167,7 +167,7 @@ public static class ValueComparator
     /// <summary>
     /// Gleichheitsvergleich: extrahiert den Actualwert als String und vergleicht
     /// getrimmt, case-insensitiv. Leerer Erwartungswert matcht Whitespace-Actual.
-    /// Boolean wird ueber ExtractString zu "True"/"False" -- der case-insensitive
+    /// Boolean wird über ExtractString zu "True"/"False" -- der case-insensitive
     /// Vergleich matcht daher auch gegen "true"/"false" (ADR-0011 Korrektur 2).
     /// </summary>
     public static bool CompareValues(object? actual, string? expected)

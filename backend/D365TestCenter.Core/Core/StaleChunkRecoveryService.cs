@@ -8,16 +8,16 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace D365TestCenter.Core;
 
-/// <summary>Ergebnis eines Recovery-Sweeps (fuer die Custom API + Trace).</summary>
+/// <summary>Ergebnis eines Recovery-Sweeps (für die Custom API + Trace).</summary>
 public sealed class RecoverySweepResult
 {
-    /// <summary>Anzahl Laeufe in Status "Laeuft" (Running), die gescannt wurden.</summary>
+    /// <summary>Anzahl Läufe in Status "Läuft" (Running), die gescannt wurden.</summary>
     public int RunsScanned { get; set; }
-    /// <summary>Anzahl Chunks, die von "Laeuft" auf "Fortsetzen" zurueckgesetzt wurden.</summary>
+    /// <summary>Anzahl Chunks, die von "Läuft" auf "Fortsetzen" zurückgesetzt wurden.</summary>
     public int ChunksRecovered { get; set; }
-    /// <summary>Anzahl Chunks, die wegen ueberschrittener Recovery-Obergrenze auf "Fehler" gesetzt wurden.</summary>
+    /// <summary>Anzahl Chunks, die wegen überschrittener Recovery-Obergrenze auf "Fehler" gesetzt wurden.</summary>
     public int ChunksPoisoned { get; set; }
-    /// <summary>Anzahl Laeufe, die dieser Sweep am Plateau abgeschlossen hat.</summary>
+    /// <summary>Anzahl Läufe, die dieser Sweep am Plateau abgeschlossen hat.</summary>
     public int RunsCompleted { get; set; }
 
     public override string ToString() =>
@@ -25,31 +25,31 @@ public sealed class RecoverySweepResult
 }
 
 /// <summary>
-/// Stale-"Laeuft"-Chunk-Recovery (FB-46 / OE-12). Testbarer Kern der Custom API
+/// Stale-"Läuft"-Chunk-Recovery (FB-46 / OE-12). Testbarer Kern der Custom API
 /// <c>jbe_RecoverStaleChunks</c>, die ein Power-Automate-Recurrence-Flow taktet (ADR-0009
-/// Takt-Option b, hier gezielt fuer Recovery).
+/// Takt-Option b, hier gezielt für Recovery).
 ///
-/// Problem: reisst eine Worker-Welle das harte 120-s-Sandbox-Limit, wird der Async-Worker gekillt,
-/// NACHDEM er den Chunk per OC-Claim auf "Laeuft" gesetzt hat, aber BEVOR er flippt. Ein eingefrorener
+/// Problem: reißt eine Worker-Welle das harte 120-s-Sandbox-Limit, wird der Async-Worker gekillt,
+/// NACHDEM er den Chunk per OC-Claim auf "Läuft" gesetzt hat, aber BEVOR er flippt. Ein eingefrorener
 /// Chunk bekommt nie wieder ein Trigger-Event -> das Run-Plateau wird nie erreicht -> Deadlock.
 ///
-/// Loesung: ein wiederkehrender Sweep findet Chunks, die laenger als <c>staleSeconds</c> in "Laeuft"
-/// stehen (provabel tot: ein lebender Worker haelt "Laeuft" hoechstens 120 s) und setzt sie auf
-/// "Fortsetzen" zurueck -- der Worker resumed ab <c>jbe_group_cursor</c> (Gruppen-Grenzen-Continuation,
+/// Lösung: ein wiederkehrender Sweep findet Chunks, die länger als <c>staleSeconds</c> in "Läuft"
+/// stehen (provabel tot: ein lebender Worker hält "Läuft" höchstens 120 s) und setzt sie auf
+/// "Fortsetzen" zurück -- der Worker resumed ab <c>jbe_group_cursor</c> (Gruppen-Grenzen-Continuation,
 /// idempotente Results -> ein atomarer Gruppen-Neustart ist folgenlos).
 ///
 /// Eigenschaften:
 ///   - <b>Stale-Anker:</b> <c>jbe_lastclaimedon</c> (vom Worker bei jedem OC-Claim gesetzt), Fallback
-///     <c>jbe_startedon</c> fuer Chunks, die vor dem Feld eingefroren sind.
+///     <c>jbe_startedon</c> für Chunks, die vor dem Feld eingefroren sind.
 ///   - <b>Re-Read + OC-Reset (IfRowVersionMatches):</b> direkt vor dem Reset wird der Chunk frisch
-///     gelesen (frische RowVersion, Status re-bestaetigt); aenderte sich der Chunk doch noch (ein
-///     spaeter Worker hat geflippt), wird uebersprungen -- kein Clobbern.
+///     gelesen (frische RowVersion, Status re-bestätigt); änderte sich der Chunk doch noch (ein
+///     später Worker hat geflippt), wird übersprungen -- kein Clobbern.
 ///   - <b>Loop-Breaker (<c>jbe_recoverycount</c>):</b> der Worker setzt ihn bei Fortschritt auf 0; die
-///     Recovery erhoeht ihn. Ueber <c>maxRecoveries</c> -> Chunk auf "Fehler" statt Endlos-Resume
+///     Recovery erhöht ihn. Über <c>maxRecoveries</c> -> Chunk auf "Fehler" statt Endlos-Resume
 ///     (irreduzibler Rest: ein Einzeltest > Wellen-Budget, ADR Entscheidung 7 vertagt). Der
-///     Fehler-Chunk zaehlt zum Plateau -> der Lauf schliesst sauber ab statt zu deadlocken.
+///     Fehler-Chunk zählt zum Plateau -> der Lauf schließt sauber ab statt zu deadlocken.
 ///   - <b>Plateau:</b> je gescanntem Lauf wird <see cref="RunCompletionService"/> aufgerufen -- ein
-///     Poison-Chunk kann das Plateau ausloesen, und ein zuvor verpasster Abschluss wird nachgeholt.
+///     Poison-Chunk kann das Plateau auslösen, und ein zuvor verpasster Abschluss wird nachgeholt.
 /// </summary>
 public sealed class StaleChunkRecoveryService
 {
@@ -63,11 +63,11 @@ public sealed class StaleChunkRecoveryService
     }
 
     /// <summary>
-    /// Sweept stale "Laeuft"-Chunks (laenger als <paramref name="staleSeconds"/> ohne Re-Claim) in
-    /// laufenden Laeufen und recovert sie. Strategie: EINE Chunk-Query (Status "Laeuft") + EIN
-    /// Running-Run-Filter statt pro-Lauf-Iteration -- auf einer Org mit vielen Alt-Laeufen, die
-    /// dauerhaft in Status Running stehen (Alt-Batch-Cascade ohne Chunks), waeren pro-Lauf-Queries
-    /// reine Verschwendung. Nur Laeufe mit tatsaechlich stale Chunks werden angefasst.
+    /// Sweept stale "Läuft"-Chunks (länger als <paramref name="staleSeconds"/> ohne Re-Claim) in
+    /// laufenden Läufen und recovert sie. Strategie: EINE Chunk-Query (Status "Läuft") + EIN
+    /// Running-Run-Filter statt pro-Lauf-Iteration -- auf einer Org mit vielen Alt-Läufen, die
+    /// dauerhaft in Status Running stehen (Alt-Batch-Cascade ohne Chunks), wären pro-Lauf-Queries
+    /// reine Verschwendung. Nur Läufe mit tatsächlich stale Chunks werden angefasst.
     /// </summary>
     public RecoverySweepResult Sweep(int staleSeconds, int maxRecoveries, Func<DateTime>? clock = null)
     {
@@ -78,7 +78,7 @@ public sealed class StaleChunkRecoveryService
         result.RunsScanned = runningRunIds.Count;
         if (runningRunIds.Count == 0)
         {
-            _log?.Invoke("Stale-Chunk-Recovery: keine laufenden Laeufe.");
+            _log?.Invoke("Stale-Chunk-Recovery: keine laufenden Läufe.");
             return result;
         }
 
@@ -96,7 +96,7 @@ public sealed class StaleChunkRecoveryService
             if (recovered + poisoned > 0) affectedRuns.Add(runId);
         }
 
-        // Plateau je betroffenem Lauf pruefen: ein Poison-Chunk kann es ausloesen.
+        // Plateau je betroffenem Lauf prüfen: ein Poison-Chunk kann es auslösen.
         foreach (var runId in affectedRuns)
             if (new RunCompletionService(_service, _log).TryComplete(runId, now))
                 result.RunsCompleted++;
@@ -110,7 +110,7 @@ public sealed class StaleChunkRecoveryService
     {
         var runRef = chunk.GetAttributeValue<EntityReference>(WorkerSchema.ChunkTestRunId);
         if (runRef == null || !runningRunIds.Contains(runRef.Id))
-            return false; // Chunk gehoert keinem laufenden Lauf -> nicht anfassen
+            return false; // Chunk gehört keinem laufenden Lauf -> nicht anfassen
         var anchor = chunk.GetAttributeValue<DateTime?>(WorkerSchema.ChunkLastClaimedOn)
                      ?? chunk.GetAttributeValue<DateTime?>(WorkerSchema.ChunkStartedOn);
         if (anchor == null)
@@ -129,11 +129,11 @@ public sealed class StaleChunkRecoveryService
         }
         catch
         {
-            return (0, 0); // Chunk inzwischen geloescht o.ae. -> ueberspringen
+            return (0, 0); // Chunk inzwischen gelöscht o.ae. -> überspringen
         }
         if (fresh.GetAttributeValue<OptionSetValue>(WorkerSchema.ChunkStatus)?.Value
             != WorkerSchema.ChunkRunning)
-            return (0, 0); // inzwischen geflippt (lebender/spaeter Worker) -> nicht anfassen
+            return (0, 0); // inzwischen geflippt (lebender/später Worker) -> nicht anfassen
 
         var prevRecoveryCount = fresh.GetAttributeValue<int?>(WorkerSchema.ChunkRecoveryCount) ?? 0;
         var newRecoveryCount = prevRecoveryCount + 1;
@@ -143,7 +143,7 @@ public sealed class StaleChunkRecoveryService
         return ResetStale(fresh, newRecoveryCount) ? (1, 0) : (0, 0);
     }
 
-    /// <summary>Reset "Laeuft" -> "Fortsetzen" per OC; der Worker resumed ab jbe_group_cursor.</summary>
+    /// <summary>Reset "Läuft" -> "Fortsetzen" per OC; der Worker resumed ab jbe_group_cursor.</summary>
     private bool ResetStale(Entity fresh, int newRecoveryCount)
     {
         var update = new Entity(WorkerSchema.TestChunkEntity, fresh.Id)
@@ -156,12 +156,12 @@ public sealed class StaleChunkRecoveryService
             $"Stale-Chunk {fresh.Id} -> Fortsetzen (Recovery {newRecoveryCount}).");
     }
 
-    /// <summary>Loop-Breaker: zu oft recovert ohne Fortschritt -> "Fehler" per OC (Plateau-faehig).</summary>
+    /// <summary>Loop-Breaker: zu oft recovert ohne Fortschritt -> "Fehler" per OC (Plateau-fähig).</summary>
     private bool PoisonStale(Entity fresh, int prevRecoveryCount, Func<DateTime> now)
     {
         var msg = $"Stale-Chunk-Recovery: Chunk lief wiederholt ins Hard-Timeout ohne Fortschritt " +
                   $"({prevRecoveryCount} Recoveries). Wahrscheinlich ein Einzeltest, dessen Schrittkette " +
-                  "das Wellen-Budget uebersteigt. Abhilfe: kleinere jbe_chunksize oder Step-Level-" +
+                  "das Wellen-Budget übersteigt. Abhilfe: kleinere jbe_chunksize oder Step-Level-" +
                   "Checkpointing (ADR-0009 Entscheidung 7, vertagt).";
         var update = new Entity(WorkerSchema.TestChunkEntity, fresh.Id)
         {
@@ -187,9 +187,9 @@ public sealed class StaleChunkRecoveryService
         }
         catch (FaultException<OrganizationServiceFault>)
         {
-            // Der Chunk hat sich zwischen Read und Reset geaendert (ein spaeter Worker hat doch
-            // noch geflippt) -> nicht clobbern, ueberspringen.
-            _log?.Invoke($"Stale-Chunk {update.Id}: OC-Reset verloren (Chunk inzwischen geaendert) -> skip.");
+            // Der Chunk hat sich zwischen Read und Reset geändert (ein später Worker hat doch
+            // noch geflippt) -> nicht clobbern, überspringen.
+            _log?.Invoke($"Stale-Chunk {update.Id}: OC-Reset verloren (Chunk inzwischen geändert) -> skip.");
             return false;
         }
     }

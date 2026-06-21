@@ -10,10 +10,10 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer <see cref="CoordinatorOrchestrator"/> (ADR-0009 Phase 2). Pinnt: Trigger-Status-Gate,
-/// Fan-Out (Gruppen -> Chunks), Abhaengigkeits-Affinitaet (Gruppe bleibt in einem Chunk),
-/// H2 (DeleteOldResults genau auf der ersten Welle), Re-Run loescht alte Chunks, chunks_total frueh,
-/// Watchdog-Continuation mit Cursor-Persistenz, Continuation ohne erneutes Loeschen.
+/// Tests für <see cref="CoordinatorOrchestrator"/> (ADR-0009 Phase 2). Pinnt: Trigger-Status-Gate,
+/// Fan-Out (Gruppen -> Chunks), Abhängigkeits-Affinität (Gruppe bleibt in einem Chunk),
+/// H2 (DeleteOldResults genau auf der ersten Welle), Re-Run löscht alte Chunks, chunks_total früh,
+/// Watchdog-Continuation mit Cursor-Persistenz, Continuation ohne erneutes Löschen.
 /// </summary>
 public class CoordinatorOrchestratorTests
 {
@@ -129,11 +129,11 @@ public class CoordinatorOrchestratorTests
 
         new CoordinatorOrchestrator(fake).Run(runId, 5, 80, SeqClock(T0));
 
-        // Eine Gruppe darf NICHT ueber Chunks getrennt werden; bei chunkSize 5 passt alles in 1 Chunk.
+        // Eine Gruppe darf NICHT über Chunks getrennt werden; bei chunkSize 5 passt alles in 1 Chunk.
         var chunks = Chunks(fake);
         Assert.Single(chunks);
         var ids = ChunkIds(chunks[0]);
-        // TC1 und TC2 muessen im selben Chunk sein.
+        // TC1 und TC2 müssen im selben Chunk sein.
         Assert.Contains("TC1", ids);
         Assert.Contains("TC2", ids);
     }
@@ -142,7 +142,7 @@ public class CoordinatorOrchestratorTests
     public void Watchdog_BudgetExceeded_PersistsCursor_Continues()
     {
         var fake = new FakeDataverse();
-        // chunkSize 1 -> 4 unabhaengige Tests = 4 Chunks.
+        // chunkSize 1 -> 4 unabhängige Tests = 4 Chunks.
         var runId = SeedRun(fake, WorkerSchema.StatusPlanned, chunkSize: 1);
         SeedTestCase(fake, "TC1");
         SeedTestCase(fake, "TC2");
@@ -160,7 +160,7 @@ public class CoordinatorOrchestratorTests
         Assert.Equal(WorkerSchema.StatusPlanned,
             run.GetAttributeValue<OptionSetValue>(WorkerSchema.RunStatus).Value); // Self-Trigger
         Assert.Equal(1, run.GetAttributeValue<int>(WorkerSchema.RunCoordinatorCursor));
-        Assert.Equal(4, run.GetAttributeValue<int>(WorkerSchema.RunChunksTotal)); // frueh gesetzt
+        Assert.Equal(4, run.GetAttributeValue<int>(WorkerSchema.RunChunksTotal)); // früh gesetzt
         Assert.Equal(1, run.GetAttributeValue<int>(WorkerSchema.RunContinuations));
     }
 
@@ -175,7 +175,7 @@ public class CoordinatorOrchestratorTests
         SeedTestCase(fake, "TC3");
         SeedTestCase(fake, "TC4");
 
-        // Ein bereits geschriebenes Result (frische Welle) darf NICHT geloescht werden.
+        // Ein bereits geschriebenes Result (frische Welle) darf NICHT gelöscht werden.
         var keep = new Entity(WorkerSchema.TestRunResultEntity, Guid.NewGuid());
         keep[WorkerSchema.ResultTestRun] = new EntityReference(WorkerSchema.TestRunEntity, runId);
         keep[WorkerSchema.ResultTestId] = "TC1";
@@ -197,7 +197,7 @@ public class CoordinatorOrchestratorTests
         var runId = SeedRun(fake, WorkerSchema.StatusPlanned, chunkSize: 5);
         SeedTestCase(fake, "TC1");
 
-        // Alt-Bestand aus einem frueheren Lauf.
+        // Alt-Bestand aus einem früheren Lauf.
         var oldResult = new Entity(WorkerSchema.TestRunResultEntity, Guid.NewGuid());
         oldResult[WorkerSchema.ResultTestRun] = new EntityReference(WorkerSchema.TestRunEntity, runId);
         oldResult[WorkerSchema.ResultTestId] = "OLD";
@@ -218,7 +218,7 @@ public class CoordinatorOrchestratorTests
         Assert.False(fake.Exists(WorkerSchema.TestRunResultEntity, oldResult.Id));
         Assert.False(fake.Exists(WorkerSchema.TestStepEntity, oldStep.Id));
         Assert.False(fake.Exists(WorkerSchema.TestChunkEntity, oldChunk.Id));
-        // Genau ein frischer Chunk (fuer TC1).
+        // Genau ein frischer Chunk (für TC1).
         Assert.Equal(1, fake.CountCreated(WorkerSchema.TestChunkEntity));
     }
 

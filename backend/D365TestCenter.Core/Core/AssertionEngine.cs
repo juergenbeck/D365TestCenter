@@ -25,7 +25,7 @@ public sealed class AssertionEngine
 
     /// <summary>
     /// Konstruktor mit Metadata-Cache. Filter-Conversion ist type-aware (FB-32):
-    /// GUID-foermige Strings auf String/Memo-Feldern bleiben Strings.
+    /// GUID-förmige Strings auf String/Memo-Feldern bleiben Strings.
     /// </summary>
     public AssertionEngine(EntityMetadataCache metadataCache)
     {
@@ -44,7 +44,7 @@ public sealed class AssertionEngine
         {
             // KRITISCH: Platzhalter im Value-Feld auflösen BEVOR die Operator-Prüfung läuft.
             // Beispiel: "value": "{DUP_CONTACT.fields.markant_goldenrecordidnumber}"
-            // muss durch den PlaceholderResolver auf die tatsaechliche AutoNumber ersetzt werden,
+            // muss durch den PlaceholderResolver auf die tatsächliche AutoNumber ersetzt werden,
             // damit die Equals-Prüfung gegen den Record-Wert gelingt.
             // Auch recordRef wird aufgelöst (könnte {RECORD:alias} enthalten).
             if (!string.IsNullOrEmpty(assertion.Value))
@@ -238,7 +238,7 @@ public sealed class AssertionEngine
 
         var op = assertion.Operator.ToUpperInvariant();
 
-        // Geteilter Vergleichskern fuer die feldbasierten Operatoren (ADR-0011):
+        // Geteilter Vergleichskern für die feldbasierten Operatoren (ADR-0011):
         // EINE Quelle der Wahrheit, von Assert UND Step-Condition genutzt.
         if (ValueComparator.TryEvaluate(assertion.Operator, actual, assertion.Value, out var passed))
         {

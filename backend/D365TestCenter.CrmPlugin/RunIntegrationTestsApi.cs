@@ -36,10 +36,10 @@ public sealed class RunIntegrationTestsApi : IPlugin
         var rawService = factory.CreateOrganizationService(context.UserId);
 
         // ADR-0005 / FB-31b: Im Sync-Plugin-Pfad alle Service-Calls via
-        // SandboxSafeOrganizationService routen. Damit faengt das Plugin
+        // SandboxSafeOrganizationService routen. Damit fängt das Plugin
         // niemals direkt eine Exception aus IOrganizationService — Faults
         // kommen als InvalidPluginExecutionException, die als managed
-        // Exception kein Sandbox-Wachter-Verstoss sind. Das deckt auch
+        // Exception kein Sandbox-Wachter-Verstoß sind. Das deckt auch
         // den FindRecord-auf-systemuser-Pfad ab (FB-31-Variante 2b).
         var service = new SandboxSafeOrganizationService(rawService);
 

@@ -6,8 +6,8 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer TestRunner.ComputeRunAggregate (ADR-0009 B.5 / Phase 3, Plateau-Aggregat).
-/// Outcome-Split + Dauer-Verteilung (ueber ausgefuehrte Tests, Skipped ausgenommen) +
+/// Tests für TestRunner.ComputeRunAggregate (ADR-0009 B.5 / Phase 3, Plateau-Aggregat).
+/// Outcome-Split + Dauer-Verteilung (über ausgeführte Tests, Skipped ausgenommen) +
 /// angelegte Records. Median-Konvention sorted[count/2] (wie Cold-Start-Heuristik).
 /// </summary>
 public class RunAggregateTests
@@ -92,7 +92,7 @@ public class RunAggregateTests
         Assert.Equal(2, agg.Passed);
         Assert.Equal(1, agg.Skipped);
         Assert.Equal(400, agg.TotalTestMs);
-        Assert.Equal(200, agg.AvgTestMs);     // 400 / 2 ausgefuehrte
+        Assert.Equal(200, agg.AvgTestMs);     // 400 / 2 ausgeführte
         Assert.Equal(300, agg.MedianTestMs);  // sorted[2/2] = sorted[1] = 300
         Assert.Equal(100, agg.MinTestMs);
         Assert.Equal(300, agg.MaxTestMs);

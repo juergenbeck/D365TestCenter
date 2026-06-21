@@ -9,15 +9,15 @@ using Microsoft.Xrm.Sdk.Query;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// In-Memory-Fake eines IOrganizationService fuer die ADR-0009 Worker-Tests
-/// (Koordinator/Worker/Result-Writer). Unterstuetzt genau die Operationen, die die
+/// In-Memory-Fake eines IOrganizationService für die ADR-0009 Worker-Tests
+/// (Koordinator/Worker/Result-Writer). Unterstützt genau die Operationen, die die
 /// testbaren Orchestratoren brauchen:
 ///   - Create / Update / Delete / Retrieve
 ///   - RetrieveMultiple (QueryExpression mit Equal/In-Conditions, Lookup-Vergleich per Id)
 ///   - Execute(UpsertRequest) mit KeyAttributeCollection (Alternate-Key-Upsert, H1/H3)
 ///   - Execute(UpdateRequest) mit ConcurrencyBehavior.IfRowVersionMatches (OC-Claim, A-02/C-03)
 ///
-/// RowVersion wird pro Record als monoton steigender Zaehler simuliert und bei jedem
+/// RowVersion wird pro Record als monoton steigender Zähler simuliert und bei jedem
 /// Update/Upsert inkrementiert; ein IfRowVersionMatches-Update mit veralteter RowVersion
 /// wirft eine FaultException&lt;OrganizationServiceFault&gt; (ConcurrencyVersionMismatch),
 /// genau wie die Plattform -- so ist der Doppel-Fire-Verlierer deterministisch testbar.
@@ -40,7 +40,7 @@ public sealed class FakeDataverse : IOrganizationService
 
     /// <summary>
     /// Optionaler Hook: wird am ENDE jedes Retrieve aufgerufen (logicalName, id), nachdem die
-    /// zurueckgegebene Kopie samt RowVersion erstellt wurde. Erlaubt im Test, einen konkurrierenden
+    /// zurückgegebene Kopie samt RowVersion erstellt wurde. Erlaubt im Test, einen konkurrierenden
     /// Fire zu simulieren (z.B. die RowVersion hochzudrehen), um den OC-Claim-Verlierer zu testen.
     /// </summary>
     public Action<string, Guid>? OnRetrieve { get; set; }
@@ -108,7 +108,7 @@ public sealed class FakeDataverse : IOrganizationService
     public EntityCollection RetrieveMultiple(QueryBase query)
     {
         if (query is not QueryExpression qe)
-            throw new NotImplementedException("FakeDataverse.RetrieveMultiple: nur QueryExpression unterstuetzt");
+            throw new NotImplementedException("FakeDataverse.RetrieveMultiple: nur QueryExpression unterstützt");
 
         IEnumerable<Row> rows = _store.Values.Where(r => r.Entity.LogicalName == qe.EntityName);
         rows = rows.Where(r => MatchesFilter(r.Entity, qe.Criteria));
@@ -178,7 +178,7 @@ public sealed class FakeDataverse : IOrganizationService
             e.Id = id;
             var keyField = e.LogicalName + "id";
             if (!e.Contains(keyField)) e[keyField] = id;
-            // Alternate-Key-Attribute als echte Attribute materialisieren (damit spaetere
+            // Alternate-Key-Attribute als echte Attribute materialisieren (damit spätere
             // Lookups per Equal-Condition sie finden).
             if (target.KeyAttributes != null)
                 foreach (var ka in target.KeyAttributes)
@@ -239,7 +239,7 @@ public sealed class FakeDataverse : IOrganizationService
             case ConditionOperator.Null:
                 return actual == null;
             default:
-                throw new NotImplementedException($"FakeDataverse: ConditionOperator {cond.Operator} nicht unterstuetzt");
+                throw new NotImplementedException($"FakeDataverse: ConditionOperator {cond.Operator} nicht unterstützt");
         }
     }
 
@@ -267,7 +267,7 @@ public sealed class FakeDataverse : IOrganizationService
 
     private static Entity ProjectColumns(Row row, ColumnSet columns)
     {
-        // Vereinfachung: immer alle Attribute zurueckgeben (Tests lesen gezielt).
+        // Vereinfachung: immer alle Attribute zurückgeben (Tests lesen gezielt).
         var clone = Clone(row.Entity);
         clone.RowVersion = row.Version.ToString();
         return clone;

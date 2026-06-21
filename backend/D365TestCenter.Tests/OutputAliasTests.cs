@@ -8,10 +8,10 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer A4 — ExecuteRequest-Output als Alias verfuegbar machen.
+/// Tests für A4 — ExecuteRequest-Output als Alias verfügbar machen.
 /// Siehe ZastrPay-Feedback v1 Anforderung A4.
 ///
-/// Pattern: {alias.outputs.X} und {alias.outputs.X[type=Y]} fuer
+/// Pattern: {alias.outputs.X} und {alias.outputs.X[type=Y]} für
 /// EntityReferenceCollection-Filter.
 /// </summary>
 public class OutputAliasTests
@@ -166,8 +166,8 @@ public class OutputAliasTests
     public void Resolve_UnknownAlias_LeavesPlaceholderUnchanged()
     {
         // Wenn der outputAlias nicht im ctx liegt, soll der Platzhalter
-        // unveraendert bleiben — analog zum {alias.id}-Verhalten. Der Test
-        // bricht spaeter im Step ab, nicht hier.
+        // unverändert bleiben — analog zum {alias.id}-Verhalten. Der Test
+        // bricht später im Step ab, nicht hier.
         var ctx = new TestContext();
         var engine = new PlaceholderEngine();
 

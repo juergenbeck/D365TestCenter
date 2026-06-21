@@ -9,10 +9,10 @@ using Newtonsoft.Json;
 
 namespace D365TestCenter.Core;
 
-/// <summary>Ergebnis eines Worker-Laufs (fuer Tests + Trace).</summary>
+/// <summary>Ergebnis eines Worker-Laufs (für Tests + Trace).</summary>
 public enum ChunkWorkerOutcome
 {
-    /// <summary>Kein Trigger-Status (Laeuft/Verarbeitet/Fehler-Fire) oder OC-Claim verloren.</summary>
+    /// <summary>Kein Trigger-Status (Läuft/Verarbeitet/Fehler-Fire) oder OC-Claim verloren.</summary>
     Skipped,
     /// <summary>Kaputtes jbe_testids-JSON -> Chunk auf Fehler, kein Re-Trigger (C-07).</summary>
     Poison,
@@ -24,19 +24,19 @@ public enum ChunkWorkerOutcome
 
 /// <summary>
 /// Testbarer Kern des RunChunkWorker-Plugins (ADR-0009 Phase 3, async auf <c>jbe_testchunk</c>).
-/// Fuehrt die Tests eines Chunks ab dem Gruppen-Cursor aus und schreibt die Ergebnisse idempotent.
+/// Führt die Tests eines Chunks ab dem Gruppen-Cursor aus und schreibt die Ergebnisse idempotent.
 ///
 /// Eigenschaften:
-///   - <b>OC-Claim + Trigger-Guard (A-02/C-03):</b> Pickup Neu/Fortsetzen -> Laeuft per
+///   - <b>OC-Claim + Trigger-Guard (A-02/C-03):</b> Pickup Neu/Fortsetzen -> Läuft per
 ///     IfRowVersionMatches; der Doppel-Fire-Verlierer skippt sauber; nur beim Trigger-Wert handeln.
 ///   - <b>Poison-Chunk (C-07):</b> kaputtes <c>jbe_testids</c>-JSON -> Status Fehler, KEIN Re-Trigger.
 ///   - <b>Gruppen-Grenzen-Continuation (Befund 3):</b> <see cref="TestRunner.RunGroupsBudgeted"/> ab
 ///     <c>jbe_group_cursor</c>; eine frische Worker-Instanz baut den dependsOn-Zustand gruppenintern
 ///     selbst auf (kein Re-Seed).
 ///   - <b>H1 Reihenfolge-Invariante:</b> erst ALLE Result-Upserts committen, dann Cursor + Status-Flip
-///     -- sonst liest ein Re-Fire einen unvollstaendigen Zustand.
-///   - <b>H3 idempotenter Upsert</b> ueber <see cref="ChunkResultWriter"/> (Alternate Key).
-///   - <b>Chunk-eigene Zaehler</b> (kein Shared-Counter-OC); Run-Aggregat erst am Plateau
+///     -- sonst liest ein Re-Fire einen unvollständigen Zustand.
+///   - <b>H3 idempotenter Upsert</b> über <see cref="ChunkResultWriter"/> (Alternate Key).
+///   - <b>Chunk-eigene Zähler</b> (kein Shared-Counter-OC); Run-Aggregat erst am Plateau
 ///     (<see cref="RunCompletionService"/>, C-04 Completion-Guard).
 /// </summary>
 public sealed class ChunkWorkerOrchestrator
@@ -77,13 +77,13 @@ public sealed class ChunkWorkerOrchestrator
         var isFirstPickup = status == WorkerSchema.ChunkNew;
         var chunkStartedOn = chunk.GetAttributeValue<DateTime?>(WorkerSchema.ChunkStartedOn) ?? startTime;
 
-        // ── OC-Claim: Neu/Fortsetzen -> Laeuft ──────────────────────
+        // ── OC-Claim: Neu/Fortsetzen -> Läuft ──────────────────────
         var claim = new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
             [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkRunning),
             // Stale-Anker (FB-46/OE-12): bei JEDEM Claim (erster Pickup + Resume) gesetzt, damit die
-            // Recovery "wie lange in Laeuft" messen kann -- jbe_startedon (erster Start) taugt nicht,
-            // ein gesund mehrwelliger Chunk waere sonst faelschlich stale.
+            // Recovery "wie lange in Läuft" messen kann -- jbe_startedon (erster Start) taugt nicht,
+            // ein gesund mehrwelliger Chunk wäre sonst fälschlich stale.
             [WorkerSchema.ChunkLastClaimedOn] = startTime
         };
         if (isFirstPickup) claim[WorkerSchema.ChunkStartedOn] = startTime;
@@ -113,7 +113,7 @@ public sealed class ChunkWorkerOrchestrator
         catch (Exception ex)
         {
             SetChunkError(chunkId, $"Kaputtes jbe_testids-JSON: {ex.Message}");
-            // Ein Fehler-Chunk zaehlt zum Plateau (done+failed == total) -> Lauf-Abschluss pruefen.
+            // Ein Fehler-Chunk zählt zum Plateau (done+failed == total) -> Lauf-Abschluss prüfen.
             new RunCompletionService(_service, _log).TryComplete(testRunId, now);
             _log?.Invoke("Worker: Poison-Chunk -> Status Fehler, kein Re-Trigger.");
             return ChunkWorkerOutcome.Poison;
@@ -128,7 +128,7 @@ public sealed class ChunkWorkerOrchestrator
         var runner = new TestRunner(_service)
         {
             KeepRecords = keepRecords,
-            // B.3 / OE-10: der async Worker unterliegt der Sandbox-Waechter-Regel nicht und darf
+            // B.3 / OE-10: der async Worker unterliegt der Sandbox-Wächter-Regel nicht und darf
             // die Primary-Namen der angelegten Records per try/catch-Retrieve erfassen.
             CaptureRecordNames = true
         };
@@ -141,7 +141,7 @@ public sealed class ChunkWorkerOrchestrator
         foreach (var tc in wave.Results)
             writer.UpsertResult(testRunId, tc);
 
-        // ── DANN Chunk-Zaehler + Cursor + Status-Flip ───────────────
+        // ── DANN Chunk-Zähler + Cursor + Status-Flip ───────────────
         var prevProcessed = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkProcessedCount) ?? 0;
         var prevFailed = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkFailedCount) ?? 0;
         var prevContinuations = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkContinuations) ?? 0;
@@ -161,7 +161,7 @@ public sealed class ChunkWorkerOrchestrator
                 [WorkerSchema.ChunkCompletedOn] = completedOn,
                 [WorkerSchema.ChunkDurationMs] =
                     (int)Math.Max(0, (completedOn - chunkStartedOn).TotalMilliseconds),
-                // Fortschritt -> Loop-Breaker-Zaehler zuruecksetzen (OE-12): nur wiederholte
+                // Fortschritt -> Loop-Breaker-Zähler zurücksetzen (OE-12): nur wiederholte
                 // Recoveries OHNE Fortschritt sollen Richtung Poison akkumulieren.
                 [WorkerSchema.ChunkRecoveryCount] = 0
             };
@@ -169,13 +169,13 @@ public sealed class ChunkWorkerOrchestrator
             _log?.Invoke($"Worker: Chunk verarbeitet ({prevProcessed + waveProcessed} Test(s), " +
                          $"{prevFailed + waveFailed} fehlgeschlagen).");
 
-            // Plateau: wenn dies der letzte fertige Chunk war, Lauf abschliessen (Completion-Guard).
+            // Plateau: wenn dies der letzte fertige Chunk war, Lauf abschließen (Completion-Guard).
             new RunCompletionService(_service, _log).TryComplete(testRunId, now);
             return ChunkWorkerOutcome.Processed;
         }
 
         // Budget gerissen -> Self-Trigger (Fortsetzen). Mindestens eine Gruppe lief (Budget-Check
-        // vor jeder Gruppe) -> Fortschritt -> Loop-Breaker-Zaehler zuruecksetzen (OE-12).
+        // vor jeder Gruppe) -> Fortschritt -> Loop-Breaker-Zähler zurücksetzen (OE-12).
         _service.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
             [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkResume),

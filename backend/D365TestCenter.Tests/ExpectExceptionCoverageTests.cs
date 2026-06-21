@@ -35,7 +35,7 @@ namespace D365TestCenter.Tests;
 ///        same code path semantics (service.Execute throws → outer catch
 ///        → EvaluateExpectException(ex)).
 ///
-/// Reference: docs/b1-expectexception-luecken-inventur-2026-05-17.md
+/// Reference: docs/b1-expectexception-lücken-inventur-2026-05-17.md
 /// </summary>
 public class ExpectExceptionCoverageTests
 {

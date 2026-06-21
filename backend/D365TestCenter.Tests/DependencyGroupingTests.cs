@@ -6,9 +6,9 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer TestRunner.BuildDependencyGroups (ADR-0009 Phase 1, Befund 3).
-/// Connected Components ueber dependsOn (+ sharedContext defensiv). Pinnt die
-/// Gruppierung, die der Koordinator fuers Chunking und der Worker fuer den
+/// Tests für TestRunner.BuildDependencyGroups (ADR-0009 Phase 1, Befund 3).
+/// Connected Components über dependsOn (+ sharedContext defensiv). Pinnt die
+/// Gruppierung, die der Koordinator fürs Chunking und der Worker für den
 /// Gruppen-Grenzen-Continuation-Cursor braucht.
 /// </summary>
 public class DependencyGroupingTests
@@ -22,7 +22,7 @@ public class DependencyGroupingTests
             SharedContext = sharedContext
         };
 
-    /// <summary>Gibt die IDs einer Gruppe zurueck (Reihenfolge erhalten).</summary>
+    /// <summary>Gibt die IDs einer Gruppe zurück (Reihenfolge erhalten).</summary>
     private static List<string> Ids(List<TestCase> group) => group.Select(t => t.Id).ToList();
 
     [Fact]
@@ -94,7 +94,7 @@ public class DependencyGroupingTests
     [Fact]
     public void UnknownDependency_OutsideSet_ProducesNoEdge()
     {
-        // A haengt von einem Test ausserhalb der Liste ab -> eigene Singleton-Gruppe.
+        // A hängt von einem Test außerhalb der Liste ab -> eigene Singleton-Gruppe.
         var tests = new List<TestCase>
         {
             Tc("A", dependsOn: new[] { "ZZZ-NOT-IN-SET" }),

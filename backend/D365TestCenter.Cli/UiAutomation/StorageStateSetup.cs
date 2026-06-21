@@ -28,7 +28,7 @@ public static class StorageStateSetup
         if (!org.Contains("-dev.", StringComparison.OrdinalIgnoreCase))
         {
             Console.Error.WriteLine($"FEHLER: --org '{org}' ist nicht eine DEV-URL.");
-            Console.Error.WriteLine("Storage-State-Setup ist auf DEV beschraenkt (Markant-Zugriffsmatrix).");
+            Console.Error.WriteLine("Storage-State-Setup ist auf DEV beschränkt (Markant-Zugriffsmatrix).");
             return 2;
         }
 
@@ -51,7 +51,7 @@ public static class StorageStateSetup
         await page.GotoAsync(startUrl);
 
         Console.WriteLine();
-        Console.WriteLine(">> Bitte jetzt im geoeffneten Browser einloggen (MFA ggf.).");
+        Console.WriteLine(">> Bitte jetzt im geöffneten Browser einloggen (MFA ggf.).");
         Console.WriteLine(">> Skript wartet AUTOMATISCH bis Markant DEV geladen ist (Timeout 5 Min).");
         Console.WriteLine();
 
@@ -76,7 +76,7 @@ public static class StorageStateSetup
         {
             Console.Error.WriteLine();
             Console.Error.WriteLine("    TIMEOUT (5 Min): Login nicht erkannt.");
-            Console.Error.WriteLine("    Pruefen: Bist du auf der Markant-DEV-Hauptseite?");
+            Console.Error.WriteLine("    Prüfen: Bist du auf der Markant-DEV-Hauptseite?");
             await browser.CloseAsync();
             return 3;
         }
@@ -84,7 +84,7 @@ public static class StorageStateSetup
         await context.StorageStateAsync(new BrowserContextStorageStateOptions { Path = output });
         Console.WriteLine();
         Console.WriteLine($"==> Storage-State gespeichert: {output}");
-        Console.WriteLine($"    Lebensdauer: ~24h fuer SPA-Flow (Microsoft Identity Platform Default).");
+        Console.WriteLine($"    Lebensdauer: ~24h für SPA-Flow (Microsoft Identity Platform Default).");
         Console.WriteLine();
         Console.WriteLine($"Run UI tests via:");
         Console.WriteLine($"  D365TestCenter.Cli run --org {org} --browser-state {output} --filter MARKANT-UI-* ...");

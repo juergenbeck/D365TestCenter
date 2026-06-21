@@ -6,7 +6,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer <see cref="WorkerEnvironment"/>: effektiver Wert = Value-Record vor DefaultValue vor
+/// Tests für <see cref="WorkerEnvironment"/>: effektiver Wert = Value-Record vor DefaultValue vor
 /// Code-Fallback; fehlende Definition -> Fallback; unparsbarer Int -> Fallback.
 /// </summary>
 public class WorkerEnvironmentTests

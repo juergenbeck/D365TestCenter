@@ -7,7 +7,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer GenericRecordWaiter.BuildQuery — insbesondere die orderBy-
+/// Tests für GenericRecordWaiter.BuildQuery — insbesondere die orderBy-
 /// und top-Erweiterungen (1c Option A aus
 /// D365TestCenter-Workspace/03_implementation/findrecord-orderby-fetchxml.md).
 /// </summary>
@@ -93,7 +93,7 @@ public class GenericRecordWaiterTests
                 "contact", new List<FilterCondition>(), null,
                 orderBy: "modifiedon sideways"));
 
-        Assert.Contains("Ungueltige Sortierrichtung", ex.Message);
+        Assert.Contains("Ungültige Sortierrichtung", ex.Message);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class GenericRecordWaiterTests
     }
 
     // ================================================================
-    //  Kombination + Kompatibilitaet
+    //  Kombination + Kompatibilität
     // ================================================================
 
     [Fact]
@@ -171,7 +171,7 @@ public class GenericRecordWaiterTests
     public void OriginalSignature_NoOrderByNoTop_StaysBackwardCompatible()
     {
         // Bestehende Aufrufe (z.B. AssertionEngine, die TopCount separat setzt)
-        // muessen unveraendert funktionieren — kein Order, kein TopCount.
+        // müssen unverändert funktionieren — kein Order, kein TopCount.
         var q = GenericRecordWaiter.BuildQuery(
             "contact",
             new List<FilterCondition>
@@ -191,15 +191,15 @@ public class GenericRecordWaiterTests
 
     // ================================================================
     //  FB-32: Metadata-aware ConvertString
-    //  GUID-foermige Strings auf String/Memo-Feldern bleiben Strings,
-    //  statt zu Guid konvertiert zu werden (was nie matchen wuerde).
+    //  GUID-förmige Strings auf String/Memo-Feldern bleiben Strings,
+    //  statt zu Guid konvertiert zu werden (was nie matchen würde).
     // ================================================================
 
     [Fact]
     public void Filter_StringFieldWithGuidValue_StaysAsString()
     {
         // markant_recordid ist ein String-Feld, das GUIDs als Strings speichert.
-        // Ohne FB-32-Fix wuerde der Wert zu Guid konvertiert und der Filter
+        // Ohne FB-32-Fix würde der Wert zu Guid konvertiert und der Filter
         // matcht nichts (Dataverse vergleicht Guid gegen String-Feld).
         var cache = EntityMetadataCache.CreateForTesting(
             new Dictionary<string, Dictionary<string, AttributeTypeCode>>
@@ -231,7 +231,7 @@ public class GenericRecordWaiterTests
     public void Filter_LookupFieldWithGuidValue_ConvertsToGuid()
     {
         // Lookup-Felder sollen weiterhin auf Guid konvertiert werden — sonst
-        // wuerde der Lookup-Filter nicht matchen.
+        // würde der Lookup-Filter nicht matchen.
         var cache = EntityMetadataCache.CreateForTesting(
             new Dictionary<string, Dictionary<string, AttributeTypeCode>>
             {
@@ -321,8 +321,8 @@ public class GenericRecordWaiterTests
     [Fact]
     public void Filter_UnknownFieldInMetadata_FallsBackToLegacy()
     {
-        // Wenn der Cache fuer das Feld keinen Typ kennt, faellt die Conversion
-        // auf den Legacy-Pfad zurueck (Guid-first).
+        // Wenn der Cache für das Feld keinen Typ kennt, fällt die Conversion
+        // auf den Legacy-Pfad zurück (Guid-first).
         var cache = EntityMetadataCache.CreateForTesting(
             new Dictionary<string, Dictionary<string, AttributeTypeCode>>
             {

@@ -9,8 +9,8 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer den SandboxSafeOrganizationService-Wrapper. ADR-0005 + FB-31b:
-/// Im Sync-Plugin-Pfad muessen alle primitiven Service-Calls via
+/// Tests für den SandboxSafeOrganizationService-Wrapper. ADR-0005 + FB-31b:
+/// Im Sync-Plugin-Pfad müssen alle primitiven Service-Calls via
 /// ExecuteMultipleRequest mit ContinueOnError=true laufen, damit der
 /// Sandbox-Wachter nicht 0x80040265 wirft.
 /// </summary>
@@ -137,7 +137,7 @@ public class SandboxSafeOrganizationServiceTests
     [Fact]
     public void RetrieveEntityRequest_PassesThroughDirectly()
     {
-        // Metadata-Requests koennen nicht in ExecuteMultipleRequest gewrappt
+        // Metadata-Requests können nicht in ExecuteMultipleRequest gewrappt
         // werden — Wrapper muss bypass machen.
         var inner = new RecordingOrganizationService();
         inner.NextResponse = new RetrieveEntityResponse();
@@ -221,7 +221,7 @@ public class SandboxSafeOrganizationServiceTests
         {
             ReceivedRequests.Add(request);
 
-            // Wrap-Pfad gibt ExecuteMultipleResponse zurueck mit der
+            // Wrap-Pfad gibt ExecuteMultipleResponse zurück mit der
             // vorgegebenen Inner-Response (oder Fault).
             if (request is ExecuteMultipleRequest em && NextResponse != null
                 && NextResponse is not ExecuteMultipleResponse)

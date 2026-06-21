@@ -6,7 +6,7 @@ using Xunit;
 namespace D365TestCenter.Tests;
 
 /// <summary>
-/// Tests fuer B5 — TrackedRecords-Persistierung in jbe_trackedrecords.
+/// Tests für B5 — TrackedRecords-Persistierung in jbe_trackedrecords.
 /// Siehe ZastrPay-Feedback Bug B5.
 /// </summary>
 public class TrackedRecordsTests

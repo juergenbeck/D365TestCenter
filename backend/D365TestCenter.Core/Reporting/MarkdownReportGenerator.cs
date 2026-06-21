@@ -195,7 +195,7 @@ public static class MarkdownReportGenerator
             }
             else
             {
-                log?.Invoke($"  (keine Definition/Doku fuer {r.TestId})");
+                log?.Invoke($"  (keine Definition/Doku für {r.TestId})");
             }
             model.Items.Add(item);
         }
