@@ -327,10 +327,10 @@ public sealed class TestStep
     public string? OnError { get; set; }
 
     /// <summary>
-    /// Optionale Lauf-Bedingung (ADR-0011). Ist sie zur Laufzeit nicht erfuellt,
-    /// wird der Step uebersprungen (StepResult.Skipped, kein Failure); sonst laeuft
+    /// Optionale Lauf-Bedingung (ADR-0011). Ist sie zur Laufzeit nicht erfüllt,
+    /// wird der Step übersprungen (StepResult.Skipped, kein Failure); sonst läuft
     /// er normal (inkl. onError/expectFailure). Orthogonal zu AssertEnvironment
-    /// (das laesst SCHEITERN; condition ueberspringt). Zwei Steps mit gegensaetzlicher
+    /// (das lässt SCHEITERN; condition überspringt). Zwei Steps mit gegensätzlicher
     /// condition bilden ein if/else.
     /// </summary>
     [JsonProperty("condition")]
@@ -442,7 +442,7 @@ public sealed class ExpectExceptionSpec
 /// Eine einzelne Vergleichsklausel einer Step-Condition (ADR-0011):
 /// left &lt;operator&gt; right. left/right laufen durch die PlaceholderEngine;
 /// operator ist einer aus <see cref="ValueComparator.SupportedOperators"/>.
-/// Basis fuer die Einfachklausel (<see cref="StepCondition"/>) und die
+/// Basis für die Einfachklausel (<see cref="StepCondition"/>) und die
 /// Elemente von all/any.
 /// </summary>
 public class StepConditionClause
@@ -463,18 +463,18 @@ public class StepConditionClause
 /// <summary>
 /// Lauf-Bedingung eines Steps (ADR-0011). Genau EINE Form:
 ///  - Einfachklausel: geerbtes Left/Operator/Right.
-///  - <see cref="All"/>: AND ueber mehrere Klauseln (alle muessen erfuellt sein).
-///  - <see cref="Any"/>: OR ueber mehrere Klauseln (mindestens eine erfuellt).
+///  - <see cref="All"/>: AND über mehrere Klauseln (alle müssen erfüllt sein).
+///  - <see cref="Any"/>: OR über mehrere Klauseln (mindestens eine erfüllt).
 /// Der PackValidator (CONDITION_MALFORMED) erzwingt die Wohlgeformtheit;
 /// zur Laufzeit gewinnt All vor Any vor Einfachklausel.
 /// </summary>
 public sealed class StepCondition : StepConditionClause
 {
-    /// <summary>AND-Verknuepfung: alle Klauseln muessen erfuellt sein.</summary>
+    /// <summary>AND-Verknüpfung: alle Klauseln müssen erfüllt sein.</summary>
     [JsonProperty("all")]
     public List<StepConditionClause>? All { get; set; }
 
-    /// <summary>OR-Verknuepfung: mindestens eine Klausel muss erfuellt sein.</summary>
+    /// <summary>OR-Verknüpfung: mindestens eine Klausel muss erfüllt sein.</summary>
     [JsonProperty("any")]
     public List<StepConditionClause>? Any { get; set; }
 }
@@ -611,7 +611,7 @@ public sealed class TestRunResult
     public int ErrorCount { get; set; }
 
     /// <summary>
-    /// Anzahl uebersprungener Tests (deaktiviert, dependsOn nicht erfuellt, oder
+    /// Anzahl übersprungener Tests (deaktiviert, dependsOn nicht erfüllt, oder
     /// ADR-0011: alle Asserts condition-geskippt). Macht die Summary ehrlich:
     /// Passed + Failed + Error + Skipped = Total.
     /// </summary>
@@ -751,15 +751,15 @@ public sealed class StepResult
     public bool Success { get; set; }
 
     /// <summary>
-    /// ADR-0011: Step wurde wegen einer nicht erfuellten <see cref="TestStep.Condition"/>
-    /// uebersprungen (nicht ausgefuehrt). Ein Skipped-Step ist weder Passed noch Failed;
-    /// die Outcome-Logik zaehlt ihn nicht als Failure, und die Persistenz schreibt
+    /// ADR-0011: Step wurde wegen einer nicht erfüllten <see cref="TestStep.Condition"/>
+    /// übersprungen (nicht ausgeführt). Ein Skipped-Step ist weder Passed noch Failed;
+    /// die Outcome-Logik zählt ihn nicht als Failure, und die Persistenz schreibt
     /// jbe_stepstatus=Skipped (statt Passed/Failed). Default false.
     /// </summary>
     [JsonProperty("skipped")]
     public bool Skipped { get; set; }
 
-    /// <summary>ADR-0011: Grund des Skips (welche Condition nicht erfuellt war). Nur bei Skipped gesetzt.</summary>
+    /// <summary>ADR-0011: Grund des Skips (welche Condition nicht erfüllt war). Nur bei Skipped gesetzt.</summary>
     [JsonProperty("skipReason")]
     public string? SkipReason { get; set; }
 
