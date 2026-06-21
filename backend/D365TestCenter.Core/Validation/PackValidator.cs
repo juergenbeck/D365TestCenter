@@ -25,6 +25,7 @@ namespace D365TestCenter.Core.Validation;
 ///   ASSERTIONS_OBSOLETE         - obsolete pre-ADR-0004 top-level assertions[] array (R10)
 ///   STEP_KEY_UNKNOWN            - unknown step-level key silently dropped on parse (e.g. withinSeconds/timeoutMs), Warning (Backlog N)
 ///   ALIAS_UNDEFINED             - alias reference ({alias.id}/{RECORD:alias}/...) with no prior defining step, Warning (OE-6 Phase 2 symbol-table, Backlog J)
+///   CONDITION_MALFORMED         - step 'condition' not well-formed: empty, mixed single+all/any, empty all/any, unknown/missing operator or missing left (Error); value operator without right (Warning). ADR-0011 Phase 4.
 ///
 /// Phase 2 metadata-aware checks run only when an EntityMetadataCache for the
 /// target env is supplied (CLI 'validate --org'); they never run in the
@@ -439,12 +440,174 @@ public sealed class PackValidator : IPackValidator
             }
         }
 
+        // CONDITION_MALFORMED (ADR-0011 Phase 4): step-level run condition well-formedness.
+        // Static rule (no metadata needed); always runs.
+        if (step.Condition != null)
+        {
+            CheckCondition(tc, step, report);
+        }
+
         // ENTITY_UNKNOWN / FIELD_UNKNOWN (OE-8 Phase 2 metadata-aware, Backlog J).
         // Runs only when a metadata cache for the target env was provided.
         if (metadata != null)
         {
             CheckEntityAndFields(tc, step, report, metadata);
         }
+    }
+
+    // ── ADR-0011 Phase 4: step-level run condition (CONDITION_MALFORMED) ─────
+    // A 'condition' lets a step skip when a runtime value does not match. The
+    // runtime (TestRunner.EvaluateStepCondition) accepts exactly ONE shape and
+    // resolves all > any > single clause. This lint pins well-formedness so a
+    // malformed condition is caught before the run instead of throwing at runtime
+    // (Outcome=Error) or silently skipping (false-green):
+    //   - empty (no clause and no all/any)                      Error
+    //   - mixed forms (single + all/any, or all + any)          Error  (runtime silently drops a form)
+    //   - empty all[]/any[]                                     Error
+    //   - clause without operator / unknown operator            Error  (runtime throws)
+    //   - clause without left                                   Error  (compares nothing)
+    //   - value operator (not IsNull/IsNotNull) without right   Warning (compares against "")
+    // An undefined alias inside the condition is already covered by ALIAS_UNDEFINED
+    // (the whole step, including condition.left/right, is serialized and scanned).
+    private void CheckCondition(TestCase tc, TestStep step, ValidationReport report)
+    {
+        var cond = step.Condition!;
+        var hasAll = cond.All != null;
+        var hasAny = cond.Any != null;
+        var hasSingle = !string.IsNullOrWhiteSpace(cond.Left)
+                     || !string.IsNullOrWhiteSpace(cond.Operator)
+                     || !string.IsNullOrWhiteSpace(cond.Right);
+
+        var formsPresent = (hasSingle ? 1 : 0) + (hasAll ? 1 : 0) + (hasAny ? 1 : 0);
+
+        if (formsPresent == 0)
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                "Step 'condition' is empty: neither a clause (left+operator(+right)) nor an 'all'/'any' list. " +
+                "The runtime would throw on the missing operator (Outcome=Error).",
+                "Set 'left'+'operator'(+'right'), or an 'all'[]/'any'[] list of clauses.");
+            return;
+        }
+
+        if (formsPresent > 1)
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                "Step 'condition' mixes forms (a single clause together with 'all'/'any', or 'all' together with 'any'). " +
+                "The runtime resolves all > any > single clause and silently ignores the other forms.",
+                "Use exactly one form: a single clause, OR 'all', OR 'any'.");
+            return;
+        }
+
+        if (hasAll)
+        {
+            if (cond.All!.Count == 0)
+            {
+                AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                    "Step 'condition' has an empty 'all'[] list, so there is nothing to evaluate.",
+                    "Add at least one clause to 'all', or use a single clause.");
+                return;
+            }
+            for (var i = 0; i < cond.All.Count; i++)
+                CheckConditionClause(tc, step, cond.All[i], report, $"all[{i}]");
+            return;
+        }
+
+        if (hasAny)
+        {
+            if (cond.Any!.Count == 0)
+            {
+                AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                    "Step 'condition' has an empty 'any'[] list, so there is nothing to evaluate.",
+                    "Add at least one clause to 'any', or use a single clause.");
+                return;
+            }
+            for (var i = 0; i < cond.Any.Count; i++)
+                CheckConditionClause(tc, step, cond.Any[i], report, $"any[{i}]");
+            return;
+        }
+
+        // Single clause (the StepCondition itself carries Left/Operator/Right).
+        CheckConditionClause(tc, step, cond, report, "condition");
+    }
+
+    private void CheckConditionClause(
+        TestCase tc, TestStep step, StepConditionClause? clause, ValidationReport report, string where)
+    {
+        if (clause == null)
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                $"Step 'condition' has a null clause at {where}.",
+                "Replace it with a clause object: { \"left\": ..., \"operator\": ..., \"right\": ... }.");
+            return;
+        }
+
+        var op = clause.Operator ?? "";
+        var opKnown = ValueComparator.SupportedOperators
+            .Any(o => string.Equals(o, op, StringComparison.OrdinalIgnoreCase));
+
+        if (string.IsNullOrWhiteSpace(op))
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                $"Condition clause ({where}) has no 'operator'. The runtime throws (Outcome=Error) on an empty operator.",
+                "Set 'operator' to one of: " + string.Join(", ", ValueComparator.SupportedOperators) + ".");
+        }
+        else if (!opKnown)
+        {
+            var suggestion = SuggestConditionOperator(op);
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                $"Condition clause ({where}) uses unknown operator '{op}'. The runtime throws (Outcome=Error).",
+                suggestion != null
+                    ? $"Did you mean '{suggestion}'?"
+                    : "Allowed operators: " + string.Join(", ", ValueComparator.SupportedOperators) + ".");
+        }
+
+        if (string.IsNullOrWhiteSpace(clause.Left))
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Error,
+                $"Condition clause ({where}) has no 'left' value to compare.",
+                "Set 'left' to the value or placeholder to test (e.g. '{cfg.fields.markant_writebacktocontact}').");
+        }
+
+        // Value operators need a right side; IsNull/IsNotNull do not.
+        var isNullOp = string.Equals(op, "IsNull", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(op, "IsNotNull", StringComparison.OrdinalIgnoreCase);
+        if (opKnown && !isNullOp && string.IsNullOrWhiteSpace(clause.Right))
+        {
+            AddConditionMalformed(tc, step, report, ValidationSeverity.Warning,
+                $"Condition clause ({where}) operator '{op}' has no 'right' value; it compares against an empty string.",
+                "Set 'right', or use 'IsNull'/'IsNotNull' to test for emptiness.");
+        }
+    }
+
+    private static void AddConditionMalformed(
+        TestCase tc, TestStep step, ValidationReport report,
+        ValidationSeverity severity, string message, string suggestion)
+    {
+        report.Add(new ValidationFinding
+        {
+            TestId = tc.Id,
+            StepNumber = step.StepNumber,
+            Severity = severity,
+            Code = "CONDITION_MALFORMED",
+            Message = message,
+            Suggestion = suggestion
+        });
+    }
+
+    /// <summary>
+    /// Suggest a supported condition operator within Levenshtein distance 2 of the
+    /// input (e.g. 'Equal' -> 'Equals'). Returns null if no close match exists.
+    /// </summary>
+    internal static string? SuggestConditionOperator(string actual)
+    {
+        if (string.IsNullOrWhiteSpace(actual)) return null;
+        var best = (Name: (string?)null, Distance: int.MaxValue);
+        foreach (var candidate in ValueComparator.SupportedOperators)
+        {
+            var d = LevenshteinDistance(actual.ToLowerInvariant(), candidate.ToLowerInvariant());
+            if (d < best.Distance) best = (candidate, d);
+        }
+        return best.Distance <= 2 ? best.Name : null;
     }
 
     // ── OE-8 Phase 2: metadata-aware checks (Backlog J) ─────────────────────

@@ -1189,6 +1189,193 @@ public class PackValidatorTests
             f => f.Code == "POLYMORPH_TARGET_INVALID");
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  CONDITION_MALFORMED (ADR-0011 Phase 4)
+    // ════════════════════════════════════════════════════════════════
+
+    private static TestStep ConditionalWait(StepCondition cond) => new TestStep
+    {
+        StepNumber = 1, Action = "Wait", WaitSeconds = 1, Condition = cond
+    };
+
+    [Fact]
+    public void Condition_Empty_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition()));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void Condition_ValidSingleClause_NoFinding()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Left = "true", Operator = "Equals", Right = "true" }));
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "CONDITION_MALFORMED");
+    }
+
+    [Fact]
+    public void Condition_UnknownOperator_IsErrorWithSuggestion()
+    {
+        // 'Equalz' is Levenshtein distance 1 from 'Equals'.
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Left = "true", Operator = "Equalz", Right = "false" }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Contains("Equals", finding.Suggestion);
+    }
+
+    [Fact]
+    public void Condition_MissingOperator_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Left = "true", Right = "false" }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void Condition_MissingLeft_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Operator = "Equals", Right = "true" }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Contains("left", finding.Message);
+    }
+
+    [Fact]
+    public void Condition_ValueOperatorWithoutRight_IsWarning()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Left = "true", Operator = "Equals" }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Warning, finding.Severity);
+    }
+
+    [Fact]
+    public void Condition_IsNullWithoutRight_Ok()
+    {
+        // IsNull/IsNotNull legitimately have no right side.
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { Left = "someValue", Operator = "IsNull" }));
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "CONDITION_MALFORMED");
+    }
+
+    [Fact]
+    public void Condition_MixedSingleAndAll_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            Left = "true", Operator = "Equals", Right = "true",
+            All = new List<StepConditionClause> { new StepConditionClause { Left = "a", Operator = "Equals", Right = "b" } }
+        }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+        Assert.Contains("mixes", finding.Message);
+    }
+
+    [Fact]
+    public void Condition_MixedAllAndAny_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            All = new List<StepConditionClause> { new StepConditionClause { Left = "a", Operator = "Equals", Right = "b" } },
+            Any = new List<StepConditionClause> { new StepConditionClause { Left = "c", Operator = "Equals", Right = "d" } }
+        }));
+        AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+    }
+
+    [Fact]
+    public void Condition_EmptyAll_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition { All = new List<StepConditionClause>() }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void Condition_ValidAll_NoFinding()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            All = new List<StepConditionClause>
+            {
+                new StepConditionClause { Left = "true", Operator = "Equals", Right = "true" },
+                new StepConditionClause { Left = "x", Operator = "IsNotNull" }
+            }
+        }));
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "CONDITION_MALFORMED");
+    }
+
+    [Fact]
+    public void Condition_ValidAny_NoFinding()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            Any = new List<StepConditionClause> { new StepConditionClause { Left = "true", Operator = "Equals", Right = "true" } }
+        }));
+        Assert.DoesNotContain(new PackValidator().ValidateOne(tc).Findings, f => f.Code == "CONDITION_MALFORMED");
+    }
+
+    [Fact]
+    public void Condition_ClauseInAllUnknownOperator_IsError()
+    {
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            All = new List<StepConditionClause>
+            {
+                new StepConditionClause { Left = "a", Operator = "Equals", Right = "b" },
+                new StepConditionClause { Left = "c", Operator = "Bogus", Right = "d" }
+            }
+        }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "CONDITION_MALFORMED");
+        Assert.Contains("all[1]", finding.Message);
+    }
+
+    [Fact]
+    public void Condition_UndefinedAlias_FlaggedByAliasUndefined()
+    {
+        // The "alias not loaded" hint required by ADR-0011 Phase 4 is delivered by the
+        // existing ALIAS_UNDEFINED rule: the whole step (incl. condition.left/right) is
+        // serialized and scanned for alias references.
+        var tc = TestCaseWith(ConditionalWait(new StepCondition
+        {
+            Left = "{wbcfg.fields.markant_writebacktocontact}", Operator = "Equals", Right = "true"
+        }));
+        var finding = AssertSingle(new PackValidator().ValidateOne(tc), "ALIAS_UNDEFINED");
+        Assert.Contains("wbcfg", finding.Message);
+    }
+
+    [Fact]
+    public void Condition_AliasDefinedBeforeUse_NoFinding()
+    {
+        // Realistic ADR-0011 shape: a prior FindRecord defines the config alias, then a
+        // conditional step references it. No CONDITION_MALFORMED and no ALIAS_UNDEFINED.
+        var tc = TestCaseWith(
+            new TestStep { StepNumber = 1, Action = "FindRecord", Entity = "markant_fg_fieldconfigs", Alias = "wbcfg",
+                Filter = new List<FilterCondition> { new FilterCondition { Field = "markant_name", Operator = "eq", Value = "x" } } },
+            new TestStep { StepNumber = 2, Action = "Wait", WaitSeconds = 1,
+                Condition = new StepCondition { Left = "{wbcfg.fields.markant_writebacktocontact}", Operator = "Equals", Right = "true" } });
+        var report = new PackValidator().ValidateOne(tc);
+        Assert.DoesNotContain(report.Findings, f => f.Code == "CONDITION_MALFORMED" || f.Code == "ALIAS_UNDEFINED");
+    }
+
+    [Fact]
+    public void TestRunner_PreRunValidation_AbortsOnMalformedCondition()
+    {
+        // A malformed condition (unknown operator) is an Error finding; the pre-run
+        // validator must abort before any service call, mirroring the runtime throw.
+        var svc = new StubOrgService();
+        var runner = new TestRunner(svc);
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "Wait", WaitSeconds = 1,
+            Condition = new StepCondition { Left = "true", Operator = "Bogus", Right = "false" }
+        });
+        tc.Id = "COND-RUN-01";
+
+        var result = runner.RunAll(new List<TestCase> { tc });
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Equal(0, svc.ExecuteCallCount);
+        Assert.Contains("CONDITION_MALFORMED", result.Results[0].ErrorMessage ?? "");
+    }
+
     private static TestCase TestCaseWith(params TestStep[] steps) => new TestCase
     {
         Id = "TC-PV-01",
