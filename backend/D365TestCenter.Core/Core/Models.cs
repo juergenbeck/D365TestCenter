@@ -326,6 +326,16 @@ public sealed class TestStep
     [JsonProperty("onError")]
     public string? OnError { get; set; }
 
+    /// <summary>
+    /// Optionale Lauf-Bedingung (ADR-0011). Ist sie zur Laufzeit nicht erfuellt,
+    /// wird der Step uebersprungen (StepResult.Skipped, kein Failure); sonst laeuft
+    /// er normal (inkl. onError/expectFailure). Orthogonal zu AssertEnvironment
+    /// (das laesst SCHEITERN; condition ueberspringt). Zwei Steps mit gegensaetzlicher
+    /// condition bilden ein if/else.
+    /// </summary>
+    [JsonProperty("condition")]
+    public StepCondition? Condition { get; set; }
+
     // ── EnvironmentVariable-Actions (SetEnvironmentVariable, RetrieveEnvironmentVariable) ──
 
     /// <summary>schemaname der environmentvariabledefinition (env-unabhaengig).</summary>
@@ -426,6 +436,47 @@ public sealed class ExpectExceptionSpec
     /// </summary>
     [JsonProperty("httpStatus")]
     public int? HttpStatus { get; set; }
+}
+
+/// <summary>
+/// Eine einzelne Vergleichsklausel einer Step-Condition (ADR-0011):
+/// left &lt;operator&gt; right. left/right laufen durch die PlaceholderEngine;
+/// operator ist einer aus <see cref="ValueComparator.SupportedOperators"/>.
+/// Basis fuer die Einfachklausel (<see cref="StepCondition"/>) und die
+/// Elemente von all/any.
+/// </summary>
+public class StepConditionClause
+{
+    /// <summary>Linker Vergleichswert (Platzhalter erlaubt, z.B. "{wbcfg.fields.markant_writebacktocontact}").</summary>
+    [JsonProperty("left")]
+    public string? Left { get; set; }
+
+    /// <summary>Vergleichsoperator aus <see cref="ValueComparator.SupportedOperators"/> (case-insensitiv).</summary>
+    [JsonProperty("operator")]
+    public string? Operator { get; set; }
+
+    /// <summary>Rechter Vergleichswert (Platzhalter erlaubt; bei IsNull/IsNotNull ungenutzt).</summary>
+    [JsonProperty("right")]
+    public string? Right { get; set; }
+}
+
+/// <summary>
+/// Lauf-Bedingung eines Steps (ADR-0011). Genau EINE Form:
+///  - Einfachklausel: geerbtes Left/Operator/Right.
+///  - <see cref="All"/>: AND ueber mehrere Klauseln (alle muessen erfuellt sein).
+///  - <see cref="Any"/>: OR ueber mehrere Klauseln (mindestens eine erfuellt).
+/// Der PackValidator (CONDITION_MALFORMED) erzwingt die Wohlgeformtheit;
+/// zur Laufzeit gewinnt All vor Any vor Einfachklausel.
+/// </summary>
+public sealed class StepCondition : StepConditionClause
+{
+    /// <summary>AND-Verknuepfung: alle Klauseln muessen erfuellt sein.</summary>
+    [JsonProperty("all")]
+    public List<StepConditionClause>? All { get; set; }
+
+    /// <summary>OR-Verknuepfung: mindestens eine Klausel muss erfuellt sein.</summary>
+    [JsonProperty("any")]
+    public List<StepConditionClause>? Any { get; set; }
 }
 
 /// <summary>
@@ -559,6 +610,14 @@ public sealed class TestRunResult
     [JsonProperty("errorCount")]
     public int ErrorCount { get; set; }
 
+    /// <summary>
+    /// Anzahl uebersprungener Tests (deaktiviert, dependsOn nicht erfuellt, oder
+    /// ADR-0011: alle Asserts condition-geskippt). Macht die Summary ehrlich:
+    /// Passed + Failed + Error + Skipped = Total.
+    /// </summary>
+    [JsonProperty("skippedCount")]
+    public int SkippedCount { get; set; }
+
     [JsonProperty("results")]
     public List<TestCaseResult> Results { get; set; } = new();
 
@@ -690,6 +749,19 @@ public sealed class StepResult
 
     [JsonProperty("success")]
     public bool Success { get; set; }
+
+    /// <summary>
+    /// ADR-0011: Step wurde wegen einer nicht erfuellten <see cref="TestStep.Condition"/>
+    /// uebersprungen (nicht ausgefuehrt). Ein Skipped-Step ist weder Passed noch Failed;
+    /// die Outcome-Logik zaehlt ihn nicht als Failure, und die Persistenz schreibt
+    /// jbe_stepstatus=Skipped (statt Passed/Failed). Default false.
+    /// </summary>
+    [JsonProperty("skipped")]
+    public bool Skipped { get; set; }
+
+    /// <summary>ADR-0011: Grund des Skips (welche Condition nicht erfuellt war). Nur bei Skipped gesetzt.</summary>
+    [JsonProperty("skipReason")]
+    public string? SkipReason { get; set; }
 
     [JsonProperty("message")]
     public string? Message { get; set; }

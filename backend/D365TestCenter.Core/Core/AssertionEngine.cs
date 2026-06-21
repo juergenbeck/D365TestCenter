@@ -1,7 +1,5 @@
-using System.Globalization;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Newtonsoft.Json.Linq;
 
 namespace D365TestCenter.Core;
 
@@ -238,71 +236,34 @@ public sealed class AssertionEngine
         result.ActualDisplay = FormatValue(actual);
         result.ExpectedDisplay = assertion.Value ?? "<null>";
 
-        switch (assertion.Operator.ToUpperInvariant())
+        var op = assertion.Operator.ToUpperInvariant();
+
+        // Geteilter Vergleichskern fuer die feldbasierten Operatoren (ADR-0011):
+        // EINE Quelle der Wahrheit, von Assert UND Step-Condition genutzt.
+        if (ValueComparator.TryEvaluate(assertion.Operator, actual, assertion.Value, out var passed))
         {
-            case "EQUALS":
-                result.Passed = CompareValues(actual, assertion.Value);
-                break;
-
-            case "NOTEQUALS":
-                result.Passed = !CompareValues(actual, assertion.Value);
-                break;
-
-            case "ISNULL":
-                result.Passed = IsNullOrEmpty(actual);
-                result.ExpectedDisplay = "<null>";
-                break;
-
-            case "ISNOTNULL":
-                result.Passed = !IsNullOrEmpty(actual);
-                result.ExpectedDisplay = "<nicht null>";
-                break;
-
-            case "CONTAINS":
-                var actualStr = ExtractString(actual) ?? "";
-                result.Passed = actualStr.Contains(
-                    assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
-                break;
-
-            case "STARTSWITH":
-                var startsActual = ExtractString(actual) ?? "";
-                result.Passed = startsActual.StartsWith(
-                    assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
-                break;
-
-            case "ENDSWITH":
-                var endsActual = ExtractString(actual) ?? "";
-                result.Passed = endsActual.EndsWith(
-                    assertion.Value ?? "", StringComparison.OrdinalIgnoreCase);
-                break;
-
-            case "GREATERTHAN":
-                result.Passed = TryCompareOrdered(actual, assertion.Value, out var gtCmp)
-                    && gtCmp > 0;
-                break;
-
-            case "LESSTHAN":
-                result.Passed = TryCompareOrdered(actual, assertion.Value, out var ltCmp)
-                    && ltCmp < 0;
-                break;
-
-            case "DATESETRECENTLY":
-                // assertion.Value (falls gesetzt) als Sekunden-Toleranz parsen (Default 120s).
-                // Fix für RV-Review: expected-Wert wurde vorher ignoriert.
-                var recentSec = 120;
-                if (!string.IsNullOrWhiteSpace(assertion.Value)
-                    && int.TryParse(assertion.Value, out var parsedSec)
-                    && parsedSec > 0)
-                {
-                    recentSec = parsedSec;
-                }
-                EvaluateDateSetRecently(actual, recentSec, result);
-                break;
-
-            default:
-                result.Passed = false;
-                result.Message = $"Unbekannter Operator: {assertion.Operator}";
-                return;
+            result.Passed = passed;
+            if (op == "ISNULL") result.ExpectedDisplay = "<null>";
+            else if (op == "ISNOTNULL") result.ExpectedDisplay = "<nicht null>";
+        }
+        else if (op == "DATESETRECENTLY")
+        {
+            // Zeit-toleranz-spezifisch, Assert-only (nicht im geteilten Comparator).
+            // assertion.Value (falls gesetzt) als Sekunden-Toleranz parsen (Default 120s).
+            var recentSec = 120;
+            if (!string.IsNullOrWhiteSpace(assertion.Value)
+                && int.TryParse(assertion.Value, out var parsedSec)
+                && parsedSec > 0)
+            {
+                recentSec = parsedSec;
+            }
+            EvaluateDateSetRecently(actual, recentSec, result);
+        }
+        else
+        {
+            result.Passed = false;
+            result.Message = $"Unbekannter Operator: {assertion.Operator}";
+            return;
         }
 
         if (string.IsNullOrEmpty(result.Message))
@@ -322,9 +283,9 @@ public sealed class AssertionEngine
     {
         if (actual is DateTime dt)
         {
-            // Dataverse returns DateTime values in UTC. See NormalizeToUtc for
-            // why Kind=Unspecified must not go through ToUniversalTime() (FB-44).
-            var utcDt = NormalizeToUtc(dt);
+            // Dataverse returns DateTime values in UTC. See ValueComparator.NormalizeToUtc
+            // for why Kind=Unspecified must not go through ToUniversalTime() (FB-44).
+            var utcDt = ValueComparator.NormalizeToUtc(dt);
             var diffSeconds = (DateTime.UtcNow - utcDt).TotalSeconds;
             result.Passed = diffSeconds >= 0 && diffSeconds <= withinSeconds;
             result.ExpectedDisplay = $"Innerhalb der letzten {withinSeconds}s";
@@ -344,117 +305,6 @@ public sealed class AssertionEngine
     // ---------------------------------------------------------------
     //  Hilfsmethoden
     // ---------------------------------------------------------------
-
-    /// <summary>
-    /// Normalisiert einen DateTime auf UTC. Dataverse liefert Zeitwerte mit
-    /// Kind=Unspecified; diese sind bereits UTC und dürfen NICHT über
-    /// ToUniversalTime() laufen, das sie als Lokalzeit interpretiert und den
-    /// Offset abzieht (beobachtet als +7200s-Drift in CEST, FB-44). Nur echte
-    /// Local-Werte werden umgerechnet. Einzige Quelle für alle zeitbasierten
-    /// Operatoren (DateSetRecently, GreaterThan/LessThan).
-    /// </summary>
-    private static DateTime NormalizeToUtc(DateTime dt) => dt.Kind switch
-    {
-        DateTimeKind.Utc => dt,
-        DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
-        _ => dt.ToUniversalTime()
-    };
-
-    /// <summary>
-    /// Geordneter Vergleich für GreaterThan/LessThan. Versucht nacheinander:
-    /// decimal (invariant), DateTime (RoundtripKind, invariant), dann String
-    /// (Ordinal, case-insensitive). Liefert false wenn beide Werte null oder
-    /// der Actualwert nicht extrahierbar ist. -1 actual&lt;expected, 0 gleich,
-    /// +1 actual&gt;expected.
-    /// </summary>
-    private static bool TryCompareOrdered(object? actual, string? expected, out int comparison)
-    {
-        comparison = 0;
-        if (actual == null || expected == null) return false;
-
-        // Money/OptionSetValue/int direkt behandeln (kein Umweg über ExtractString-String-Format).
-        decimal? actualNum = actual switch
-        {
-            Money m => m.Value,
-            OptionSetValue osv => osv.Value,
-            int i => i,
-            long l => l,
-            decimal d => d,
-            double dbl => (decimal)dbl,
-            float f => (decimal)f,
-            _ => null
-        };
-
-        if (actualNum.HasValue
-            && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var expectedNum))
-        {
-            comparison = actualNum.Value.CompareTo(expectedNum);
-            return true;
-        }
-
-        if (actual is DateTime actualDt
-            && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expectedDt))
-        {
-            comparison = NormalizeToUtc(actualDt).CompareTo(NormalizeToUtc(expectedDt));
-            return true;
-        }
-
-        var actualStr = ExtractString(actual);
-        if (actualStr == null) return false;
-
-        // String-Fallback: erst Zahl, dann DateTime, dann Text.
-        if (decimal.TryParse(actualStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var a)
-            && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var e))
-        {
-            comparison = a.CompareTo(e);
-            return true;
-        }
-
-        if (DateTime.TryParse(actualStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ad)
-            && DateTime.TryParse(expected, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var ed))
-        {
-            comparison = NormalizeToUtc(ad).CompareTo(NormalizeToUtc(ed));
-            return true;
-        }
-
-        comparison = string.Compare(actualStr, expected, StringComparison.OrdinalIgnoreCase);
-        return true;
-    }
-
-    private static bool CompareValues(object? actual, string? expected)
-    {
-        var actualStr = ExtractString(actual);
-
-        if (actualStr == null && expected == null) return true;
-        if (actualStr == null || expected == null) return false;
-        if (expected == "" && string.IsNullOrWhiteSpace(actualStr)) return true;
-
-        return string.Equals(
-            actualStr.Trim(), expected.Trim(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsNullOrEmpty(object? value)
-    {
-        if (value == null) return true;
-        if (value is string s) return string.IsNullOrWhiteSpace(s);
-        return false;
-    }
-
-    private static string? ExtractString(object? value)
-    {
-        return value switch
-        {
-            null => null,
-            string s => s,
-            OptionSetValue osv => osv.Value.ToString(),
-            EntityReference er => er.Id.ToString(),
-            Money m => m.Value.ToString(),
-            DateTime dt => dt.ToString("O"),
-            bool b => b.ToString(),
-            JToken jt => jt.ToString(),
-            _ => value.ToString()
-        };
-    }
 
     private static string FormatValue(object? value)
     {

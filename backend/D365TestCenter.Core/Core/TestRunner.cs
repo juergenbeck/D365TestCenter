@@ -106,7 +106,8 @@ public sealed class TestRunner
 
         result.CompletedAt = DateTime.UtcNow;
         Log($"=== ERGEBNIS: {result.PassedCount}/{result.TotalCount} bestanden, " +
-            $"{result.FailedCount} fehlgeschlagen, {result.ErrorCount} Fehler ===");
+            $"{result.FailedCount} fehlgeschlagen, {result.ErrorCount} Fehler, " +
+            $"{result.SkippedCount} übersprungen ===");
 
         result.FullLog = _log.ToString();
         return result;
@@ -226,6 +227,7 @@ public sealed class TestRunner
             case TestOutcome.Passed: result.PassedCount++; break;
             case TestOutcome.Failed: result.FailedCount++; break;
             case TestOutcome.Error: result.ErrorCount++; break;
+            case TestOutcome.Skipped: result.SkippedCount++; break;
         }
 
         OnTestCompleted?.Invoke(index, total, tcResult);
@@ -508,9 +510,29 @@ public sealed class TestRunner
             //  - Mindestens ein Step hat Success=false → Failed. Das umfasst:
             //    Assert-Failure (OnError=continue per Default) und Non-Assert-
             //    Step-Failure mit explizitem OnError=continue.
-            var anyFailed = tcResult.StepResults.Any(s => !s.Success);
-            tcResult.Outcome = anyFailed ? TestOutcome.Failed : TestOutcome.Passed;
-            Log($"  -> {(anyFailed ? "FEHLGESCHLAGEN" : "BESTANDEN")}");
+            // ADR-0011: Skipped-Steps (condition nicht erfuellt) zaehlen NICHT als
+            // Failure. Outcome=Skipped, wenn der Test Assert-Steps DEFINIERT, aber
+            // KEINER ausgefuehrt wurde (alle condition-geskippt) -- sonst waere er
+            // gruen ohne Pruefung. Bestandstests ohne condition sind unberuehrt:
+            // dort wird nie geskippt (anyAssertExecuted == hasAsserts), und ein
+            // assert-loser Smoke (hasAsserts=false) bleibt Passed.
+            var anyFailed = tcResult.StepResults.Any(s => !s.Success && !s.Skipped);
+            var assertSteps = tcResult.StepResults
+                .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var allAssertsSkipped = assertSteps.Count > 0 && assertSteps.All(s => s.Skipped);
+
+            tcResult.Outcome = anyFailed ? TestOutcome.Failed
+                : allAssertsSkipped ? TestOutcome.Skipped
+                : TestOutcome.Passed;
+
+            var outcomeLabel = tcResult.Outcome switch
+            {
+                TestOutcome.Failed => "FEHLGESCHLAGEN",
+                TestOutcome.Skipped => "ÜBERSPRUNGEN (alle Asserts condition-geskippt)",
+                _ => "BESTANDEN"
+            };
+            Log($"  -> {outcomeLabel}");
         }
         catch (Exception ex)
         {
@@ -722,6 +744,45 @@ public sealed class TestRunner
                     : step.Description
             };
             var stepSw = Stopwatch.StartNew();
+
+            // ADR-0011: Lauf-Bedingung VOR jeder Ausfuehrung pruefen (auch vor dem
+            // sandbox-safe expectFailure-Pfad). Nicht erfuellt -> Step uebersprungen
+            // (Skipped, kein Failure). Unaufgeloester Platzhalter oder unbekannter
+            // Operator -> harter Fehler (Outcome=Error, KEIN stiller Skip), unabhaengig
+            // von onError: eine kaputte Bedingung ist ein Test-Defekt.
+            if (step.Condition != null)
+            {
+                bool conditionMet;
+                string conditionDesc;
+                try
+                {
+                    conditionMet = EvaluateStepCondition(step.Condition, ctx, out conditionDesc);
+                }
+                catch (Exception condEx)
+                {
+                    stepResult.Success = false;
+                    stepResult.Message = condEx.Message;
+                    Log($"      condition-Fehler: {condEx.Message}");
+                    stepSw.Stop();
+                    stepResult.DurationMs = stepSw.ElapsedMilliseconds;
+                    tcResult.StepResults.Add(stepResult);
+                    throw;
+                }
+
+                if (!conditionMet)
+                {
+                    stepResult.Skipped = true;
+                    stepResult.Success = true; // Skipped zaehlt nicht als Failure (Outcome-Logik filtert Skipped)
+                    stepResult.SkipReason = conditionDesc;
+                    stepResult.Message = $"Übersprungen (condition nicht erfüllt): {conditionDesc}";
+                    Log($"      SKIP (condition): {conditionDesc}");
+                    stepSw.Stop();
+                    stepResult.DurationMs = stepSw.ElapsedMilliseconds;
+                    tcResult.StepResults.Add(stepResult);
+                    continue;
+                }
+                Log($"      condition erfüllt: {conditionDesc}");
+            }
 
             // ADR-0005 (FB-31): Steps mit expectFailure/expectException auf primitiven
             // Service-Aktionen (Create/Update/Delete/ExecuteRequest) laufen ueber den
@@ -1011,6 +1072,76 @@ public sealed class TestRunner
         var icon = assertResult.Passed ? "(OK)" : "(FAIL)";
         Log($"      Assert {icon} {assertion.Field} {assertion.Operator} {assertion.Value}");
     }
+
+    // ================================================================
+    //  Step-Condition (ADR-0011): config-adaptives Ueberspringen
+    // ================================================================
+
+    private static readonly System.Text.RegularExpressions.Regex _unresolvedPlaceholder =
+        new(@"\{[^{}]+\}", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// Wertet eine Step-Condition aus (ADR-0011). Genau eine Form, Vorrang
+    /// all (AND) vor any (OR) vor Einfachklausel. <paramref name="description"/>
+    /// traegt eine lesbare Zusammenfassung (Skip-Grund). Wirft bei unaufgeloestem
+    /// Platzhalter oder unbekanntem Operator (-> Outcome=Error, kein stiller Skip).
+    /// </summary>
+    private bool EvaluateStepCondition(StepCondition cond, TestContext ctx, out string description)
+    {
+        if (cond.All != null && cond.All.Count > 0)
+        {
+            var parts = cond.All.Select(c => (clause: c, met: EvaluateClause(c, ctx))).ToList();
+            description = "all[" + string.Join(" AND ", parts.Select(p => DescribeClause(p.clause, p.met))) + "]";
+            return parts.All(p => p.met);
+        }
+        if (cond.Any != null && cond.Any.Count > 0)
+        {
+            var parts = cond.Any.Select(c => (clause: c, met: EvaluateClause(c, ctx))).ToList();
+            description = "any[" + string.Join(" OR ", parts.Select(p => DescribeClause(p.clause, p.met))) + "]";
+            return parts.Any(p => p.met);
+        }
+        var single = EvaluateClause(cond, ctx);
+        description = DescribeClause(cond, single);
+        return single;
+    }
+
+    /// <summary>
+    /// Wertet eine einzelne Vergleichsklausel ueber den geteilten
+    /// <see cref="ValueComparator"/> aus. left/right werden aufgeloest (mit
+    /// Unaufgeloest-Pruefung); unbekannter Operator wirft.
+    /// </summary>
+    private bool EvaluateClause(StepConditionClause c, TestContext ctx)
+    {
+        var left = ResolveConditionSide(c.Left, ctx);
+        var right = ResolveConditionSide(c.Right, ctx);
+        if (!ValueComparator.TryEvaluate(c.Operator, left, right, out var passed))
+            throw new InvalidOperationException(
+                $"condition: Unbekannter Operator '{c.Operator ?? "<null>"}'. " +
+                $"Erlaubt: {string.Join(", ", ValueComparator.SupportedOperators)}.");
+        return passed;
+    }
+
+    /// <summary>
+    /// Loest einen condition-Wert (left/right) ueber die PlaceholderEngine auf und
+    /// erzwingt, dass kein Platzhalter ueberbleibt. Ein unbekannter/falsch
+    /// geschriebener Alias laesst {x.fields.y} woertlich stehen (die PlaceholderEngine
+    /// wirft dort NICHT, ADR-0011 Korrektur 3) -- das wuerde sonst zu einem stillen,
+    /// falsch-gruenen Skip fuehren. Darum hier hart pruefen und werfen.
+    /// </summary>
+    private string ResolveConditionSide(string? raw, TestContext ctx)
+    {
+        if (string.IsNullOrEmpty(raw)) return raw ?? "";
+        var resolved = _placeholderEngine.Resolve(raw, ctx);
+        if (_unresolvedPlaceholder.IsMatch(resolved))
+            throw new InvalidOperationException(
+                $"condition: Platzhalter nicht aufgeloest: '{raw}' -> '{resolved}'. " +
+                "Ein unbekannter oder falsch geschriebener Alias macht den Vergleich sonst " +
+                "still falsch (ADR-0011: kein falsch-gruener Skip durch Alias-Tippfehler).");
+        return resolved;
+    }
+
+    private static string DescribeClause(StepConditionClause c, bool met)
+        => $"'{c.Left}' {c.Operator} '{c.Right}' = {met}";
 
     // ================================================================
     //  Generische Actions
