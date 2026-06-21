@@ -2776,10 +2776,10 @@ const API = {
 };
 
 // ── PlaceholderResolver entfernt (ADR-0003, v5.3) ───────────────
-// Die JS-Engine ist weg (CRUD-Trigger-Plugin ubernimmt Tests).
-// Platzhalter-Aufloesung laeuft komplett serverseitig in
+// Die JS-Engine ist weg (CRUD-Trigger-Plugin übernimmt Tests).
+// Platzhalter-Auflösung läuft komplett serverseitig in
 // D365TestCenter.Core/PlaceholderEngine.cs. Wenn UI-Preview je
-// Platzhalter aufloesen muss, stattdessen Orchestrator-Preview
+// Platzhalter auflösen muss, stattdessen Orchestrator-Preview
 // per Custom API aufrufen.
 
 /* ====== Visual Editor: FieldRegistry ====== */
@@ -4465,12 +4465,12 @@ const VisualEditor = {
 // ── Engine entfernt (ADR-0003 Single-Engine-Architektur, v5.3) ────
 //
 // Der Browser ist seit v5.3.0 ein reiner UI-Client. Die Test-Ausführung
-// laeuft komplett in der C#-Core-Engine (D365TestCenter.Core). Der Browser
+// läuft komplett in der C#-Core-Engine (D365TestCenter.Core). Der Browser
 // ruft die Custom API jbe_RunIntegrationTests auf, und pollt dann
 // jbe_testrun + jbe_testrunresult für die Live-Ansicht.
 //
 // Der alte JS-Engine-Block enthielt:
-//   - ConcurrencyPool: parallele Testausfuehrung (obsolet)
+//   - ConcurrencyPool: parallele Testausführung (obsolet)
 //   - ProgressTracker: Live-Logging (jetzt vom Plugin in jbe_testsummary geschrieben)
 //   - RecordTracker: Cleanup-Verwaltung (jetzt im Plugin, TestRunner.Cleanup)
 //   - StepExecutor: Step-Ausführung (jetzt TestRunner.cs in C#)
@@ -5058,8 +5058,8 @@ async function _startRunWithFilter(filter, keepRecords, concurrency) {
     // einen jbe_testrun-Record mit Status "Geplant" an. Das CRUD-Trigger-Plugin
     // (RunTestsOnStatusChange) übernimmt die Ausführung asynchron per Batch-
     // Cascade (BatchSize=12, max ~96 Tests). Die Core-Engine (TestRunner.cs)
-    // fuehrt die Tests aus, schreibt jbe_testrunresult + jbe_teststep Records.
-    // Die Live-View pollt auf jbe_testrun + jbe_testrunresult (unveraendert).
+    // führt die Tests aus, schreibt jbe_testrunresult + jbe_teststep Records.
+    // Die Live-View pollt auf jbe_testrun + jbe_testrunresult (unverändert).
     //
     // Für grössere Suites (>96 Tests) muss die CLI verwendet werden - sie
     // nutzt denselben Orchestrator/TestRunner, aber ohne Sandbox-Limit.
@@ -5723,7 +5723,7 @@ async function _updateLiveView(runId) {
 
         // MVP-3 Phase 7: Worker-Chunk-Fortschritt. Degradationssicher - existiert die jbe_testchunk-
         // Entity nicht oder hat der Lauf keine Chunks (alte Cascade / Worker aus), bleibt die Leiste
-        // verborgen und die bestehende Ergebnis-Ansicht unveraendert.
+        // verborgen und die bestehende Ergebnis-Ansicht unverändert.
         try {
             const chunks = await API.getMany("jbe_testchunks",
                 `$select=jbe_chunkindex,jbe_chunkstatus,jbe_processedcount,jbe_failedcount` +
@@ -5731,7 +5731,7 @@ async function _updateLiveView(runId) {
             _renderChunkProgress(chunks);
         } catch { _renderChunkProgress([]); }
 
-        // Update selected detail nur wenn sich das Ergebnis geaendert hat
+        // Update selected detail nur wenn sich das Ergebnis geändert hat
         // (verhindert dass Toggle-States beim Polling zurückgesetzt werden)
         if (LiveRunState.selectedTestId) {
             const selResult = _liveResultsCache.find(r => r.jbe_testid === LiveRunState.selectedTestId);
@@ -6171,19 +6171,19 @@ async function _renderLiveDetail(runId, testId) {
         } catch {}
     }
 
-    // ADR-0004: keine Phasen mehr. Fuer die Summary-Darstellung leiten wir eine
+    // ADR-0004: keine Phasen mehr. Für die Summary-Darstellung leiten wir eine
     // Pseudo-Kategorie aus jbe_action ab. Setup = Create/Update/Delete/Retrieve/Wait-Record-Artiges,
-    // Schritt = ExecuteRequest/Wait/CallCustomApi, Pruefung = Assert, Aufraeumen = Cleanup.
+    // Schritt = ExecuteRequest/Wait/CallCustomApi, Prüfung = Assert, Aufräumen = Cleanup.
     function stepCategory(action) {
         if (!action) return "Sonstige";
         const a = String(action).toLowerCase();
-        if (a === "assert" || a === "assertenvironment") return "Pruefung";
-        if (a === "cleanup") return "Aufraeumen";
+        if (a === "assert" || a === "assertenvironment") return "Prüfung";
+        if (a === "cleanup") return "Aufräumen";
         if (a === "createrecord" || a === "updaterecord" || a === "deleterecord"
             || a === "retrieverecord" || a === "waitforrecord" || a === "waitforfieldvalue") return "Setup";
         return "Schritt";
     }
-    const phaseColors = { "Setup": "#42a5f5", "Schritt": "#4caf50", "Pruefung": "#ff9800", "Aufraeumen": "#6c6c88", "Governance": "#ab47bc", "Sonstige": "#6c6c88" };
+    const phaseColors = { "Setup": "#42a5f5", "Schritt": "#4caf50", "Prüfung": "#ff9800", "Aufräumen": "#6c6c88", "Governance": "#ab47bc", "Sonstige": "#6c6c88" };
 
     // Prüfen ob Governance-Steps vorhanden
     let hasGovernance = false;
@@ -8035,9 +8035,9 @@ function escapeHtml(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// E1 (ADR-0008): minimaler Markdown-zu-HTML-Renderer fuer jbe_documentation.
-// Zero Dependencies, deckt die fachlichen Doku-Sektionen ab: ## Ueberschriften,
-// Absaetze, ul/ol-Listen (mit eingerueckten Fortsetzungen), inline **bold** /
+// E1 (ADR-0008): minimaler Markdown-zu-HTML-Renderer für jbe_documentation.
+// Zero Dependencies, deckt die fachlichen Doku-Sektionen ab: ## Überschriften,
+// Absätze, ul/ol-Listen (mit eingerückten Fortsetzungen), inline **bold** /
 // *italic* / `code`. HTML-escaped. Spiegelt die Server-Logik (Core MarkdownToHtml).
 function renderMarkdown(md) {
     if (!md) return "";
@@ -8212,7 +8212,7 @@ async function activateDemoMode() {
         const packSel = document.getElementById("pack-selector");
         if (packSel) {
             try {
-                // Alle Tags aus Testfaellen aggregieren
+                // Alle Tags aus Testfällen aggregieren
                 const cases = await API.getMany("jbe_testcases",
                     "$filter=jbe_enabled eq true&$select=jbe_tags&$top=500");
                 const tagCounts = {};
@@ -8250,7 +8250,7 @@ async function activateDemoMode() {
                 };
                 packSel.parentNode.insertBefore(runBtn, packSel.nextSibling);
 
-                // Filter-Event: filtere die Testfaelle-Liste wenn sichtbar
+                // Filter-Event: filtere die Testfälle-Liste wenn sichtbar
                 packSel.addEventListener("change", () => {
                     State.activeTagFilter = packSel.value;
                     if (location.hash.startsWith("#cases")) {
@@ -8266,8 +8266,8 @@ async function activateDemoMode() {
 
     JBELog.info("App", `Bereit. Version ${CONFIG.version} (${CONFIG.buildDate}). User: ${State.currentUserId || "Demo"}`);
 
-    // CH-02: Warning bei Tab-Closen (v5.3: Plugin laeuft serverseitig, kein
-    // Browser-Block mehr noetig - aber wir warnen wenn ein laufender Run offen ist).
+    // CH-02: Warning bei Tab-Closen (v5.3: Plugin läuft serverseitig, kein
+    // Browser-Block mehr nötig - aber wir warnen wenn ein laufender Run offen ist).
     window.addEventListener("beforeunload", e => {
         // State.currentRunId ist gesetzt wenn ein Run in der Live-View aktiv ist
         if (State.currentRunId && State.pollingTimer) {
