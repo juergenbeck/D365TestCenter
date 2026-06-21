@@ -10,6 +10,11 @@ im Datei-Inhalt, via gemeinsamer Lib .githooks/umlaut_check_lib.py.
 Das Verhalten kommt aus der optionalen .githooks/umlaut-allowlist.json:
   file_scope  : "md_only" (Default) prüft nur .md; "all_text" prüft alle Textdateien.
   enforcement : "block" (Default) -> Exit 1 bei Treffer; "warn" -> nur melden, Exit 0.
+                Gilt global; pro Endung überstimmbar via block_extensions/warn_extensions.
+  block_extensions[] : Endungen (z.B. ".md"), die IMMER blocken, auch bei enforcement=warn.
+  warn_extensions[]  : Endungen (z.B. ".cs"), die IMMER nur warnen, auch bei enforcement=block.
+                Präzedenz pro Datei: block_extensions > warn_extensions > globales enforcement.
+                So lässt sich "Doku blockt, Code warnt" abbilden.
   generated[] : Regex-Liste (repo-relativer Pfad, Vorwärts-Slashes), strukturelle Ausschlüsse.
   exceptions[]: [{path}] exakte oder glob-Einzeldatei-Ausnahmen.
 Fehlt die Config: md_only + block + eingebaute Default-Ausschlüsse (COMPANION_RE,
@@ -73,11 +78,31 @@ def git(*args):
                           encoding='utf-8').stdout
 
 
+def _norm_ext(ext):
+    """Normalisiert eine Endung auf lowercase mit führendem Punkt ('.cs')."""
+    ext = str(ext).strip().lower()
+    if ext and not ext.startswith('.'):
+        ext = '.' + ext
+    return ext
+
+
+def is_blocking_file(rel, cfg):
+    """Pro-Datei-Entscheidung block vs. warn. Präzedenz: block_extensions >
+    warn_extensions > globales enforcement. Erlaubt 'Doku blockt, Code warnt'."""
+    ext = os.path.splitext(rel)[1].lower()
+    if ext in cfg['block_extensions']:
+        return True
+    if ext in cfg['warn_extensions']:
+        return False
+    return cfg['enforcement'] != 'warn'
+
+
 def load_config(githooks_dir):
     """Liest .githooks/umlaut-allowlist.json. Defaults (fehlt/kaputt): md_only,
     block, keine Zusatz-Ausschlüsse - verhält sich wie die bisherige py-Repo-Version."""
     cfg = {'file_scope': 'md_only', 'enforcement': 'block',
-           'generated': [], 'exceptions': []}
+           'generated': [], 'exceptions': [],
+           'block_extensions': set(), 'warn_extensions': set()}
     path = os.path.join(githooks_dir, 'umlaut-allowlist.json')
     if not os.path.isfile(path):
         return cfg
@@ -97,6 +122,10 @@ def load_config(githooks_dir):
     if data.get('exceptions'):
         cfg['exceptions'] = [e['path'] for e in data['exceptions']
                              if isinstance(e, dict) and e.get('path')]
+    if data.get('block_extensions'):
+        cfg['block_extensions'] = {_norm_ext(e) for e in data['block_extensions']}
+    if data.get('warn_extensions'):
+        cfg['warn_extensions'] = {_norm_ext(e) for e in data['warn_extensions']}
     return cfg
 
 
@@ -155,25 +184,34 @@ def main():
     if not violations:
         return 0
 
-    blocking = cfg['enforcement'] != 'warn'
+    # Pro Datei block vs. warn entscheiden (block_extensions/warn_extensions/global).
+    # Reihenfolge bleibt erhalten, gleiche rel bleiben konsekutiv -> groupby trägt.
+    block_viol, warn_viol = [], []
+    for rel, h in violations:
+        (block_viol if is_blocking_file(rel, cfg) else warn_viol).append((rel, h))
+
     w = sys.stderr.write
-    w('\n=================================================================\n')
-    if blocking:
-        w(' Pre-Commit-Hook: Umlaut-Verstöße erkannt (Commit blockiert)\n')
-    else:
-        w(' Pre-Commit-Hook: Umlaut-Verstöße (WARNUNG, blockt NICHT)\n')
-    w('=================================================================\n\n')
-    for rel, group in groupby(violations, key=lambda x: x[0]):
-        w('  %s\n' % rel)
-        for _, h in group:
-            note = ', alleinstehend' if h['block'] == 2 else ''
-            w("    Zeile %4d [Umlaut]: '%s'%s -> ASCII-Ersatz statt echtem "
-              "ä/ö/ü/ß. Siehe Skill umlaute.\n" % (h['line'], h['match'], note))
-            text = h['text']
-            snippet = text[:117] + '...' if len(text) > 120 else text
-            w('      > %s\n' % snippet)
+
+    def report(group_viol, title):
+        w('\n=================================================================\n')
+        w(' %s\n' % title)
+        w('=================================================================\n\n')
+        for rel, group in groupby(group_viol, key=lambda x: x[0]):
+            w('  %s\n' % rel)
+            for _, h in group:
+                note = ', alleinstehend' if h['block'] == 2 else ''
+                w("    Zeile %4d [Umlaut]: '%s'%s -> ASCII-Ersatz statt echtem "
+                  "ä/ö/ü/ß. Siehe Skill umlaute.\n" % (h['line'], h['match'], note))
+                text = h['text']
+                snippet = text[:117] + '...' if len(text) > 120 else text
+                w('      > %s\n' % snippet)
+
+    if block_viol:
+        report(block_viol, 'Pre-Commit-Hook: Umlaut-Verstöße erkannt (Commit blockiert)')
+    if warn_viol:
+        report(warn_viol, 'Pre-Commit-Hook: Umlaut-Verstöße (WARNUNG, blockt NICHT)')
     w('\n Bypass im Notfall: git commit --no-verify (DOKUMENTIEREN, warum)\n\n')
-    return 1 if blocking else 0
+    return 1 if block_viol else 0
 
 
 if __name__ == '__main__':

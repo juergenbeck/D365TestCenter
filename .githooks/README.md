@@ -35,6 +35,27 @@ geklonten Rechner.
 Der nicht-blockierende Schreib-Warn-Hook `.claude/hooks/check-umlaute.py` teilt
 dieselbe Lib (gleiche Treffer wie der Commit-Block).
 
+## Repo-weite Konfiguration: `umlaut-allowlist.json`
+
+Optionale Datei `.githooks/umlaut-allowlist.json` (wird vom Sync **nicht**
+überschrieben). Fehlt sie, gilt der Default `md_only` + `block` (nur `.md`,
+blockierend) wie bisher. Felder:
+
+| Feld | Bedeutung |
+|------|-----------|
+| `file_scope` | `md_only` (Default, nur `.md`) oder `all_text` (alle Nicht-Binär-Dateien, inkl. `.cs`, `.ps1`, ...) |
+| `enforcement` | globaler Default: `block` (Exit 1) oder `warn` (nur melden, Exit 0) |
+| `block_extensions` | Endungen (z.B. `".md"`), die IMMER blocken, auch bei `enforcement: warn` |
+| `warn_extensions` | Endungen (z.B. `".cs"`), die IMMER nur warnen, auch bei `enforcement: block` |
+| `generated` | Regex-Liste (repo-relativer Pfad), strukturelle Dauerausschlüsse |
+| `exceptions` | `[{path, reason, date}]` bewusste Einzeldatei-Ausnahmen |
+
+Pro Datei gilt: `block_extensions` > `warn_extensions` > globales `enforcement`.
+Damit lässt sich z.B. "Doku (`.md`) blockt, Code (`.cs`) warnt nur" abbilden:
+`file_scope: all_text`, `enforcement: warn`, `block_extensions: [".md"]`. Im
+`all_text`-Profil sind die eingebauten `md_only`-Ausschlüsse inaktiv: das Repo
+definiert seine Ausschlüsse vollständig über `generated`.
+
 ## Projekt-lokaler Erweiterungspunkt: `pre-commit-local.py`
 
 Der `pre-commit`-Wrapper ruft nach dem Umlaut-Check **optional** ein

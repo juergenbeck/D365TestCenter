@@ -1,0 +1,27 @@
+{
+  "_comment": "Steuert den repo-weiten Umlaut-Check der Python-Hook-Kette (.githooks/pre-commit.py + .claude/hooks/check-umlaute.py). Feldbedeutung: siehe .githooks/README.md, Abschnitt 'Repo-weite Konfiguration'.",
+
+  "file_scope": "all_text",
+  "_file_scope_help": "all_text = alle Nicht-Binär-Dateien prüfen (inkl. .cs). md_only wäre nur .md.",
+
+  "enforcement": "warn",
+  "_enforcement_help": "Globaler Default warn (nur melden, Exit 0). Pro Endung überstimmbar via block_extensions/warn_extensions.",
+
+  "block_extensions": [".md"],
+  "_block_extensions_help": "Doku (.md) blockt den Commit weiterhin, exakt wie vor der all_text-Umstellung. Kein Schutzverlust für Markdown.",
+
+  "warn_extensions": [],
+  "_warn_extensions_help": "Leer: alle Nicht-.md-Endungen folgen dem globalen warn. .cs, .ps1, .json usw. warnen also nur, blockieren nicht.",
+
+  "generated": [
+    "(^|/)(bin|obj|publish)/",
+    "\\.Designer\\.cs$",
+    "\\.g\\.cs$",
+    "^\\.githooks/(commit-msg|pre-commit)$",
+    "(^|/)[^/]*(umlaut|surrogate)[^/]*\\.[a-z0-9]+$"
+  ],
+  "_generated_help": "Strukturelle Dauerausschlüsse (Regex auf repo-relativen Pfad, Vorwärts-Slashes): Build-Artefakte (bin/obj/publish, inkl. der eingebetteten Playwright-Fremd-.md), generierter C#-Code, die endungslosen Hook-Bash-Dateien (tragen die Surrogat-Stämme als Trigger-Daten) und das Umlaut-Tooling selbst (führt das Verstoß-Pattern als Daten).",
+
+  "exceptions": [],
+  "_exceptions_help": "Bewusste Einzeldatei-Ausnahmen: { path, reason (deutsch), date (YYYY-MM-DD) }. Wer hier einträgt, meldet die Ausnahme dem Anwender."
+}
