@@ -24,6 +24,70 @@ typische Fallen, und wofür sie da sind.
 einen Fehler werfen sollen, gibt es zwei optionale Felder
 `expectFailure` und `expectException` — siehe [09-negative-path.md](09-negative-path.md).
 
+**Konditionale Steps (ADR-0011):** Jeder Step kann ein optionales Feld
+`condition` tragen, das ihn überspringt, wenn eine Laufzeit-Bedingung nicht
+zutrifft — siehe Abschnitt [condition](#condition).
+
+## condition
+
+> Konditionale Step-Ausführung (ADR-0011). Kein eigener Action-Typ, sondern
+> ein optionales Feld auf **jedem** Step.
+
+Ist die `condition` zur Laufzeit **nicht** erfüllt, wird der Step
+**übersprungen** (Step-Status `Skipped`, kein Failure). Ist sie erfüllt, läuft
+der Step normal (inkl. `onError`/`expectFailure`). Zwei Steps mit
+gegensätzlicher `condition` bilden ein if/else. Typischer Einsatz: ein Test,
+der sich ohne Re-Edit an die Ziel-Konfiguration anpasst (z.B. ein Feature an/aus
+je Umgebung) und nur im zutreffenden Zweig die echte Datensatz-Änderung prüft.
+
+**Genau EINE von drei Formen pro `condition`** (die Laufzeit löst `all` vor
+`any` vor Einfachklausel):
+
+```jsonc
+// Einfachklausel auf einem beliebigen Step:
+"condition": { "left": "{cfg.fields.feature_enabled}", "operator": "Equals", "right": "true" }
+
+// all (UND) - alle Klauseln müssen zutreffen:
+"condition": { "all": [
+  { "left": "{cfg.fields.a}", "operator": "Equals", "right": "1" },
+  { "left": "{cfg.fields.b}", "operator": "IsNotNull" }
+] }
+
+// any (ODER) - mindestens eine Klausel:
+"condition": { "any": [
+  { "left": "{cfg.fields.a}", "operator": "Equals", "right": "x" },
+  { "left": "{cfg.fields.a}", "operator": "Equals", "right": "y" }
+] }
+```
+
+Eine Klausel ist `left` `operator` `right`. Mische die Formen nicht (eine
+Einfachklausel zusammen mit `all`/`any`, oder `all` mit `any`); der
+Pre-Run-Validator meldet das als `CONDITION_MALFORMED` (siehe
+[11-pre-run-validation.md](11-pre-run-validation.md)).
+
+**Operatoren** (geteilter Comparator, identisch zur `Assert`-Action,
+**case-insensitiv**): `Equals`, `NotEquals`, `IsNull`, `IsNotNull`, `Contains`,
+`StartsWith`, `EndsWith`, `GreaterThan`, `LessThan`. `IsNull`/`IsNotNull`
+brauchen kein `right`. Nicht enthalten: `DateSetRecently`/`Exists`/`NotExists`/
+`RecordCount` (Assert-/Query-only) und `In`/`NotIn` (nur im Filter-Set).
+
+**Fallstricke:**
+
+- **Unaufgelöster Platzhalter -> harter Fehler (`Outcome=Error`), kein stiller
+  Skip.** Ein falsch geschriebener Alias lässt `{x.fields.y}` wörtlich stehen;
+  die Auswertung erkennt das und wirft, damit ein Tippfehler nicht zu einem
+  falsch-grünen Skip führt.
+- **Boolean-Vergleich case-insensitiv halten.** `{alias.fields.<bool>}` liefert
+  `"True"`/`"False"` (groß); der Comparator vergleicht case-insensitiv, also
+  matcht `right: "true"`.
+- **Test-Outcome bei lauter Skips:** Ein Test, dessen Asserts **alle**
+  condition-übersprungen wurden, wird `Skipped` (nicht Passed), ehrlich sichtbar
+  statt falsch-grün.
+
+**Abgrenzung zu `AssertEnvironment`:** `AssertEnvironment` **scheitert** (Fail),
+wenn eine Umgebungs-Vorbedingung nicht stimmt; `condition` **überspringt** den
+Step (Skip). Scheitern vs. Überspringen.
+
 ## CreateRecord
 
 Legt einen neuen Record an.

@@ -38,6 +38,7 @@ braucht weder Auth noch Org-Metadata. Dynamische Checks gegen die Ziel-Env
 | `PRECONDITIONS_OBSOLETE` | Error | Obsoletes Top-Level-`preconditions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `steps[]` migrieren. |
 | `ASSERTIONS_OBSOLETE` | Error | Obsoletes Top-Level-`assertions[]`-Array (Pre-ADR-0004). Wird still ignoriert, Test prüft nichts. Als `Assert`-Steps migrieren. |
 | `STEP_KEY_UNKNOWN` | Warning | Step-Key, der nicht im Schema steht (z.B. `withinSeconds`, `timeoutMs`, `ms`). Wird beim Parse still ignoriert, der Wert wirkt nicht. `comment`/`note` sind als Inline-Doku erlaubt. (v5.3.13) |
+| `CONDITION_MALFORMED` | Error / Warning | Step-`condition` ist nicht wohlgeformt (ADR-0011). Error: leer, gemischte Formen, leeres `all`/`any`, unbekannter oder fehlender Operator, fehlendes `left`. Warning: wertbasierter Operator ohne `right`. |
 
 Die beiden `*_OBSOLETE`-Regeln (v5.3.12) schützen das ADR-0004-Schema: seit
 ADR-0004 ist ein Test eine einzige `steps[]`-Liste. Ein Test mit altem
@@ -56,6 +57,16 @@ Severity Warning (kein Test-Abbruch), aber im CLI `validate --strict` ein
 Build-Failure. Die Schema-Key-Liste wird per Reflection aus `TestStep`
 abgeleitet (bleibt automatisch synchron); bewusste Inline-Doku-Keys
 (`comment`, `note`) sind erlaubt.
+
+`CONDITION_MALFORMED` (ADR-0011) prüft die optionale Step-`condition` (siehe
+[02-actions-referenz.md](02-actions-referenz.md#condition)) statisch auf
+Wohlgeformtheit, **bevor** sie zur Laufzeit wirkt. Genau eine Form ist erlaubt
+(Einfachklausel ODER `all` ODER `any`), der Operator muss aus dem geteilten
+Comparator stammen (`Equals`, `IsNull`, ...) und `left` muss gesetzt sein. Sonst
+würde die Laufzeit entweder werfen (`Outcome=Error`) oder still gegen einen
+leeren Wert vergleichen und falsch-grün überspringen; beides fängt der Validator
+vorab ab. Ein undefinierter Alias innerhalb der `condition` wird zusätzlich von
+der Symbol-Tabelle (`ALIAS_UNDEFINED`) erfasst.
 
 ## CLI: `validate`-Sub-Command
 

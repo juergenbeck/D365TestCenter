@@ -53,6 +53,7 @@ Action. Die JSON-Reihenfolge ist die Ausführungsreihenfolge.
 |---|---|---|
 | `description` | String | Kommentar für den Log, oft hilfreich für Debugging. |
 | `onError` | String | `"continue"` oder `"stop"`. Steuert Fehlerverhalten je Step. |
+| `condition` | Objekt | Optionale Lauf-Bedingung (ADR-0011). Ist sie zur Laufzeit nicht erfüllt, wird der Step **übersprungen** (`Skipped`) statt ausgeführt. Formen und Operatoren in der [Actions-Referenz](02-actions-referenz.md#condition). |
 
 **Was `action`-abhängig dazukommt:** variiert. Siehe
 [Actions-Referenz](02-actions-referenz.md).
