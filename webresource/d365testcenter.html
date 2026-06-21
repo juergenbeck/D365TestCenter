@@ -366,6 +366,22 @@ body {
 .live-progress-fill.mixed { background: linear-gradient(90deg, var(--accent-green) var(--pass-pct), var(--accent-red) var(--pass-pct)); }
 .live-progress-fill.all-pass { background: var(--accent-green); }
 
+/* MVP-3 Phase 7: Worker-Chunk-Fortschritt (jbe_testchunk). Nur sichtbar wenn Chunks existieren. */
+.chunk-progress { margin-top: 10px; }
+.chunk-strip-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.chunk-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+.chunk-tile {
+    min-width: 22px; height: 18px; padding: 0 4px; border-radius: 3px;
+    font-size: 11px; line-height: 18px; text-align: center; color: #fff;
+    background: var(--text-muted);
+}
+.chunk-tile.chunk-new { background: var(--bg-tertiary); color: var(--text-secondary); }
+.chunk-tile.chunk-running { background: var(--accent-blue); animation: chunk-pulse 1.2s ease-in-out infinite; }
+.chunk-tile.chunk-resume { background: var(--accent-yellow); color: #1a1a1a; }
+.chunk-tile.chunk-done { background: var(--accent-green); }
+.chunk-tile.chunk-error { background: var(--accent-red); }
+@keyframes chunk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
 .live-split {
     display: grid; grid-template-columns: 340px 1fr; gap: 16px;
     min-height: calc(100vh - 240px);
@@ -1568,7 +1584,7 @@ body {
 // Passen Sie diese Werte an Ihren Dataverse-Publisher an.
 // Standard-Prefix: "jbe" (Integration Test Tool)
 const CONFIG = {
-    version: "5.3.20",                 // Bei jedem Deployment hochzählen
+    version: "5.3.21",                 // Bei jedem Deployment hochzählen
     buildDate: "2026-06-21",          // Build-Date
     prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
     optionSetBase: 100570000,         // Basis für OptionSet-Werte (Publisher 10571 * 10000)
@@ -1612,6 +1628,13 @@ const CONFIG = {
         statusRunning: 105710001,
         statusCompleted: 105710002,
         statusError: 105710003,
+        statusSplitting: 105710004,   // "Aufteilung läuft" (Worker-Modell: Koordinator-Continuation)
+        // ChunkStatus (jbe_chunkstatus, Worker-Modell ADR-0009) - Prefix 10571
+        chunkNew: 105710000,
+        chunkRunning: 105710001,
+        chunkResume: 105710002,
+        chunkProcessed: 105710003,
+        chunkError: 105710004,
         // Outcome (jbe_testoutcome) - Prefix 10571
         outcomePassed: 105710000,
         outcomeFailed: 105710001,
@@ -5557,6 +5580,7 @@ async function renderRunDetail(runId) {
     <div id="live-progress-wrap" style="margin:-8px 0 16px">
         <div class="live-progress"><div class="live-progress-fill" id="live-bar" style="width:0%"></div></div>
     </div>
+    <div class="chunk-progress" id="live-chunks" style="display:none"></div>
     <div class="live-split">
         <div class="live-list">
             <div class="live-list-toolbar">
@@ -5627,7 +5651,9 @@ async function _updateLiveView(runId) {
     try {
         const run = await API.getOne("jbe_testruns", runId,
             "jbe_teststatus,jbe_passed,jbe_failed,jbe_total,jbe_startedon,jbe_completedon,jbe_testsummary,jbe_fulllog,jbe_testcasefilter,jbe_keeprecords");
-        const isActive = run.jbe_teststatus === CONFIG.optionSets.statusRunning || run.jbe_teststatus === CONFIG.optionSets.statusPlanned;
+        const isActive = run.jbe_teststatus === CONFIG.optionSets.statusRunning
+            || run.jbe_teststatus === CONFIG.optionSets.statusPlanned
+            || run.jbe_teststatus === CONFIG.optionSets.statusSplitting;   // Worker-Modell: Koordinator teilt noch auf
         const passed = run.jbe_passed || 0;
         const failed = run.jbe_failed || 0;
         const total = run.jbe_total || LiveRunState.testCaseList.length || 0;
@@ -5691,6 +5717,16 @@ async function _updateLiveView(runId) {
 
         _renderLiveList(runId);
 
+        // MVP-3 Phase 7: Worker-Chunk-Fortschritt. Degradationssicher - existiert die jbe_testchunk-
+        // Entity nicht oder hat der Lauf keine Chunks (alte Cascade / Worker aus), bleibt die Leiste
+        // verborgen und die bestehende Ergebnis-Ansicht unveraendert.
+        try {
+            const chunks = await API.getMany("jbe_testchunks",
+                `$select=jbe_chunkindex,jbe_chunkstatus,jbe_processedcount,jbe_failedcount` +
+                `&$filter=_jbe_testrunid_value eq '${runId}'&$orderby=jbe_chunkindex asc`);
+            _renderChunkProgress(chunks);
+        } catch { _renderChunkProgress([]); }
+
         // Update selected detail nur wenn sich das Ergebnis geaendert hat
         // (verhindert dass Toggle-States beim Polling zurückgesetzt werden)
         if (LiveRunState.selectedTestId) {
@@ -5727,6 +5763,39 @@ async function _updateLiveView(runId) {
         const logEl = document.getElementById("run-log");
         if (logEl) logEl.innerHTML = `<span class="log-fail">Error: ${escapeHtml(err.message)}</span>`;
     }
+}
+
+// MVP-3 Phase 7: rendert den Worker-Chunk-Fortschritt (jbe_testchunk). Eine Kachel pro Chunk,
+// Farbe nach Status; verborgen wenn der Lauf keine Chunks hat (alte Cascade / Worker aus).
+function _renderChunkProgress(chunks) {
+    const el = document.getElementById("live-chunks");
+    if (!el) return;
+    if (!chunks || chunks.length === 0) { el.innerHTML = ""; el.style.display = "none"; return; }
+    el.style.display = "";
+
+    const os = CONFIG.optionSets;
+    const meta = (s) => {
+        switch (s) {
+            case os.chunkProcessed: return { cls: "chunk-done", label: "Verarbeitet" };
+            case os.chunkError:     return { cls: "chunk-error", label: "Fehler" };
+            case os.chunkRunning:   return { cls: "chunk-running", label: "Läuft" };
+            case os.chunkResume:    return { cls: "chunk-resume", label: "Fortsetzen" };
+            default:                return { cls: "chunk-new", label: "Neu" };
+        }
+    };
+
+    const total = chunks.length;
+    const done = chunks.filter(c => c.jbe_chunkstatus === os.chunkProcessed).length;
+    const failed = chunks.filter(c => c.jbe_chunkstatus === os.chunkError).length;
+
+    const tiles = chunks.map(c => {
+        const m = meta(c.jbe_chunkstatus);
+        const p = c.jbe_processedcount || 0, f = c.jbe_failedcount || 0;
+        const idx = (c.jbe_chunkindex ?? 0);
+        return `<span class="chunk-tile ${m.cls}" title="Chunk ${idx}: ${m.label} (${p} ok${f > 0 ? ", " + f + " fail" : ""})">${idx}</span>`;
+    }).join("");
+
+    el.innerHTML = `<div class="chunk-strip-label">Worker-Chunks: ${done}/${total} verarbeitet${failed > 0 ? `, ${failed} Fehler` : ""}</div><div class="chunk-strip">${tiles}</div>`;
 }
 
 function _renderLiveList(runId) {
