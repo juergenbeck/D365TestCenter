@@ -141,6 +141,45 @@ public class MarkdownResultSyncTests
     }
 
     [Fact]
+    public void FormatErgebnis_AllSkipped_IsSkip()
+    {
+        // ADR-0011: a run whose tests were all condition-skipped (no fail/error) is
+        // SKIP, not FAIL. Pins the fixed else-branch.
+        Assert.Equal("0/2 SKIP (0s)", MarkdownResultSync.FormatErgebnis(new List<TestCaseResult>
+        {
+            Tc(TestOutcome.Skipped, 0), Tc(TestOutcome.Skipped, 0)
+        }));
+    }
+
+    [Fact]
+    public void FormatErgebnis_PassedAndSkipped_IsPass()
+    {
+        // Some executed and green, the rest skipped, nothing broken -> PASS (not FAIL).
+        Assert.Equal("1/2 PASS (1s)", MarkdownResultSync.FormatErgebnis(new List<TestCaseResult>
+        {
+            Tc(TestOutcome.Passed, 1000), Tc(TestOutcome.Skipped, 0)
+        }));
+    }
+
+    [Fact]
+    public void FormatErgebnis_FailedAndSkipped_IsFail()
+    {
+        Assert.Equal("0/2 FAIL (1s)", MarkdownResultSync.FormatErgebnis(new List<TestCaseResult>
+        {
+            Tc(TestOutcome.Failed, 1000), Tc(TestOutcome.Skipped, 0)
+        }));
+    }
+
+    [Fact]
+    public void FormatErgebnis_ErrorAndSkipped_IsError()
+    {
+        Assert.Equal("0/2 ERROR (1s)", MarkdownResultSync.FormatErgebnis(new List<TestCaseResult>
+        {
+            Tc(TestOutcome.Error, 1000), Tc(TestOutcome.Skipped, 0)
+        }));
+    }
+
+    [Fact]
     public void BuildEntry_LowercasesEnv_FormatsDate()
     {
         var e = MarkdownResultSync.BuildEntry(

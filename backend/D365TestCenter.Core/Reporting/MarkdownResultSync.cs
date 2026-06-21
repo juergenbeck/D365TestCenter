@@ -57,7 +57,17 @@ public static class MarkdownResultSync
         int total = matched.Count;
         int passed = matched.Count(r => r.Outcome == TestOutcome.Passed);
         bool anyError = matched.Any(r => r.Outcome == TestOutcome.Error);
-        string status = passed == total ? "PASS" : anyError ? "ERROR" : "FAIL";
+        bool anyFailed = matched.Any(r => r.Outcome == TestOutcome.Failed);
+        // Skipped (ADR-0011) is neither pass nor fail. Priority Error > Failed >
+        // Pass/Skip: a run with only skips (no fail/error) is SKIP; a mix of
+        // passed+skipped (no fail/error) is PASS. Without this, a skip-only run
+        // fell into the FAIL else-branch.
+        string status =
+            anyError ? "ERROR" :
+            anyFailed ? "FAIL" :
+            passed == total ? "PASS" :
+            passed == 0 ? "SKIP" :
+            "PASS";
         long ms = matched.Sum(r => r.DurationMs);
         long secs = (long)Math.Round(ms / 1000.0, MidpointRounding.AwayFromZero);
         return $"{passed}/{total} {status} ({secs}s)";
