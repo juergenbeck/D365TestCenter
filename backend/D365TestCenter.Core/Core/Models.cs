@@ -577,11 +577,18 @@ public sealed class TestContext
         throw new InvalidOperationException($"Entity-Name für Record '{alias}' nicht gefunden.");
     }
 
-    /// <summary>Registriert einen Record im Registry und in CreatedEntities für Cleanup.</summary>
-    public void RegisterRecord(string alias, string entityName, Guid id)
+    /// <summary>
+    /// Registriert einen Record im Registry und (bei trackForCleanup=true) in CreatedEntities
+    /// für den Cleanup. Angelegte Records (CreateRecord) tracken; per FindRecord/WaitForRecord
+    /// nur GEFUNDENE Bestands-Records dürfen NICHT getrackt werden (trackForCleanup=false),
+    /// sonst löscht der Cleanup geteilte Stammdaten (z.B. den per FindRecord gelesenen
+    /// markant_fg_fieldconfig) auf der Ziel-Umgebung. Ein gefundener Record ist kein erzeugter.
+    /// </summary>
+    public void RegisterRecord(string alias, string entityName, Guid id, bool trackForCleanup = true)
     {
         Records[alias] = (entityName, id);
-        CreatedEntities.Add((entityName, id));
+        if (trackForCleanup)
+            CreatedEntities.Add((entityName, id));
     }
 }
 

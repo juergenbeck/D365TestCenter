@@ -1247,7 +1247,10 @@ public sealed class TestRunner
             throw new InvalidOperationException(
                 $"WaitForRecord: Kein Record in '{entityName}' gefunden (Timeout: {step.TimeoutSeconds}s).");
 
-        ctx.RegisterRecord(alias, entityName, found.Id);
+        // trackForCleanup:false - ein per FindRecord/WaitForRecord GEFUNDENER Bestands-Record
+        // ist kein vom Test erzeugter Record und darf nicht in die Cleanup-Löschliste. Sonst
+        // löscht der Cleanup geteilte Stammdaten (z.B. den gelesenen markant_fg_fieldconfig).
+        ctx.RegisterRecord(alias, entityName, found.Id, trackForCleanup: false);
         ctx.FoundRecords[alias] = found;
         Log($"      WaitForRecord [{alias}] gefunden: {found.Id} ({sw.ElapsedMilliseconds}ms)");
 

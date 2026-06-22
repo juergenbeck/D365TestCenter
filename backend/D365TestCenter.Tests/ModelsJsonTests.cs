@@ -263,6 +263,22 @@ public class ModelsJsonTests
     }
 
     [Fact]
+    public void TestContext_RegisterRecord_TrackForCleanupFalse_RegistersButDoesNotTrack()
+    {
+        // FindRecord/WaitForRecord registriert gefundene Bestands-Records nur für die
+        // Alias-Auflösung, NICHT für den Cleanup - sonst löscht der Cleanup geteilte
+        // Stammdaten (z.B. den gelesenen markant_fg_fieldconfig).
+        var ctx = new TestContext { TestId = "TC01" };
+        var id = Guid.NewGuid();
+
+        ctx.RegisterRecord("wbcfg", "markant_fg_fieldconfig", id, trackForCleanup: false);
+
+        Assert.True(ctx.Records.ContainsKey("wbcfg"));
+        Assert.Equal(id, ctx.Records["wbcfg"].Id);
+        Assert.Empty(ctx.CreatedEntities);
+    }
+
+    [Fact]
     public void TestContext_ResolveRecordId_ThrowsForUnknownAlias()
     {
         var ctx = new TestContext { TestId = "TC01" };
