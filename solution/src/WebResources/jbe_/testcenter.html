@@ -4983,7 +4983,7 @@ function renderCasesTable(cases) {
             <td>${stories || "-"}</td>
             <td>${status}</td>
             <td style="white-space:nowrap">
-                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.jbe_testid)}',false)" title="Start test run" style="padding:2px 8px">&#9654;</button>
+                <button class="btn btn-sm" onclick="runSingleCase('${escapeHtml(c.jbe_testid)}')" title="Start test run" style="padding:2px 8px">&#9654;</button>
                 <a href="#cases/${c.jbe_testcaseid}" class="btn btn-sm">${LANG.cases_edit}</a>
                 <a href="/main.aspx?etn=jbe_testcase&id=${c.jbe_testcaseid}&pagetype=entityrecord" target="_blank" class="btn btn-sm" title="Open in CRM" style="padding:2px 6px;color:var(--accent-blue)">CRM</a>
             </td>
@@ -5021,11 +5021,11 @@ window.runSelectedCases = async function() {
     const ids = Array.from(checked).map(cb => cb.dataset.testid).join(",");
     const concSel = document.getElementById("concurrency-select");
     const conc = concSel ? parseInt(concSel.value) || 3 : 3;
-    await _startRunWithFilter(ids, true, conc);
+    await _startRunWithFilter(ids, false, conc);
 };
 
 window.runSingleCase = async function(testId) {
-    await _startRunWithFilter(testId, true, 1);
+    await _startRunWithFilter(testId, false, 1);
 };
 
 async function _startRunWithFilter(filter, keepRecords, concurrency) {
@@ -5039,7 +5039,7 @@ async function _startRunWithFilter(filter, keepRecords, concurrency) {
     // Für grössere Suites (>96 Tests) muss die CLI verwendet werden - sie
     // nutzt denselben Orchestrator/TestRunner, aber ohne Sandbox-Limit.
     const conc = concurrency || LiveRunState.concurrency || 3;
-    const keep = keepRecords !== false; // Default: true (Retain by Default)
+    const keep = keepRecords === true; // Default: false (Cleanup-Grundsatz, OE 2026-06-23); Behalten nur per Opt-in (Formular-Checkbox) oder CLI/Zephyr-Workflow
     JBELog.info("TestRunner", `Starting test run via CRUD-Trigger: Filter="${filter}", keepRecords=${keep}`);
     try {
         // TestRun-Record anlegen mit Status "Geplant" - das Plugin übernimmt

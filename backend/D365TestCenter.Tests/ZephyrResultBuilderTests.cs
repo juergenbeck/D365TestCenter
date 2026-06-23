@@ -161,8 +161,10 @@ public class ZephyrResultBuilderTests
 
         Assert.NotNull(c);
         Assert.Contains("Angelegt:", c);
-        Assert.Contains("account \"JBE Test GmbH\" [acc]", c);
-        Assert.Contains("lead [lead]", c);                 // no name -> entity + alias only
+        // ID UND Name müssen erscheinen (Zephyr-Beleg-Integrität, OE 2026-06-23): der Verweis im
+        // Zephyr-Ergebnis muss auf den konkreten Dataverse-Record zeigen. Das ` (<guid>)` mit pinnen.
+        Assert.Contains("account \"JBE Test GmbH\" [acc] (11111111-1111-1111-1111-111111111111)", c);
+        Assert.Contains("lead [lead] (22222222-2222-2222-2222-222222222222)", c);   // no name -> entity + alias + id
         Assert.Contains("Geprüft:", c);
         Assert.Contains("Firma abgeleitet = JBE Test GmbH (OK)", c);
         Assert.Contains("companyname gesetzt = leer (FAIL)", c);
@@ -182,7 +184,7 @@ public class ZephyrResultBuilderTests
         var c = ZephyrResultBuilder.BuildAuditComment(tracked, null, null);
 
         Assert.NotNull(c);
-        Assert.Contains("contact \"JBE Test, Max\" [con]", c!);
+        Assert.Contains("contact \"JBE Test, Max\" [con] (33333333-3333-3333-3333-333333333333)", c!);
         Assert.DoesNotContain("Geprüft", c!);              // no asserts
         Assert.DoesNotContain("Fehler", c!);
     }
