@@ -1,0 +1,18 @@
+<customapi uniquename="jbe_ValidatePack">
+  <allowedcustomprocessingsteptype>0</allowedcustomprocessingsteptype>
+  <bindingtype>0</bindingtype>
+  <description default="ADR-0009 Phase 4: validiert die jbe_testcase-Definitionen (Symbol-Table) und liefert Findings als JSON.">
+    <label description="ADR-0009 Phase 4: validiert die jbe_testcase-Definitionen (Symbol-Table) und liefert Findings als JSON." languagecode="1033" />
+  </description>
+  <displayname default="Validate Pack">
+    <label description="Validate Pack" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isfunction>0</isfunction>
+  <isprivate>0</isprivate>
+  <name>ValidatePack</name>
+  <plugintypeid>
+    <plugintypeexportkey>825A0DC7A62641B5DDCFF3E04C9C47EC194A637FCBAB606746F254DD54DF4B26</plugintypeexportkey>
+  </plugintypeid>
+  <workflowsdkstepenabled>0</workflowsdkstepenabled>
+</customapi>

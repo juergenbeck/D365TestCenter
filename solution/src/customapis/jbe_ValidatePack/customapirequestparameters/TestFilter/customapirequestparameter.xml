@@ -1,0 +1,9 @@
+<customapirequestparameter uniquename="TestFilter">
+  <displayname default="TestFilter">
+    <label description="TestFilter" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isoptional>1</isoptional>
+  <name>TestFilter</name>
+  <type>10</type>
+</customapirequestparameter>

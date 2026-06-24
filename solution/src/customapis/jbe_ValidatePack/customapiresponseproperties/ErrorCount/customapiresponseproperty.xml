@@ -1,0 +1,8 @@
+<customapiresponseproperty uniquename="ErrorCount">
+  <displayname default="ErrorCount">
+    <label description="ErrorCount" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>ErrorCount</name>
+  <type>7</type>
+</customapiresponseproperty>

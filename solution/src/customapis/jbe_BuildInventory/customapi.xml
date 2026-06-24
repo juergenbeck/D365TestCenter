@@ -1,0 +1,18 @@
+<customapi uniquename="jbe_BuildInventory">
+  <allowedcustomprocessingsteptype>0</allowedcustomprocessingsteptype>
+  <bindingtype>0</bindingtype>
+  <description default="ADR-0009 Phase 4: erzeugt das Management-Inventar (Markdown) ueber die jbe_testcase-Landschaft.">
+    <label description="ADR-0009 Phase 4: erzeugt das Management-Inventar (Markdown) ueber die jbe_testcase-Landschaft." languagecode="1033" />
+  </description>
+  <displayname default="Build Inventory">
+    <label description="Build Inventory" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isfunction>0</isfunction>
+  <isprivate>0</isprivate>
+  <name>BuildInventory</name>
+  <plugintypeid>
+    <plugintypeexportkey>2518A12B6009C87268E20319A70C70D2244615F2B1CE89880B46628F3246A965</plugintypeexportkey>
+  </plugintypeid>
+  <workflowsdkstepenabled>0</workflowsdkstepenabled>
+</customapi>

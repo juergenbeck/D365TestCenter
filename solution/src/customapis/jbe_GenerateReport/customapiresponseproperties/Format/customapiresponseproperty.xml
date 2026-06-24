@@ -1,0 +1,8 @@
+<customapiresponseproperty uniquename="Format">
+  <displayname default="Format">
+    <label description="Format" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>Format</name>
+  <type>10</type>
+</customapiresponseproperty>

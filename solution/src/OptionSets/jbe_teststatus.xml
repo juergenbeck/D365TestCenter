@@ -19,6 +19,11 @@
         <label description="Pending" languagecode="1033" />
       </labels>
     </option>
+    <option value="105710004" IsHidden="0">
+      <labels>
+        <label description="Aufteilung laeuft" languagecode="1033" />
+      </labels>
+    </option>
     <option value="105710001" ExternalValue="" IsHidden="0">
       <labels>
         <label description="Läuft" languagecode="1031" />

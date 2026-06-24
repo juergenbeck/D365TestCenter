@@ -1,0 +1,15 @@
+<customapi uniquename="jbe_RecoverStaleChunks">
+  <allowedcustomprocessingsteptype>1</allowedcustomprocessingsteptype>
+  <bindingtype>0</bindingtype>
+  <description default="FB-46/OE-12: Setzt zu lange in Laeuft steckende jbe_testchunk auf Fortsetzen zurueck (Async-Step).">
+    <label description="FB-46/OE-12: Setzt zu lange in Laeuft steckende jbe_testchunk auf Fortsetzen zurueck (Async-Step)." languagecode="1033" />
+  </description>
+  <displayname default="Recover Stale Chunks">
+    <label description="Recover Stale Chunks" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isfunction>0</isfunction>
+  <isprivate>0</isprivate>
+  <name>RecoverStaleChunks</name>
+  <workflowsdkstepenabled>0</workflowsdkstepenabled>
+</customapi>
