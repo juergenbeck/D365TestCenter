@@ -189,6 +189,35 @@ public static class Program
             SyncZephyr);
         rootCommand.AddCommand(syncZephyrCommand);
 
+        // ── sync-devops command (E5 pendant / ADR 2026-06-24) ──────
+        var syncDevOpsCommand = new Command("sync-devops",
+            "Post the results of a finished run as an Azure-DevOps work-item comment (HTML audit fragment): KPI header + per-test Angelegt/Geprüft/Fehler block. The licence-free pendant to sync-zephyr. Writes to Azure DevOps - approval-gated.");
+        syncDevOpsCommand.AddOption(orgOption);
+        syncDevOpsCommand.AddOption(clientIdOption);
+        syncDevOpsCommand.AddOption(clientSecretOption);
+        syncDevOpsCommand.AddOption(tenantIdOption);
+        syncDevOpsCommand.AddOption(tokenOption);
+        syncDevOpsCommand.AddOption(interactiveOption);
+        syncDevOpsCommand.AddOption(new Option<string>("--run",
+            "Test run id (jbe_testrun GUID) whose results are posted.") { IsRequired = true });
+        syncDevOpsCommand.AddOption(new Option<int>("--work-item",
+            "Target Azure DevOps work-item id (explicit, no auto-link).") { IsRequired = true });
+        syncDevOpsCommand.AddOption(new Option<string>("--devops-org",
+            "Azure DevOps organisation, e.g. lmtfs.") { IsRequired = true });
+        syncDevOpsCommand.AddOption(new Option<string>("--devops-project",
+            "Azure DevOps project, e.g. LMApp.") { IsRequired = true });
+        syncDevOpsCommand.AddOption(new Option<string>("--devops-token",
+            "AAD Bearer token for Azure DevOps. Pass from a TokenVault wrapper; the CLI stays secret-agnostic.") { IsRequired = true });
+        syncDevOpsCommand.AddOption(new Option<string>("--devops-url", () => "https://dev.azure.com",
+            "Azure DevOps base URL (default: https://dev.azure.com)."));
+        syncDevOpsCommand.AddOption(new Option<string?>("--env",
+            "Environment label for the KPI header (e.g. DEV). Optional."));
+        syncDevOpsCommand.AddOption(new Option<string>("--config", () => "standard",
+            "Config profile: standard, markant, lm."));
+        syncDevOpsCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, int, string, string, string, string, string?, string>(
+            SyncDevOps);
+        rootCommand.AddCommand(syncDevOpsCommand);
+
         // ── sync-docs command (E1 / ADR-0008) ─────────────────────
         var syncDocsCommand = new Command("sync-docs",
             "Write the documentation sections of the Markdown definitions into jbe_testcase.jbe_documentation (E1).");
@@ -630,6 +659,67 @@ public static class Program
                 (sum.RunKey != null ? $" (Zephyr Test-Run {sum.RunKey})" : "") +
                 $", {sum.Mapped} gemappt, {sum.SkippedNoKey} ohne zephyr_key, {sum.Total} im Run.");
             return sum.Uploaded > 0 ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Fehler: {ex.Message}");
+            return 1;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  sync-devops command (E5 pendant / ADR 2026-06-24): post results
+    //  as an Azure-DevOps work-item comment (HTML audit fragment)
+    // ════════════════════════════════════════════════════════════════
+
+    static async Task<int> SyncDevOps(
+        string org, string? clientId, string? clientSecret, string? tenantId,
+        string? token, bool interactive, string run, int workItem, string devopsOrg,
+        string devopsProject, string devopsToken, string devopsUrl, string? env, string config)
+    {
+        try
+        {
+            if (!Guid.TryParse(run, out var runId))
+            {
+                Console.WriteLine($"  Ungültige Run-Id (kein GUID): {run}");
+                return 2;
+            }
+            if (workItem <= 0)
+            {
+                Console.WriteLine($"  Ungültige Work-Item-Id: {workItem} (muss > 0 sein).");
+                return 2;
+            }
+            if (string.IsNullOrWhiteSpace(devopsOrg) || string.IsNullOrWhiteSpace(devopsProject))
+            {
+                Console.WriteLine("  --devops-org und --devops-project sind erforderlich.");
+                return 2;
+            }
+            if (string.IsNullOrWhiteSpace(devopsToken))
+            {
+                Console.WriteLine("  --devops-token fehlt (AAD-Bearer). Vom TokenVault-Wrapper übergeben.");
+                return 2;
+            }
+
+            using var client = Connect(org, clientId, clientSecret, tenantId, token, interactive);
+            var cfg = GetConfig(config);
+            var envLabel = string.IsNullOrWhiteSpace(env) ? null : env!.Trim();
+
+            Console.WriteLine();
+            Console.WriteLine($"  sync-devops Run {runId} -> Work-Item {workItem} " +
+                $"({devopsUrl.TrimEnd('/')}/{devopsOrg}/{devopsProject}, " +
+                $"env={(envLabel ?? "(ohne)")}):");
+            var sum = await DevOpsSync.SyncAsync(
+                client, cfg, runId, workItem, devopsUrl, devopsOrg, devopsProject, devopsToken,
+                envLabel, Console.WriteLine);
+
+            Console.WriteLine();
+            if (sum.Posted)
+                Console.WriteLine(
+                    $"  Fertig: Kommentar {sum.CommentId} auf Work-Item {sum.WorkItemId} gepostet " +
+                    $"({sum.TestsTotal} Testfälle).");
+            else
+                Console.WriteLine($"  Nichts gepostet (Run {runId} hatte keine Ergebnisse).");
+            return sum.Posted ? 0 : 1;
         }
         catch (Exception ex)
         {

@@ -158,39 +158,11 @@ public static class ZephyrResultBuilder
         IReadOnlyList<StepResult>? assertSteps,
         string? errorMessage)
     {
-        var lines = new List<string>();
-
-        if (trackedRecords != null && trackedRecords.Count > 0)
-        {
-            var parts = trackedRecords.Select(t =>
-            {
-                var label = string.IsNullOrWhiteSpace(t.Name) ? t.Entity : $"{t.Entity} \"{t.Name}\"";
-                if (!string.IsNullOrWhiteSpace(t.Alias)) label += $" [{t.Alias}]";
-                return $"{label} ({t.Id})";
-            });
-            lines.Add("Angelegt: " + string.Join(", ", parts));
-        }
-
-        var asserts = (assertSteps ?? Array.Empty<StepResult>())
-            .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        if (asserts.Count > 0)
-        {
-            var parts = asserts.Select(a =>
-            {
-                var what = string.IsNullOrWhiteSpace(a.Description) ? a.AssertField : a.Description;
-                var val = !string.IsNullOrWhiteSpace(a.ActualDisplay) ? a.ActualDisplay : a.ExpectedDisplay;
-                var ok = a.Success ? "OK" : "FAIL";
-                return string.IsNullOrWhiteSpace(val) ? $"{what} ({ok})" : $"{what} = {val} ({ok})";
-            });
-            lines.Add("Geprüft: " + string.Join("; ", parts));
-        }
-
-        if (!string.IsNullOrWhiteSpace(errorMessage))
-            lines.Add("Fehler: " + errorMessage);
-
-        if (lines.Count == 0) return null;
-        var comment = string.Join("\n", lines);
-        return comment.Length > 1500 ? comment.Substring(0, 1500) + "..." : comment;
+        // ADR 2026-06-24: the audit logic now lives in the shared AuditCommentBuilder
+        // so sync-devops (HTML) and sync-zephyr (plain) render the same facts without
+        // drift. This method keeps its signature and plain-text behaviour (Cap 1500),
+        // pinned by ZephyrResultBuilderTests.
+        var model = AuditCommentBuilder.BuildModel(trackedRecords, assertSteps, errorMessage);
+        return AuditCommentBuilder.RenderPlain(model);
     }
 }
