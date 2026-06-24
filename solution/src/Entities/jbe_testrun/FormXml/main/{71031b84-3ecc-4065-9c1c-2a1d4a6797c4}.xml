@@ -24,15 +24,15 @@
                     <row>
                       <cell id="{ccc250d7-f7b4-5c10-9786-5a8e12d23335}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Filter" languagecode="1033" />
                           <label description="Filter" languagecode="1031" />
+                          <label description="Filter" languagecode="1033" />
                         </labels>
                         <control id="jbe_testcasefilter" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testcasefilter" disabled="false" />
                       </cell>
                       <cell id="{5b145ca5-3b20-59db-a3d8-436271a3b460}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Test Status" languagecode="1033" />
                           <label description="Teststatus" languagecode="1031" />
+                          <label description="Test Status" languagecode="1033" />
                         </labels>
                         <control id="jbe_teststatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_teststatus" disabled="false" />
                       </cell>
@@ -40,15 +40,15 @@
                     <row>
                       <cell id="{5c5a8537-6a39-50bf-bbd2-2b132bdfbaaa}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Keep Test Records" languagecode="1033" />
                           <label description="Testdaten behalten" languagecode="1031" />
+                          <label description="Keep Test Records" languagecode="1033" />
                         </labels>
                         <control id="jbe_keeprecords" classid="{67FAC785-CD58-4F9F-ABB3-4B7DDC6ED5ED}" datafieldname="jbe_keeprecords" disabled="false" />
                       </cell>
                       <cell id="{4d67b7f1-7a65-5a1a-8180-c896d1750b02}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Started On" languagecode="1033" />
                           <label description="Gestartet am" languagecode="1031" />
+                          <label description="Started On" languagecode="1033" />
                         </labels>
                         <control id="jbe_startedon" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="jbe_startedon" disabled="false" />
                       </cell>
@@ -56,8 +56,8 @@
                     <row>
                       <cell id="{725367f4-99e3-5ff3-bdf8-88cce7ccc6ce}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Completed On" languagecode="1033" />
                           <label description="Abgeschlossen am" languagecode="1031" />
+                          <label description="Completed On" languagecode="1033" />
                         </labels>
                         <control id="jbe_completedon" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="jbe_completedon" disabled="false" />
                       </cell>
@@ -73,22 +73,22 @@
                     <row>
                       <cell id="{3267cb6f-522b-53d7-a8e8-4f6477211f0a}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Total" languagecode="1033" />
                           <label description="Gesamt" languagecode="1031" />
+                          <label description="Total" languagecode="1033" />
                         </labels>
                         <control id="jbe_total" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_total" disabled="false" />
                       </cell>
                       <cell id="{c7b60370-2b77-5db8-96b1-51b5ad71ac71}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Passed" languagecode="1033" />
                           <label description="Bestanden" languagecode="1031" />
+                          <label description="Passed" languagecode="1033" />
                         </labels>
                         <control id="jbe_passed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_passed" disabled="false" />
                       </cell>
                       <cell id="{7e4a408d-c598-577a-af38-6065e4e1eca4}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Failed" languagecode="1033" />
                           <label description="Fehlgeschlagen" languagecode="1031" />
+                          <label description="Failed" languagecode="1033" />
                         </labels>
                         <control id="jbe_failed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_failed" disabled="false" />
                       </cell>
@@ -104,8 +104,8 @@
                     <row>
                       <cell id="{efdc8fdd-cfa0-5644-a2e4-9d9861373945}" colspan="1" rowspan="6">
                         <labels>
-                          <label description="Summary" languagecode="1033" />
                           <label description="Zusammenfassung" languagecode="1031" />
+                          <label description="Summary" languagecode="1033" />
                         </labels>
                         <control id="jbe_testsummary" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_testsummary" disabled="false" />
                       </cell>
@@ -133,8 +133,8 @@
                     <row>
                       <cell id="{e89a557b-963c-5a57-949d-f2005033e3a2}" colspan="1" rowspan="28">
                         <labels>
-                          <label description="Full Log" languagecode="1033" />
                           <label description="Vollständiges Log" languagecode="1031" />
+                          <label description="Full Log" languagecode="1033" />
                         </labels>
                         <control id="jbe_fulllog" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_fulllog" disabled="false" />
                       </cell>
@@ -522,29 +522,29 @@
           <row>
             <cell id="{5b145ca5-3b20-59db-a3d8-436271a3b460}" colspan="1" rowspan="1">
               <labels>
-                <label description="Test Status" languagecode="1033" />
                 <label description="Teststatus" languagecode="1031" />
+                <label description="Test Status" languagecode="1033" />
               </labels>
               <control id="jbe_teststatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_teststatus" disabled="false" />
             </cell>
             <cell id="{3267cb6f-522b-53d7-a8e8-4f6477211f0a}" colspan="1" rowspan="1">
               <labels>
-                <label description="Total" languagecode="1033" />
                 <label description="Gesamt" languagecode="1031" />
+                <label description="Total" languagecode="1033" />
               </labels>
               <control id="jbe_total" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_total" disabled="false" />
             </cell>
             <cell id="{c7b60370-2b77-5db8-96b1-51b5ad71ac71}" colspan="1" rowspan="1">
               <labels>
-                <label description="Passed" languagecode="1033" />
                 <label description="Bestanden" languagecode="1031" />
+                <label description="Passed" languagecode="1033" />
               </labels>
               <control id="jbe_passed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_passed" disabled="false" />
             </cell>
             <cell id="{7e4a408d-c598-577a-af38-6065e4e1eca4}" colspan="1" rowspan="1">
               <labels>
-                <label description="Failed" languagecode="1033" />
                 <label description="Fehlgeschlagen" languagecode="1031" />
+                <label description="Failed" languagecode="1033" />
               </labels>
               <control id="jbe_failed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_failed" disabled="false" />
             </cell>
@@ -554,21 +554,9 @@
       <footer id="{dfec7e98-b2fc-5305-9e6b-0a44e113a275}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
         <rows>
           <row>
-            <cell id="{cd666676-cb98-56a1-8080-2feeffae00ad}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
-            <cell id="{164373cc-e9d0-5fb3-9619-a6f8c22a5706}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
-            <cell id="{3bc80eb2-07da-5389-9357-4789bf81b82e}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
+            <cell id="{cd666676-cb98-56a1-8080-2feeffae00ad}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
+            <cell id="{164373cc-e9d0-5fb3-9619-a6f8c22a5706}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
+            <cell id="{3bc80eb2-07da-5389-9357-4789bf81b82e}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
           </row>
         </rows>
       </footer>

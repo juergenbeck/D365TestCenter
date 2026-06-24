@@ -24,15 +24,15 @@
                     <row>
                       <cell id="{882388b6-89cd-5408-ae8b-115198321e39}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Test ID" languagecode="1033" />
                           <label description="Test-ID" languagecode="1031" />
+                          <label description="Test ID" languagecode="1033" />
                         </labels>
                         <control id="jbe_testid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testid" disabled="false" />
                       </cell>
                       <cell id="{676ba4b9-1955-56d9-987c-3e026283ac8a}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Outcome" languagecode="1033" />
                           <label description="Ergebnis" languagecode="1031" />
+                          <label description="Outcome" languagecode="1033" />
                         </labels>
                         <control id="jbe_outcome" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_outcome" disabled="false" />
                       </cell>
@@ -40,15 +40,15 @@
                     <row>
                       <cell id="{6c390c6d-489d-5842-abfa-1fcabd2c5ffd}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Duration (ms)" languagecode="1033" />
                           <label description="Dauer (ms)" languagecode="1031" />
+                          <label description="Duration (ms)" languagecode="1033" />
                         </labels>
                         <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
                       </cell>
                       <cell id="{ddc49284-e00a-5d4c-a41a-a69550d7c18e}" colspan="1" rowspan="1">
                         <labels>
-                          <label description="Test Run" languagecode="1033" />
                           <label description="Testlauf" languagecode="1031" />
+                          <label description="Test Run" languagecode="1033" />
                         </labels>
                         <control id="jbe_testrunid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="jbe_testrunid" disabled="false" />
                       </cell>
@@ -64,8 +64,8 @@
                     <row>
                       <cell id="{427c2c70-b6a5-5334-b194-c693ca9d5445}" colspan="1" rowspan="8">
                         <labels>
-                          <label description="Error Message" languagecode="1033" />
                           <label description="Fehlermeldung" languagecode="1031" />
+                          <label description="Error Message" languagecode="1033" />
                         </labels>
                         <control id="jbe_errormessage" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_errormessage" disabled="false" />
                       </cell>
@@ -93,8 +93,8 @@
                     <row>
                       <cell id="{93485e3d-3fda-567d-a8d2-62152d1f22bc}" colspan="1" rowspan="28">
                         <labels>
-                          <label description="Assertion Results (JSON)" languagecode="1033" />
                           <label description="Assertion-Ergebnisse (JSON)" languagecode="1031" />
+                          <label description="Assertion Results (JSON)" languagecode="1033" />
                         </labels>
                         <control id="jbe_assertionresults" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_assertionresults" disabled="false" />
                       </cell>
@@ -122,8 +122,8 @@
                     <row>
                       <cell id="{2f83acbf-9411-5fa8-87f5-52344d2b7956}" colspan="1" rowspan="28">
                         <labels>
-                          <label description="Tracked Records (JSON)" languagecode="1033" />
                           <label description="Erzeugte Records (JSON)" languagecode="1031" />
+                          <label description="Tracked Records (JSON)" languagecode="1033" />
                         </labels>
                         <control id="jbe_trackedrecords" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_trackedrecords" disabled="false" />
                       </cell>
@@ -520,29 +520,29 @@
           <row>
             <cell id="{676ba4b9-1955-56d9-987c-3e026283ac8a}" colspan="1" rowspan="1">
               <labels>
-                <label description="Outcome" languagecode="1033" />
                 <label description="Ergebnis" languagecode="1031" />
+                <label description="Outcome" languagecode="1033" />
               </labels>
               <control id="jbe_outcome" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_outcome" disabled="false" />
             </cell>
             <cell id="{882388b6-89cd-5408-ae8b-115198321e39}" colspan="1" rowspan="1">
               <labels>
-                <label description="Test ID" languagecode="1033" />
                 <label description="Test-ID" languagecode="1031" />
+                <label description="Test ID" languagecode="1033" />
               </labels>
               <control id="jbe_testid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testid" disabled="false" />
             </cell>
             <cell id="{6c390c6d-489d-5842-abfa-1fcabd2c5ffd}" colspan="1" rowspan="1">
               <labels>
-                <label description="Duration (ms)" languagecode="1033" />
                 <label description="Dauer (ms)" languagecode="1031" />
+                <label description="Duration (ms)" languagecode="1033" />
               </labels>
               <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
             </cell>
             <cell id="{ddc49284-e00a-5d4c-a41a-a69550d7c18e}" colspan="1" rowspan="1">
               <labels>
-                <label description="Test Run" languagecode="1033" />
                 <label description="Testlauf" languagecode="1031" />
+                <label description="Test Run" languagecode="1033" />
               </labels>
               <control id="jbe_testrunid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="jbe_testrunid" disabled="false" />
             </cell>
@@ -552,21 +552,9 @@
       <footer id="{f72ad5d0-97fe-5651-825c-e7e78700ba70}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
         <rows>
           <row>
-            <cell id="{5767c899-ca00-5335-8d3c-10b6310b366a}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
-            <cell id="{26e7dcea-ae2f-5ec8-9fd4-7ea3e5600014}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
-            <cell id="{318d5bb6-ea56-59d5-ae76-97cc587373a8}" showlabel="false">
-              <labels>
-                <label description="" languagecode="1033" />
-              </labels>
-            </cell>
+            <cell id="{5767c899-ca00-5335-8d3c-10b6310b366a}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
+            <cell id="{26e7dcea-ae2f-5ec8-9fd4-7ea3e5600014}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
+            <cell id="{318d5bb6-ea56-59d5-ae76-97cc587373a8}" showlabel="false"><labels><label description="" languagecode="1033" /></labels></cell>
           </row>
         </rows>
       </footer>

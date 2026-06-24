@@ -35,6 +35,7 @@ def sid(key: str) -> str:
 FIELD_TYPES = {
     "jbe_testcase": {
         "jbe_category": "picklist", "jbe_definitionjson": "memo",
+        "jbe_documentation": "memo",
         "jbe_enabled": "boolean", "jbe_name": "string", "jbe_tags": "string",
         "jbe_testid": "string", "jbe_title": "string", "jbe_userstories": "string",
     },
@@ -65,6 +66,7 @@ FIELD_TYPES = {
 LABELS = {
     "jbe_category": ("Kategorie", "Category"),
     "jbe_definitionjson": ("Definition (JSON)", "Definition (JSON)"),
+    "jbe_documentation": ("Dokumentation", "Documentation"),
     "jbe_enabled": ("Aktiv", "Enabled"),
     "jbe_name": ("Name", "Name"),
     "jbe_tags": ("Tags", "Tags"),
@@ -122,7 +124,7 @@ SPECS = {
                 ("Metadaten", "Metadata", ["createdon", "createdby", "modifiedon", "modifiedby"], 2),
             ]),
             ("Definition (JSON)", "Definition (JSON)", [
-                ("Definition", "Definition", [("jbe_definitionjson", 24)], 1),
+                ("Definition", "Definition", [("jbe_definitionjson", 24), ("jbe_documentation", 12)], 1),
             ]),
         ],
     },
@@ -164,11 +166,11 @@ SPECS = {
         ],
     },
     "jbe_teststep": {
-        "header_fields": ["jbe_stepstatus", "jbe_phase", "jbe_stepnumber", "jbe_durationms"],
+        "header_fields": ["jbe_stepstatus", "jbe_stepnumber", "jbe_durationms"],
         "tabs": [
             ("Übersicht", "Overview", [
                 ("Identifikation", "Identification", [
-                    "jbe_stepnumber", "jbe_name", "jbe_phase", "jbe_stepstatus"], 2),
+                    "jbe_stepnumber", "jbe_name", "jbe_stepstatus"], 2),
                 ("Aktion", "Action", [
                     "jbe_action", "jbe_entity", "jbe_alias", "jbe_recordid"], 2),
                 ("Link", "Link", ["jbe_recordurl"], 1),
@@ -187,6 +189,12 @@ SPECS = {
             ]),
         ],
     },
+}
+
+# Manuell in Dataverse ergänzte Cells mit nicht-deterministischer ID (nicht sid-reproduzierbar).
+# Hartkodiert, damit der Generator die DEV-Form byte-genau trifft (Jürgen-Entscheidung 2026-06-25).
+FIXED_CELL_IDS = {
+    ("jbe_testcase", "jbe_documentation"): "{7f3e9a21-0d4c-4b8e-a1f6-5c2b9e8d4a17}",
 }
 
 # ------------------ Helpers ------------------
@@ -217,7 +225,7 @@ def cell_xml(entity: str, spec_item, indent="                      "):
 
     classid = CLASSIDS[ftype]
     de, en = LABELS.get(fld, (fld, fld))
-    cell_id = sid(f"{entity}:cell:{fld}")
+    cell_id = FIXED_CELL_IDS.get((entity, fld)) or sid(f"{entity}:cell:{fld}")
 
     return (f'{indent}<cell id="{cell_id}" colspan="1" rowspan="{rowspan}">\n'
             f'{indent}  <labels>\n'
@@ -298,7 +306,7 @@ def section_xml(entity: str, section_spec, indent="              "):
 def tab_xml(entity: str, tab_spec, indent="        "):
     name_de, name_en, sections = tab_spec
     tab_id = sid(f"{entity}:tab:{name_en}")
-    sections_xml = "\n".join(section_xml(entity, s, indent + "      ") for s in sections)
+    sections_xml = "\n".join(section_xml(entity, s, indent + "        ") for s in sections)
     return (f'{indent}<tab verticallayout="true" id="{tab_id}" IsUserDefined="1" showlabel="true" expanded="true">\n'
             f'{indent}  <labels>\n'
             f'{indent}    <label description="{xml_escape(name_de)}" languagecode="1031" />\n'
@@ -313,7 +321,7 @@ def tab_xml(entity: str, tab_spec, indent="        "):
             f'{indent}</tab>')
 
 def header_xml(entity: str, fields, indent="      "):
-    cells = "\n".join(cell_xml(entity, f, indent + "    ") for f in fields)
+    cells = "\n".join(cell_xml(entity, f, indent + "      ") for f in fields)
     hdr_id = sid(f"{entity}:header")
     return (f'{indent}<header id="{hdr_id}" celllabelposition="Top" columns="{len(fields)*37}" labelwidth="115" celllabelalignment="Left">\n'
             f'{indent}  <rows>\n'
@@ -417,7 +425,7 @@ for entity in SPECS.keys():
         print(f"  [{entity}] formid nicht extrahierbar, skip")
         continue
     new_xml = form_xml(fid, entity)
-    xml_path.write_text(new_xml, encoding="utf-8")
+    xml_path.write_text(new_xml.rstrip("\n"), encoding="utf-8-sig")
     print(f"  [{entity}] Main-Form geschrieben (formid={fid})")
 
 print("Forms built.")

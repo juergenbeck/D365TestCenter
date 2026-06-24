@@ -174,7 +174,7 @@ DISPLAYNAMES_RE = re.compile(
     r'(<displaynames>)(\s*<displayname[^/]*/>\s*)+(</displaynames>)',
     re.DOTALL)
 DESCRIPTIONS_RE = re.compile(
-    r'<Descriptions>\s*(?:<Description[^/]*/>\s*)+</Descriptions>',
+    r'[ ]*<Descriptions>\s*(?:<Description[^>]*/>\s*)+</Descriptions>',
     re.DOTALL)
 
 def build_displaynames_block(de, en):

@@ -545,8 +545,8 @@
             <displayname description="Test Run Result" languagecode="1033" />
           </displaynames>
           <Descriptions>
-            <Description description="Associated test run result (parent lookup)." languagecode="1033" />
             <Description description="Zugehöriges Testfall-Ergebnis (Parent-Lookup)." languagecode="1031" />
+            <Description description="Associated test run result (parent lookup)." languagecode="1033" />
           </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_TrackedRecords">

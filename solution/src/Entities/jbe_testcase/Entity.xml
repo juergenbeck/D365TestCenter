@@ -378,13 +378,13 @@
             <IntroducedVersion>1.0.0.0</IntroducedVersion>
             <IsCustomizable>1</IsCustomizable>
             <displaynames>
-              <displayname description="Aktiv" languagecode="1031" />
-              <displayname description="Enabled" languagecode="1033" />
-            </displaynames>
-            <Descriptions>
-              <Description description="Wenn aktiv, wird der Testfall bei Sammel-Läufen berücksichtigt. Inaktive Testfälle werden übersprungen." languagecode="1031" />
-              <Description description="If enabled, the test case is included in bulk runs. Disabled test cases are skipped." languagecode="1033" />
-            </Descriptions>
+            <displayname description="Aktiv" languagecode="1031" />
+            <displayname description="Enabled" languagecode="1033" />
+          </displaynames>
+          <Descriptions>
+            <Description description="Wenn aktiv, wird der Testfall bei Sammel-Läufen berücksichtigt. Inaktive Testfälle werden übersprungen." languagecode="1031" />
+            <Description description="If enabled, the test case is included in bulk runs. Disabled test cases are skipped." languagecode="1033" />
+          </Descriptions>
             <options>
               <option value="1" ExternalValue="" IsHidden="0">
                 <labels>

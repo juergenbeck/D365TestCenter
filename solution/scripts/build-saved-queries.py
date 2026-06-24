@@ -147,27 +147,27 @@ SPECS = {
     "jbe_teststep": {
         "active": (
             "Aktive Testschritte", "Active Test Steps", QT_MAIN, True,
-            [("jbe_stepnumber",70), ("jbe_phase",100), ("jbe_name",200),
+            [("jbe_stepnumber",70), ("jbe_name",200),
              ("jbe_action",120), ("jbe_entity",130), ("jbe_stepstatus",100),
              ("jbe_durationms",90), ("jbe_testrunresultid",200)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_stepnumber", False, "jbe_name"),
         "inactive": (
             "Inaktive Testschritte", "Inactive Test Steps", QT_MAIN, False,
-            [("jbe_stepnumber",70), ("jbe_phase",100), ("jbe_name",200),
+            [("jbe_stepnumber",70), ("jbe_name",200),
              ("jbe_action",120), ("jbe_stepstatus",100), ("modifiedon",140)],
             '<condition attribute="statecode" operator="eq" value="1" />',
             "modifiedon", True, "jbe_name"),
         "quickfind": (
             "Schnellsuche Aktive Testschritte", "Quick Find Active Test Steps", QT_QUICKFIND, True,
-            [("jbe_stepnumber",70), ("jbe_phase",100), ("jbe_name",200),
+            [("jbe_stepnumber",70), ("jbe_name",200),
              ("jbe_action",120), ("jbe_entity",130), ("jbe_stepstatus",100)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_stepnumber", False, "jbe_name",
             ["jbe_name", "jbe_action", "jbe_entity", "jbe_alias", "jbe_errormessage"]),
         "assoc": (
             "Zugeordnete Testschritte", "Associated Test Steps", QT_ASSOC, True,
-            [("jbe_stepnumber",60), ("jbe_phase",100), ("jbe_name",220),
+            [("jbe_stepnumber",60), ("jbe_name",220),
              ("jbe_action",120), ("jbe_stepstatus",100), ("jbe_durationms",80)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_stepnumber", False, "jbe_name"),
@@ -185,8 +185,8 @@ NEW_VIEWS = {
                  ("jbe_passed",70), ("jbe_failed",70), ("jbe_testcasefilter",160),
                  ("jbe_startedon",140)],
                 # Status != Completed
-                '<condition attribute="statecode" operator="eq" value="0" />'
-                '<condition attribute="jbe_teststatus" operator="ne" value="105710002" />',
+                '<condition attribute="statecode" operator="eq" value="0" />\n'
+                '            <condition attribute="jbe_teststatus" operator="ne" value="105710002" />',
                 "jbe_startedon", True, "jbe_name"),
         },
     ],
@@ -197,10 +197,11 @@ NEW_VIEWS = {
                 "Fehlgeschlagene Ergebnisse", "Failed Test Run Results", QT_MAIN, False,
                 [("jbe_testid",100), ("jbe_outcome",100), ("jbe_errormessage",400),
                  ("jbe_durationms",90), ("jbe_testrunid",200), ("createdon",140)],
-                '<condition attribute="statecode" operator="eq" value="0" />'
-                '<condition attribute="jbe_outcome" operator="in">'
-                '<value>105710001</value><value>105710003</value>'
-                '</condition>',
+                '<condition attribute="statecode" operator="eq" value="0" />\n'
+                '            <condition attribute="jbe_outcome" operator="in">\n'
+                '              <value>105710001</value>\n'
+                '              <value>105710003</value>\n'
+                '            </condition>',
                 "createdon", True, "jbe_name"),
         },
     ],
@@ -215,7 +216,7 @@ def build_savedquery(sqid, entity, pk_attr, spec):
     find_columns = spec[9] if len(spec) >= 10 else None
 
     cells_xml = "\n".join(f'          <cell name="{n}" width="{w}" />' for n,w in cells)
-    layoutxml = (f'      <grid name="resultset" object="0" jump="{jump_attr}" select="1" icon="1" preview="1">\n'
+    layoutxml = (f'      <grid name="resultset" jump="{jump_attr}" select="1" icon="1" preview="1">\n'
                  f'        <row name="result" id="{pk_attr}">\n{cells_xml}\n'
                  f'        </row>\n'
                  f'      </grid>')
@@ -243,7 +244,7 @@ def build_savedquery(sqid, entity, pk_attr, spec):
     if qt == QT_QUICKFIND and find_columns:
         # QuickFind-Syntax: filter attribute die "LIKE" suchen (Dataverse baut das on-the-fly)
         # Nur Namen sind noetig, Plattform macht den Rest
-        fc_xml = "\n".join(f'          <condition attribute="{c}" operator="like" value="{{0}}" />' for c in find_columns)
+        fc_xml = "\n".join(f'              <condition attribute="{c}" operator="like" value="{{0}}" />' for c in find_columns)
         # wir ergaenzen eine zweite filter-Sektion type="or" mit like-Conditions
         fetchxml = fetchxml.replace(
             f'            {filter_xml}\n          </filter>',
@@ -291,7 +292,7 @@ for entity, views in SPECS.items():
         sqid = EXISTING[entity][role]
         xml = build_savedquery(sqid, entity, PK_ATTR[entity], spec)
         target = sq_dir / f"{sqid}.xml"
-        target.write_text(xml, encoding="utf-8")
+        target.write_text(xml.rstrip("\n"), encoding="utf-8-sig")
         print(f"  [{entity}] {role}: {spec[1]}")
 
 for entity, items in NEW_VIEWS.items():
@@ -299,7 +300,7 @@ for entity, items in NEW_VIEWS.items():
     for it in items:
         xml = build_savedquery(it["id"], entity, PK_ATTR[entity], it["spec"])
         target = sq_dir / f"{it['id']}.xml"
-        target.write_text(xml, encoding="utf-8")
+        target.write_text(xml.rstrip("\n"), encoding="utf-8-sig")
         print(f"  [{entity}] NEW: {it['spec'][1]}  ({it['id']})")
 
 print("SavedQueries built.")

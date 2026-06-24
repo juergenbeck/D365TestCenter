@@ -14,7 +14,7 @@ TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
 <optionset Name="{name}" localizedName="{localized}" description="{desc_en}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <OptionSetType>picklist</OptionSetType>
   <IsGlobal>1</IsGlobal>
-  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IntroducedVersion>{introduced}</IntroducedVersion>
   <IsCustomizable>1</IsCustomizable>
   <displaynames>
     <displayname description="{dn_de}" languagecode="1031" />
@@ -43,6 +43,7 @@ DEFINITIONS = {
         "desc_de": "Status eines Testlaufs.", "desc_en": "Status of a test run.",
         "options": [
             (105710000, "Ausstehend", "Pending"),
+            (105710004, "Aufteilung läuft", "Splitting"),
             (105710001, "Läuft", "Running"),
             (105710002, "Abgeschlossen", "Completed"),
             (105710003, "Fehler", "Error"),
@@ -70,15 +71,28 @@ DEFINITIONS = {
             (105710002, "Übersprungen", "Skipped"),
         ],
     },
-    "jbe_stepphase": {
-        "localized": "Step Phase",
-        "dn_de": "Schrittphase", "dn_en": "Step Phase",
-        "desc_de": "Phase eines Testschritts.", "desc_en": "Phase of a test step.",
+    "jbe_chunkstatus": {
+        "localized": "Chunk Status", "introduced": "1.0.0.27",
+        "dn_de": "Chunk-Status", "dn_en": "Chunk Status",
+        "desc_de": "Status eines Test-Chunks im Worker-Modell.", "desc_en": "Status of a test chunk in the worker model.",
         "options": [
-            (105710000, "Vorbedingung", "Precondition"),
-            (105710001, "Schritt", "Step"),
-            (105710002, "Prüfung", "Assertion"),
-            (105710003, "Aufräumen", "Cleanup"),
+            (105710000, "Neu", "New"),
+            (105710001, "Läuft", "Running"),
+            (105710002, "Fortsetzen", "Resume"),
+            (105710003, "Verarbeitet", "Processed"),
+            (105710004, "Fehler", "Error"),
+        ],
+    },
+    "jbe_lifecyclestatus": {
+        "localized": "Lifecycle Status", "introduced": "1.0.0.27",
+        "dn_de": "Lebenszyklus-Status", "dn_en": "Lifecycle Status",
+        "desc_de": "Lebenszyklus-Status eines Testfalls.", "desc_en": "Lifecycle status of a test case.",
+        "options": [
+            (105710000, "Entwurf", "Draft"),
+            (105710001, "Aktiv", "Active"),
+            (105710002, "Instabil", "Unstable"),
+            (105710003, "Historisch", "Historical"),
+            (105710004, "Archiviert", "Archived"),
         ],
     },
     "jbe_testcategory": {
@@ -107,9 +121,10 @@ for name, cfg in DEFINITIONS.items():
         name=name, localized=cfg["localized"],
         dn_de=cfg["dn_de"], dn_en=cfg["dn_en"],
         desc_de=cfg["desc_de"], desc_en=cfg["desc_en"],
+        introduced=cfg.get("introduced", "1.0.0.0"),
         options=opts_xml,
     )
     target = OPTIONSETS / f"{name}.xml"
-    target.write_text(xml, encoding="utf-8")
+    target.write_text(xml, encoding="utf-8-sig")
     print(f"  {name}.xml: {len(cfg['options'])} Optionen")
 print("OptionSets enriched.")

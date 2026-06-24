@@ -219,4 +219,12 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    # STILLGELEGT (Jürgen-Entscheidung 2026-06-24): Das DEV-Handbuch
+    # solution/src/WebResources/jbe_/handbuch.html ist die Source of Truth.
+    # Der pandoc-Generator divergiert um ~1791 Zeilen (anderes Handbuch) und wird
+    # NICHT mehr im Idempotenz-Lauf ausgeführt, um den DEV-Stand nicht zu überschreiben.
+    # Bei Bedarf manuell reaktivieren: build() direkt aufrufen.
+    print("build-handbuch.py ist STILLGELEGT - DEV-handbuch.html ist die SoT. Kein Lauf.")
+    import sys
+    sys.exit(0)
+    build()  # noqa: stillgelegt

@@ -301,8 +301,13 @@
           <CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior>
           <Behavior>1</Behavior>
           <displaynames>
+            <displayname description="Abgeschlossen am" languagecode="1031" />
             <displayname description="Completed On" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Zeitstempel, an dem der Testlauf abgeschlossen wurde (letzter Batch fertig)." languagecode="1031" />
+            <Description description="Timestamp when the test run was completed (last batch finished)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_continuations">
           <Type>int</Type>
@@ -375,8 +380,13 @@
           <MinValue>0</MinValue>
           <MaxValue>2147483647</MaxValue>
           <displaynames>
+            <displayname description="Dauer (ms)" languagecode="1031" />
             <displayname description="Duration (ms)" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Ausführungsdauer dieses Testfalls in Millisekunden." languagecode="1031" />
+            <Description description="Execution duration of this test case in milliseconds." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_errordetails">
           <Type>ntext</Type>
@@ -559,8 +569,13 @@
           <MaxLength>100</MaxLength>
           <Length>200</Length>
           <displaynames>
+            <displayname description="Name" languagecode="1031" />
             <displayname description="Name" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Primärer Anzeigename des Testfalls. Wird i.d.R. identisch mit 'Titel' gesetzt." languagecode="1031" />
+            <Description description="Primary display name of the test case. Usually set identical to 'Title'." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_processedcount">
           <Type>int</Type>
@@ -670,8 +685,13 @@
           <CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior>
           <Behavior>1</Behavior>
           <displaynames>
+            <displayname description="Gestartet am" languagecode="1031" />
             <displayname description="Started On" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Zeitstempel, an dem der Testlauf gestartet wurde." languagecode="1031" />
+            <Description description="Timestamp when the test run was started." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_testchunkId">
           <Type>primarykey</Type>
@@ -781,8 +801,13 @@
           <LookupStyle>single</LookupStyle>
           <LookupTypes />
           <displaynames>
+            <displayname description="Testlauf" languagecode="1031" />
             <displayname description="Test Run" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Zugehöriger Testlauf (Parent-Lookup)." languagecode="1031" />
+            <Description description="Associated test run (parent lookup)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="ModifiedBy">
           <Type>lookup</Type>

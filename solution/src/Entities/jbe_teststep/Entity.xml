@@ -724,6 +724,10 @@
             <Description description="GUID des vom Schritt erstellten/angefassten Dataverse-Records (falls zutreffend)." languagecode="1031" />
             <Description description="GUID of the Dataverse record created/touched by the step (if applicable)." languagecode="1033" />
           </Descriptions>
+          <Descriptions>
+            <Description description="GUID des vom Schritt erstellten/angefassten Dataverse-Records (falls zutreffend)." languagecode="1031" />
+            <Description description="GUID of the Dataverse record created/touched by the step (if applicable)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_RecordUrl">
           <Type>nvarchar</Type>

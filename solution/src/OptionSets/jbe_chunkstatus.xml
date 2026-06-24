@@ -1,36 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<optionset Name="jbe_chunkstatus" localizedName="Chunk Status" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<optionset Name="jbe_chunkstatus" localizedName="Chunk Status" description="Status of a test chunk in the worker model." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <OptionSetType>picklist</OptionSetType>
   <IsGlobal>1</IsGlobal>
   <IntroducedVersion>1.0.0.27</IntroducedVersion>
   <IsCustomizable>1</IsCustomizable>
   <displaynames>
+    <displayname description="Chunk-Status" languagecode="1031" />
     <displayname description="Chunk Status" languagecode="1033" />
   </displaynames>
+  <Descriptions>
+    <Description description="Status eines Test-Chunks im Worker-Modell." languagecode="1031" />
+    <Description description="Status of a test chunk in the worker model." languagecode="1033" />
+  </Descriptions>
   <options>
     <option value="105710000" ExternalValue="" IsHidden="0">
       <labels>
-        <label description="Neu" languagecode="1033" />
+        <label description="Neu" languagecode="1031" />
+        <label description="New" languagecode="1033" />
       </labels>
     </option>
     <option value="105710001" ExternalValue="" IsHidden="0">
       <labels>
-        <label description="Laeuft" languagecode="1033" />
+        <label description="Läuft" languagecode="1031" />
+        <label description="Running" languagecode="1033" />
       </labels>
     </option>
     <option value="105710002" ExternalValue="" IsHidden="0">
       <labels>
-        <label description="Fortsetzen" languagecode="1033" />
+        <label description="Fortsetzen" languagecode="1031" />
+        <label description="Resume" languagecode="1033" />
       </labels>
     </option>
     <option value="105710003" ExternalValue="" IsHidden="0">
       <labels>
-        <label description="Verarbeitet" languagecode="1033" />
+        <label description="Verarbeitet" languagecode="1031" />
+        <label description="Processed" languagecode="1033" />
       </labels>
     </option>
     <option value="105710004" ExternalValue="" IsHidden="0">
       <labels>
-        <label description="Fehler" languagecode="1033" />
+        <label description="Fehler" languagecode="1031" />
+        <label description="Error" languagecode="1033" />
       </labels>
     </option>
   </options>
