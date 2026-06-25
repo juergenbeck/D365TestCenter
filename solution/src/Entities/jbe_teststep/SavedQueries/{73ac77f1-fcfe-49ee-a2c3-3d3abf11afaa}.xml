@@ -2,16 +2,17 @@
 <savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <savedquery>
     <IsCustomizable>1</IsCustomizable>
-    <CanBeDeleted>0</CanBeDeleted>
+    <CanBeDeleted>1</CanBeDeleted>
     <isquickfindquery>0</isquickfindquery>
     <isprivate>0</isprivate>
-    <isdefault>1</isdefault>
+    <isdefault>0</isdefault>
     <savedqueryid>{73ac77f1-fcfe-49ee-a2c3-3d3abf11afaa}</savedqueryid>
     <layoutxml>
-      <grid name="jbe_teststeps" jump="jbe_name" select="1" icon="1" preview="0">
-        <row name="jbe_teststep" id="jbe_teststepid">
-          <cell name="jbe_name" width="300" />
-          <cell name="createdon" width="125" />
+      <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
+        <row name="result" id="jbe_teststepid">
+          <cell name="jbe_name" width="180" />
+          <cell name="jbe_stepnumber" width="70" />
+          <cell name="jbe_action" width="120" />
         </row>
       </grid>
     </layoutxml>
@@ -21,15 +22,18 @@
         <entity name="jbe_teststep">
           <attribute name="jbe_teststepid" />
           <attribute name="jbe_name" />
-          <attribute name="createdon" />
+          <attribute name="jbe_stepnumber" />
+          <attribute name="jbe_action" />
           <filter type="and">
             <condition attribute="statecode" operator="eq" value="0" />
           </filter>
+          <order attribute="jbe_stepnumber" descending="false" />
         </entity>
       </fetch>
     </fetchxml>
     <IntroducedVersion>1.0.0.0</IntroducedVersion>
     <LocalizedNames>
+      <LocalizedName description="Schritt-Suche" languagecode="1031" />
       <LocalizedName description="Test Step Lookup View" languagecode="1033" />
     </LocalizedNames>
   </savedquery>

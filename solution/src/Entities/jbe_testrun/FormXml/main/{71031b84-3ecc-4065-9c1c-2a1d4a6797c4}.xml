@@ -61,10 +61,17 @@
                         </labels>
                         <control id="jbe_completedon" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="jbe_completedon" disabled="false" />
                       </cell>
+                      <cell id="{5e95916e-5b5e-539d-969e-c04b6b3ea07f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Dauer (ms)" languagecode="1031" />
+                          <label description="Duration (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_durationms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_durationms" disabled="false" />
+                      </cell>
                     </row>
                   </rows>
                 </section>
-                <section name="sec_17e26526" showlabel="true" showbar="true" columns="3" labelwidth="115" id="{518a7c23-d6b1-525b-a32a-e4ca7826094c}" IsUserDefined="1">
+                <section name="sec_17e26526" showlabel="true" showbar="true" columns="5" labelwidth="115" id="{518a7c23-d6b1-525b-a32a-e4ca7826094c}" IsUserDefined="1">
                   <labels>
                     <label description="Zähler" languagecode="1031" />
                     <label description="Counters" languagecode="1033" />
@@ -92,6 +99,20 @@
                         </labels>
                         <control id="jbe_failed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_failed" disabled="false" />
                       </cell>
+                      <cell id="{72e13159-55b2-5a80-b091-fac4a8f0587e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Übersprungen" languagecode="1031" />
+                          <label description="Skipped" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_skipped" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_skipped" disabled="false" />
+                      </cell>
+                      <cell id="{cdd1ef57-f034-5bdf-8b7e-6eaebf4c68b8}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Fehler" languagecode="1031" />
+                          <label description="Errored" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_errored" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_errored" disabled="false" />
+                      </cell>
                     </row>
                   </rows>
                 </section>
@@ -108,6 +129,123 @@
                           <label description="Summary" languagecode="1033" />
                         </labels>
                         <control id="jbe_testsummary" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="jbe_testsummary" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab verticallayout="true" id="{036b2b03-4ffb-5159-be75-86354b53b241}" IsUserDefined="1" showlabel="true" expanded="true">
+          <labels>
+            <label description="Worker-Metriken" languagecode="1031" />
+            <label description="Worker Metrics" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="sec_827ca417" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{27c8a44a-6d28-5a1f-95c5-35c3ef9d1d35}" IsUserDefined="1">
+                  <labels>
+                    <label description="Performance" languagecode="1031" />
+                    <label description="Performance" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{3fd9e3de-3070-5c27-9349-e3257e681854}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Ø Test (ms)" languagecode="1031" />
+                          <label description="Avg Test (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_avgtestms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_avgtestms" disabled="false" />
+                      </cell>
+                      <cell id="{f08a29f7-0dd8-5401-8108-2a3232af0d8f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Median Test (ms)" languagecode="1031" />
+                          <label description="Median Test (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_mediantestms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_mediantestms" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{d447e91f-b10d-586a-86bc-bb317d98a278}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Min Test (ms)" languagecode="1031" />
+                          <label description="Min Test (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_mintestms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_mintestms" disabled="false" />
+                      </cell>
+                      <cell id="{ea6b6961-4bdc-51f4-a03b-1bb90e81e119}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Max Test (ms)" languagecode="1031" />
+                          <label description="Max Test (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_maxtestms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_maxtestms" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{3a13fb02-a334-5a0e-af41-97a34ae992f3}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Summe Test (ms)" languagecode="1031" />
+                          <label description="Total Test (ms)" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_totaltestms" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_totaltestms" disabled="false" />
+                      </cell>
+                      <cell id="{f460dd7e-9fea-51d3-ac08-d53515debc7f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Langsamster Test" languagecode="1031" />
+                          <label description="Slowest Test" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_slowesttestid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_slowesttestid" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="sec_79004145" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{7ee9f481-ade2-5397-913e-b800d526cbbd}" IsUserDefined="1">
+                  <labels>
+                    <label description="Ausführung" languagecode="1031" />
+                    <label description="Execution" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{e0401e27-801d-548e-94e4-3c9b20ff5c05}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Erzeugte Records" languagecode="1031" />
+                          <label description="Records Created" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_recordscreated" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_recordscreated" disabled="false" />
+                      </cell>
+                      <cell id="{8a3157ca-3b6f-5198-9ec0-4a844bafc50d}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Chunk-Größe" languagecode="1031" />
+                          <label description="Chunk Size" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_chunksize" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_chunksize" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0a74fb52-23ef-558a-83b9-3f183337e2fc}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Max. parallel" languagecode="1031" />
+                          <label description="Max Concurrent" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_maxconcurrent" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_maxconcurrent" disabled="false" />
+                      </cell>
+                      <cell id="{be136488-b5a4-592f-98ea-f92788033141}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Fortsetzungen" languagecode="1031" />
+                          <label description="Continuations" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_continuations" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_continuations" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{6cb59aa6-efad-5776-8ad1-855aa07312d6}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Batch-Offset" languagecode="1031" />
+                          <label description="Batch Offset" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_batchoffset" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_batchoffset" disabled="false" />
                       </cell>
                     </row>
                   </rows>
@@ -517,7 +655,7 @@
           </columns>
         </tab>
       </tabs>
-      <header id="{514c5fef-50cf-5f89-9c90-46b5bc8b95d2}" celllabelposition="Top" columns="148" labelwidth="115" celllabelalignment="Left">
+      <header id="{514c5fef-50cf-5f89-9c90-46b5bc8b95d2}" celllabelposition="Top" columns="222" labelwidth="115" celllabelalignment="Left">
         <rows>
           <row>
             <cell id="{5b145ca5-3b20-59db-a3d8-436271a3b460}" colspan="1" rowspan="1">
@@ -547,6 +685,20 @@
                 <label description="Failed" languagecode="1033" />
               </labels>
               <control id="jbe_failed" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_failed" disabled="false" />
+            </cell>
+            <cell id="{72e13159-55b2-5a80-b091-fac4a8f0587e}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Übersprungen" languagecode="1031" />
+                <label description="Skipped" languagecode="1033" />
+              </labels>
+              <control id="jbe_skipped" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_skipped" disabled="false" />
+            </cell>
+            <cell id="{cdd1ef57-f034-5bdf-8b7e-6eaebf4c68b8}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Fehler" languagecode="1031" />
+                <label description="Errored" languagecode="1033" />
+              </labels>
+              <control id="jbe_errored" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_errored" disabled="false" />
             </cell>
           </row>
         </rows>

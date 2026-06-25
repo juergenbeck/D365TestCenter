@@ -1020,10 +1020,6 @@
           <displaynames>
             <displayname description="Status" languagecode="1033" />
           </displaynames>
-          <Descriptions>
-            <Description description="Status of the Test Run Result" languagecode="1033" />
-            <Description description="Status von Testlauf-Ergebnis" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="statuscode">
           <Type>status</Type>
@@ -1086,10 +1082,6 @@
             <displayname description="Status Reason" languagecode="1033" />
             <displayname description="Statusgrund" languagecode="1031" />
           </displaynames>
-          <Descriptions>
-            <Description description="Reason for the status of the Test Run Result" languagecode="1033" />
-            <Description description="Grund für den Status von Testlauf-Ergebnis" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="TimeZoneRuleVersionNumber">
           <Type>int</Type>

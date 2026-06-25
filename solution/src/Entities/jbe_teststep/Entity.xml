@@ -724,10 +724,6 @@
             <Description description="GUID des vom Schritt erstellten/angefassten Dataverse-Records (falls zutreffend)." languagecode="1031" />
             <Description description="GUID of the Dataverse record created/touched by the step (if applicable)." languagecode="1033" />
           </Descriptions>
-          <Descriptions>
-            <Description description="GUID des vom Schritt erstellten/angefassten Dataverse-Records (falls zutreffend)." languagecode="1031" />
-            <Description description="GUID of the Dataverse record created/touched by the step (if applicable)." languagecode="1033" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_RecordUrl">
           <Type>nvarchar</Type>
@@ -1326,10 +1322,6 @@
           <displaynames>
             <displayname description="Status" languagecode="1033" />
           </displaynames>
-          <Descriptions>
-            <Description description="Status of the Test Step" languagecode="1033" />
-            <Description description="Status von Testschritt" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="statuscode">
           <Type>status</Type>
@@ -1392,10 +1384,6 @@
             <displayname description="Status Reason" languagecode="1033" />
             <displayname description="Statusgrund" languagecode="1031" />
           </displaynames>
-          <Descriptions>
-            <Description description="Reason for the status of the Test Step" languagecode="1033" />
-            <Description description="Grund für den Status von Testschritt" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="TimeZoneRuleVersionNumber">
           <Type>int</Type>

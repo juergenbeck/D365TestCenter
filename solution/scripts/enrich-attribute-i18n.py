@@ -38,6 +38,30 @@ MAPPING = {
     "jbe_userstories":    ("User Stories", "User Stories",
                            "Zugeordnete User Stories oder Backlog-Items, komma-separiert.",
                            "Assigned user stories or backlog items, comma-separated."),
+    "jbe_domain":         ("Domäne", "Domain",
+                           "Fachliche Domäne des Testfalls (z.B. CRM, Sales, Governance).",
+                           "Functional domain of the test case (e.g. CRM, Sales, Governance)."),
+    "jbe_testlevel":      ("Test-Level", "Test Level",
+                           "Teststufe des Testfalls (z.B. Unit, Integration, End-to-End) als numerischer Wert.",
+                           "Test level of the test case (e.g. unit, integration, end-to-end) as a numeric value."),
+    "jbe_lifecyclestatus":("Lebenszyklus", "Lifecycle Status",
+                           "Lebenszyklus-Status des Testfalls (z.B. Entwurf, Aktiv, Veraltet).",
+                           "Lifecycle status of the test case (e.g. draft, active, deprecated)."),
+    "jbe_envscope":       ("Umgebungs-Scope", "Environment Scope",
+                           "Umgebungen, in denen der Testfall laufen darf (z.B. DEV, TEST).",
+                           "Environments in which the test case may run (e.g. DEV, TEST)."),
+    "jbe_estimatedminutes":("Geschätzte Minuten", "Estimated Minutes",
+                           "Geschätzte Ausführungsdauer des Testfalls in Minuten.",
+                           "Estimated execution time of the test case in minutes."),
+    "jbe_owner":          ("Verantwortlich", "Owner",
+                           "Fachlich verantwortliche Person für den Testfall (Freitext).",
+                           "Person functionally responsible for the test case (free text)."),
+    "jbe_tickets":        ("Tickets", "Tickets",
+                           "Zugeordnete Tickets oder Work-Items (z.B. Azure DevOps, Jira), komma-separiert.",
+                           "Associated tickets or work items (e.g. Azure DevOps, Jira), comma-separated."),
+    "jbe_zephyrkey":      ("Zephyr-Key", "Zephyr Key",
+                           "Schlüssel des zugeordneten Zephyr-/Jira-Testfalls.",
+                           "Key of the associated Zephyr/Jira test case."),
 
     # jbe_testrun
     "jbe_batchoffset":    ("Batch-Offset", "Batch Offset",
@@ -73,6 +97,42 @@ MAPPING = {
     "jbe_total":          ("Gesamt", "Total",
                            "Gesamtzahl der im Lauf enthaltenen Testfälle.",
                            "Total number of test cases included in this run."),
+    "jbe_skipped":        ("Übersprungen", "Skipped",
+                           "Anzahl der Testfälle mit Outcome 'Übersprungen' in diesem Lauf.",
+                           "Number of test cases with outcome 'Skipped' in this run."),
+    "jbe_errored":        ("Fehler", "Errored",
+                           "Anzahl der Testfälle mit Outcome 'Fehler' (Exception) in diesem Lauf.",
+                           "Number of test cases with outcome 'Error' (exception) in this run."),
+    "jbe_recordscreated": ("Erzeugte Records", "Records Created",
+                           "Gesamtzahl der während des Laufs erzeugten Dataverse-Records.",
+                           "Total number of Dataverse records created during the run."),
+    "jbe_avgtestms":      ("Ø Dauer/Test (ms)", "Avg Test (ms)",
+                           "Durchschnittliche Ausführungsdauer pro Testfall in Millisekunden.",
+                           "Average execution duration per test case in milliseconds."),
+    "jbe_mediantestms":   ("Median Dauer/Test (ms)", "Median Test (ms)",
+                           "Median der Ausführungsdauer pro Testfall in Millisekunden.",
+                           "Median execution duration per test case in milliseconds."),
+    "jbe_mintestms":      ("Min. Dauer/Test (ms)", "Min Test (ms)",
+                           "Kürzeste Testfall-Ausführungsdauer in Millisekunden.",
+                           "Shortest test case execution duration in milliseconds."),
+    "jbe_maxtestms":      ("Max. Dauer/Test (ms)", "Max Test (ms)",
+                           "Längste Testfall-Ausführungsdauer in Millisekunden.",
+                           "Longest test case execution duration in milliseconds."),
+    "jbe_totaltestms":    ("Summe Dauer (ms)", "Total Test (ms)",
+                           "Summe der Testfall-Ausführungsdauern in Millisekunden.",
+                           "Sum of test case execution durations in milliseconds."),
+    "jbe_slowesttestid":  ("Langsamster Test", "Slowest Test",
+                           "Test-ID des Testfalls mit der längsten Ausführungsdauer.",
+                           "Test ID of the test case with the longest execution duration."),
+    "jbe_chunksize":      ("Chunk-Größe", "Chunk Size",
+                           "Anzahl Testfälle pro Worker-Chunk bei paralleler Ausführung.",
+                           "Number of test cases per worker chunk during parallel execution."),
+    "jbe_maxconcurrent":  ("Max. parallel", "Max Concurrent",
+                           "Maximale Anzahl gleichzeitig laufender Worker-Chunks.",
+                           "Maximum number of concurrently running worker chunks."),
+    "jbe_continuations":  ("Fortsetzungen", "Continuations",
+                           "Anzahl der Self-Trigger-Fortsetzungen des Worker-Laufs.",
+                           "Number of self-trigger continuations of the worker run."),
 
     # jbe_testrunresult
     "jbe_assertionresults": ("Assertion-Ergebnisse (JSON)", "Assertion Results (JSON)",
@@ -173,8 +233,11 @@ OVERRIDE_BY_ENTITY = {
 DISPLAYNAMES_RE = re.compile(
     r'(<displaynames>)(\s*<displayname[^/]*/>\s*)+(</displaynames>)',
     re.DOTALL)
+# Matcht einen kompletten <Descriptions>-Block INKL. führender Newline+Einrückung.
+# Non-greedy ohne [^>] -> robust gegen '>' im Description-Text. Mehrere Treffer (FB-51-Dubletten)
+# werden so sauber inkl. ihrer Zeile entfernt; danach wird genau ein Block neu gesetzt.
 DESCRIPTIONS_RE = re.compile(
-    r'[ ]*<Descriptions>\s*(?:<Description[^>]*/>\s*)+</Descriptions>',
+    r'\n[ ]*<Descriptions>.*?</Descriptions>',
     re.DOTALL)
 
 def build_displaynames_block(de, en):
@@ -189,6 +252,20 @@ def build_descriptions_block(de, en):
             f"            <Description description=\"{de}\" languagecode=\"1031\" />\n"
             f"            <Description description=\"{en}\" languagecode=\"1033\" />\n"
             f"          </Descriptions>")
+
+ATTRIBUTE_BLOCK_RE = re.compile(r'<attribute\b[^>]*>.*?</attribute>', re.DOTALL)
+
+def dedup_descriptions(text):
+    """FB-51: Reduziert pro <attribute> mehrere <Descriptions>-Container auf den ersten.
+    Wirkt generisch auf ALLE Attribute, auch System-Attribute (statecode/statuscode), die
+    nicht im MAPPING stehen und vom Mapping-Pfad daher nicht angefasst werden."""
+    def fix_attr(am):
+        seen = [0]
+        def repl(dm):
+            seen[0] += 1
+            return dm.group(0) if seen[0] == 1 else ''
+        return DESCRIPTIONS_RE.sub(repl, am.group(0))
+    return ATTRIBUTE_BLOCK_RE.sub(fix_attr, text)
 
 def process_entity(entity_dir):
     entity_name = entity_dir.name
@@ -226,20 +303,20 @@ def process_entity(entity_dir):
         new_dn = build_displaynames_block(de_label, en_label)
         new_body, n_dn = DISPLAYNAMES_RE.subn(new_dn, body)
 
-        # Descriptions: wenn existiert ersetzen, sonst nach displaynames einfuegen
+        # Descriptions: ALLE existierenden Blöcke entfernen (Dedup gegen FB-51-Mehrfach-Container),
+        # dann genau einen direkt nach dem displaynames-Block setzen. Lambda-Replacement, damit
+        # Sonderzeichen im Description-Text nicht als Backreference interpretiert werden.
         new_desc = build_descriptions_block(de_desc, en_desc)
-        if DESCRIPTIONS_RE.search(new_body):
-            new_body = DESCRIPTIONS_RE.sub(new_desc, new_body)
-        else:
-            # Einfuegen direkt nach displaynames-Block (nach der schliessenden Zeile)
-            new_body = re.sub(
-                r'(          </displaynames>)',
-                r'\1\n' + new_desc,
-                new_body, count=1)
+        new_body = DESCRIPTIONS_RE.sub('', new_body)
+        new_body = re.sub(
+            r'(          </displaynames>)',
+            lambda m: m.group(1) + '\n' + new_desc,
+            new_body, count=1)
 
         return header + new_body + footer
 
     new_text, n = attr_pat.subn(replace_attr, text)
+    new_text = dedup_descriptions(new_text)  # FB-51: generischer Dedup über alle Attribute
     if new_text != text:
         xml_path.write_text(new_text, encoding="utf-8")
         # Zaehle aktualisierte Attribute grob: Differenz in den Descriptions-Bloecken

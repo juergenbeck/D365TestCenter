@@ -343,8 +343,13 @@
           <MinValue>0</MinValue>
           <MaxValue>100000</MaxValue>
           <displaynames>
+            <displayname description="Fortsetzungen" languagecode="1031" />
             <displayname description="Continuations" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Anzahl der Self-Trigger-Fortsetzungen des Worker-Laufs." languagecode="1031" />
+            <Description description="Number of self-trigger continuations of the worker run." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_durationms">
           <Type>int</Type>
@@ -1243,12 +1248,6 @@
             <displayname description="Statut" languagecode="1036" />
             <displayname description="Stav" languagecode="1029" />
           </displaynames>
-          <Descriptions>
-            <Description description="Status of the Test Chunk" languagecode="1033" />
-            <Description description="Status von Test Chunk" languagecode="1031" />
-            <Description description="Statut de l'élément Test Chunk" languagecode="1036" />
-            <Description description="Stav záznamu typu Test Chunk" languagecode="1029" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="statuscode">
           <Type>status</Type>
@@ -1321,12 +1320,6 @@
             <displayname description="Raison du statut" languagecode="1036" />
             <displayname description="Důvod stavu" languagecode="1029" />
           </displaynames>
-          <Descriptions>
-            <Description description="Reason for the status of the Test Chunk" languagecode="1033" />
-            <Description description="Grund für den Status von Test Chunk" languagecode="1031" />
-            <Description description="Raison du statut de l'élément Test Chunk" languagecode="1036" />
-            <Description description="Důvod stavu záznamu typu Test Chunk" languagecode="1029" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="TimeZoneRuleVersionNumber">
           <Type>int</Type>

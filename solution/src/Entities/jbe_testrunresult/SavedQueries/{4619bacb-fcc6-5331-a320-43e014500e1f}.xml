@@ -10,12 +10,13 @@
     <layoutxml>
       <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
         <row name="result" id="jbe_testrunresultid">
-          <cell name="jbe_testid" width="100" />
+          <cell name="jbe_name" width="150" />
+          <cell name="jbe_testid" width="110" />
           <cell name="jbe_outcome" width="100" />
           <cell name="jbe_errormessage" width="400" />
           <cell name="jbe_durationms" width="90" />
-          <cell name="jbe_testrunid" width="200" />
-          <cell name="createdon" width="140" />
+          <cell name="jbe_testrunid" width="160" />
+          <cell name="modifiedon" width="120" />
         </row>
       </grid>
     </layoutxml>
@@ -24,12 +25,13 @@
       <fetch version="1.0" mapping="logical">
         <entity name="jbe_testrunresult">
           <attribute name="jbe_testrunresultid" />
+          <attribute name="jbe_name" />
           <attribute name="jbe_testid" />
           <attribute name="jbe_outcome" />
           <attribute name="jbe_errormessage" />
           <attribute name="jbe_durationms" />
           <attribute name="jbe_testrunid" />
-          <attribute name="createdon" />
+          <attribute name="modifiedon" />
           <filter type="and">
             <condition attribute="statecode" operator="eq" value="0" />
             <condition attribute="jbe_outcome" operator="in">
@@ -37,7 +39,7 @@
               <value>105710003</value>
             </condition>
           </filter>
-          <order attribute="createdon" descending="true" />
+          <order attribute="modifiedon" descending="true" />
         </entity>
       </fetch>
     </fetchxml>

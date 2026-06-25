@@ -339,8 +339,13 @@
           <MaxLength>100</MaxLength>
           <Length>200</Length>
           <displaynames>
+            <displayname description="Domäne" languagecode="1031" />
             <displayname description="Domain" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Fachliche Domäne des Testfalls (z.B. CRM, Sales, Governance)." languagecode="1031" />
+            <Description description="Functional domain of the test case (e.g. CRM, Sales, Governance)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_Enabled">
           <Type>bit</Type>
@@ -404,10 +409,6 @@
             <displayname description="Aktiv" languagecode="1031" />
             <displayname description="Enabled" languagecode="1033" />
           </displaynames>
-          <Descriptions>
-            <Description description="Wenn aktiv, wird der Testfall bei Sammel-Läufen berücksichtigt. Inaktive Testfälle werden übersprungen." languagecode="1031" />
-            <Description description="If enabled, the test case is included in bulk runs. Disabled test cases are skipped." languagecode="1033" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_envscope">
           <Type>nvarchar</Type>
@@ -443,8 +444,13 @@
           <MaxLength>200</MaxLength>
           <Length>400</Length>
           <displaynames>
-            <displayname description="Env Scope" languagecode="1033" />
+            <displayname description="Umgebungs-Scope" languagecode="1031" />
+            <displayname description="Environment Scope" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Umgebungen, in denen der Testfall laufen darf (z.B. DEV, TEST)." languagecode="1031" />
+            <Description description="Environments in which the test case may run (e.g. DEV, TEST)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_estimatedminutes">
           <Type>int</Type>
@@ -480,8 +486,13 @@
           <MinValue>0</MinValue>
           <MaxValue>100000</MaxValue>
           <displaynames>
+            <displayname description="Geschätzte Minuten" languagecode="1031" />
             <displayname description="Estimated Minutes" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Geschätzte Ausführungsdauer des Testfalls in Minuten." languagecode="1031" />
+            <Description description="Estimated execution time of the test case in minutes." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_lifecyclestatus">
           <Type>picklist</Type>
@@ -515,8 +526,13 @@
           <IsLocalizable>0</IsLocalizable>
           <OptionSetName>jbe_lifecyclestatus</OptionSetName>
           <displaynames>
+            <displayname description="Lebenszyklus" languagecode="1031" />
             <displayname description="Lifecycle Status" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Lebenszyklus-Status des Testfalls (z.B. Entwurf, Aktiv, Veraltet)." languagecode="1031" />
+            <Description description="Lifecycle status of the test case (e.g. draft, active, deprecated)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_name">
           <Type>nvarchar</Type>
@@ -594,8 +610,13 @@
           <MaxLength>100</MaxLength>
           <Length>200</Length>
           <displaynames>
+            <displayname description="Verantwortlich" languagecode="1031" />
             <displayname description="Owner" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Fachlich verantwortliche Person für den Testfall (Freitext)." languagecode="1031" />
+            <Description description="Person functionally responsible for the test case (free text)." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_Tags">
           <Type>nvarchar</Type>
@@ -754,8 +775,13 @@
           <MinValue>0</MinValue>
           <MaxValue>1000</MaxValue>
           <displaynames>
+            <displayname description="Test-Level" languagecode="1031" />
             <displayname description="Test Level" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Teststufe des Testfalls (z.B. Unit, Integration, End-to-End) als numerischer Wert." languagecode="1031" />
+            <Description description="Test level of the test case (e.g. unit, integration, end-to-end) as a numeric value." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_tickets">
           <Type>nvarchar</Type>
@@ -791,8 +817,13 @@
           <MaxLength>500</MaxLength>
           <Length>1000</Length>
           <displaynames>
+            <displayname description="Tickets" languagecode="1031" />
             <displayname description="Tickets" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Zugeordnete Tickets oder Work-Items (z.B. Azure DevOps, Jira), komma-separiert." languagecode="1031" />
+            <Description description="Associated tickets or work items (e.g. Azure DevOps, Jira), comma-separated." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="jbe_Title">
           <Type>nvarchar</Type>
@@ -912,8 +943,13 @@
           <MaxLength>100</MaxLength>
           <Length>200</Length>
           <displaynames>
+            <displayname description="Zephyr-Key" languagecode="1031" />
             <displayname description="Zephyr Key" languagecode="1033" />
           </displaynames>
+          <Descriptions>
+            <Description description="Schlüssel des zugeordneten Zephyr-/Jira-Testfalls." languagecode="1031" />
+            <Description description="Key of the associated Zephyr/Jira test case." languagecode="1033" />
+          </Descriptions>
         </attribute>
         <attribute PhysicalName="ModifiedBy">
           <Type>lookup</Type>
@@ -1307,10 +1343,6 @@
           <displaynames>
             <displayname description="Status" languagecode="1033" />
           </displaynames>
-          <Descriptions>
-            <Description description="Status of the Test Case" languagecode="1033" />
-            <Description description="Status von Testfall" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="statuscode">
           <Type>status</Type>
@@ -1373,10 +1405,6 @@
             <displayname description="Status Reason" languagecode="1033" />
             <displayname description="Statusgrund" languagecode="1031" />
           </displaynames>
-          <Descriptions>
-            <Description description="Reason for the status of the Test Case" languagecode="1033" />
-            <Description description="Grund für den Status von Testfall" languagecode="1031" />
-          </Descriptions>
         </attribute>
         <attribute PhysicalName="TimeZoneRuleVersionNumber">
           <Type>int</Type>

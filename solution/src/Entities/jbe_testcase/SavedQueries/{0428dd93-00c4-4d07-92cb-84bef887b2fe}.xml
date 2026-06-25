@@ -10,12 +10,15 @@
     <layoutxml>
       <grid name="resultset" jump="jbe_testid" select="1" icon="1" preview="1">
         <row name="result" id="jbe_testcaseid">
+          <cell name="jbe_name" width="200" />
           <cell name="jbe_testid" width="110" />
-          <cell name="jbe_title" width="250" />
-          <cell name="jbe_category" width="140" />
-          <cell name="jbe_tags" width="180" />
-          <cell name="jbe_userstories" width="180" />
-          <cell name="jbe_enabled" width="80" />
+          <cell name="jbe_title" width="240" />
+          <cell name="jbe_category" width="130" />
+          <cell name="jbe_domain" width="120" />
+          <cell name="jbe_testlevel" width="110" />
+          <cell name="jbe_tags" width="160" />
+          <cell name="jbe_enabled" width="70" />
+          <cell name="jbe_lifecyclestatus" width="120" />
           <cell name="modifiedon" width="120" />
         </row>
       </grid>
@@ -25,12 +28,15 @@
       <fetch version="1.0" mapping="logical">
         <entity name="jbe_testcase">
           <attribute name="jbe_testcaseid" />
+          <attribute name="jbe_name" />
           <attribute name="jbe_testid" />
           <attribute name="jbe_title" />
           <attribute name="jbe_category" />
+          <attribute name="jbe_domain" />
+          <attribute name="jbe_testlevel" />
           <attribute name="jbe_tags" />
-          <attribute name="jbe_userstories" />
           <attribute name="jbe_enabled" />
+          <attribute name="jbe_lifecyclestatus" />
           <attribute name="modifiedon" />
           <filter type="and">
             <condition attribute="statecode" operator="eq" value="0" />

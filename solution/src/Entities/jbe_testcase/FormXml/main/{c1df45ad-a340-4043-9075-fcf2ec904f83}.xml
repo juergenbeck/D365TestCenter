@@ -22,6 +22,15 @@
                   </labels>
                   <rows>
                     <row>
+                      <cell id="{fab3c2b7-bc7e-5abc-a0f7-f5db28c5191a}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Name" languagecode="1031" />
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_name" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
                       <cell id="{5049c50f-54fb-5355-b112-f122081d2558}" colspan="1" rowspan="1">
                         <labels>
                           <label description="Test-ID" languagecode="1031" />
@@ -39,18 +48,9 @@
                         <control id="jbe_title" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_title" disabled="false" />
                       </cell>
                     </row>
-                    <row>
-                      <cell id="{fab3c2b7-bc7e-5abc-a0f7-f5db28c5191a}" colspan="1" rowspan="1">
-                        <labels>
-                          <label description="Name" languagecode="1031" />
-                          <label description="Name" languagecode="1033" />
-                        </labels>
-                        <control id="jbe_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_name" disabled="false" />
-                      </cell>
-                    </row>
                   </rows>
                 </section>
-                <section name="sec_4d6383aa" showlabel="true" showbar="true" columns="1" labelwidth="115" id="{b1e4a96f-1f71-5608-aa89-04c92cfb0528}" IsUserDefined="1">
+                <section name="sec_4d6383aa" showlabel="true" showbar="true" columns="2" labelwidth="115" id="{b1e4a96f-1f71-5608-aa89-04c92cfb0528}" IsUserDefined="1">
                   <labels>
                     <label description="Klassifizierung" languagecode="1031" />
                     <label description="Classification" languagecode="1033" />
@@ -64,6 +64,29 @@
                         </labels>
                         <control id="jbe_category" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_category" disabled="false" />
                       </cell>
+                      <cell id="{8f27f863-d229-5cab-9215-e37437346c18}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Domäne" languagecode="1031" />
+                          <label description="Domain" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_domain" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_domain" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{2d64ace7-8b10-536a-bc4c-801c07de376e}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Test-Level" languagecode="1031" />
+                          <label description="Test Level" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_testlevel" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_testlevel" disabled="false" />
+                      </cell>
+                      <cell id="{c02e4cf7-42dc-52de-9b34-f4922713f4b9}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Lebenszyklus" languagecode="1031" />
+                          <label description="Lifecycle Status" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_lifecyclestatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_lifecyclestatus" disabled="false" />
+                      </cell>
                     </row>
                     <row>
                       <cell id="{5f56d9c9-1983-53f4-bb16-d4ce4b2823e3}" colspan="1" rowspan="1">
@@ -73,8 +96,6 @@
                         </labels>
                         <control id="jbe_tags" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_tags" disabled="false" />
                       </cell>
-                    </row>
-                    <row>
                       <cell id="{37fd37d2-7b3e-504d-a1e1-abff7d6913a6}" colspan="1" rowspan="1">
                         <labels>
                           <label description="User Stories" languagecode="1031" />
@@ -84,6 +105,45 @@
                       </cell>
                     </row>
                     <row>
+                      <cell id="{8f77a998-bbaa-581d-bcf2-04bf32d07ac2}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Tickets" languagecode="1031" />
+                          <label description="Tickets" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_tickets" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_tickets" disabled="false" />
+                      </cell>
+                      <cell id="{69f1309a-968c-59f8-a37f-e5e5cf83771d}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Zephyr-Key" languagecode="1031" />
+                          <label description="Zephyr Key" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_zephyrkey" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_zephyrkey" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{83da3024-0092-54da-b721-5929bb795d9f}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Umgebungs-Scope" languagecode="1031" />
+                          <label description="Environment Scope" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_envscope" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_envscope" disabled="false" />
+                      </cell>
+                      <cell id="{3e613abc-033a-5827-b08e-ab8b72f3615c}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Geschätzte Minuten" languagecode="1031" />
+                          <label description="Estimated Minutes" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_estimatedminutes" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="jbe_estimatedminutes" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{54219ee5-a6cb-5a27-a18f-c188525c1f53}" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Verantwortlich" languagecode="1031" />
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="jbe_owner" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_owner" disabled="false" />
+                      </cell>
                       <cell id="{8a8e7ef3-552c-5e2c-9c19-ce19d33c2d1a}" colspan="1" rowspan="1">
                         <labels>
                           <label description="Aktiv" languagecode="1031" />
@@ -187,13 +247,6 @@
               </labels>
               <control id="jbe_testid" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="jbe_testid" disabled="false" />
             </cell>
-            <cell id="{8a8e7ef3-552c-5e2c-9c19-ce19d33c2d1a}" colspan="1" rowspan="1">
-              <labels>
-                <label description="Aktiv" languagecode="1031" />
-                <label description="Enabled" languagecode="1033" />
-              </labels>
-              <control id="jbe_enabled" classid="{67FAC785-CD58-4F9F-ABB3-4B7DDC6ED5ED}" datafieldname="jbe_enabled" disabled="false" />
-            </cell>
             <cell id="{8499d65e-aba4-5254-9a85-9a2d5c7e72d7}" colspan="1" rowspan="1">
               <labels>
                 <label description="Kategorie" languagecode="1031" />
@@ -201,12 +254,19 @@
               </labels>
               <control id="jbe_category" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_category" disabled="false" />
             </cell>
-            <cell id="{9d79886f-61ad-59f0-92af-c48c09d190c9}" colspan="1" rowspan="1">
+            <cell id="{c02e4cf7-42dc-52de-9b34-f4922713f4b9}" colspan="1" rowspan="1">
               <labels>
-                <label description="Besitzer" languagecode="1031" />
-                <label description="Owner" languagecode="1033" />
+                <label description="Lebenszyklus" languagecode="1031" />
+                <label description="Lifecycle Status" languagecode="1033" />
               </labels>
-              <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" disabled="false" />
+              <control id="jbe_lifecyclestatus" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="jbe_lifecyclestatus" disabled="false" />
+            </cell>
+            <cell id="{8a8e7ef3-552c-5e2c-9c19-ce19d33c2d1a}" colspan="1" rowspan="1">
+              <labels>
+                <label description="Aktiv" languagecode="1031" />
+                <label description="Enabled" languagecode="1033" />
+              </labels>
+              <control id="jbe_enabled" classid="{67FAC785-CD58-4F9F-ABB3-4B7DDC6ED5ED}" datafieldname="jbe_enabled" disabled="false" />
             </cell>
           </row>
         </rows>

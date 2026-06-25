@@ -10,9 +10,10 @@
     <layoutxml>
       <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
         <row name="result" id="jbe_testrunresultid">
-          <cell name="jbe_testid" width="100" />
+          <cell name="jbe_name" width="150" />
+          <cell name="jbe_testid" width="110" />
           <cell name="jbe_outcome" width="100" />
-          <cell name="jbe_testrunid" width="200" />
+          <cell name="jbe_testrunid" width="160" />
           <cell name="modifiedon" width="140" />
         </row>
       </grid>
@@ -22,6 +23,7 @@
       <fetch version="1.0" mapping="logical">
         <entity name="jbe_testrunresult">
           <attribute name="jbe_testrunresultid" />
+          <attribute name="jbe_name" />
           <attribute name="jbe_testid" />
           <attribute name="jbe_outcome" />
           <attribute name="jbe_testrunid" />

@@ -2,16 +2,17 @@
 <savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <savedquery>
     <IsCustomizable>1</IsCustomizable>
-    <CanBeDeleted>0</CanBeDeleted>
+    <CanBeDeleted>1</CanBeDeleted>
     <isquickfindquery>0</isquickfindquery>
     <isprivate>0</isprivate>
-    <isdefault>1</isdefault>
+    <isdefault>0</isdefault>
     <savedqueryid>{a5a29b63-604e-4e6d-aaf2-805090ec285a}</savedqueryid>
     <layoutxml>
-      <grid name="jbe_testrunresults" jump="jbe_name" select="1" icon="1" preview="0">
-        <row name="jbe_testrunresult" id="jbe_testrunresultid">
-          <cell name="jbe_name" width="300" />
-          <cell name="createdon" width="125" />
+      <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
+        <row name="result" id="jbe_testrunresultid">
+          <cell name="jbe_name" width="150" />
+          <cell name="jbe_testid" width="110" />
+          <cell name="jbe_outcome" width="100" />
         </row>
       </grid>
     </layoutxml>
@@ -21,15 +22,18 @@
         <entity name="jbe_testrunresult">
           <attribute name="jbe_testrunresultid" />
           <attribute name="jbe_name" />
-          <attribute name="createdon" />
+          <attribute name="jbe_testid" />
+          <attribute name="jbe_outcome" />
           <filter type="and">
             <condition attribute="statecode" operator="eq" value="0" />
           </filter>
+          <order attribute="modifiedon" descending="true" />
         </entity>
       </fetch>
     </fetchxml>
     <IntroducedVersion>1.0.0.0</IntroducedVersion>
     <LocalizedNames>
+      <LocalizedName description="Ergebnis-Suche" languagecode="1031" />
       <LocalizedName description="Test Run Result Lookup View" languagecode="1033" />
     </LocalizedNames>
   </savedquery>

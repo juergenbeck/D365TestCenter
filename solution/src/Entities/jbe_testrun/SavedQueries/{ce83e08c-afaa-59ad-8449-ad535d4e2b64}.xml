@@ -10,13 +10,15 @@
     <layoutxml>
       <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">
         <row name="result" id="jbe_testrunid">
-          <cell name="jbe_name" width="220" />
+          <cell name="jbe_name" width="200" />
           <cell name="jbe_teststatus" width="110" />
-          <cell name="jbe_total" width="70" />
-          <cell name="jbe_passed" width="70" />
-          <cell name="jbe_failed" width="70" />
-          <cell name="jbe_testcasefilter" width="160" />
-          <cell name="jbe_startedon" width="140" />
+          <cell name="jbe_total" width="60" />
+          <cell name="jbe_passed" width="60" />
+          <cell name="jbe_failed" width="60" />
+          <cell name="jbe_skipped" width="60" />
+          <cell name="jbe_errored" width="60" />
+          <cell name="jbe_testcasefilter" width="150" />
+          <cell name="jbe_startedon" width="130" />
         </row>
       </grid>
     </layoutxml>
@@ -30,6 +32,8 @@
           <attribute name="jbe_total" />
           <attribute name="jbe_passed" />
           <attribute name="jbe_failed" />
+          <attribute name="jbe_skipped" />
+          <attribute name="jbe_errored" />
           <attribute name="jbe_testcasefilter" />
           <attribute name="jbe_startedon" />
           <filter type="and">

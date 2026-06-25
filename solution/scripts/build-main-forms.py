@@ -35,16 +35,23 @@ def sid(key: str) -> str:
 FIELD_TYPES = {
     "jbe_testcase": {
         "jbe_category": "picklist", "jbe_definitionjson": "memo",
-        "jbe_documentation": "memo",
+        "jbe_documentation": "memo", "jbe_domain": "string", "jbe_envscope": "string",
+        "jbe_estimatedminutes": "number", "jbe_lifecyclestatus": "picklist",
+        "jbe_owner": "string", "jbe_testlevel": "number", "jbe_tickets": "string",
+        "jbe_zephyrkey": "string",
         "jbe_enabled": "boolean", "jbe_name": "string", "jbe_tags": "string",
         "jbe_testid": "string", "jbe_title": "string", "jbe_userstories": "string",
     },
     "jbe_testrun": {
-        "jbe_batchoffset": "number", "jbe_completedon": "datetime",
-        "jbe_failed": "number", "jbe_fulllog": "memo", "jbe_keeprecords": "boolean",
-        "jbe_name": "string", "jbe_passed": "number", "jbe_startedon": "datetime",
+        "jbe_avgtestms": "number", "jbe_batchoffset": "number", "jbe_chunksize": "number",
+        "jbe_completedon": "datetime", "jbe_continuations": "number", "jbe_durationms": "number",
+        "jbe_errored": "number", "jbe_failed": "number", "jbe_fulllog": "memo",
+        "jbe_keeprecords": "boolean", "jbe_maxconcurrent": "number", "jbe_maxtestms": "number",
+        "jbe_mediantestms": "number", "jbe_mintestms": "number",
+        "jbe_name": "string", "jbe_passed": "number", "jbe_recordscreated": "number",
+        "jbe_skipped": "number", "jbe_slowesttestid": "string", "jbe_startedon": "datetime",
         "jbe_testcasefilter": "string", "jbe_teststatus": "picklist",
-        "jbe_testsummary": "memo", "jbe_total": "number",
+        "jbe_testsummary": "memo", "jbe_total": "number", "jbe_totaltestms": "number",
     },
     "jbe_testrunresult": {
         "jbe_assertionresults": "memo", "jbe_durationms": "number",
@@ -56,7 +63,7 @@ FIELD_TYPES = {
         "jbe_assertionfield": "string", "jbe_assertionoperator": "string",
         "jbe_durationms": "number", "jbe_entity": "string", "jbe_errormessage": "memo",
         "jbe_expectedvalue": "string", "jbe_inputdata": "memo", "jbe_name": "string",
-        "jbe_outputdata": "memo", "jbe_phase": "picklist", "jbe_recordid": "string",
+        "jbe_outputdata": "memo", "jbe_recordid": "string",
         "jbe_recordurl": "string", "jbe_stepnumber": "number",
         "jbe_stepstatus": "picklist", "jbe_testrunresultid": "lookup",
     },
@@ -105,6 +112,27 @@ LABELS = {
     "jbe_stepnumber": ("Schritt-Nr.", "Step Number"),
     "jbe_stepstatus": ("Status", "Status"),
     "jbe_testrunresultid": ("Testfall-Ergebnis", "Test Run Result"),
+    # MID-Ergänzungen 2026-06-25 (neue Schema-Felder)
+    "jbe_skipped": ("Übersprungen", "Skipped"),
+    "jbe_errored": ("Fehler", "Errored"),
+    "jbe_recordscreated": ("Erzeugte Records", "Records Created"),
+    "jbe_avgtestms": ("Ø Test (ms)", "Avg Test (ms)"),
+    "jbe_mediantestms": ("Median Test (ms)", "Median Test (ms)"),
+    "jbe_mintestms": ("Min Test (ms)", "Min Test (ms)"),
+    "jbe_maxtestms": ("Max Test (ms)", "Max Test (ms)"),
+    "jbe_totaltestms": ("Summe Test (ms)", "Total Test (ms)"),
+    "jbe_slowesttestid": ("Langsamster Test", "Slowest Test"),
+    "jbe_chunksize": ("Chunk-Größe", "Chunk Size"),
+    "jbe_maxconcurrent": ("Max. parallel", "Max Concurrent"),
+    "jbe_continuations": ("Fortsetzungen", "Continuations"),
+    "jbe_domain": ("Domäne", "Domain"),
+    "jbe_testlevel": ("Test-Level", "Test Level"),
+    "jbe_lifecyclestatus": ("Lebenszyklus", "Lifecycle Status"),
+    "jbe_envscope": ("Umgebungs-Scope", "Environment Scope"),
+    "jbe_estimatedminutes": ("Geschätzte Minuten", "Estimated Minutes"),
+    "jbe_owner": ("Verantwortlich", "Owner"),
+    "jbe_tickets": ("Tickets", "Tickets"),
+    "jbe_zephyrkey": ("Zephyr-Key", "Zephyr Key"),
     "ownerid": ("Besitzer", "Owner"),
     "createdby": ("Erstellt von", "Created By"),
     "modifiedby": ("Geändert von", "Modified By"),
@@ -116,11 +144,13 @@ LABELS = {
 # Jedes entity: (tabs=[{label_de,label_en, sections=[{label_de,label_en,fields=[...], columns, rowspan_overrides}]}], header=[...])
 SPECS = {
     "jbe_testcase": {
-        "header_fields": ["jbe_testid", "jbe_enabled", "jbe_category", "ownerid"],
+        "header_fields": ["jbe_testid", "jbe_category", "jbe_lifecyclestatus", "jbe_enabled"],
         "tabs": [
             ("Übersicht", "Overview", [
-                ("Identifikation", "Identification", ["jbe_testid", "jbe_title", "jbe_name"], 1),
-                ("Klassifizierung", "Classification", ["jbe_category", "jbe_tags", "jbe_userstories", "jbe_enabled"], 1),
+                ("Identifikation", "Identification", ["jbe_name", "jbe_testid", "jbe_title"], 1),
+                ("Klassifizierung", "Classification", ["jbe_category", "jbe_domain", "jbe_testlevel",
+                    "jbe_lifecyclestatus", "jbe_tags", "jbe_userstories", "jbe_tickets", "jbe_zephyrkey",
+                    "jbe_envscope", "jbe_estimatedminutes", "jbe_owner", "jbe_enabled"], 2),
                 ("Metadaten", "Metadata", ["createdon", "createdby", "modifiedon", "modifiedby"], 2),
             ]),
             ("Definition (JSON)", "Definition (JSON)", [
@@ -129,14 +159,20 @@ SPECS = {
         ],
     },
     "jbe_testrun": {
-        "header_fields": ["jbe_teststatus", "jbe_total", "jbe_passed", "jbe_failed"],
+        "header_fields": ["jbe_teststatus", "jbe_total", "jbe_passed", "jbe_failed", "jbe_skipped", "jbe_errored"],
         "tabs": [
             ("Übersicht", "Overview", [
                 ("Filter & Status", "Filter & Status", [
                     "jbe_testcasefilter", "jbe_teststatus", "jbe_keeprecords",
-                    "jbe_startedon", "jbe_completedon"], 2),
-                ("Zähler", "Counters", ["jbe_total", "jbe_passed", "jbe_failed"], 3),
+                    "jbe_startedon", "jbe_completedon", "jbe_durationms"], 2),
+                ("Zähler", "Counters", ["jbe_total", "jbe_passed", "jbe_failed", "jbe_skipped", "jbe_errored"], 5),
                 ("Zusammenfassung", "Summary", [("jbe_testsummary", 6)], 1),
+            ]),
+            ("Worker-Metriken", "Worker Metrics", [
+                ("Performance", "Performance", ["jbe_avgtestms", "jbe_mediantestms", "jbe_mintestms",
+                    "jbe_maxtestms", "jbe_totaltestms", "jbe_slowesttestid"], 2),
+                ("Ausführung", "Execution", ["jbe_recordscreated", "jbe_chunksize", "jbe_maxconcurrent",
+                    "jbe_continuations", "jbe_batchoffset"], 2),
             ]),
             ("Vollständiges Log", "Full Log", [
                 ("Log", "Log", [("jbe_fulllog", 28)], 1),
