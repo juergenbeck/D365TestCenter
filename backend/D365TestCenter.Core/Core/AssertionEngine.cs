@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
@@ -315,10 +316,10 @@ public sealed class AssertionEngine
             string s => $"\"{s}\"",
             OptionSetValue osv => $"OptionSet({osv.Value})",
             EntityReference er => $"Lookup({er.LogicalName}, {er.Id})",
-            Money m => $"Money({m.Value})",
-            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss'Z'"),
+            Money m => $"Money({m.Value.ToString(CultureInfo.InvariantCulture)})",
+            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss'Z'", CultureInfo.InvariantCulture),
             bool b => b ? "true" : "false",
-            _ => value.ToString() ?? "<unbekannt>"
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "<unbekannt>"
         };
     }
 }

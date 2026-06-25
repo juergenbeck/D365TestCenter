@@ -116,22 +116,11 @@ public static class ValueComparator
         if (actual == null || expected == null) return false;
 
         // Money/OptionSetValue/int direkt behandeln (kein Umweg über ExtractString-String-Format).
-        decimal? actualNum = actual switch
-        {
-            Money m => m.Value,
-            OptionSetValue osv => osv.Value,
-            int i => i,
-            long l => l,
-            decimal d => d,
-            double dbl => (decimal)dbl,
-            float f => (decimal)f,
-            _ => null
-        };
-
-        if (actualNum.HasValue
+        // EINE Zahl-Quelle mit CompareValues (Equals/NotEquals): TryExtractNumber (FB-52).
+        if (TryExtractNumber(actual, out var actualNum)
             && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var expectedNum))
         {
-            comparison = actualNum.Value.CompareTo(expectedNum);
+            comparison = actualNum.CompareTo(expectedNum);
             return true;
         }
 
@@ -172,6 +161,21 @@ public static class ValueComparator
     /// </summary>
     public static bool CompareValues(object? actual, string? expected)
     {
+        // Numerische Gleichheit für native Zahl-Typen (Money/Decimal/Double/Float/
+        // OptionSet/Integer): Gleichheit auf einem numerischen Feld ist numerisch, nicht
+        // textuell. Das löst zwei Defekte in einem (FB-52): die Culture-Abhängigkeit
+        // (Dezimal-Komma unter de-DE/de-CH) UND die Skalierung aus Dataverse -- ein
+        // retrievter Money trägt die Feld-Precision (z.B. "1000.0000000000"), die ein
+        // reiner Stringvergleich gegen "1000" fälschlich als FAIL wertet. Spiegelt die
+        // numerische Semantik von TryCompareOrdered (GreaterThan/LessThan). String-actuals
+        // (Text-Felder, Condition-Pfad) bleiben bewusst textuell -- "00123" ist nicht "123".
+        if (expected != null
+            && TryExtractNumber(actual, out var actualNum)
+            && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var expectedNum))
+        {
+            return actualNum == expectedNum;
+        }
+
         var actualStr = ExtractString(actual);
 
         if (actualStr == null && expected == null) return true;
@@ -180,6 +184,28 @@ public static class ValueComparator
 
         return string.Equals(
             actualStr.Trim(), expected.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Extrahiert einen nativen numerischen Dataverse-Wert als decimal (Money, OptionSetValue,
+    /// int, long, decimal, double, float). Liefert false für alle anderen Typen (inkl. String):
+    /// String-actuals werden bewusst NICHT als Zahl interpretiert, damit Text-Felder textuell
+    /// vergleichen. EINE Zahl-Quelle für CompareValues (Equals/NotEquals) und TryCompareOrdered
+    /// (GreaterThan/LessThan), beide dadurch kulturunabhängig und skalierungs-robust (FB-52).
+    /// </summary>
+    public static bool TryExtractNumber(object? value, out decimal number)
+    {
+        switch (value)
+        {
+            case Money m: number = m.Value; return true;
+            case OptionSetValue osv: number = osv.Value; return true;
+            case int i: number = i; return true;
+            case long l: number = l; return true;
+            case decimal d: number = d; return true;
+            case double dbl: number = (decimal)dbl; return true;
+            case float f: number = (decimal)f; return true;
+            default: number = 0m; return false;
+        }
     }
 
     /// <summary>True wenn der Wert null oder ein reiner Whitespace-String ist.</summary>
@@ -193,6 +219,15 @@ public static class ValueComparator
     /// <summary>
     /// Zieht einen vergleichbaren String aus einem nativen Dataverse-Wert. OptionSetValue
     /// -> Zahl, EntityReference -> GUID, Money -> Betrag, DateTime -> ISO-O, bool -> "True"/"False".
+    ///
+    /// KULTURUNABHÄNGIG (InvariantCulture): Der Comparator vergleicht Maschinenwerte gegen den
+    /// erwarteten String aus dem Pack, keine lokalisierte UI-Anzeige. Numerische Typen MÜSSEN
+    /// invariant (Dezimal-Punkt) formatiert werden, sonst bricht Contains/StartsWith/EndsWith auf
+    /// einem Money-/Decimal-Feld unter einer Komma-Culture (de-DE/de-CH): decimal.ToString() ohne
+    /// CultureInfo liefert dort "1000,5" statt "1000.5" (FB-52). Gilt für ALLE Aufrufpfade,
+    /// besonders den Plugin-/Worker-Pfad (geteilter Core, ADR-0003), dessen Server-Culture nicht
+    /// kontrollierbar ist. Equals/NotEquals laufen vorrangig über den numerischen Pfad
+    /// (TryExtractNumber); diese String-Form ist der Fallback und der Pfad der Substring-Operatoren.
     /// </summary>
     public static string? ExtractString(object? value)
     {
@@ -200,13 +235,13 @@ public static class ValueComparator
         {
             null => null,
             string s => s,
-            OptionSetValue osv => osv.Value.ToString(),
+            OptionSetValue osv => osv.Value.ToString(CultureInfo.InvariantCulture),
             EntityReference er => er.Id.ToString(),
-            Money m => m.Value.ToString(),
-            DateTime dt => dt.ToString("O"),
+            Money m => m.Value.ToString(CultureInfo.InvariantCulture),
+            DateTime dt => dt.ToString("O", CultureInfo.InvariantCulture),
             bool b => b.ToString(),
             JToken jt => jt.ToString(),
-            _ => value.ToString()
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture)
         };
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using D365TestCenter.Core;
 using Microsoft.Xrm.Sdk;
 using Xunit;
@@ -41,6 +42,53 @@ public class ValueComparatorTests
         Assert.True(Eval("Equals", new Money(42m), "42"));
         Assert.True(Eval("Equals", null, null));
         Assert.False(Eval("Equals", null, "x"));
+    }
+
+    [Fact]
+    public void Equals_NumericFieldWithScale_ComparesNumerically_FB52()
+    {
+        // FB-52: Ein aus Dataverse retrievter Money/Decimal trägt die Feld-Precision als
+        // decimal-Scale (z.B. 1000.0000000000m). Der frühere reine Stringvergleich verglich
+        // "1000.0000000000" gegen den Pack-Wert "1000" und scheiterte. Equals MUSS numerisch
+        // vergleichen (wie GreaterThan/LessThan). Dieser Test ist culture-unabhängig
+        // deterministisch: der Scale-Mismatch failt OHNE Fix unter JEDER Culture.
+        Assert.True(Eval("Equals", new Money(1000.0000000000m), "1000"));
+        Assert.True(Eval("Equals", new Money(10000.00m), "10000"));
+        Assert.True(Eval("Equals", new Money(20000m), "20000"));
+        Assert.True(Eval("Equals", 1234.5600m, "1234.56"));        // nativer decimal mit Scale
+        // Negativfall + Inversion bleiben korrekt:
+        Assert.False(Eval("Equals", new Money(1000.5m), "1000"));
+        Assert.True(Eval("NotEquals", new Money(1000.5m), "1000"));
+        Assert.False(Eval("NotEquals", new Money(1000.0000000000m), "1000"));
+    }
+
+    [Fact]
+    public void ExtractAndCompare_UnderCommaCulture_StayInvariant_FB52()
+    {
+        // Erzwingt das Dezimal-Komma (de-DE/de-CH = Jürgens Maschine UND der reale
+        // LM-DEV-Defekt). Beweist, dass Vergleich UND Substring-Operatoren invariant
+        // (Dezimal-Punkt) arbeiten, statt das Komma der Maschinen-Culture zu erben.
+        var original = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+
+            // ExtractString liefert Punkt, nie Komma:
+            Assert.Equal("1234.56", ValueComparator.ExtractString(new Money(1234.56m)));
+            Assert.Equal("1234.56", ValueComparator.ExtractString(1234.56m));
+
+            // Equals matcht trotz Komma-Culture (numerischer Pfad):
+            Assert.True(Eval("Equals", new Money(1000.0000000000m), "1000"));
+
+            // Substring-Operatoren laufen über die invariante String-Form:
+            Assert.True(Eval("Contains", new Money(1234.56m), "1234.56"));
+            Assert.True(Eval("EndsWith", new Money(1234.56m), ".56"));
+            Assert.False(Eval("Contains", new Money(1234.56m), "1234,56"));   // Komma kommt NICHT vor
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
     }
 
     [Fact]
