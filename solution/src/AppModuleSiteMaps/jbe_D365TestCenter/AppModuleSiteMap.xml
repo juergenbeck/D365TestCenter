@@ -12,7 +12,8 @@
       </Titles>
       <Group Id="group_testcenter" ResourceId="SitemapDesigner.NewGroup" DescriptionResourceId="SitemapDesigner.NewGroup" IntroducedVersion="7.0.0.0" IsProfile="false" ToolTipResourseId="SitemapDesigner.Unknown">
         <Titles>
-          <Title LCID="1033" Title="Test Center" />
+          <Title LCID="1031" Title="D365 Test Center" />
+          <Title LCID="1033" Title="D365 Test Center" />
         </Titles>
         <SubArea Id="subarea_testrunner" Icon="/_imgs/imagestrips/transparent_spacer.gif" Url="$webresource:jbe_/testcenter.html" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="false" PassParams="false" Sku="All,OnPremise,Live,SPLA">
           <Titles>
