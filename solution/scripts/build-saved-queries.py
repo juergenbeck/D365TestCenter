@@ -10,7 +10,8 @@ import re
 import uuid
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\Juerg\Source\repo\D365TestCenter\solution\src\Entities")
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = REPO_ROOT / "solution" / "src" / "Entities"
 NAMESPACE = uuid.UUID("d365dc00-0000-0000-0000-000000000002")
 def sid(key: str) -> str:
     return "{" + str(uuid.uuid5(NAMESPACE, key)) + "}"
@@ -59,6 +60,9 @@ QT_LOOKUP = 64
 QT_QUICKFIND = 4
 
 # ViewSpec: (name_de, name_en, querytype, isdefault, layout_cells, fetch_filter_xml, order_attr, order_desc, jump_attr)
+# Note: the lookup view (querytype 64) is generated with isdefault=True so every jbe_* table has
+# exactly one default lookup view, consistent with the jbe_testchunk lookup view. Without this, the
+# lookup dialogs (e.g. jbe_testrun on the jbe_testrunresult form) have no default view.
 SPECS = {
     "jbe_testcase": {
         "active": (
@@ -89,7 +93,7 @@ SPECS = {
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_testid", False, "jbe_testid"),
         "lookup": (
-            "Testfall-Suche", "Test Case Lookup View", QT_LOOKUP, False,
+            "Testfall-Suche", "Test Case Lookup View", QT_LOOKUP, True,
             [("jbe_name",200), ("jbe_testid",110), ("jbe_title",240)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_testid", False, "jbe_testid"),
@@ -124,7 +128,7 @@ SPECS = {
             '<condition attribute="statecode" operator="eq" value="0" />',
             "modifiedon", True, "jbe_name"),
         "lookup": (
-            "Testlauf-Suche", "Test Run Lookup View", QT_LOOKUP, False,
+            "Testlauf-Suche", "Test Run Lookup View", QT_LOOKUP, True,
             [("jbe_name",200), ("jbe_teststatus",110), ("jbe_startedon",130)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "modifiedon", True, "jbe_name"),
@@ -156,7 +160,7 @@ SPECS = {
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_testid", False, "jbe_name"),
         "lookup": (
-            "Ergebnis-Suche", "Test Run Result Lookup View", QT_LOOKUP, False,
+            "Ergebnis-Suche", "Test Run Result Lookup View", QT_LOOKUP, True,
             [("jbe_name",150), ("jbe_testid",110), ("jbe_outcome",100)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "modifiedon", True, "jbe_name"),
@@ -189,7 +193,7 @@ SPECS = {
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_stepnumber", False, "jbe_name"),
         "lookup": (
-            "Schritt-Suche", "Test Step Lookup View", QT_LOOKUP, False,
+            "Schritt-Suche", "Test Step Lookup View", QT_LOOKUP, True,
             [("jbe_name",180), ("jbe_stepnumber",70), ("jbe_action",120)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_stepnumber", False, "jbe_name"),

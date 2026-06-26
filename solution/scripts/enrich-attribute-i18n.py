@@ -9,7 +9,8 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\Juerg\Source\repo\D365TestCenter\solution\src\Entities")
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = REPO_ROOT / "solution" / "src" / "Entities"
 
 # (logical_name) -> (DE_Label, EN_Label, DE_Desc, EN_Desc)
 MAPPING = {

@@ -5,7 +5,7 @@
     <CanBeDeleted>1</CanBeDeleted>
     <isquickfindquery>0</isquickfindquery>
     <isprivate>0</isprivate>
-    <isdefault>0</isdefault>
+    <isdefault>1</isdefault>
     <savedqueryid>{17298d33-abc8-4f47-8995-fa817155062c}</savedqueryid>
     <layoutxml>
       <grid name="resultset" jump="jbe_name" select="1" icon="1" preview="1">

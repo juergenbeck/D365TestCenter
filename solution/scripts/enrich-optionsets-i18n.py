@@ -5,7 +5,8 @@ und fixt Umlaut-Verstoesse. Wird nach jedem `pac solution unpack` ausgefuehrt.
 """
 from pathlib import Path
 
-OPTIONSETS = Path(r"C:\Users\Juerg\Source\repo\D365TestCenter\solution\src\OptionSets")
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+OPTIONSETS = REPO_ROOT / "solution" / "src" / "OptionSets"
 
 # Vollstaendige Ziel-Definitionen (keine Diffs, sondern Full-Rewrite).
 # So ist das Ergebnis garantiert exakt gewuenscht und idempotent.

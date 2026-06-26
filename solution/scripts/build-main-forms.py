@@ -11,7 +11,8 @@ import uuid
 import hashlib
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\Juerg\Source\repo\D365TestCenter\solution\src\Entities")
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = REPO_ROOT / "solution" / "src" / "Entities"
 
 CLASSIDS = {
     "string":   "{4273EDBD-AC1D-40d3-9FB2-095C621B552D}",
