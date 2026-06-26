@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Baut SavedQueries (Views) der 4 jbe_*-Tabellen neu auf:
-- Umbau der bestehenden Main Active / Associated / QuickFind Views (savedqueryid bleibt)
-- Neue Views: "Aktive L\u00e4ufe" und "Fehlgeschlagene Ergebnisse"
+Rebuilds the SavedQueries (views) of the 4 jbe_* tables:
+- Reworks the existing Main Active / Associated / QuickFind views (savedqueryid is kept)
+- New views: "Running Test Runs" and "Failed Test Run Results"
 - Labels 1031 + 1033
 Idempotent.
 """
@@ -16,7 +16,7 @@ NAMESPACE = uuid.UUID("d365dc00-0000-0000-0000-000000000002")
 def sid(key: str) -> str:
     return "{" + str(uuid.uuid5(NAMESPACE, key)) + "}"
 
-# Bestehende View-IDs, die wir umbauen (savedqueryid beibehalten)
+# Existing view IDs that we rework (savedqueryid is kept)
 EXISTING = {
     "jbe_testcase": {
         "active":   "{0428dd93-00c4-4d07-92cb-84bef887b2fe}",
@@ -84,7 +84,7 @@ SPECS = {
              ("jbe_tags",160)],
             '<condition attribute="statecode" operator="eq" value="0" />',
             "jbe_testid", False, "jbe_testid",
-            # QuickFind hat spezielle FindColumns
+            # QuickFind has special FindColumns
             ["jbe_testid", "jbe_title", "jbe_name", "jbe_tags", "jbe_userstories"]),
         "assoc": (
             "Zugeordnete Testfälle", "Associated Test Cases", QT_ASSOC, True,
@@ -200,7 +200,7 @@ SPECS = {
     },
 }
 
-# Neue Views (neue GUIDs, neue Datei)
+# New views (new GUIDs, new file)
 NEW_VIEWS = {
     "jbe_testrun": [
         {
@@ -236,7 +236,7 @@ NEW_VIEWS = {
 # ------------------ Builder ------------------
 
 def build_savedquery(sqid, entity, pk_attr, spec):
-    """spec ist Tuple (de, en, qt, isdefault, cells, filter_xml, order, desc, jump, [findcolumns])"""
+    """spec is a tuple (de, en, qt, isdefault, cells, filter_xml, order, desc, jump, [findcolumns])"""
     de, en, qt, isdefault = spec[0], spec[1], spec[2], spec[3]
     cells, filter_xml, order_attr, order_desc, jump_attr = spec[4], spec[5], spec[6], spec[7], spec[8]
     find_columns = spec[9] if len(spec) >= 10 else None
@@ -263,15 +263,15 @@ def build_savedquery(sqid, entity, pk_attr, spec):
     isdefault_s = "1" if isdefault else "0"
     isquickfind = "1" if qt == QT_QUICKFIND else "0"
 
-    # Fuer QuickFind brauchen wir isquickfindquery=1 + FindColumns
-    # (FindColumns sind in FetchXml via Filter mit dynamischen Parametern normalerweise, aber
-    # hier reicht unser Static-Filter; QuickFind-Matcher nutzen die attribute-Liste fetchxml-seitig)
+    # For QuickFind we need isquickfindquery=1 + FindColumns
+    # (FindColumns normally live in FetchXml via a filter with dynamic parameters, but
+    # our static filter is enough here; QuickFind matchers use the attribute list on the fetchxml side)
     quickfind_addon = ""
     if qt == QT_QUICKFIND and find_columns:
-        # QuickFind-Syntax: filter attribute die "LIKE" suchen (Dataverse baut das on-the-fly)
-        # Nur Namen sind noetig, Plattform macht den Rest
+        # QuickFind syntax: filter attributes searched with "LIKE" (Dataverse builds this on the fly)
+        # Only names are needed, the platform does the rest
         fc_xml = "\n".join(f'              <condition attribute="{c}" operator="like" value="{{0}}" />' for c in find_columns)
-        # wir ergaenzen eine zweite filter-Sektion type="or" mit like-Conditions
+        # we add a second filter section type="or" with like conditions
         fetchxml = fetchxml.replace(
             f'            {filter_xml}\n          </filter>',
             f'            {filter_xml}\n            <filter type="or">\n{fc_xml}\n            </filter>\n          </filter>')
@@ -312,7 +312,7 @@ PK_ATTR = {
 for entity, views in SPECS.items():
     sq_dir = ROOT / entity / "SavedQueries"
     if not sq_dir.exists():
-        print(f"  [{entity}] SavedQueries-Ordner fehlt")
+        print(f"  [{entity}] SavedQueries folder missing")
         continue
     for role, spec in views.items():
         sqid = EXISTING[entity][role]

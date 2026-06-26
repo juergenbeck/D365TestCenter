@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Baut die 4 Main-Forms der jbe_*-Tabellen spec-basiert neu auf.
-- Behaelt die formid aus der bestehenden Form (Merge-Stabilitaet)
-- Generiert deterministische GUIDs fuer Tabs/Sections/Cells aus stabilen Namen
-  -> idempotent bei mehrfacher Ausfuehrung
-- Labels immer 1031 (DE) + 1033 (EN)
+Rebuilds the 4 main forms of the jbe_* tables from spec.
+- Keeps the formid from the existing form (merge stability)
+- Generates deterministic GUIDs for tabs/sections/cells from stable names
+  -> idempotent across repeated runs
+- Labels are always 1031 (DE) + 1033 (EN)
 """
 import re
 import uuid
@@ -26,13 +26,13 @@ CLASSIDS = {
     "notes":    "{06375649-C143-495E-A496-C962E5B4488E}",
 }
 
-# Kontinuierlicher stabiler GUID-Generator (aus einem Namespace + Key).
-# Gleicher Key -> gleicher GUID bei jedem Run. So bleiben IDs stabil.
+# Continuous stable GUID generator (from a namespace + key).
+# Same key -> same GUID on every run, so IDs stay stable.
 NAMESPACE = uuid.UUID("d365dc00-0000-0000-0000-000000000001")
 def sid(key: str) -> str:
     return "{" + str(uuid.uuid5(NAMESPACE, key)) + "}"
 
-# Feldtyp-Map pro Entity
+# Field type map per entity
 FIELD_TYPES = {
     "jbe_testcase": {
         "jbe_category": "picklist", "jbe_definitionjson": "memo",
@@ -70,7 +70,7 @@ FIELD_TYPES = {
     },
 }
 
-# DE/EN-Feldlabels (aus dem Attribute-i18n-Skript dupliziert, kurzform)
+# DE/EN field labels (duplicated from the attribute i18n script, short form)
 LABELS = {
     "jbe_category": ("Kategorie", "Category"),
     "jbe_definitionjson": ("Definition (JSON)", "Definition (JSON)"),
@@ -113,7 +113,7 @@ LABELS = {
     "jbe_stepnumber": ("Schritt-Nr.", "Step Number"),
     "jbe_stepstatus": ("Status", "Status"),
     "jbe_testrunresultid": ("Testfall-Ergebnis", "Test Run Result"),
-    # MID-Ergänzungen 2026-06-25 (neue Schema-Felder)
+    # MID additions 2026-06-25 (new schema fields)
     "jbe_skipped": ("Übersprungen", "Skipped"),
     "jbe_errored": ("Fehler", "Errored"),
     "jbe_recordscreated": ("Erzeugte Records", "Records Created"),
@@ -141,8 +141,8 @@ LABELS = {
     "modifiedon": ("Geändert am", "Modified On"),
 }
 
-# Form-Spezifikation
-# Jedes entity: (tabs=[{label_de,label_en, sections=[{label_de,label_en,fields=[...], columns, rowspan_overrides}]}], header=[...])
+# Form specification
+# Each entity: (tabs=[{label_de,label_en, sections=[{label_de,label_en,fields=[...], columns, rowspan_overrides}]}], header=[...])
 SPECS = {
     "jbe_testcase": {
         "header_fields": ["jbe_testid", "jbe_category", "jbe_lifecyclestatus", "jbe_enabled"],
@@ -228,8 +228,8 @@ SPECS = {
     },
 }
 
-# Manuell in Dataverse ergänzte Cells mit nicht-deterministischer ID (nicht sid-reproduzierbar).
-# Hartkodiert, damit der Generator die DEV-Form byte-genau trifft (Jürgen-Entscheidung 2026-06-25).
+# Cells added manually in Dataverse with a non-deterministic ID (not sid-reproducible).
+# Hardcoded so the generator matches the DEV form byte-for-byte (project owner decision 2026-06-25).
 FIXED_CELL_IDS = {
     ("jbe_testcase", "jbe_documentation"): "{7f3e9a21-0d4c-4b8e-a1f6-5c2b9e8d4a17}",
 }
@@ -240,10 +240,10 @@ def xml_escape(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 def cell_xml(entity: str, spec_item, indent="                      "):
-    """spec_item kann sein:
-       - "jbe_field"                -> normale Zelle (rowspan=1)
-       - ("jbe_field", rowspan)     -> Memo mit rowspan
-       - "SUBGRID:jbe_target:jbe_lookup" -> Subgrid-Zelle
+    """spec_item can be:
+       - "jbe_field"                -> normal cell (rowspan=1)
+       - ("jbe_field", rowspan)     -> memo with rowspan
+       - "SUBGRID:jbe_target:jbe_lookup" -> subgrid cell
     """
     if isinstance(spec_item, tuple):
         fld, rowspan = spec_item
@@ -254,7 +254,7 @@ def cell_xml(entity: str, spec_item, indent="                      "):
 
     ftype = FIELD_TYPES.get(entity, {}).get(fld)
     if ftype is None:
-        # Systemfelder
+        # System fields
         if fld == "ownerid":       ftype = "lookup"
         elif fld in ("createdby", "modifiedby"): ftype = "lookup"
         elif fld in ("createdon", "modifiedon"): ftype = "datetime"
@@ -276,13 +276,13 @@ def subgrid_cell_xml(entity: str, spec: str, indent="                      "):
     # SUBGRID:target_entity:lookup_field
     _, target_entity, lookup_field = spec.split(":")
     cell_id = sid(f"{entity}:subgrid:{target_entity}")
-    # Labels: "Ergebnisse"/"Results" bzw. "Schritte"/"Steps"
+    # Labels: "Ergebnisse"/"Results" or "Schritte"/"Steps"
     titles = {
         "jbe_testrunresult": ("Ergebnisse", "Results"),
         "jbe_teststep": ("Schritte", "Steps"),
     }
     de, en = titles.get(target_entity, (target_entity, target_entity))
-    # Wir setzen ViewId={00000000-0000-0000-0000-000000000000} -> nutzt Default-View der Target-Entity
+    # We set ViewId={00000000-0000-0000-0000-000000000000} -> uses the default view of the target entity
     # RecordsPerPage=8, ChartGridMode=CHART_AND_GRID
     return (f'{indent}<cell id="{cell_id}" colspan="1" rowspan="16">\n'
             f'{indent}  <labels>\n'
@@ -315,13 +315,13 @@ def section_xml(entity: str, section_spec, indent="              "):
     showlabel = "false" if name_en is None else "true"
     label_de = name_de or ""
     label_en = name_en or label_de
-    # Rows: wir legen pro Feld eine Row mit einer Cell an (columns=1) ODER gruppieren in Rows a "columns" Cells
+    # Rows: one row with one cell per field (columns=1) OR grouped into rows of "columns" cells
     rows_out = []
     if columns == 1:
         for fld in fields:
             rows_out.append(f'{indent}    <row>\n{cell_xml(entity, fld, indent + "      ")}\n{indent}    </row>')
     else:
-        # fields in Gruppen von `columns` aufteilen
+        # split fields into groups of `columns`
         for i in range(0, len(fields), columns):
             group = fields[i:i+columns]
             cells = "\n".join(cell_xml(entity, f, indent + "      ") for f in group)
@@ -450,19 +450,19 @@ def extract_formid(xml_path: Path) -> str:
 for entity in SPECS.keys():
     main_dir = ROOT / entity / "FormXml" / "main"
     if not main_dir.exists():
-        print(f"  [{entity}] FormXml/main nicht vorhanden, skip")
+        print(f"  [{entity}] FormXml/main not present, skip")
         continue
     xmls = list(main_dir.glob("*.xml"))
     if not xmls:
-        print(f"  [{entity}] keine Form gefunden, skip")
+        print(f"  [{entity}] no form found, skip")
         continue
     xml_path = xmls[0]
     fid = extract_formid(xml_path)
     if not fid:
-        print(f"  [{entity}] formid nicht extrahierbar, skip")
+        print(f"  [{entity}] formid not extractable, skip")
         continue
     new_xml = form_xml(fid, entity)
     xml_path.write_text(new_xml.rstrip("\n"), encoding="utf-8-sig")
-    print(f"  [{entity}] Main-Form geschrieben (formid={fid})")
+    print(f"  [{entity}] main form written (formid={fid})")
 
 print("Forms built.")

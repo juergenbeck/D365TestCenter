@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Reichert alle jbe_*-OptionSet-XML-Dateien idempotent mit i18n-Labels an
-und fixt Umlaut-Verstoesse. Wird nach jedem `pac solution unpack` ausgefuehrt.
+Idempotently enriches all jbe_* OptionSet XML files with i18n labels
+and fixes umlaut violations. Run after every `pac solution unpack`.
 """
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 OPTIONSETS = REPO_ROOT / "solution" / "src" / "OptionSets"
 
-# Vollstaendige Ziel-Definitionen (keine Diffs, sondern Full-Rewrite).
-# So ist das Ergebnis garantiert exakt gewuenscht und idempotent.
+# Complete target definitions (no diffs, but a full rewrite).
+# This guarantees the result is exactly as intended and idempotent.
 
 TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
 <optionset Name="{name}" localizedName="{localized}" description="{desc_en}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -59,7 +59,7 @@ DEFINITIONS = {
             (105710000, "Bestanden", "Passed"),
             (105710001, "Fehlgeschlagen", "Failed"),
             (105710002, "Übersprungen", "Skipped"),
-            (105710003, "Fehler", "Error"),   # Neu in v5.4
+            (105710003, "Fehler", "Error"),   # New in v5.4
         ],
     },
     "jbe_stepstatus": {
@@ -127,5 +127,5 @@ for name, cfg in DEFINITIONS.items():
     )
     target = OPTIONSETS / f"{name}.xml"
     target.write_text(xml, encoding="utf-8-sig")
-    print(f"  {name}.xml: {len(cfg['options'])} Optionen")
+    print(f"  {name}.xml: {len(cfg['options'])} options")
 print("OptionSets enriched.")

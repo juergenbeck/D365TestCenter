@@ -1,18 +1,18 @@
 """
-Build-Skript: erzeugt aus docs/handbuch/*.md eine einzige HTML-WebResource.
+Build script: generates a single HTML web resource from docs/handbuch/*.md.
 
 Output:  solution/src/WebResources/jbe_/handbuch.html
-Aufruf:  python solution/scripts/build-handbuch.py
+Usage:   python solution/scripts/build-handbuch.py
 
-Das Skript:
- 1. sammelt alle .md-Dateien unter docs/handbuch/ in lesbarer Reihenfolge
-    (README zuerst, dann 01-einführung/*, 02-testfall-schreiben/* usw.)
- 2. gibt jedem H1-Heading eine explizite ID fuer interne Navigation
- 3. rewritet alle [text](../kap/datei.md)-Links auf #<slug>-Anker
- 4. ruft pandoc auf mit inline-CSS fuer saubere Darstellung
- 5. schreibt das HTML in solution/src/WebResources/jbe_/handbuch.html
+The script:
+ 1. collects all .md files under docs/handbuch/ in readable order
+    (README first, then the chapter subfolders in sorted order)
+ 2. gives every H1 heading an explicit ID for internal navigation
+ 3. rewrites all [text](../chapter/file.md) links to #<slug> anchors
+ 4. calls pandoc with inline CSS for clean rendering
+ 5. writes the HTML to solution/src/WebResources/jbe_/handbuch.html
 
-Voraussetzung: pandoc 3.x im PATH.
+Prerequisite: pandoc 3.x in PATH.
 """
 import os
 import re
@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 HANDBUCH_DIR = REPO_ROOT / "docs" / "handbuch"
 OUTPUT = REPO_ROOT / "solution" / "src" / "WebResources" / "jbe_" / "handbuch.html"
 
-# Inline-CSS fuer die HTML-Ausgabe (minimalistisch, gut lesbar, D365-naeher Look)
+# Inline CSS for the HTML output (minimal, readable, D365-like look)
 CSS = r"""
 body {
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -101,12 +101,12 @@ hr { border: none; border-top: 2px solid #e1dfdd; margin: 3em 0; }
 
 
 def file_slug(path: Path) -> str:
-    """Stabiler Slug aus dem Datei-Pfad, nicht aus dem H1."""
+    """Stable slug from the file path, not from the H1."""
     rel = path.relative_to(HANDBUCH_DIR)
     parts = list(rel.parent.parts) + [rel.stem]
     s = "-".join(parts)
     s = s.lower().replace("_", "-").replace(" ", "-")
-    # Umlaute für saubere Anker ascii-transliterieren
+    # transliterate umlauts to ASCII for clean anchors
     s = (s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
            .replace("ß", "ss"))
     s = re.sub(r"[^a-z0-9-]", "-", s)
@@ -128,14 +128,14 @@ def gather_mds():
 
 
 def inject_h1_id(content: str, slug: str) -> str:
-    """Dem ersten H1 eine explizite ID verpassen."""
+    """Give the first H1 an explicit ID."""
     def repl(m):
         return f"{m.group(0).rstrip()} {{#{slug}}}"
     return re.sub(r"^#\s+.+$", repl, content, count=1, flags=re.MULTILINE)
 
 
 def rewrite_links(content: str, current_file: Path, slug_map: dict) -> str:
-    """[text](path.md) und [text](path.md#anchor) auf interne Anker umschreiben."""
+    """Rewrite [text](path.md) and [text](path.md#anchor) to internal anchors."""
     def repl(m):
         text = m.group(1)
         link = m.group(2).strip()
@@ -162,13 +162,13 @@ def rewrite_links(content: str, current_file: Path, slug_map: dict) -> str:
 
 def build():
     if not HANDBUCH_DIR.exists():
-        print(f"FEHLER: {HANDBUCH_DIR} existiert nicht.", file=sys.stderr)
+        print(f"ERROR: {HANDBUCH_DIR} does not exist.", file=sys.stderr)
         sys.exit(1)
 
     files = gather_mds()
-    print(f"Gefunden: {len(files)} Markdown-Dateien")
+    print(f"Found: {len(files)} markdown files")
     if not files:
-        print("FEHLER: keine .md-Dateien gefunden.", file=sys.stderr)
+        print("ERROR: no .md files found.", file=sys.stderr)
         sys.exit(1)
 
     # key -> slug
@@ -219,12 +219,12 @@ def build():
 
 
 if __name__ == "__main__":
-    # STILLGELEGT (Jürgen-Entscheidung 2026-06-24): Das DEV-Handbuch
-    # solution/src/WebResources/jbe_/handbuch.html ist die Source of Truth.
-    # Der pandoc-Generator divergiert um ~1791 Zeilen (anderes Handbuch) und wird
-    # NICHT mehr im Idempotenz-Lauf ausgeführt, um den DEV-Stand nicht zu überschreiben.
-    # Bei Bedarf manuell reaktivieren: build() direkt aufrufen.
-    print("build-handbuch.py ist STILLGELEGT - DEV-handbuch.html ist die SoT. Kein Lauf.")
+    # DISABLED (project owner decision 2026-06-24): The DEV handbook
+    # solution/src/WebResources/jbe_/handbuch.html is the source of truth.
+    # The pandoc generator diverges by ~1791 lines (different handbook) and is
+    # NO LONGER run in the idempotency pass, to avoid overwriting the DEV state.
+    # Reactivate manually if needed: call build() directly.
+    print("build-handbuch.py is DISABLED - DEV handbuch.html is the SoT. No run.")
     import sys
     sys.exit(0)
-    build()  # noqa: stillgelegt
+    build()  # noqa: disabled

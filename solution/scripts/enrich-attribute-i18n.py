@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Reichert alle jbe_* Custom-Attribute in den Entity.xml-Dateien an:
-  - Setzt displaynames (1031 + 1033) exakt nach Mapping
-  - Setzt Descriptions (1031 + 1033) exakt nach Mapping
-Idempotent: mehrfaches Ausfuehren aendert nichts mehr.
+Enriches all jbe_* custom attributes in the Entity.xml files:
+  - Sets displaynames (1031 + 1033) exactly per mapping
+  - Sets Descriptions (1031 + 1033) exactly per mapping
+Idempotent: repeated runs change nothing further.
 """
 import re
 import sys
@@ -202,11 +202,11 @@ MAPPING = {
                            "Zugehöriges Testfall-Ergebnis (Parent-Lookup).",
                            "Associated test run result (parent lookup)."),
 
-    # Gemeinsam genutzte Namen
-    # (jbe_name wird pro Entity unterschiedlich beschrieben, daher oben je einzeln)
+    # Shared names
+    # (jbe_name is described differently per entity, hence listed individually above)
 }
 
-# Sonder-Override pro Entity fuer jbe_name und jbe_testid (Description variiert)
+# Special per-entity override for jbe_name and jbe_testid (description varies)
 OVERRIDE_BY_ENTITY = {
     "jbe_testrun": {
         "jbe_name": ("Name", "Name",
@@ -228,21 +228,21 @@ OVERRIDE_BY_ENTITY = {
     },
 }
 
-# Reihenfolge: Descriptions nach displaynames, vor dem schliessenden </attribute>
-# Wir verwenden Regex auf Block-Ebene. Robust, weil die Pfad-Struktur sehr regelmaessig ist.
+# Order: Descriptions after displaynames, before the closing </attribute>
+# We use a block-level regex. Robust because the path structure is very regular.
 
 DISPLAYNAMES_RE = re.compile(
     r'(<displaynames>)(\s*<displayname[^/]*/>\s*)+(</displaynames>)',
     re.DOTALL)
-# Matcht einen kompletten <Descriptions>-Block INKL. führender Newline+Einrückung.
-# Non-greedy ohne [^>] -> robust gegen '>' im Description-Text. Mehrere Treffer (FB-51-Dubletten)
-# werden so sauber inkl. ihrer Zeile entfernt; danach wird genau ein Block neu gesetzt.
+# Matches a complete <Descriptions> block INCL. leading newline + indentation.
+# Non-greedy without [^>] -> robust against '>' in the description text. Multiple matches (FB-51 duplicates)
+# are removed cleanly incl. their line; afterwards exactly one block is set anew.
 DESCRIPTIONS_RE = re.compile(
     r'\n[ ]*<Descriptions>.*?</Descriptions>',
     re.DOTALL)
 
 def build_displaynames_block(de, en):
-    # kein fuehrendes Indent - der Match-Anker sitzt schon am eingerueckten <displaynames>
+    # no leading indent - the match anchor already sits at the indented <displaynames>
     return ("<displaynames>\n"
             f"            <displayname description=\"{de}\" languagecode=\"1031\" />\n"
             f"            <displayname description=\"{en}\" languagecode=\"1033\" />\n"
@@ -257,9 +257,9 @@ def build_descriptions_block(de, en):
 ATTRIBUTE_BLOCK_RE = re.compile(r'<attribute\b[^>]*>.*?</attribute>', re.DOTALL)
 
 def dedup_descriptions(text):
-    """FB-51: Reduziert pro <attribute> mehrere <Descriptions>-Container auf den ersten.
-    Wirkt generisch auf ALLE Attribute, auch System-Attribute (statecode/statuscode), die
-    nicht im MAPPING stehen und vom Mapping-Pfad daher nicht angefasst werden."""
+    """FB-51: Reduces multiple <Descriptions> containers per <attribute> to the first one.
+    Works generically on ALL attributes, including system attributes (statecode/statuscode) that
+    are not in MAPPING and therefore are not touched by the mapping path."""
     def fix_attr(am):
         seen = [0]
         def repl(dm):
@@ -275,38 +275,38 @@ def process_entity(entity_dir):
         return
     text = xml_path.read_text(encoding="utf-8")
 
-    # Iteriere ueber alle <attribute PhysicalName="jbe_..."> Bloecke
+    # Iterate over all <attribute PhysicalName="jbe_..."> blocks
     attr_pat = re.compile(
         r'(<attribute PhysicalName="(jbe_\w+)">)(.*?)(</attribute>)',
         re.DOTALL)
 
     def replace_attr(m):
         header, physname, body, footer = m.group(1), m.group(2), m.group(3), m.group(4)
-        # LogicalName aus Body (immer lowercase)
+        # LogicalName from body (always lowercase)
         lm = re.search(r'<LogicalName>(jbe_\w+)</LogicalName>', body)
         if not lm:
             return m.group(0)
         logical = lm.group(1)
 
-        # Mapping holen: erst per-entity override, dann global
+        # Get mapping: per-entity override first, then global
         entry = None
         if entity_name in OVERRIDE_BY_ENTITY and logical in OVERRIDE_BY_ENTITY[entity_name]:
             entry = OVERRIDE_BY_ENTITY[entity_name][logical]
         elif logical in MAPPING:
             entry = MAPPING[logical]
         else:
-            # Kein Mapping -> unveraendert
+            # No mapping -> unchanged
             return m.group(0)
 
         de_label, en_label, de_desc, en_desc = entry
 
-        # displaynames ersetzen (Block existiert immer)
+        # replace displaynames (block always exists)
         new_dn = build_displaynames_block(de_label, en_label)
         new_body, n_dn = DISPLAYNAMES_RE.subn(new_dn, body)
 
-        # Descriptions: ALLE existierenden Blöcke entfernen (Dedup gegen FB-51-Mehrfach-Container),
-        # dann genau einen direkt nach dem displaynames-Block setzen. Lambda-Replacement, damit
-        # Sonderzeichen im Description-Text nicht als Backreference interpretiert werden.
+        # Descriptions: remove ALL existing blocks (dedup against FB-51 multi-container),
+        # then set exactly one directly after the displaynames block. Lambda replacement so that
+        # special characters in the description text are not interpreted as a backreference.
         new_desc = build_descriptions_block(de_desc, en_desc)
         new_body = DESCRIPTIONS_RE.sub('', new_body)
         new_body = re.sub(
@@ -317,17 +317,17 @@ def process_entity(entity_dir):
         return header + new_body + footer
 
     new_text, n = attr_pat.subn(replace_attr, text)
-    new_text = dedup_descriptions(new_text)  # FB-51: generischer Dedup über alle Attribute
+    new_text = dedup_descriptions(new_text)  # FB-51: generic dedup across all attributes
     if new_text != text:
         xml_path.write_text(new_text, encoding="utf-8")
-        # Zaehle aktualisierte Attribute grob: Differenz in den Descriptions-Bloecken
-        print(f"  [{entity_name}] aktualisiert")
+        # Rough count of updated attributes: difference in the Descriptions blocks
+        print(f"  [{entity_name}] updated")
     else:
-        print(f"  [{entity_name}] unveraendert")
+        print(f"  [{entity_name}] unchanged")
 
 def main():
     if not ROOT.exists():
-        print(f"ROOT nicht gefunden: {ROOT}", file=sys.stderr)
+        print(f"ROOT not found: {ROOT}", file=sys.stderr)
         sys.exit(1)
     for d in sorted(ROOT.iterdir()):
         if d.is_dir() and d.name.startswith("jbe_"):
