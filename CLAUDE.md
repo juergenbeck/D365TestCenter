@@ -6,7 +6,7 @@ Architecture, decisions, reviews, and skills live in the separate **D365TestCent
 ## Workspace Reference
 
 Full collaboration rules, architecture docs, session state, and skills are in:
-`C:\Users\Juerg\source\repos\D365TestCenter-Workspace\`
+`C:\Users\Juerg\Source\repo\D365TestCenter-Workspace\`
 
 At session start, always read the Workspace's `CLAUDE.md` and `ZUSAMMENARBEIT.md` first.
 
