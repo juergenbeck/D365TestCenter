@@ -368,6 +368,42 @@ public sealed class TestStep
     [JsonProperty("top")]
     public int? Top { get; set; }
 
+    // ── WaitForAsyncCompletion (ADR 2026-06-28) ──────────────────────────────
+
+    /// <summary>
+    /// WaitForAsyncCompletion: Alias-Namen der Records, deren ausgelöste async-Plugin-Jobs
+    /// (asyncoperation) abgewartet werden. Leer/null -> alle bisher im Test registrierten
+    /// Records. Korrelation läuft über regardingobjectid (Plattform-Befund LM DEV 2026-06-28:
+    /// primaryentitytype ist bei Plugin-Jobs leer, correlationid bündelt eine fachliche Kette
+    /// nicht zuverlässig).
+    /// </summary>
+    [JsonProperty("aliases")]
+    public List<string>? Aliases { get; set; }
+
+    /// <summary>
+    /// WaitForAsyncCompletion: Stabilitätsfenster — Quiescence wird erst nach so vielen
+    /// aufeinanderfolgenden Polls ohne offenen Job gemeldet. Überbrückt die Inter-Wellen-Lücke
+    /// nicht-atomarer Ketten (gegen Falsch-Grün). Default 3.
+    /// </summary>
+    [JsonProperty("stableChecks")]
+    public int? StableChecks { get; set; }
+
+    /// <summary>
+    /// WaitForAsyncCompletion: Anlauf in ms, bevor das Stabilitätsfenster zu zählen beginnt
+    /// (gibt den ausgelösten Jobs Zeit, als statecode=0 in der Queue zu erscheinen). Default 2000.
+    /// </summary>
+    [JsonProperty("initialWaitMs")]
+    public int? InitialWaitMs { get; set; }
+
+    /// <summary>
+    /// WaitForAsyncCompletion: Rückblick-Fenster in Sekunden. Gezählt werden offene async-Jobs mit
+    /// createdon >= (jetzt - lookbackSeconds). Da der Step direkt nach der Trigger-Operation steht,
+    /// fängt ein kleiner Wert (Default 20) die ausgelöste Kette inkl. Folge-Jobs auf erzeugten
+    /// Records; im seriellen Lauf bleiben ältere Jobs vorheriger Tests außen vor.
+    /// </summary>
+    [JsonProperty("lookbackSeconds")]
+    public int? LookbackSeconds { get; set; }
+
     // ── Negative-Path-Tests (expectFailure / expectException) ──
 
     /// <summary>

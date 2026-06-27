@@ -377,6 +377,9 @@ public static class Program
             // Records (für den sync-zephyr-Audit-Kommentar). Die Plugin-Pfade nicht
             // (Sandbox-Wächter-Regel).
             orchestrator.CaptureRecordNames = true;
+            // ADR 2026-06-28: der headless CLI-Pfad hat kein 2-min-Sandbox-Limit und darf den
+            // async-Job-Quiescence-Wait (WaitForAsyncCompletion) ausführen. Plugin-Pfade skippen.
+            orchestrator.AllowAsyncOperationPolling = true;
 
             var result = orchestrator.RunNewTestRun(filter, keepRecords);
 

@@ -139,6 +139,124 @@ public sealed class GenericRecordWaiter
     }
 
     /// <summary>
+    /// Async-Job-Quiescence-Wait (ADR 2026-06-28, WaitForAsyncCompletion). Polls the
+    /// asyncoperation queue until NO open/running job (statecode 0/1/2) created since
+    /// <paramref name="windowStartUtc"/> remains — across <paramref name="stableChecks"/>
+    /// consecutive polls (stability window that bridges the inter-wave gap of non-atomic
+    /// chains, guarding against a premature "done").
+    ///
+    /// Correlation is primarily a TIME WINDOW (createdon >= windowStartUtc), not a fixed
+    /// regardingobjectid set: a chain continues on records the plugin CREATES (umsatzplan,
+    /// rollup/actioncard follow-ups) whose ids the test cannot know up front, so a fixed regobj
+    /// set can miss a later wave and report a false quiescence (verified LM DEV 2026-06-28, see
+    /// korrelation-zeitfenster-statt-regobj.md). In the serial CLI run no other test triggers
+    /// jobs concurrently, so createdon>=windowStart captures exactly this test's jobs; queued
+    /// jobs of prior tests have createdon<windowStart and are ignored. statecode IN (0,1,2)
+    /// because successful jobs are retained only briefly while open ones stay visible.
+    /// </summary>
+    /// <param name="windowStartUtc">Only jobs created at or after this UTC instant count. The
+    /// step sets it to (now - lookback) right before polling, spanning the just-triggered chain.</param>
+    /// <param name="regardingIds">Optional extra narrowing: if non-empty, only jobs whose
+    /// regardingobjectid is in this set count. Null/empty -> pure time window.</param>
+    /// <param name="timeoutSeconds">GENEROUS safety ceiling against hangs, NOT a rate value.
+    /// Exceeded -> false (step error).</param>
+    /// <param name="stableChecks">Consecutive empty polls required for quiescence. Default 3.</param>
+    /// <param name="initialWaitMs">Run-up before the window starts counting, so jobs can appear
+    /// in the queue first. Default 2000.</param>
+    /// <returns>true once quiescent, false on timeout.</returns>
+    public bool WaitForAsyncQuiescence(
+        IOrganizationService service,
+        DateTime windowStartUtc,
+        ICollection<Guid>? regardingIds = null,
+        int timeoutSeconds = 240,
+        int pollingIntervalMs = 2000,
+        int stableChecks = 3,
+        int initialWaitMs = 2000,
+        Action<string>? log = null)
+    {
+        if (stableChecks < 1) stableChecks = 1;
+
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        // Run-up: give the triggered jobs time to appear as statecode=0 (Ready) in the queue
+        // before the stability window counts. Otherwise a too-early empty poll reports a
+        // false quiescence.
+        if (initialWaitMs > 0) Thread.Sleep(initialWaitMs);
+
+        var consecutiveEmpty = 0;
+        while (DateTime.UtcNow < deadline)
+        {
+            var open = CountOpenAsyncOperations(service, windowStartUtc, regardingIds);
+            if (open == 0)
+            {
+                consecutiveEmpty++;
+                if (consecutiveEmpty >= stableChecks)
+                {
+                    log?.Invoke($"WaitForAsyncCompletion: Quiescence erreicht ({stableChecks} stabile Polls ohne offenen Job).");
+                    return true;
+                }
+            }
+            else
+            {
+                if (consecutiveEmpty > 0)
+                    log?.Invoke($"WaitForAsyncCompletion: {open} offene(r) async-Job(s), Stabilitätsfenster zurückgesetzt.");
+                consecutiveEmpty = 0;
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForAsyncCompletion: Timeout ({timeoutSeconds}s) — async-Jobs nicht zur Ruhe gekommen.");
+        return false;
+    }
+
+    /// <summary>
+    /// Counts open asyncoperation jobs (statecode 0/1/2) created since windowStartUtc, optionally
+    /// narrowed to a regardingobjectid set. Count-only (no column fetch); TopCount=1 suffices
+    /// because the quiescence decision only needs "are there open jobs" (0 or >0).
+    /// </summary>
+    private static int CountOpenAsyncOperations(
+        IOrganizationService service, DateTime windowStartUtc, ICollection<Guid>? regardingIds)
+    {
+        var query = BuildOpenAsyncOperationsQuery(windowStartUtc, regardingIds);
+        var results = service.RetrieveMultiple(query);
+        return results.Entities.Count;
+    }
+
+    /// <summary>
+    /// Builds the QueryExpression for open async jobs: asyncoperation, statecode IN (0,1,2)
+    /// (open/running), createdon >= windowStartUtc (this test's wave in a serial run), optionally
+    /// regardingobjectid IN {ids}. Count-only ColumnSet, TopCount=1. Static + public for unit testing.
+    /// </summary>
+    public static QueryExpression BuildOpenAsyncOperationsQuery(
+        DateTime windowStartUtc, ICollection<Guid>? regardingIds = null)
+    {
+        var query = new QueryExpression("asyncoperation")
+        {
+            ColumnSet = new ColumnSet(),   // count-only: primary key only
+            TopCount = 1                    // existence is enough for the quiescence decision
+        };
+
+        // statecode 0 Ready / 1 Suspended / 2 Locked = open/running (3 Completed = done).
+        query.Criteria.AddCondition("statecode", ConditionOperator.In, 0, 1, 2);
+
+        // Time window: only this test's jobs (serial run). Queued jobs of prior tests have
+        // createdon < windowStartUtc and are correctly ignored.
+        query.Criteria.AddCondition("createdon", ConditionOperator.OnOrAfter, windowStartUtc);
+
+        // Optional narrowing to specific trigger/context records.
+        if (regardingIds != null && regardingIds.Count > 0)
+        {
+            var ids = new object[regardingIds.Count];
+            var i = 0;
+            foreach (var id in regardingIds) ids[i++] = id;
+            query.Criteria.AddCondition("regardingobjectid", ConditionOperator.In, ids);
+        }
+
+        return query;
+    }
+
+    /// <summary>
     /// Builds a QueryExpression from a list of FilterConditions.
     /// </summary>
     /// <param name="orderBy">Optional comma-separated order expression, OData style

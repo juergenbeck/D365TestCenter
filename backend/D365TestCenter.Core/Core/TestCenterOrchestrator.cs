@@ -145,6 +145,13 @@ public sealed class TestCenterOrchestrator
     public bool CaptureRecordNames { get; set; }
 
     /// <summary>
+    /// ADR 2026-06-28: an den TestRunner durchgereicht. Nur der headless CLI-run-Pfad setzt das
+    /// auf true (erlaubt den async-Job-Quiescence-Wait WaitForAsyncCompletion). Die
+    /// Sandbox-Pfade lassen es false -> der Step wird dort geskippt (2-min-Limit). Default false.
+    /// </summary>
+    public bool AllowAsyncOperationPolling { get; set; }
+
+    /// <summary>
     /// Führt einen kompletten Testlauf aus: Legt einen TestRun-Record an,
     /// lädt Tests, führt sie aus, schreibt Ergebnisse.
     ///
@@ -290,7 +297,8 @@ public sealed class TestCenterOrchestrator
         var runner = new TestRunner(_service, _browser)
         {
             KeepRecords = keepRecords,
-            CaptureRecordNames = CaptureRecordNames
+            CaptureRecordNames = CaptureRecordNames,
+            AllowAsyncOperationPolling = AllowAsyncOperationPolling
         };
 
         // Live-Progress pro Testfall: Konsolen-/fulllog-Zeile plus leichtgewichtiges

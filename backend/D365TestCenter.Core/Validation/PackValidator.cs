@@ -56,6 +56,7 @@ public sealed class PackValidator : IPackValidator
         "FindRecord",
         "WaitForFieldValue",
         "WaitForNotExists",
+        "WaitForAsyncCompletion",
         "AssertEnvironment",
         "Assert",
         "Wait",

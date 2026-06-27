@@ -49,6 +49,15 @@ public sealed class TestRunner
     public bool CaptureRecordNames { get; set; }
 
     /// <summary>
+    /// ADR 2026-06-28: erlaubt den async-Job-Quiescence-Wait (WaitForAsyncCompletion).
+    /// NUR der headless CLI-Pfad setzt das auf true. In allen Plugin-Sandbox-Pfaden
+    /// (Custom-API-Sync, Async-CRUD-Trigger, ChunkWorker) bleibt es false, weil ein langer
+    /// asyncoperation-Poll das 2-min-Sandbox-Limit sprengt — der Step wird dort sauber
+    /// geskippt (analog BrowserAction, das _browser==null prüft). Default false.
+    /// </summary>
+    public bool AllowAsyncOperationPolling { get; set; }
+
+    /// <summary>
     /// Wird nach jedem Testfall aufgerufen (index, total, result).
     /// Ermöglicht Fortschritts-Updates im TestRun-Record.
     /// </summary>
@@ -867,6 +876,25 @@ public sealed class TestRunner
                         StepWaitForNotExists(step, ctx);
                         break;
 
+                    case "WAITFORASYNCCOMPLETION":
+                        // ADR 2026-06-28: async-Job-Quiescence-Wait, CLI-/Core-only. Im
+                        // Plugin-Sandbox-Pfad (Custom-API-Sync, Async-CRUD-Trigger, ChunkWorker)
+                        // würde ein langer asyncoperation-Poll das 2-min-Sandbox-Limit sprengen ->
+                        // sauber skippen (kein Failure), analog BrowserAction. Nur der headless
+                        // CLI-Pfad setzt AllowAsyncOperationPolling=true.
+                        if (!AllowAsyncOperationPolling)
+                        {
+                            Log("      SKIP WaitForAsyncCompletion: nur im CLI-Pfad unterstützt " +
+                                "(asyncoperation-Poll im Plugin-Sandbox-2-min-Limit ungeeignet). Siehe ADR 2026-06-28.");
+                            stepResult.Message = "WaitForAsyncCompletion skipped: CLI-only (asyncoperation polling " +
+                                "is not safe in the Plugin-Sandbox path). Use the CLI path for async-chain tests.";
+                        }
+                        else
+                        {
+                            StepWaitForAsyncCompletion(step, ctx);
+                        }
+                        break;
+
                     case "ASSERTENVIRONMENT":
                         StepAssertEnvironment(step, ctx);
                         break;
@@ -1327,6 +1355,58 @@ public sealed class TestRunner
         if (step.MaxDurationMs.HasValue && sw.ElapsedMilliseconds > step.MaxDurationMs.Value)
             throw new InvalidOperationException(
                 $"WaitForNotExists [{entityName}]: Dauer {sw.ElapsedMilliseconds}ms überschreitet maxDurationMs={step.MaxDurationMs.Value}ms");
+    }
+
+    /// <summary>
+    /// WaitForAsyncCompletion (ADR 2026-06-28): wartet deterministisch auf das ENDE der durch
+    /// vorherige Steps ausgelösten async-Plugin-Kette (asyncoperation-Quiescence), statt auf einen
+    /// geratenen fachlichen Endzustand mit festem Timeout. Korreliert über regardingobjectid auf
+    /// die Test-Records. Nur im CLI-Pfad erreichbar (Dispatch skippt sonst).
+    /// </summary>
+    private void StepWaitForAsyncCompletion(TestStep step, TestContext ctx)
+    {
+        // Optionale Verengung auf bestimmte Trigger-Records (regardingobjectid). Default: keine
+        // Verengung -> reines Zeitfenster, das auch Folge-Jobs auf vom Plugin ERZEUGTEN Records
+        // (umsatzplan, rollup/actioncard) fängt. Ein festes regobj-Set würde solche Wellen
+        // verpassen und Falsch-Grün melden (Befund LM DEV 2026-06-28).
+        List<Guid>? regardingIds = null;
+        if (step.Aliases != null && step.Aliases.Count > 0)
+        {
+            regardingIds = new List<Guid>();
+            foreach (var a in step.Aliases)
+                regardingIds.Add(ctx.ResolveRecordId(a));  // wirft bei Alias-Tippfehler -> kein Falsch-Grün
+        }
+        else if (!string.IsNullOrWhiteSpace(step.Alias))
+        {
+            regardingIds = new List<Guid> { ctx.ResolveRecordId(step.Alias) };
+        }
+
+        var lookbackSeconds = step.LookbackSeconds ?? 20;
+        var stableChecks = step.StableChecks ?? 3;
+        var initialWaitMs = step.InitialWaitMs ?? 2000;
+        // Zeitfenster-Start: jetzt minus Rückblick. Der Step steht direkt nach der Trigger-Operation,
+        // der Rückblick fängt die ausgelöste Kette sicher.
+        var windowStartUtc = DateTime.UtcNow.AddSeconds(-lookbackSeconds);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        var quiescent = _recordWaiter.WaitForAsyncQuiescence(
+            _service, windowStartUtc, regardingIds,
+            step.TimeoutSeconds, step.PollingIntervalMs, stableChecks, initialWaitMs,
+            msg => Log($"      {msg}"));
+
+        sw.Stop();
+
+        if (!quiescent)
+            throw new InvalidOperationException(
+                $"WaitForAsyncCompletion: async-Jobs nicht zur Ruhe gekommen (Timeout: {step.TimeoutSeconds}s).");
+
+        var scope = regardingIds != null ? $"{regardingIds.Count} Record(s) + Zeitfenster" : "Zeitfenster";
+        Log($"      WaitForAsyncCompletion: Quiescence nach {sw.ElapsedMilliseconds}ms ({scope}, lookback {lookbackSeconds}s)");
+
+        // Performance-Assertion (analog StepWaitForRecord)
+        if (step.MaxDurationMs.HasValue && sw.ElapsedMilliseconds > step.MaxDurationMs.Value)
+            throw new InvalidOperationException(
+                $"WaitForAsyncCompletion: Dauer {sw.ElapsedMilliseconds}ms überschreitet maxDurationMs={step.MaxDurationMs.Value}ms");
     }
 
     // ================================================================
