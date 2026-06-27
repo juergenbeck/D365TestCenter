@@ -1164,7 +1164,7 @@ public sealed class TestRunner
         var alias = step.Alias ?? $"record_{step.StepNumber}";
 
         var entity = new Entity(entityName);
-        ApplyFields(entity, resolvedFields);
+        ApplyFields(entity, resolvedFields, ctx);
 
         var id = _service.Create(entity);
         ctx.RegisterRecord(alias, entityName, id);
@@ -1193,7 +1193,7 @@ public sealed class TestRunner
         var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
 
         var entity = new Entity(entityName, recordId);
-        ApplyFields(entity, resolvedFields, allowNull: true);
+        ApplyFields(entity, resolvedFields, ctx, allowNull: true);
         _service.Update(entity);
         Log($"      UpdateRecord [{alias}] in '{entityName}': {recordId}");
     }
@@ -1894,7 +1894,7 @@ public sealed class TestRunner
         switch (step.Action.ToUpperInvariant())
         {
             case "CREATERECORD":
-                req = BuildCreateRequestFromStep(step, resolvedFields);
+                req = BuildCreateRequestFromStep(step, ctx, resolvedFields);
                 break;
             case "UPDATERECORD":
                 req = BuildUpdateRequestFromStep(step, ctx, resolvedFields);
@@ -2015,11 +2015,11 @@ public sealed class TestRunner
         return new InvalidPluginExecutionException(msg);
     }
 
-    private CreateRequest BuildCreateRequestFromStep(TestStep step, Dictionary<string, object?> resolvedFields)
+    private CreateRequest BuildCreateRequestFromStep(TestStep step, TestContext ctx, Dictionary<string, object?> resolvedFields)
     {
         var entityName = ResolveEntity(step.Entity);
         var entity = new Entity(entityName);
-        ApplyFields(entity, resolvedFields);
+        ApplyFields(entity, resolvedFields, ctx);
         return new CreateRequest { Target = entity };
     }
 
@@ -2036,7 +2036,7 @@ public sealed class TestRunner
         var entityName = step.Entity != null ? ResolveEntity(step.Entity) : ctx.ResolveRecordEntityName(alias);
 
         var entity = new Entity(entityName, recordId);
-        ApplyFields(entity, resolvedFields, allowNull: true);
+        ApplyFields(entity, resolvedFields, ctx, allowNull: true);
         return new UpdateRequest { Target = entity };
     }
 
@@ -2375,7 +2375,7 @@ public sealed class TestRunner
 
     private void ApplyFields(
         Entity entity, Dictionary<string, object?> fields,
-        bool allowNull = false)
+        TestContext ctx, bool allowNull = false)
     {
         foreach (var kvp in fields)
         {
@@ -2398,6 +2398,17 @@ public sealed class TestRunner
                         new EntityReference(bindResult.Value.TargetEntity, bindResult.Value.Id);
                     continue;
                 }
+            }
+
+            // ADR-2026-06-27: $type-Feldwerte (EntityCollection/Entity/EntityReference/
+            // OptionSetValue/Money/Guid) über den rekursiven ResolveTypedValue auflösen —
+            // derselbe Resolver wie im ExecuteRequest-Pfad. Schaltet activityparty-Partylists
+            // (z.B. "requiredattendees") und andere Deep-Insert-Strukturen im CreateRecord/
+            // UpdateRecord frei. Ein roher Wert ohne $type fällt unverändert in ConvertValue.
+            if (value is JObject typedObj && typedObj.ContainsKey("$type"))
+            {
+                entity[key] = ResolveTypedValue(typedObj, ctx);
+                continue;
             }
 
             var converted = ConvertValue(value);
