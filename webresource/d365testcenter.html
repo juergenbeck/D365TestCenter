@@ -1587,7 +1587,7 @@ const CONFIG = {
     version: "5.3.21",                 // Bei jedem Deployment hochzählen
     buildDate: "2026-06-21",          // Build-Date
     prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
-    optionSetBase: 100570000,         // Basis für OptionSet-Werte (Publisher 10571 * 10000)
+    optionSetBase: 105710000,         // Basis für OptionSet-Werte (Publisher 10571 * 10000)
     entities: {
         testcase: "jbe_testcase",
         testrun: "jbe_testrun",
@@ -1663,54 +1663,51 @@ const CONFIG = {
     //   "https://dev.azure.com/org/project/_workitems/edit/{key}"
     storyLinkPattern: "",
     // Governance configuration: customize for your plugin chain.
-    // These settings control the async polling and auto-date-fields behavior.
+    //
+    // NOTE (since v5.3 / ADR-0003): this block does NOT drive the live run.
+    // The engine runs in the C# Core and sources governance entities/fields from
+    // the config profile (ITestCenterConfig: StandardCrmConfig has no governance,
+    // MarkantConfig carries the Q2 markant_fg_* names). This HTML block only takes
+    // effect in Demo mode (MockAPI), in Visual Editor field suggestions, and in the
+    // governance result display. Keep the values below in sync with MarkantConfig.cs.
     governance: {
         // The entity that receives source data (e.g. ContactSource)
-        sourceEntity: "markant_cdhcontactsource",
-        sourceEntitySet: "markant_cdhcontactsources",
-        // The logging entity that the governance plugin writes to
-        loggingEntity: "markant_cdh_loggings",
-        loggingEntitySet: "markant_cdh_loggings",
-        // Primary key and display name fields on the logging entity
-        loggingPk: "markant_cdh_loggingid",
-        loggingName: "markant_name",
-        loggingDiagnostics: "markant_diagonstics_text",
-        // Lookup from source entity to contact
-        contactLookup: "markant_contactid",
-        contactLookupOdata: "_markant_contactid_value",
-        // Lookup from logging to source
-        sourceIdLookup: "_markant_cdhcontactsourceid_value",
-        // Default Custom API for governance trigger
+        sourceEntity: "markant_fg_contactsource",
+        sourceEntitySet: "markant_fg_contactsources",
+        // The logging entity set the governance plugin writes to (OData query name)
+        loggingEntitySet: "markant_fg_loggings",
+        // Default Custom API for governance trigger.
+        // Deleted on 2026-04-21, redeployment pending (CDH-20260421-001); kept as a
+        // reference name to mirror MarkantConfig.GovernanceApiName.
         governanceApi: "markant_RunFieldGovernanceForContact",
-        // Source system field on source entity
-        sourceSystemField: "markant_sourcesystem",
+        // Source system field on source entity (Q2)
+        sourceSystemField: "markant_fg_sourcesystemcode",
         // ExternalId field (used for timestamp guard detection)
         externalIdField: "markant_externalid",
         // Fields that trigger auto-date-setting (governance timestamp mappings).
-        // Key = value field, Value = corresponding _modifiedondate timestamp field.
+        // Key = value field, Value = corresponding _modifiedon timestamp field.
+        // Q2 pattern: markant_<field>_modifiedon (only exception: markant_raw_external_status).
+        // Mirrors MarkantConfig.AutoDateFields (authoritative source).
         autoDateFields: {
-            "markant_firstname":               "markant_cdh_firstname_modifiedondate",
-            "markant_lastname":                "markant_cdh_lastname_modifiedondate",
-            "markant_emailaddress1":           "markant_cdh_emailaddress1_modifiedondate",
-            "markant_gendercode":              "markant_cdh_gendercode_modifiedondate",
-            "markant_jobtitle":                "markant_cdh_markant_jobtitle_modifiedondate",
-            "markant_telephone1":              "markant_cdh_markant_telephone1_modifiedondate",
-            "markant_telephone2":              "markant_cdh_markant_telephone2_modifiedondate",
-            "markant_mobilephone":             "markant_cdh_markant_mobilephone_modifiedondate",
-            "markant_middlename":              "markant_cdh_middlename_modifiedondate",
-            "markant_academictitle":           "markant_cdh_academictitle_modifiedondate",
-            "markant_parentcustomerid":        "markant_cdh_parentcustomerid_modifiedondate",
-            "markant_communicationlanguageid": "markant_cdh_communicationlanguageid_modifiedon"
-        },
-        // Lookup fields that need _value suffix in OData queries
-        lookupFields: [
-            "markant_contactid",
-            "markant_parentcustomerid"
-        ],
-        // Polling settings
-        pollingIntervalMs: 2000,
-        pollingTimeoutMs: 120000,
-        pollingInitialDelayMs: 1500
+            "markant_firstname": "markant_firstname_modifiedon",
+            "markant_lastname": "markant_lastname_modifiedon",
+            "markant_middlename": "markant_middlename_modifiedon",
+            "markant_academictitle": "markant_academictitle_modifiedon",
+            "markant_emailaddress1": "markant_emailaddress1_modifiedon",
+            "markant_telephone1": "markant_telephone1_modifiedon",
+            "markant_telephone2": "markant_telephone2_modifiedon",
+            "markant_mobilephone": "markant_mobilephone_modifiedon",
+            "markant_jobtitle": "markant_jobtitle_modifiedon",
+            "markant_gender": "markant_gender_modifiedon",
+            "markant_parentcustomerid": "markant_parentcustomerid_modifiedon",
+            "markant_externalid": "markant_externalid_modifiedon",
+            "markant_communicationlanguage": "markant_communicationlanguage_modifiedon",
+            "markant_kin": "markant_kin_modifiedon",
+            "markant_is_markant_employee": "markant_is_markant_employee_modifiedon",
+            "markant_ismarkantemployee": "markant_ismarkantemployee_modifiedon",
+            "markant_external_status_aggregation": "markant_external_status_aggregation_modifiedon",
+            "markant_raw_external_status": "markant_raw_external_status_modifiedondate"
+        }
     }
 };
 
@@ -2148,7 +2145,7 @@ const PackLoader = {
     _optionSetMap: null,
     _getOptionSetMap() {
         if (this._optionSetMap) return this._optionSetMap;
-        const base = CONFIG.optionSetBase; // 100570000
+        const base = CONFIG.optionSetBase; // 105710000
         if (base === 100000000) { this._optionSetMap = {}; return this._optionSetMap; }
         const m = {};
         for (let i = 0; i <= 8; i++) m[100000000 + i] = base + i;
