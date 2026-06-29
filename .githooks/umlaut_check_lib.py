@@ -19,17 +19,18 @@ Bezeichner, Slug-/Domain-/Dateinamen-Tokens).
 import re
 
 # >>> AUTO-GENERATED:UMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
-UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|ausfueh|ausgefuehrt|begruend|behoerde|durchfueh|einfueh|enthaelt|faerb|fluess|frueher|fuehl|fuer|gefaehr|gehoer|geloescht|gemaess|groesse|gruen|haengt|haetten|haeufig|hoechste|hoehe|hoehere|jaehrli|klaer|koennen|kuendig|laenge|laeuft|loesch|loeschen|loest|loesung|moegli|muessen|naechst|naehe|naemli|noetig|praezis|pruef|qualitaet|regulaer|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|spaet|stoer|tatsaechli|ueberall|uebernom|uebersetz|uebersich|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|verfueg|verknuepf|wuensch|wuerd|zaehl|zoeger|gueltig|hoeh|ueberarb|primaer|ueberwach|hoeh|ueberarb|primaer|ueberwach|bestaet|bestaet|tragfaeh|tragfaeh|bruecke|bruecke|aender|fuehr|fuehr|hoer|loes|loes|gewaehr|gewaehr|erwaeg|erwaeg|genueg|fueg|schuetz|stuetz|nuetz|ueben|uebung|uebt|schaeft|gruend|gruend|haeng|haelt|faehig|faehig|staend|faehr|haendl|haendl|glaeub|glaeub|itaet|taetig|taetig|moegli|gueltig|gaeng|gaeng|faell|faell|traeg|schlaeg|saetz|saetz|laeuf|laeuf|kraeft|kraeft|maerkt|maerkt|gebuehr|gebuehr|waehr|waehr|waerts|fuellen|fuellt|fuellung|fuellung|buerg|buerg|praesent|praesent|praemi|praezis|taegli|woechentl|frueh|frueh|staerk|staerk|schwaech|schwaech|kuerz|kuerz|ruehr|rueck|rueck|schoepf|schraenk|knuepf|schluess|schluess|erloes|erloes|zueg|zueg|wuensch|beduerf|beduerf|luecke|luecke|verstaend|verstaend|erlaeuter|erlaeuter|vorraet|vorraet|gefaess|gefaess|gebaeud|gebaeud|gelaend|gelaend|zaehler|zaehl|schaed|naehe|aeusser|ueber|ueber)\w*\b|\b\w*(schliess|fliess|geniess)\w*\b'
+UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|ausfueh|ausgefuehrt|beduerf|begruend|behoerde|bestaet|bruecke|buerg|durchfueh|einfueh|enthaelt|erlaeuter|erloes|erwaeg|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengt|haetten|haeufig|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|klaer|knuepf|koennen|kraeft|kuendig|kuenft|kuerz|laenge|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|moegli|muessen|naechst|naehe|naemli|noetig|nuetz|praemi|praesent|praezis|primaer|pruef|qualitaet|regulaer|rueck|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|stuetz|taegli|taetig|tatsaechli|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|uebernom|uebersetz|uebersich|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|verfueg|verknuepf|verstaend|vorraet|waehr|waerts|woechentl|wuensch|wuerd|zaehl|zaehler|zoeger|zueg)\w*\b|\b\w*(fliess|geniess|schliess)\w*\b'
 
 # Block 2: alleinstehende Woerter
 UMLAUT_BLOCK2 = r'\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b'
 
 UMLAUT_WHITELIST = [
-    '22_qualitaets', 'abhaengig_von', 'Address', 'ausfuehrungs_modi', 'Azure', 'bfuer', 'Class', 'Daemon',
-    'Failed', 'Issue', 'kongruent', 'Layer', 'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2',
-    'Payload', 'Pipeline', 'Plugin', 'Process', 'pruef', 'Queue', 'Rescue', 'Sandbox',
-    'Schedule', 'Session', 'Source', 'Stage', 'Status', 'Trace', 'Ueber', 'User',
-    'Value', 'vorausschauend',
+    '22_qualitaets', 'abhaengig_von', 'Address', 'ausfuehrungs_modi', 'Azure', 'bfuer',
+    'Class', 'Daemon', 'Failed', 'Issue', 'kongruent', 'Layer',
+    'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2', 'Payload', 'Pipeline',
+    'Plugin', 'Process', 'pruef', 'Queue', 'rescue', 'Sandbox',
+    'Schedule', 'Session', 'Source', 'Stage', 'Status', 'Trace',
+    'Ueber', 'User', 'Value', 'vorausschauend',
 ]
 # <<< AUTO-GENERATED:UMLAUT-DATA
 
