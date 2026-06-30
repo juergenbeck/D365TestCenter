@@ -101,39 +101,9 @@ public static class TestCaseLoader
         return testCases;
     }
 
+    // Filter-Logik zentral in TestCaseFilter (ADR 2026-06-30 1432): Negation
+    // (Exclude per !-Präfix) + geteilte Wildcard-/tag:/category:-Semantik. Der
+    // Coordinator-Pfad erbt damit dieselbe Filter-Mächtigkeit wie der CLI-Pfad.
     private static List<TestCase> ApplyFilter(List<TestCase> testCases, string? filter)
-    {
-        var enabled = testCases.Where(tc => tc.Enabled);
-
-        if (string.IsNullOrWhiteSpace(filter) || filter!.Trim() == "*")
-            return enabled.ToList();
-
-        var trimmed = filter.Trim();
-
-        if (trimmed.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
-        {
-            var tag = trimmed.Substring("tag:".Length).Trim();
-            return enabled.Where(tc => tc.Tags.Any(t =>
-                t.Equals(tag, StringComparison.OrdinalIgnoreCase))).ToList();
-        }
-
-        if (trimmed.StartsWith("category:", StringComparison.OrdinalIgnoreCase))
-        {
-            var cat = trimmed.Substring("category:".Length).Trim();
-            return enabled.Where(tc => (tc.Category ?? "")
-                .Equals(cat, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-
-        var ids = trimmed.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim()).ToArray();
-        return enabled.Where(tc => ids.Any(p => MatchesPattern(tc.Id, p))).ToList();
-    }
-
-    private static bool MatchesPattern(string testId, string pattern)
-    {
-        if (pattern.EndsWith("*"))
-            return testId.StartsWith(pattern.Substring(0, pattern.Length - 1),
-                StringComparison.OrdinalIgnoreCase);
-        return testId.Equals(pattern, StringComparison.OrdinalIgnoreCase);
-    }
+        => TestCaseFilter.Apply(testCases, filter);
 }

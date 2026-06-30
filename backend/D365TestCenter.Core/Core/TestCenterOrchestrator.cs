@@ -519,83 +519,9 @@ public sealed class TestCenterOrchestrator
     /// </summary>
     public static List<TestCase> ApplyFilter(List<TestCase> testCases, string? filter)
     {
-        var enabled = testCases.Where(tc => tc.Enabled);
-
-        if (string.IsNullOrWhiteSpace(filter) || filter.Trim() == "*")
-            return enabled.ToList();
-
-        var trimmed = filter.Trim();
-
-        if (trimmed.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
-        {
-            var tag = trimmed.Substring("tag:".Length).Trim();
-            return enabled
-                .Where(tc => tc.Tags.Any(t =>
-                    t.Equals(tag, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-        }
-
-        if (trimmed.StartsWith("category:", StringComparison.OrdinalIgnoreCase))
-        {
-            var category = trimmed.Substring("category:".Length).Trim();
-            return enabled
-                .Where(tc => (tc.Category ?? "")
-                    .Equals(category, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        // Komma-getrennte IDs mit Wildcard-Support: "MGR*,STD01,TC03"
-        var patterns = trimmed
-            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .Where(s => s.Length > 0)
-            .ToArray();
-
-        return enabled.Where(tc => MatchesAny(tc.Id, patterns)).ToList();
-    }
-
-    private static bool MatchesAny(string testId, string[] patterns)
-    {
-        foreach (var pattern in patterns)
-        {
-            if (pattern.Contains("*"))
-            {
-                // Wildcard-Match: Prefix/Suffix
-                if (pattern.StartsWith("*") && pattern.EndsWith("*"))
-                {
-                    var mid = pattern.Trim('*');
-                    if (testId.IndexOf(mid, StringComparison.OrdinalIgnoreCase) >= 0)
-                        return true;
-                }
-                else if (pattern.StartsWith("*"))
-                {
-                    var suffix = pattern.TrimStart('*');
-                    if (testId.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                        return true;
-                }
-                else if (pattern.EndsWith("*"))
-                {
-                    var prefix = pattern.TrimEnd('*');
-                    if (testId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                        return true;
-                }
-                else
-                {
-                    // *mitte*
-                    var parts = pattern.Split('*');
-                    if (parts.Length == 2
-                        && testId.StartsWith(parts[0], StringComparison.OrdinalIgnoreCase)
-                        && testId.EndsWith(parts[1], StringComparison.OrdinalIgnoreCase))
-                        return true;
-                }
-            }
-            else
-            {
-                if (testId.Equals(pattern, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-        }
-        return false;
+        // Delegation an die zentrale Filter-Logik (ADR 2026-06-30 1432): Negation
+        // (Exclude per !-Präfix) + geteilte Wildcard-/tag:/category:-Semantik.
+        return TestCaseFilter.Apply(testCases, filter);
     }
 
     // ════════════════════════════════════════════════════════════════════

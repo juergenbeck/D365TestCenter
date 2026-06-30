@@ -170,4 +170,97 @@ public class TestCenterOrchestratorTests
         var result = TestCenterOrchestrator.ApplyFilter(cases, "  MGR01  ,  MGR02  ");
         Assert.Equal(2, result.Count);
     }
+
+    // ── Negation / Exclude (ADR 2026-06-30 1432) ──────────────────────────────
+
+    [Fact]
+    public void ApplyFilter_StarMinusOne_ReturnsAllButExcluded()
+    {
+        var cases = MakeCases("MGR01", "MGR02", "STD01");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "*,!MGR02");
+        Assert.Equal(2, result.Count);
+        Assert.DoesNotContain(result, tc => tc.Id == "MGR02");
+    }
+
+    [Fact]
+    public void ApplyFilter_OnlyExclude_ImpliesAllAsBaseSet()
+    {
+        var cases = MakeCases("MGR01", "MGR02", "STD01");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "!MGR02");
+        Assert.Equal(2, result.Count);
+        Assert.DoesNotContain(result, tc => tc.Id == "MGR02");
+    }
+
+    [Fact]
+    public void ApplyFilter_ExcludeByTag_RemovesTagged()
+    {
+        var cases = MakeCases("MGR01", "MGR02", "STD01");
+        cases[1].Tags = new List<string> { "known-flaky" };
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "!tag:known-flaky");
+        Assert.Equal(2, result.Count);
+        Assert.DoesNotContain(result, tc => tc.Id == "MGR02");
+    }
+
+    [Fact]
+    public void ApplyFilter_ExcludeByCategory_RemovesMatching()
+    {
+        var cases = MakeCases("MGR01", "STD01");
+        cases[0].Category = "Flaky";
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "!category:Flaky");
+        Assert.Single(result);
+        Assert.Equal("STD01", result[0].Id);
+    }
+
+    [Fact]
+    public void ApplyFilter_IncludeWildcardMinusOne_NarrowsThenExcludes()
+    {
+        var cases = MakeCases("LSP01", "LSP-STATUS-01", "LST-STATUS-01", "MGR01");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "LSP*,!LSP-STATUS-01");
+        Assert.Single(result);
+        Assert.Equal("LSP01", result[0].Id);
+    }
+
+    [Fact]
+    public void ApplyFilter_Exclude_CaseInsensitive()
+    {
+        var cases = MakeCases("MGR01", "MGR02");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "*,!mgr02");
+        Assert.Single(result);
+        Assert.Equal("MGR01", result[0].Id);
+    }
+
+    [Fact]
+    public void ApplyFilter_Exclude_WithWhitespace_Trimmed()
+    {
+        var cases = MakeCases("MGR01", "MGR02");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "* , ! MGR02");
+        Assert.Single(result);
+        Assert.Equal("MGR01", result[0].Id);
+    }
+
+    [Fact]
+    public void ApplyFilter_MultipleExcludes_RemovesAll()
+    {
+        var cases = MakeCases("MGR01", "MGR02", "MGR03", "STD01");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "MGR*,!MGR01,!MGR03");
+        Assert.Single(result);
+        Assert.Equal("MGR02", result[0].Id);
+    }
+
+    [Fact]
+    public void ApplyFilter_ExcludeMatchesNothing_BaseSetUnchanged()
+    {
+        var cases = MakeCases("MGR01", "MGR02");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "*,!XYZ99");
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public void ApplyFilter_ExcludeWildcard_RemovesPrefixGroup()
+    {
+        var cases = MakeCases("MGR01", "MGR02", "STD01");
+        var result = TestCenterOrchestrator.ApplyFilter(cases, "*,!MGR*");
+        Assert.Single(result);
+        Assert.Equal("STD01", result[0].Id);
+    }
 }
