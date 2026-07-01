@@ -1178,11 +1178,17 @@ $entityIcons = @(
 
 foreach ($ei in $entityIcons) {
     Write-Host "  [ICON] $($ei.Entity) -> $($ei.Icon)" -ForegroundColor Green
-    $iconBody = @{ IconVectorName = $ei.Icon } | ConvertTo-Json
-    Invoke-RestMethod -Method Patch `
+    # EntityMetadata unterstützt kein PATCH (Fehler 0x80060888). Korrekt: volle
+    # Definition holen, IconVectorName setzen, per PUT zurück - MSCRM.MergeLabels
+    # erhält dabei die lokalisierten Labels.
+    $def = Invoke-RestMethod -Method Get `
+        -Uri "$baseUrl/EntityDefinitions(LogicalName='$($ei.Entity)')" -Headers $headers
+    $def.IconVectorName = $ei.Icon
+    $defJson = $def | ConvertTo-Json -Depth 20
+    Invoke-RestMethod -Method Put `
         -Uri "$baseUrl/EntityDefinitions(LogicalName='$($ei.Entity)')" `
-        -Headers ($headers + @{ "If-Match" = "*" }) `
-        -Body $iconBody | Out-Null
+        -Headers ($headers + @{ "MSCRM.MergeLabels" = "true" }) `
+        -Body ([System.Text.Encoding]::UTF8.GetBytes($defJson)) | Out-Null
 }
 
 # App-Icon: appmodule.webresourceid auf die App-SVG-Web-Resource setzen

@@ -16,15 +16,23 @@
     -AllowNonDev und Freigabe).
 
 .EXAMPLE
+    # Mit Client-Credentials (Service Principal)
     ./Deploy-Icons.ps1 -OrgUrl "https://markant-dev.crm4.dynamics.com" `
         -ClientId $cid -ClientSecret $secret -TenantId $tid
+
+.EXAMPLE
+    # Mit fertigem Bearer-Token (z.B. aus einem Token-Vault)
+    ./Deploy-Icons.ps1 -OrgUrl "https://markant-dev.crm4.dynamics.com" -BearerToken $tok
 #>
 
 param(
     [Parameter(Mandatory)] [string]$OrgUrl,
-    [Parameter(Mandatory)] [string]$ClientId,
-    [Parameter(Mandatory)] [string]$ClientSecret,
-    [Parameter(Mandatory)] [string]$TenantId,
+    # Auth-Variante A: fertiger Bearer-Token (z.B. aus einem Token-Vault)
+    [string]$BearerToken,
+    # Auth-Variante B: Client-Credentials (Service Principal)
+    [string]$ClientId,
+    [string]$ClientSecret,
+    [string]$TenantId,
     [switch]$AllowNonDev,
     [string]$SolutionName = "D365TestCenter"
 )
@@ -36,10 +44,16 @@ if ($OrgUrl -notmatch "-dev\." -and -not $AllowNonDev) {
 }
 $OrgUrl = $OrgUrl.TrimEnd("/")
 
-# -- Auth (Client-Credentials) ---------------------------------------------
-$tok = (Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" `
-    -Method Post -Body @{ grant_type="client_credentials"; client_id=$ClientId; client_secret=$ClientSecret; scope="$OrgUrl/.default" } `
-    -ContentType "application/x-www-form-urlencoded").access_token
+# -- Auth: Bearer-Token direkt ODER Client-Credentials ----------------------
+if ($BearerToken) {
+    $tok = $BearerToken
+} elseif ($ClientId -and $ClientSecret -and $TenantId) {
+    $tok = (Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" `
+        -Method Post -Body @{ grant_type="client_credentials"; client_id=$ClientId; client_secret=$ClientSecret; scope="$OrgUrl/.default" } `
+        -ContentType "application/x-www-form-urlencoded").access_token
+} else {
+    throw "Auth fehlt: entweder -BearerToken ODER -ClientId/-ClientSecret/-TenantId angeben."
+}
 
 $readH  = @{ Authorization="Bearer $tok"; Accept="application/json" }
 $writeH = @{ Authorization="Bearer $tok"; "Content-Type"="application/json; charset=utf-8"; "OData-MaxVersion"="4.0"; "OData-Version"="4.0" }
@@ -107,9 +121,14 @@ $entityIcons = @(
 
 foreach ($ei in $entityIcons) {
     Write-Host "  [ICON] $($ei.Entity) -> $($ei.Icon)" -ForegroundColor Green
-    $body = @{ IconVectorName = $ei.Icon } | ConvertTo-Json
-    Invoke-RestMethod -Method Patch -Uri "$base/EntityDefinitions(LogicalName='$($ei.Entity)')" `
-        -Headers ($writeH + @{ "If-Match" = "*" }) -Body $body | Out-Null
+    # EntityMetadata unterstützt kein PATCH (Fehler 0x80060888). Korrekt: volle
+    # Definition holen, IconVectorName setzen, per PUT zurück - MSCRM.MergeLabels
+    # erhält dabei die lokalisierten Labels.
+    $def = Invoke-RestMethod -Method Get -Uri "$base/EntityDefinitions(LogicalName='$($ei.Entity)')" -Headers $readH
+    $def.IconVectorName = $ei.Icon
+    $defJson = $def | ConvertTo-Json -Depth 20
+    Invoke-RestMethod -Method Put -Uri "$base/EntityDefinitions(LogicalName='$($ei.Entity)')" `
+        -Headers ($writeH + @{ "MSCRM.MergeLabels" = "true" }) -Body ([System.Text.Encoding]::UTF8.GetBytes($defJson)) | Out-Null
 }
 
 # ==========================================================================
