@@ -241,7 +241,7 @@ if ($existingPub.value.Count -gt 0) {
 
     $pubBody = @{
         uniquename             = $pubUnique
-        friendlyname           = "Juergen Beck"
+        friendlyname           = "Jürgen Beck"
         description            = "Publisher for the Integration Test Center product"
         customizationprefix    = $pubPrefix
         customizationoptionvalueprefix = $optPrefix
