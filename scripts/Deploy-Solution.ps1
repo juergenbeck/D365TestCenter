@@ -309,7 +309,7 @@ $optionSets = @(
         Desc = "Status of a test run"
         Options = @(
             (New-OptionItem ($ovBase + 0) "Ausstehend" "Pending"),
-            (New-OptionItem ($ovBase + 1) "Laeuft" "Running"),
+            (New-OptionItem ($ovBase + 1) "Läuft" "Running"),
             (New-OptionItem ($ovBase + 2) "Abgeschlossen" "Completed"),
             (New-OptionItem ($ovBase + 3) "Fehler" "Error")
         )
@@ -673,7 +673,7 @@ New-Attribute "jbe_testrun" @{
 New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.MemoAttributeMetadata"
     SchemaName    = "jbe_FullLog"
-    DisplayName   = New-Label "Vollstaendiges Log" "Full Log"
+    DisplayName   = New-Label "Vollständiges Log" "Full Log"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 1048576
     Format        = "TextArea"
@@ -929,7 +929,7 @@ New-Attribute "jbe_teststep" @{
 New-Attribute "jbe_teststep" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
     SchemaName    = "jbe_ActualValue"
-    DisplayName   = New-Label "Tatsaechlicher Wert" "Actual Value"
+    DisplayName   = New-Label "Tatsächlicher Wert" "Actual Value"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 2000
     FormatName    = @{ Value = "Text" }
