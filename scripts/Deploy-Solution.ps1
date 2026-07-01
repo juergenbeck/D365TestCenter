@@ -1097,6 +1097,13 @@ $webResources = @(
     @{ Name = "jbe_/packs/standard.json";          File = "packs/standard.json";         Type = 3  }
     @{ Name = "jbe_/packs/demo-standard.json";     File = "packs/demo-standard.json";    Type = 3  }
     @{ Name = "jbe_/packs/empty.json";              File = "packs/empty.json";            Type = 3  }
+    # App- und Tabellen-Icons (SVG-Vektorgrafiken)
+    @{ Name = "jbe_/icons/app.svg";                 File = "icons/app.svg";               Type = 11 } # 11 = SVG
+    @{ Name = "jbe_/icons/testcase.svg";            File = "icons/testcase.svg";          Type = 11 }
+    @{ Name = "jbe_/icons/teststep.svg";            File = "icons/teststep.svg";          Type = 11 }
+    @{ Name = "jbe_/icons/testchunk.svg";           File = "icons/testchunk.svg";         Type = 11 }
+    @{ Name = "jbe_/icons/testrun.svg";             File = "icons/testrun.svg";           Type = 11 }
+    @{ Name = "jbe_/icons/testrunresult.svg";       File = "icons/testrunresult.svg";     Type = 11 }
     # Add custom packs here:
     # @{ Name = "jbe_/packs/custom-pack.json";     File = "packs/custom-pack.json";    Type = 3  }
 )
@@ -1147,6 +1154,61 @@ foreach ($wr in $webResources) {
         $wrId = $resp.webresourceid
         Write-Host "    Erstellt: $($wr.Name) ($wrId)" -ForegroundColor Green
     }
+}
+
+# ==========================================================================
+#  STEP 9b: ICONS VERDRAHTEN (App-Icon + Tabellen-Vektor-Icons)
+# ==========================================================================
+#  Muss NACH dem Web-Resource-Upload (Schritt 9) und VOR dem Publish (Schritt 10)
+#  laufen, weil die Icons als Web Resources existieren müssen, bevor sie
+#  referenziert werden. Idempotent: setzt nur die Icon-Referenzen, PublishAllXml
+#  in Schritt 10 macht sie sichtbar.
+
+Write-Host ""
+Write-Host "-- Schritt 9b/10: Icons verdrahten --------------------------------" -ForegroundColor Cyan
+
+# Tabellen-Icons: IconVectorName auf die jeweilige SVG-Web-Resource setzen
+$entityIcons = @(
+    @{ Entity = "jbe_testcase";      Icon = "jbe_/icons/testcase.svg"      }
+    @{ Entity = "jbe_teststep";      Icon = "jbe_/icons/teststep.svg"      }
+    @{ Entity = "jbe_testchunk";     Icon = "jbe_/icons/testchunk.svg"     }
+    @{ Entity = "jbe_testrun";       Icon = "jbe_/icons/testrun.svg"       }
+    @{ Entity = "jbe_testrunresult"; Icon = "jbe_/icons/testrunresult.svg" }
+)
+
+foreach ($ei in $entityIcons) {
+    Write-Host "  [ICON] $($ei.Entity) -> $($ei.Icon)" -ForegroundColor Green
+    $iconBody = @{ IconVectorName = $ei.Icon } | ConvertTo-Json
+    Invoke-RestMethod -Method Patch `
+        -Uri "$baseUrl/EntityDefinitions(LogicalName='$($ei.Entity)')" `
+        -Headers ($headers + @{ "If-Match" = "*" }) `
+        -Body $iconBody | Out-Null
+}
+
+# App-Icon: appmodule.webresourceid auf die App-SVG-Web-Resource setzen
+$appIconWr = Invoke-RestMethod -Method Get `
+    -Uri "$baseUrl/webresourceset?`$filter=name eq 'jbe_/icons/app.svg'&`$select=webresourceid" `
+    -Headers $headers
+
+if ($appIconWr.value.Count -gt 0) {
+    $appIconId = $appIconWr.value[0].webresourceid
+    $appMod = Invoke-RestMethod -Method Get `
+        -Uri "$baseUrl/appmodules?`$filter=uniquename eq 'jbe_D365TestCenter'&`$select=appmoduleid" `
+        -Headers $headers
+
+    if ($appMod.value.Count -gt 0) {
+        $appModuleId = $appMod.value[0].appmoduleid
+        Write-Host "  [ICON] App jbe_D365TestCenter -> jbe_/icons/app.svg" -ForegroundColor Green
+        $appIconBody = @{ webresourceid = $appIconId } | ConvertTo-Json
+        Invoke-RestMethod -Method Patch `
+            -Uri "$baseUrl/appmodules($appModuleId)" `
+            -Headers ($headers + @{ "If-Match" = "*" }) `
+            -Body $appIconBody | Out-Null
+    } else {
+        Write-Host "  [WARN] App jbe_D365TestCenter nicht gefunden - App-Icon übersprungen" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  [WARN] Web Resource jbe_/icons/app.svg nicht gefunden - App-Icon übersprungen" -ForegroundColor Yellow
 }
 
 # ==========================================================================
