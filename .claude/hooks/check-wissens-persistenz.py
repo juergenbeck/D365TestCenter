@@ -29,6 +29,11 @@ from datetime import datetime, timezone
 
 try:
     sys.stdout.reconfigure(encoding='utf-8')
+    # stdin ebenfalls auf UTF-8: Claude Code liefert das Hook-JSON als UTF-8-Bytes; ohne
+    # reconfigure liest Python auf Windows cp1252 und Umlaut-Prompts ('übergabe schreiben')
+    # kommen als Mojibake an, der Handover-Regex greift dann nicht (empirisch belegt
+    # 2026-07-04 im Repo DeutscheBahn, ADR-2026-07-04-0840 dort).
+    sys.stdin.reconfigure(encoding='utf-8', errors='replace')
 except Exception:
     pass
 
