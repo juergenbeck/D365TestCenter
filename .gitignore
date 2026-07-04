@@ -43,6 +43,7 @@ solution/out/
 .claude/scheduled_tasks.lock
 .claude/worktrees/
 .claude/settings.local.json
+.claude/handover-drafts/
 
 # Claude-interne Wegwerf-Artefakte nicht versionieren (Auto-Sync-Schutz).
 __pycache__/
