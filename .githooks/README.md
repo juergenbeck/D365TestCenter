@@ -4,9 +4,10 @@ Dieses Verzeichnis enthält Git-Hooks, die ins Repo eingecheckt sind und
 für alle Clones gelten — sofern `core.hooksPath` einmalig auf `.githooks`
 gesetzt wird.
 
-> **Hinweis:** Die `commit-msg`-Datei und (in kit=python-Repos) die
-> Datei-Inhalt-Kette (`umlaut_check_lib.py`, `pre-commit.py`, `pre-commit`,
-> `.claude/hooks/check-umlaute.py`) werden automatisch aus der zentralen
+> **Hinweis:** Die `commit-msg`-Datei und (in kit=python-Repos) die generierte
+> Hook-Kette (`umlaut_check_lib.py`, `pre-commit.py`, `pre-commit`,
+> `.claude/hooks/check-umlaute.py`, `.claude/hooks/check-tool-umlaute.py`) werden
+> automatisch aus der zentralen
 > Trigger-Liste `~/.claude/umlaute-triggers.json` plus den Templates unter
 > `~/.claude/hook-templates/python/` generiert. Manuelle Änderungen werden
 > beim nächsten Sync überschrieben. Pflege ausschließlich über

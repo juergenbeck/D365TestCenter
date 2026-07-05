@@ -14,8 +14,10 @@ sind deutsche Prosa-UI und unterliegen derselben Umlaut-/Typografie-Pflicht, lie
 aber an allen Datei-Hooks vorbei (kein file_path, kein Write-Match). Gerade im
 strukturierten Tool-Input ist der ASCII-Reflex besonders stark.
 
-AUTO-GENERATED-Datenregion aus ~/.claude/umlaute-triggers.json (gerendert vom Sync
-~/.claude/scripts/Sync-UmlautTriggers.ps1, Funktion Ensure-ToolHookData).
+AUTO-GENERATED aus ~/.claude/hook-templates/python/check-tool-umlaute.py (ausgerollt
+von ~/.claude/scripts/Sync-UmlautTriggers.ps1; die Datenregion zwischen den
+AUTO-GENERATED-Markern wird aus ~/.claude/umlaute-triggers.json gerendert). Nicht von
+Hand editieren, sondern am Template ändern und neu syncen.
 Plattformneutral (macOS / Windows / Linux); kein Laufzeit-Zugriff auf die JSON, weil
 die mobil nicht vorhanden ist - das volle Pattern wird eingebettet (kein
 .githooks-Pfad-Risiko: ein PreToolUse-Hook, der am Pfad scheitert, blockt sonst in
@@ -27,8 +29,9 @@ Geprüft werden nur Frei-Text-Felder:
 (Technische Felder wie taskId, status, owner, metadata bleiben unberührt.)
 
 Tool-Texte sind reine deutsche UI-Prosa, daher die VOLLE Stamm-Liste (alle Blöcke),
-nicht die Datei-Inhalt-Teilmenge. Matching ist case-sensitiv (wie das volle
-commit-msg-Pattern). Backtick-Zitate und Whitelist-Tokens werden vorab neutralisiert.
+nicht die Datei-Inhalt-Teilmenge. Matching ist case-insensitiv (wie das volle
+commit-msg-Pattern), fängt also auch Satzanfang-Großschreibung (Fuer, Waere, ...)
+und Vollcaps. Backtick-Zitate und Whitelist-Tokens werden vorab neutralisiert.
 Jedes Feld wird einzeln geprüft, damit ein Code-Fence in einem Feld das Fence-Tracking
 eines anderen nicht verfälscht.
 
@@ -43,14 +46,17 @@ import sys
 TYPO = {"–": "Halbgeviertstrich", "—": "Geviertstrich", "→": "Pfeil"}
 
 # >>> AUTO-GENERATED:TOOLUMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
-TOOL_TRIGGERS = r'\b\w*(abhaengig|abloest|aehn|aelter|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|Anhaenge|aufgeloest|Aufloesung|aufraeum|ausfueh|ausgefuehrt|Auszueg|begruend|behoerde|beruecks|Bezueg|Domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|Empfaenger|enthaelt|Entitaeten|Ergaen|ergaenz|erschoepft|erwaehnt|Fachdomaene|faerb|fluess|frueher|fuehl|fuehrend|fuer|gefaehr|gefaehrli|gehoer|geloescht|gemaess|gepruft|Geschaeft|groesse|gruen|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoehe|hoehere|jaehrli|klaer|Klaerung|koennen|koennte|Konformitaet|kuendig|kuenftig|laenge|laengst|laesst|laeuft|Loesch|loeschen|loest|Loesung|Massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetzlich|Plaene|praezis|pruef|pruefen|Pruefung|qualitaet|raeum|Realitaet|regulaer|Ruecksprach|ruestung|saemtli|schaed|schluessel|schoen|spaet|spaeter|Spaet|stoer|Stoerung|Strassen|Stueck|tatsaechli|Tonalitaet|ueberall|Ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|Uebersicht|ueberspring|uebertra|ueblich|uebrig|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaendlich|verstaerken|Verstoss|vollstaendig|Vorgaenger|vorschlaeg|waehl|waere|wuensch|wuerd|zaehl|zoeger|zurueck|zusaetz|zusaetzli|gueltig|hoeh|ueberarb|primaer|ueberwach|Hoeh|Ueberarb|Primaer|Ueberwach|bestaet|Bestaet|tragfaeh|Tragfaeh|bruecke|Bruecke|aender|fuehr|Fuehr|hoer|loes|Loes|gewaehr|Gewaehr|erwaeg|Erwaeg|genueg|fueg|schuetz|stuetz|nuetz|ueben|Uebung|uebt|schaeft|gruend|Gruend|haeng|haelt|faehig|Faehig|staend|faehr|haendl|Haendl|glaeub|Glaeub|itaet|taetig|Taetig|Moegli|Gueltig|gaeng|Gaeng|faell|Faell|traeg|schlaeg|saetz|Saetz|laeuf|Laeuf|kraeft|Kraeft|maerkt|Maerkt|gebuehr|Gebuehr|waehr|Waehr|waerts|fuellen|fuellt|fuellung|Fuellung|buerg|Buerg|praesent|Praesent|Praemi|Praezis|taegli|woechentl|frueh|Frueh|staerk|Staerk|schwaech|Schwaech|kuerz|Kuerz|ruehr|rueck|Rueck|schoepf|schraenk|knuepf|schluess|Schluess|erloes|Erloes|zueg|Zueg|Wuensch|beduerf|Beduerf|luecke|Luecke|verstaend|Verstaend|erlaeuter|Erlaeuter|vorraet|Vorraet|gefaess|Gefaess|gebaeud|Gebaeud|gelaend|Gelaend|zaehler|Zaehl|Schaed|Naehe|Aeusser|Ueberschr|ueber|Ueber)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|aussen|ausserhalb|aussert|aussreich|einschliess|gemaess|groess|gross|grosse|grosser|grosses|Hauptstrass|laess|maess|massnahm|regelmaess|schliess|verschliess|verstoess|begruess|Begruess|fliess|geniess|reiss|heiss|giess|schiess|beiss|massg)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|Hauptstrasse)\b'
-TOOL_WHITELIST = r'\b(22_qualitaets|abhaengig_von|Address|ausfuehrungs_modi|Azure|bfuer|Class|Daemon|Failed|Issue|kongruent|Layer|loesch|over|overall|ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2|Payload|Pipeline|Plugin|Process|pruef|Queue|Rescue|Sandbox|Schedule|Session|Source|Stage|Status|Trace|Ueber|User|Value|vorausschauend)\b'
+TOOL_TRIGGERS = r'\b\w*(abhaengig|abloest|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|anhaenge|aufgeloest|aufloesung|aufraeum|ausfueh|ausgefuehrt|auszueg|beduerf|begruend|behoerde|beruecks|bestaet|bezueg|bruecke|buerg|domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|empfaenger|enthaelt|entitaeten|ergaen|ergaenz|erlaeuter|erloes|erschoepft|erwaeg|erwaehnt|fachdomaene|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuehrend|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaehrli|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gepruft|geschaeft|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|klaer|klaerung|knuepf|koennen|koennte|konformitaet|kraeft|kuendig|kuenft|kuenftig|kuerz|laenge|laengst|laesst|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetz|nuetzlich|plaene|praemi|praesent|praezis|primaer|pruef|pruefen|pruefung|qualitaet|raeum|realitaet|regulaer|rueck|ruecksprach|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|stoerung|strassen|stueck|stuetz|taegli|taetig|tatsaechli|tonalitaet|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|uebersicht|ueberspring|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaend|verstaendlich|verstaerken|verstoss|vollstaendig|vorgaenger|vorraet|vorschlaeg|waehl|waehr|waere|waerts|woechentl|wuensch|wuerd|zaehl|zaehler|zoeger|zueg|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|aussen|ausserhalb|aussert|aussreich|begruess|beiss|einschliess|fliess|gemaess|geniess|giess|groess|gross|grosse|grosser|grosses|hauptstrass|heiss|laess|maess|massg|massnahm|regelmaess|reiss|schiess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|hauptstrasse)\b'
+TOOL_WHITELIST = r'\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|process|pruef|queue|rescue|sandbox|schedule|session|source|stage|status|trace|ueber|user|value|vorausschauend)\b'
 # <<< AUTO-GENERATED:TOOLUMLAUT-DATA
 
-# Case-sensitiv wie der commit-msg-grep (grep -nE ohne -i): die Datenregion führt
-# Stämme bewusst in Original-Schreibweise (lowercase und Capitalized getrennt).
-_RE_TRIGGERS = re.compile(TOOL_TRIGGERS)
-_RE_WHITELIST = re.compile(TOOL_WHITELIST)
+# Case-insensitiv (wie der commit-msg-Hook, der auf einer lowercase-Kopie matcht,
+# und wie umlaut_check_lib.py mit re.IGNORECASE): die Datenregion führt reine
+# lowercase-Stämme, re.IGNORECASE deckt Groß-/Kleinschreibung ab. Die Whitelist
+# wird ebenfalls case-insensitiv neutralisiert, damit englische Fachbegriffe
+# (User, Status, Azure, ...) in jeder Schreibweise verschont bleiben.
+_RE_TRIGGERS = re.compile(TOOL_TRIGGERS, re.IGNORECASE)
+_RE_WHITELIST = re.compile(TOOL_WHITELIST, re.IGNORECASE)
 _RE_INLINE = re.compile(r'`[^`]*`')
 
 

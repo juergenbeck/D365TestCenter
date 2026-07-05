@@ -2,7 +2,7 @@
 #
 # commit-msg Hook — AUTO-GENERATED
 #
-# Quelle:    ~/.claude/umlaute-triggers.json (Version 2, Stand 2026-06-29)
+# Quelle:    ~/.claude/umlaute-triggers.json (Version 2, Stand 2026-07-05)
 # Generator: ~/.claude/scripts/Sync-UmlautTriggers.ps1
 # Manuelle Änderungen werden beim nächsten Sync überschrieben.
 #
@@ -28,18 +28,28 @@ fi
 # Pre-process:
 #   1. Backtick-Inline-Code rausstrippen (Zitate des Verstoß-Patterns erlaubt)
 #   2. Comment-Zeilen rausstrippen (git hängt diese an die Commit-Message an)
-#   3. Whitelist-Tokens neutralisieren, damit englische Fachbegriffe
-#      (User, Queue, Status, Plugin, ...) und Code-Bezeichner nicht falsch matchen
 STRIPPED=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
 
-WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|Address|ausfuehrungs_modi|Azure|bfuer|Class|Daemon|Failed|Issue|kongruent|Layer|loesch|over|overall|ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2|Payload|Pipeline|Plugin|Process|pruef|Queue|rescue|Sandbox|Schedule|Session|Source|Stage|Status|Trace|Ueber|User|Value|vorausschauend)\b'
+# Case-insensitiv OHNE nicht-portables Flag (BSD-sed/macOS kennt kein s///I, GNU-only):
+# auf einer ASCII-lowercase-Kopie matchen. tr 'A-Z' 'a-z' ist single-byte-safe, echte
+# Umlaut-Bytes (UTF-8, >127) bleiben unberührt; die ASCII-Surrogate sind ohnehin klein.
+# Trigger- und Whitelist-Regex werden vom Generator lowercase gerendert.
+STRIPPED_LC=$(printf '%s\n' "$STRIPPED" | tr 'A-Z' 'a-z')
+
+# Whitelist-Tokens neutralisieren, damit englische Fachbegriffe (User, Queue, Status,
+# Plugin, ...) und Code-Bezeichner nicht falsch matchen.
+WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|process|pruef|queue|rescue|sandbox|schedule|session|source|stage|status|trace|ueber|user|value|vorausschauend)\b'
 if [ -n "$WHITELIST_REGEX" ]; then
-    STRIPPED=$(echo "$STRIPPED" | sed -E "s/$WHITELIST_REGEX//g")
+    STRIPPED_LC=$(printf '%s\n' "$STRIPPED_LC" | sed -E "s/$WHITELIST_REGEX//g")
 fi
 
-TRIGGERS='\b\w*(abhaengig|abloest|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|Anhaenge|aufgeloest|Aufloesung|aufraeum|ausfueh|ausgefuehrt|Auszueg|beduerf|begruend|behoerde|beruecks|bestaet|Bezueg|bruecke|buerg|Domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|Empfaenger|enthaelt|Entitaeten|Ergaen|ergaenz|erlaeuter|erloes|erschoepft|erwaeg|erwaehnt|Fachdomaene|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuehrend|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaehrli|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gepruft|Geschaeft|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|klaer|Klaerung|knuepf|koennen|koennte|Konformitaet|kraeft|kuendig|kuenft|kuenftig|kuerz|laenge|laengst|laesst|laeuf|laeuft|loes|loesch|loeschen|loest|Loesung|luecke|maerkt|Massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetz|nuetzlich|Plaene|praemi|praesent|praezis|primaer|pruef|pruefen|Pruefung|qualitaet|raeum|Realitaet|regulaer|rueck|Ruecksprach|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|Stoerung|Strassen|Stueck|stuetz|taegli|taetig|tatsaechli|Tonalitaet|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|Ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|Uebersicht|ueberspring|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaend|verstaendlich|verstaerken|Verstoss|vollstaendig|Vorgaenger|vorraet|vorschlaeg|waehl|waehr|waere|waerts|woechentl|wuensch|wuerd|zaehl|zaehler|zoeger|zueg|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|ausserhalb|aussert|aussreich|einschliess|fliess|gemaess|geniess|groess|gross|grosse|grosser|grosses|Hauptstrass|laess|maess|massnahm|regelmaess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|Hauptstrasse)\b'
+TRIGGERS='\b\w*(abhaengig|abloest|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|anhaenge|aufgeloest|aufloesung|aufraeum|ausfueh|ausgefuehrt|auszueg|beduerf|begruend|behoerde|beruecks|bestaet|bezueg|bruecke|buerg|domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|empfaenger|enthaelt|entitaeten|ergaen|ergaenz|erlaeuter|erloes|erschoepft|erwaeg|erwaehnt|fachdomaene|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuehrend|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaehrli|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gepruft|geschaeft|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|klaer|klaerung|knuepf|koennen|koennte|konformitaet|kraeft|kuendig|kuenft|kuenftig|kuerz|laenge|laengst|laesst|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|noetig|nuetz|nuetzlich|plaene|praemi|praesent|praezis|primaer|pruef|pruefen|pruefung|qualitaet|raeum|realitaet|regulaer|rueck|ruecksprach|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|stoerung|strassen|stueck|stuetz|taegli|taetig|tatsaechli|tonalitaet|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|uebersicht|ueberspring|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaend|verstaendlich|verstaerken|verstoss|vollstaendig|vorgaenger|vorraet|vorschlaeg|waehl|waehr|waere|waerts|woechentl|wuensch|wuerd|zaehl|zaehler|zoeger|zueg|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|aussch|ausschliess|ausschliesslich|aussehen|aussen|ausserhalb|aussert|aussreich|begruess|beiss|einschliess|fliess|gemaess|geniess|giess|groess|gross|grosse|grosser|grosses|hauptstrass|heiss|laess|maess|massg|massnahm|regelmaess|reiss|schiess|schliess|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|hauptstrasse)\b'
 
-if HITS=$(echo "$STRIPPED" | grep -nE "$TRIGGERS"); then
+# Treffer-Zeilennummern auf der lowercase-Kopie ermitteln. tr/sed ändern keine
+# Zeilenzahl, daher sind die Nummern stabil und die Original-Zeilen (mit korrekter
+# Groß-/Kleinschreibung) werden zur Anzeige aus $STRIPPED geholt.
+HIT_LINES=$(printf '%s\n' "$STRIPPED_LC" | grep -nE "$TRIGGERS" | cut -d: -f1)
+if [ -n "$HIT_LINES" ]; then
     cat >&2 <<'EOF'
 
 ============================================================
@@ -52,7 +62,10 @@ müssen aber in Inline-Code-Backticks stehen (`ausserhalb`).
 
 Trefferzeilen (Backtick-Zitate und Whitelist-Tokens bereits ignoriert):
 EOF
-    echo "$HITS" >&2
+    printf '%s\n' "$HIT_LINES" | while IFS= read -r n; do
+        [ -n "$n" ] || continue
+        printf '%s:%s\n' "$n" "$(printf '%s\n' "$STRIPPED" | sed -n "${n}p")" >&2
+    done
     cat >&2 <<'EOF'
 
 Quelle der Trigger-Liste: ~/.claude/umlaute-triggers.json
