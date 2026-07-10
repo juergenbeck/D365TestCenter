@@ -59,6 +59,9 @@ _RE_TLD = re.compile(
 _RE_WWW = re.compile(r'www\.[a-z0-9-]', re.IGNORECASE)
 _RE_HANDLE = re.compile(r'^\W*@\w')
 
+# Test-IsJsonKey: umgebender Token ist ein JSON-Objekt-Schlüssel ("feldname":).
+_RE_JSON_KEY = re.compile(r'^"[^"]+"\s*:')
+
 
 def _strip_edges(token):
     # Rand-Zeichen abschneiden, die nicht Buchstabe/Ziffer/Underscore sind
@@ -115,6 +118,17 @@ def is_technical_token(token):
     return False
 
 
+def is_json_key(token):
+    """Umgebender Token ist ein JSON-Objekt-Schlüssel (`"feldname":`) und damit ein
+    technischer Bezeichner, laut CLAUDE.md von der Umlaut-Pflicht ausgenommen
+    (JSON-Felder). Kontext-sensitiv: greift nur beim Schlüssel selbst. Ein
+    String-WERT (`"...wort..."`, endet mit `"` bzw. `",`) oder ein Prosa-Vorkommen
+    bleibt geprüft. Der Token stammt aus _surrounding_token (an Whitespace getrennt)
+    und trägt den schließenden Quote plus Doppelpunkt: `"anhaenge":` bzw.
+    `"anhaenge":[`."""
+    return bool(_RE_JSON_KEY.match(token))
+
+
 def _surrounding_token(text, start, end):
     s = start
     while s > 0 and not text[s - 1].isspace():
@@ -148,7 +162,8 @@ def get_umlaut_violations(lines):
             if (val.lower() not in _WHITELIST_LOWER
                     and not is_code_identifier(val)
                     and not is_slug_token(tok)
-                    and not is_technical_token(tok)):
+                    and not is_technical_token(tok)
+                    and not is_json_key(tok)):
                 result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 1})
 
         for m in _RE_BLOCK2.finditer(clean):
@@ -156,7 +171,8 @@ def get_umlaut_violations(lines):
             tok = _surrounding_token(clean, m.start(), m.end())
             if (not is_code_identifier(val)
                     and not is_slug_token(tok)
-                    and not is_technical_token(tok)):
+                    and not is_technical_token(tok)
+                    and not is_json_key(tok)):
                 result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 2})
 
     return result
