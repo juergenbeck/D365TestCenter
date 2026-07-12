@@ -49,10 +49,16 @@ _RE_LOWER = re.compile(r'[a-zäöüß]')
 _RE_INNER_UPPER = re.compile(r'.[A-ZÄÖÜ]')
 _RE_UND_DIGIT = re.compile(r'[_0-9]')
 
-# Test-IsTechnicalToken: TLD-/Datei-Endungen (kein Buchstabe/Ziffer danach)
+# Test-IsTechnicalToken: TLD-/Datei-Endungen (kein Buchstabe/Ziffer danach).
+# Die letzte Gruppe sind Diagramm-Quellformate (drawio, mmd, mermaid, puml, plantuml,
+# vsdx), damit ein Dateiname wie deployment-pipeline-uebersicht.drawio nicht als
+# Prosa-Umlaut-Verstoß gewertet wird - Dateinamen dürfen laut Konvention ASCII-
+# Surrogate tragen. (.mxfile ist bewusst nicht dabei: das ist das XML-Wurzelelement
+# von draw.io-Dateien, keine reale Datei-Endung.)
 _RE_TLD = re.compile(
     r'\.(de|com|org|net|eu|io|info|gov|co|uk|at|ch|html?|php|aspx?|pdf|md|txt|json|ya?ml|csv|xml|'
-    r'ps[md]?1|sh|bat|cmd|jsx?|tsx?|py|css|scss|sql|png|jpe?g|gif|webp|svg|ico|mp[34]|mov|zip|docx?|xlsx?|pptx?)'
+    r'ps[md]?1|sh|bat|cmd|jsx?|tsx?|py|css|scss|sql|png|jpe?g|gif|webp|svg|ico|mp[34]|mov|zip|docx?|xlsx?|pptx?|'
+    r'drawio|mmd|mermaid|puml|plantuml|vsdx)'
     r'(?![0-9A-Za-zäöüßÄÖÜ])',
     re.IGNORECASE,
 )
