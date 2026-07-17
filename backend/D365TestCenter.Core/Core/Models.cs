@@ -225,6 +225,26 @@ public sealed class TestStep
     [JsonProperty("recordRef")]
     public string? RecordRef { get; set; }
 
+    /// <summary>
+    /// FindRecord/WaitForRecord: found record goes into the cleanup delete list.
+    /// Default false (a FOUND record is master data and must never be deleted).
+    /// Set true only when the found record was created SERVER-SIDE during this
+    /// run by the API under test (e.g. an invoice created by a custom API) —
+    /// then cleanup removes it and it cannot block the delete of its tracked
+    /// parent records (restrict-delete dependents).
+    /// </summary>
+    [JsonProperty("trackForCleanup")]
+    public bool TrackForCleanup { get; set; }
+
+    /// <summary>
+    /// TrackRecord: id of the known record to register for cleanup, placeholder-
+    /// resolvable (e.g. "{result.outputs.InvoiceId}"). Companion to
+    /// trackForCleanup for the case where the created id comes from a custom-API
+    /// output and no lookup query is needed.
+    /// </summary>
+    [JsonProperty("recordId")]
+    public string? RecordId { get; set; }
+
     [JsonProperty("filter")]
     [JsonConverter(typeof(FilterListConverter))]
     public List<FilterCondition>? Filter { get; set; }
@@ -623,7 +643,11 @@ public sealed class TestContext
     public void RegisterRecord(string alias, string entityName, Guid id, bool trackForCleanup = true)
     {
         Records[alias] = (entityName, id);
-        if (trackForCleanup)
+        // Dedup: derselbe Record darf nur EINMAL in der Löschliste stehen (z.B.
+        // TrackRecord auf einen bereits per CreateRecord getrackten Record) —
+        // sonst schlägt der zweite Delete im Cleanup mit 404 fehl und erzeugt
+        // eine falsche Cleanup-Warnung.
+        if (trackForCleanup && !CreatedEntities.Contains((entityName, id)))
             CreatedEntities.Add((entityName, id));
     }
 }
@@ -660,6 +684,15 @@ public sealed class TestRunResult
     /// </summary>
     [JsonProperty("skippedCount")]
     public int SkippedCount { get; set; }
+
+    /// <summary>
+    /// Sum of failed cleanup operations across all tests (see
+    /// <see cref="TestCaseResult.CleanupFailedCount"/>). Non-zero means test
+    /// data survived the run and needs manual cleanup — surfaced in the result
+    /// banner and the run summary, independent of the (green) outcomes.
+    /// </summary>
+    [JsonProperty("cleanupFailedCount")]
+    public int CleanupFailedCount { get; set; }
 
     [JsonProperty("results")]
     public List<TestCaseResult> Results { get; set; } = new();
@@ -752,6 +785,16 @@ public sealed class TestCaseResult
     /// </summary>
     [JsonProperty("trackedRecords")]
     public List<TrackedRecord> TrackedRecords { get; set; } = new();
+
+    /// <summary>
+    /// Number of failed cleanup operations of this test (record deletes plus
+    /// EnvVar restores). The outcome stays untouched (a green test does not turn
+    /// red because cleanup failed), but the run aggregates and reports this so
+    /// leftover test data (e.g. a restrict-delete-blocked account) is visible
+    /// instead of hiding in the step log.
+    /// </summary>
+    [JsonProperty("cleanupFailedCount")]
+    public int CleanupFailedCount { get; set; }
 }
 
 /// <summary>Pro TestCase getrackter Record für jbe_trackedrecords (B5).</summary>

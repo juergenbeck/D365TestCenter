@@ -239,6 +239,8 @@ public sealed class TestRunner
             case TestOutcome.Skipped: result.SkippedCount++; break;
         }
 
+        result.CleanupFailedCount += tcResult.CleanupFailedCount;
+
         OnTestCompleted?.Invoke(index, total, tcResult);
     }
 
@@ -868,6 +870,10 @@ public sealed class TestRunner
                         StepWaitForRecord(step, ctx);
                         break;
 
+                    case "TRACKRECORD":
+                        StepTrackRecord(step, ctx);
+                        break;
+
                     case "WAITFORFIELDVALUE":
                         StepWaitForFieldValue(step, ctx);
                         break;
@@ -1241,6 +1247,32 @@ public sealed class TestRunner
         Log($"      DeleteRecord [{alias}] in '{entityName}': {recordId}");
     }
 
+    /// <summary>
+    /// Registers a record whose id is already known (typically created SERVER-SIDE
+    /// by the API under test and returned as an output, e.g.
+    /// "{result.outputs.InvoiceId}") into the record registry AND the cleanup
+    /// delete list — companion to trackForCleanup on FindRecord/WaitForRecord for
+    /// the output-id case where no lookup query is needed. Without this, records
+    /// created by the tested API stay unknown to cleanup and can block the delete
+    /// of their tracked parent records (restrict-delete dependents).
+    /// </summary>
+    private void StepTrackRecord(TestStep step, TestContext ctx)
+    {
+        var entityName = ResolveEntity(step.Entity);
+        var raw = step.RecordId
+            ?? throw new InvalidOperationException("TrackRecord benötigt 'recordId'.");
+
+        var resolved = _placeholderEngine.Resolve(raw, ctx);
+        if (!Guid.TryParse(resolved, out var id))
+            throw new InvalidOperationException(
+                $"TrackRecord: 'recordId' ist keine GUID: '{raw}' -> '{resolved}'. " +
+                "Ein unaufgelöster Platzhalter oder Tippfehler würde sonst still nichts tracken.");
+
+        var alias = step.Alias ?? $"tracked_{step.StepNumber}";
+        ctx.RegisterRecord(alias, entityName, id);
+        Log($"      TrackRecord [{alias}] in '{entityName}': {id} (für Cleanup vorgemerkt)");
+    }
+
     private void StepWaitForRecord(TestStep step, TestContext ctx)
     {
         var entityName = ResolveEntity(step.Entity);
@@ -1275,10 +1307,14 @@ public sealed class TestRunner
             throw new InvalidOperationException(
                 $"WaitForRecord: Kein Record in '{entityName}' gefunden (Timeout: {step.TimeoutSeconds}s).");
 
-        // trackForCleanup:false - ein per FindRecord/WaitForRecord GEFUNDENER Bestands-Record
-        // ist kein vom Test erzeugter Record und darf nicht in die Cleanup-Löschliste. Sonst
-        // löscht der Cleanup geteilte Stammdaten (z.B. den gelesenen markant_fg_fieldconfig).
-        ctx.RegisterRecord(alias, entityName, found.Id, trackForCleanup: false);
+        // trackForCleanup default false - ein per FindRecord/WaitForRecord GEFUNDENER
+        // Bestands-Record ist kein vom Test erzeugter Record und darf nicht in die
+        // Cleanup-Löschliste (sonst löscht der Cleanup geteilte Stammdaten, z.B. den
+        // gelesenen markant_fg_fieldconfig). Pack-Autoren setzen trackForCleanup:true
+        // NUR, wenn der gefundene Record während dieses Laufs von der getesteten API
+        // SERVERSEITIG erzeugt wurde (z.B. invoice einer Beleg-API) - dann räumt der
+        // Cleanup ihn mit ab und er blockiert nicht den Delete der Eltern-Records.
+        ctx.RegisterRecord(alias, entityName, found.Id, trackForCleanup: step.TrackForCleanup);
         ctx.FoundRecords[alias] = found;
         Log($"      WaitForRecord [{alias}] gefunden: {found.Id} ({sw.ElapsedMilliseconds}ms)");
 
@@ -2403,6 +2439,10 @@ public sealed class TestRunner
             : (envFailed > 0) ? firstEnvError : null;
         cleanupResult.DurationMs = sw.ElapsedMilliseconds;
         tcResult.StepResults.Add(cleanupResult);
+
+        // Aggregat für die Lauf-Sichtbarkeit: liegengebliebene Test-Daten dürfen
+        // sich nicht im Step-Log verstecken (der Outcome bleibt bewusst unberührt).
+        tcResult.CleanupFailedCount = failed + envFailed;
     }
 
     /// <summary>

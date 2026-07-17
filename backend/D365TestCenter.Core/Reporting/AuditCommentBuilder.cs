@@ -46,9 +46,17 @@ public static class AuditCommentBuilder
         public IReadOnlyList<AssertLine> Checked { get; set; } = Array.Empty<AssertLine>();
         public string? Error { get; set; }
 
-        /// <summary>True when there is nothing to render (no records, no asserts, no error).</summary>
+        /// <summary>
+        /// FB-54 cleanup visibility: set when the test's cleanup failed (leftover
+        /// test data, e.g. a restrict-delete-blocked parent record). Carries the
+        /// cleanup step's message (first delete error) or description.
+        /// </summary>
+        public string? CleanupWarning { get; set; }
+
+        /// <summary>True when there is nothing to render (no records, no asserts, no error, no cleanup warning).</summary>
         public bool IsEmpty =>
-            Created.Count == 0 && Checked.Count == 0 && string.IsNullOrWhiteSpace(Error);
+            Created.Count == 0 && Checked.Count == 0 && string.IsNullOrWhiteSpace(Error)
+            && string.IsNullOrWhiteSpace(CleanupWarning);
     }
 
     /// <summary>
@@ -80,11 +88,22 @@ public static class AuditCommentBuilder
                 Ok = a.Success
             }).ToList();
 
+        // FB-54: a failed cleanup step means test data survived the run (e.g. a
+        // restrict-delete-blocked account). Works for live results and for
+        // Dataverse-loaded ones (AssertionResultsJson persists failed cleanup steps).
+        var cleanupFail = (assertSteps ?? Array.Empty<StepResult>())
+            .FirstOrDefault(s =>
+                string.Equals(s.Action, "Cleanup", StringComparison.OrdinalIgnoreCase) && !s.Success);
+        var cleanupWarning = cleanupFail == null
+            ? null
+            : (!string.IsNullOrWhiteSpace(cleanupFail.Message) ? cleanupFail.Message : cleanupFail.Description);
+
         return new AuditModel
         {
             Created = created,
             Checked = asserts,
-            Error = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage
+            Error = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage,
+            CleanupWarning = string.IsNullOrWhiteSpace(cleanupWarning) ? null : cleanupWarning
         };
     }
 
@@ -109,6 +128,9 @@ public static class AuditCommentBuilder
 
         if (!string.IsNullOrWhiteSpace(model.Error))
             lines.Add("Fehler: " + model.Error);
+
+        if (!string.IsNullOrWhiteSpace(model.CleanupWarning))
+            lines.Add("Cleanup unvollständig: " + model.CleanupWarning + " (Testdaten verblieben, bitte prüfen)");
 
         if (lines.Count == 0) return null;
         var comment = string.Join("\n", lines);
@@ -161,6 +183,11 @@ public static class AuditCommentBuilder
 
         if (!string.IsNullOrWhiteSpace(model.Error))
             sb.Append("<b>Fehler:</b> ").Append(EscapeHtml(model.Error)).Append("<br>\n");
+
+        if (!string.IsNullOrWhiteSpace(model.CleanupWarning))
+            sb.Append("<b>Cleanup unvollständig:</b> ")
+              .Append(EscapeHtml(model.CleanupWarning))
+              .Append(" (Testdaten verblieben, bitte prüfen)<br>\n");
 
         return sb.Length == 0 ? null : sb.ToString();
     }

@@ -60,7 +60,7 @@ public sealed class ChunkResultWriter
         result[WorkerSchema.ResultOutcome] = new OptionSetValue(MapOutcome(tcResult.Outcome));
         result[WorkerSchema.ResultDuration] = (int)tcResult.DurationMs;
         result[WorkerSchema.ResultError] = Truncate(tcResult.ErrorMessage, 4000);
-        result[WorkerSchema.ResultAssertions] = Truncate(BuildAssertionsJson(tcResult), 100000);
+        result[WorkerSchema.ResultAssertions] = Truncate(AssertionResultsJson.Build(tcResult), 100000);
 
         var trackedJson = BuildTrackedJson(tcResult);
         if (!string.IsNullOrEmpty(trackedJson))
@@ -134,30 +134,6 @@ public sealed class ChunkResultWriter
             {
                 /* non-critical: ein Fehler bei einem Step-Log soll den Test-Run nicht abbrechen. */
             }
-        }
-    }
-
-    private static string BuildAssertionsJson(TestCaseResult tcResult)
-    {
-        try
-        {
-            var assertSteps = tcResult.StepResults
-                .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
-                .Select(s => new
-                {
-                    description = s.Description,
-                    passed = s.Success && !s.Skipped,
-                    skipped = s.Skipped,
-                    message = s.Message,
-                    expectedDisplay = s.ExpectedDisplay,
-                    actualDisplay = s.ActualDisplay
-                })
-                .ToList();
-            return JsonConvert.SerializeObject(assertSteps, JsonSettings);
-        }
-        catch
-        {
-            return "[]";
         }
     }
 

@@ -358,6 +358,9 @@ public sealed class TestCenterOrchestrator
         Log("");
         Log($"  ============================================================");
         Log($"  ERGEBNIS: {result.PassedCount} PASSED | {result.FailedCount} FAILED | {result.ErrorCount} ERROR | {result.TotalCount} TOTAL");
+        if (result.CleanupFailedCount > 0)
+            Log($"  CLEANUP-WARNUNG: {result.CleanupFailedCount} Aufräum-Operation(en) fehlgeschlagen, " +
+                "Testdaten verblieben in der Umgebung (Details in den Step-Logs)");
         Log($"  ============================================================");
 
         // 3c. Final-Update: Status + Summary + Counts + FullLog (B4 + Block 1 L)
@@ -553,26 +556,9 @@ public sealed class TestCenterOrchestrator
             [FldResultTestRun] = testRunRef
         };
 
-        // AssertionResults als JSON (aus den Assert-StepResults gefiltert,
-        // Kompat für UI-Code der jbe_assertionresults parst).
-        try
-        {
-            var assertSteps = tcResult.StepResults
-                .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
-                .Select(s => new
-                {
-                    description = s.Description,
-                    passed = s.Success && !s.Skipped,
-                    skipped = s.Skipped,
-                    message = s.Message,
-                    expectedDisplay = s.ExpectedDisplay,
-                    actualDisplay = s.ActualDisplay
-                })
-                .ToList();
-            resultRecord[FldResultAssertions] = Truncate(
-                JsonConvert.SerializeObject(assertSteps, JsonSettings), 100000);
-        }
-        catch { /* Feld existiert vielleicht nicht auf allen Umgebungen */ }
+        // AssertionResults als JSON (geteilter Helper; Assert-Steps plus
+        // fehlgeschlagene Cleanup-Steps, Kompat für UI-Code der jbe_assertionresults parst).
+        resultRecord[FldResultAssertions] = Truncate(AssertionResultsJson.Build(tcResult), 100000);
 
         // B5-Fix: TrackedRecords als JSON in jbe_trackedrecords. Wurde bisher
         // nie geschrieben — Test-Autoren konnten nicht sehen welche Records
@@ -694,6 +680,9 @@ public sealed class TestCenterOrchestrator
             $"{result.PassedCount}/{result.TotalCount} bestanden, " +
             $"{result.FailedCount} fehlgeschlagen, " +
             $"{result.ErrorCount} Fehler ({duration:F1}s)");
+        if (result.CleanupFailedCount > 0)
+            sb.AppendLine($"CLEANUP-WARNUNG: {result.CleanupFailedCount} Aufräum-Operation(en) " +
+                "fehlgeschlagen, Testdaten verblieben (Details in den Step-Logs).");
         sb.AppendLine();
 
         foreach (var tc in result.Results.Take(50))  // max 50 im Summary (4000 chars Limit)

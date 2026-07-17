@@ -29,6 +29,56 @@ public class AuditCommentBuilderTests
         new() { Action = "Assert", Description = "companyname gesetzt", Success = false, ActualDisplay = "leer" }
     };
 
+    // ── FB-54: Cleanup-Warnung (leftover test data) im Audit-Kommentar ──
+
+    [Fact]
+    public void BuildModel_FailedCleanupStep_SetsCleanupWarning_WithoutPollutingChecked()
+    {
+        var steps = new List<StepResult>
+        {
+            new() { Action = "Assert", Description = "ok", Success = true, ActualDisplay = "x" },
+            new() { Action = "Cleanup", Description = "Cleanup: 2 gelöscht, 1 fehlgeschlagen",
+                    Success = false, Message = "account 123: dependents" }
+        };
+        var model = AuditCommentBuilder.BuildModel(null, steps, null);
+
+        Assert.Equal("account 123: dependents", model.CleanupWarning);
+        Assert.Single(model.Checked);
+        Assert.False(model.IsEmpty);
+    }
+
+    [Fact]
+    public void BuildModel_SuccessfulCleanup_NoWarning()
+    {
+        var steps = new List<StepResult>
+        {
+            new() { Action = "Cleanup", Description = "Cleanup: 3 gelöscht, 0 fehlgeschlagen", Success = true }
+        };
+        var model = AuditCommentBuilder.BuildModel(null, steps, null);
+
+        Assert.Null(model.CleanupWarning);
+        Assert.True(model.IsEmpty);
+    }
+
+    [Fact]
+    public void RenderPlain_WithCleanupWarning_AppendsLine()
+    {
+        var model = new AuditCommentBuilder.AuditModel { CleanupWarning = "account 123: dependents" };
+        Assert.Equal(
+            "Cleanup unvollständig: account 123: dependents (Testdaten verblieben, bitte prüfen)",
+            AuditCommentBuilder.RenderPlain(model));
+    }
+
+    [Fact]
+    public void RenderHtml_WithCleanupWarning_AppendsEscapedLine()
+    {
+        var model = new AuditCommentBuilder.AuditModel { CleanupWarning = "acc <5> & co" };
+        var html = AuditCommentBuilder.RenderHtml(model);
+        Assert.Equal(
+            "<b>Cleanup unvollständig:</b> acc &lt;5&gt; &amp; co (Testdaten verblieben, bitte prüfen)<br>\n",
+            html);
+    }
+
     // ── BuildModel selection (verhaltensgleich zum alten BuildAuditComment) ──
 
     [Fact]

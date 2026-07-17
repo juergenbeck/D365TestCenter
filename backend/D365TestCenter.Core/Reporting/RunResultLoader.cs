@@ -61,7 +61,12 @@ public static class RunResultLoader
         catch { return new List<TrackedRecord>(); }
     }
 
-    /// <summary>OE-10: deserialisiert jbe_assertionresults-JSON zu Assert-StepResults (leer bei null/Fehler).</summary>
+    /// <summary>
+    /// OE-10: deserialisiert jbe_assertionresults-JSON zu StepResults (leer bei null/Fehler).
+    /// Alt-Blobs tragen nur Assert-Einträge ohne 'action'-Feld (Default "Assert");
+    /// seit dem Cleanup-Sichtbarkeits-Fix enthält der Blob zusätzlich fehlgeschlagene
+    /// Cleanup-Steps (action:"Cleanup") für den Audit-Kommentar.
+    /// </summary>
     static List<StepResult> ParseAssertSteps(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return new List<StepResult>();
@@ -70,7 +75,7 @@ public static class RunResultLoader
             var dtos = JsonConvert.DeserializeObject<List<AssertResultDto>>(json!) ?? new List<AssertResultDto>();
             return dtos.Select(d => new StepResult
             {
-                Action = "Assert",
+                Action = string.IsNullOrWhiteSpace(d.action) ? "Assert" : d.action!,
                 Description = d.description ?? "",
                 Success = d.passed,
                 Message = d.message,
@@ -81,9 +86,10 @@ public static class RunResultLoader
         catch { return new List<StepResult>(); }
     }
 
-    /// <summary>DTO für das jbe_assertionresults-JSON (Orchestrator-Schreibformat).</summary>
+    /// <summary>DTO für das jbe_assertionresults-JSON (AssertionResultsJson-Schreibformat).</summary>
     sealed class AssertResultDto
     {
+        public string? action { get; set; }
         public string? description { get; set; }
         public bool passed { get; set; }
         public string? message { get; set; }

@@ -54,6 +54,7 @@ public sealed class PackValidator : IPackValidator
         "RetrieveRecord",
         "WaitForRecord",
         "FindRecord",
+        "TrackRecord",
         "WaitForFieldValue",
         "WaitForNotExists",
         "WaitForAsyncCompletion",
@@ -353,6 +354,23 @@ public sealed class PackValidator : IPackValidator
             }
         }
 
+        // R4b TRACKRECORD_MISSING_FIELDS: TrackRecord without entity or recordId
+        // throws at runtime — catch it in the pre-run validation.
+        if (string.Equals(action, "TrackRecord", StringComparison.OrdinalIgnoreCase)
+            && (string.IsNullOrWhiteSpace(step.Entity) || string.IsNullOrWhiteSpace(step.RecordId)))
+        {
+            report.Add(new ValidationFinding
+            {
+                TestId = tc.Id,
+                StepNumber = step.StepNumber,
+                Severity = ValidationSeverity.Error,
+                Code = "TRACKRECORD_MISSING_FIELDS",
+                Message = "TrackRecord needs both 'entity' and 'recordId'. The TestRunner would throw at runtime.",
+                Suggestion = "Set 'entity' to the record's entity and 'recordId' to the known id, " +
+                             "e.g. a custom-API output placeholder like \"{result.outputs.InvoiceId}\"."
+            });
+        }
+
         // R5 LOOKUP_BIND_FORMAT (field-key check on Fields plus Parameters)
         CheckLookupBind(tc, step, step.Fields, report);
         if (step.Parameters != null) CheckLookupBind(tc, step, step.Parameters, report);
@@ -620,7 +638,8 @@ public sealed class PackValidator : IPackValidator
     private static readonly HashSet<string> _entityBearingActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "CreateRecord", "UpdateRecord", "DeleteRecord", "RetrieveRecord",
-        "WaitForRecord", "WaitForNotExists", "FindRecord", "WaitForFieldValue"
+        "WaitForRecord", "WaitForNotExists", "FindRecord", "WaitForFieldValue",
+        "TrackRecord"
     };
 
     private static void CheckEntityAndFields(TestCase tc, TestStep step, ValidationReport report, EntityMetadataCache metadata)

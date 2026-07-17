@@ -523,26 +523,9 @@ public sealed class RunTestsOnStatusChange : IPlugin
 
         foreach (var tcResult in result.Results)
         {
-            // jbe_assertionresults aus den Assert-StepResults generieren
-            // (Kompat für UI-Code der den JSON-Blob parst).
-            string assertionsJson = "[]";
-            try
-            {
-                var assertSteps = tcResult.StepResults
-                    .Where(s => string.Equals(s.Action, "Assert", StringComparison.OrdinalIgnoreCase))
-                    .Select(s => new
-                    {
-                        description = s.Description,
-                        passed = s.Success && !s.Skipped,
-                        skipped = s.Skipped,
-                        message = s.Message,
-                        expectedDisplay = s.ExpectedDisplay,
-                        actualDisplay = s.ActualDisplay
-                    })
-                    .ToList();
-                assertionsJson = JsonConvert.SerializeObject(assertSteps, JsonSettings);
-            }
-            catch { /* fallback: leer */ }
+            // jbe_assertionresults über den geteilten Helper generieren (Assert-Steps
+            // plus fehlgeschlagene Cleanup-Steps; Kompat für UI-Code der den Blob parst).
+            string assertionsJson = AssertionResultsJson.Build(tcResult);
 
             // B5-Fix: TrackedRecords als JSON in jbe_trackedrecords. Wurde
             // bisher nie geschrieben — Test-Autoren konnten nicht sehen welche

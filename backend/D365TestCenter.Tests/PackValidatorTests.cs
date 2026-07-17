@@ -73,6 +73,34 @@ public class PackValidatorTests
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  TRACKRECORD_MISSING_FIELDS (FB-54)
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void TrackRecord_MissingRecordId_IsError()
+    {
+        var tc = TestCaseWith(new TestStep { StepNumber = 1, Action = "TrackRecord", Entity = "invoices" });
+        var report = new PackValidator().ValidateOne(tc);
+
+        var finding = AssertSingle(report, "TRACKRECORD_MISSING_FIELDS");
+        Assert.Equal(ValidationSeverity.Error, finding.Severity);
+    }
+
+    [Fact]
+    public void TrackRecord_Complete_NoFinding()
+    {
+        var tc = TestCaseWith(new TestStep
+        {
+            StepNumber = 1, Action = "TrackRecord", Entity = "invoices",
+            Alias = "inv", RecordId = "{result.outputs.InvoiceId}"
+        });
+        var report = new PackValidator().ValidateOne(tc);
+
+        Assert.DoesNotContain(report.Findings, f => f.Code == "TRACKRECORD_MISSING_FIELDS");
+        Assert.DoesNotContain(report.Findings, f => f.Code == "ACTION_UNKNOWN");
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  FILTER_FIELD_NOT_LOGICAL
     // ════════════════════════════════════════════════════════════════
 
