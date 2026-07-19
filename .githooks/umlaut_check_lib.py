@@ -68,6 +68,12 @@ _RE_HANDLE = re.compile(r'^\W*@\w')
 # Test-IsJsonKey: umgebender Token ist ein JSON-Objekt-Schlüssel ("feldname":).
 _RE_JSON_KEY = re.compile(r'^"[^"]+"\s*:')
 
+# Test-IsFrontmatterValue: die Zeile ist ein YAML-Frontmatter-Skalar mit genau EINEM
+# Wert-Token (`key: wert` oder `- wert`). Der Treffer im Wert (Gruppe 1) ist ein
+# technischer Bezeichner (Skill-Name/Tag/Id). Ein Prosa-Wert (`description: <ganzer
+# Satz>`) ist mehr-token und matcht NICHT (`(\S+)\s*$` verlangt ein Token bis Zeilenende).
+_RE_FM_SCALAR = re.compile(r'^\s*(?:[\w-]+:|-)\s*(\S+)\s*$')
+
 
 def _strip_edges(token):
     # Rand-Zeichen abschneiden, die nicht Buchstabe/Ziffer/Underscore sind
@@ -135,6 +141,21 @@ def is_json_key(token):
     return bool(_RE_JSON_KEY.match(token))
 
 
+def is_frontmatter_value(text, start, end):
+    """Der Treffer steht als einzelner Skalar-Wert im führenden YAML-Frontmatter
+    (`name: zellenlaeufer`, `- zellenlaeufer`) und ist damit ein technischer
+    Bezeichner (Skill-Name/Tag/Id), laut CLAUDE.md von der Umlaut-Pflicht
+    ausgenommen. Kontext-sensitiv: greift nur zusammen mit dem in_frontmatter-Gate
+    in get_umlaut_violations (das den führenden --- ... --- / ... -Block erkennt).
+    Bedingungen: die Zeile hat die Form `key: wert` bzw. `- wert` mit genau EINEM
+    whitespace-freien Wert UND der Treffer liegt im Wert (nicht im Key). Ein
+    Prosa-Wert (`description: <ganzer Satz>`) ist mehr-token und matcht nicht."""
+    m = _RE_FM_SCALAR.match(text)
+    if not m:
+        return False
+    return start >= m.start(1) and end <= m.end(1)
+
+
 def _surrounding_token(text, start, end):
     s = start
     while s > 0 and not text[s - 1].isspace():
@@ -148,10 +169,23 @@ def _surrounding_token(text, start, end):
 def get_umlaut_violations(lines):
     """Nimmt die Zeilen einer Markdown-Datei und liefert pro Verstoss ein dict
     {line, match, text, block}. Wendet Fence-Skip, Inline-Code-, Autolink-, URL-,
-    Link-Target-Filter sowie Whitelist-, Bezeichner-, Slug- und Technical-Heuristik an."""
+    Link-Target-Filter sowie Whitelist-, Bezeichner-, Slug-, Technical-, JSON-Key-
+    und Frontmatter-Wert-Heuristik an."""
     result = []
     in_fence = False
+    in_frontmatter = False
     for i, line in enumerate(lines):
+        # Führendes YAML-Frontmatter (--- ... --- ab Zeile 1) tracken, analog zum
+        # in_fence-Zustand. Werte darin sind technische Felder; ein einzelner
+        # Token-Wert wird unten per is_frontmatter_value ausgenommen. Nur am
+        # Dateianfang, damit ein --- als thematischer Bruch mitten in Prosa kein
+        # Frontmatter öffnet.
+        if i == 0 and line.strip() == '---':
+            in_frontmatter = True
+            continue
+        if in_frontmatter and line.strip() in ('---', '...'):
+            in_frontmatter = False
+            continue
         if _RE_FENCE.match(line):
             in_fence = not in_fence
             continue
@@ -169,7 +203,8 @@ def get_umlaut_violations(lines):
                     and not is_code_identifier(val)
                     and not is_slug_token(tok)
                     and not is_technical_token(tok)
-                    and not is_json_key(tok)):
+                    and not is_json_key(tok)
+                    and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
                 result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 1})
 
         for m in _RE_BLOCK2.finditer(clean):
@@ -178,7 +213,8 @@ def get_umlaut_violations(lines):
             if (not is_code_identifier(val)
                     and not is_slug_token(tok)
                     and not is_technical_token(tok)
-                    and not is_json_key(tok)):
+                    and not is_json_key(tok)
+                    and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
                 result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 2})
 
     return result
