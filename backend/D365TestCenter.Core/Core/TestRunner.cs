@@ -2427,6 +2427,11 @@ public sealed class TestRunner
                     try
                     {
                         var removed = DeleteCleanupChildren(rel, item.Id);
+                        // Kind-Deletes zählen in der Summenzeile MIT (Symmetrie zu
+                        // 'failed', das Kind-Fehler mitzählt): "Cleanup: N gelöscht"
+                        // muss die volle Räumleistung ausweisen, sonst untertreibt
+                        // die Steps-Tab-Zeile gegenüber dem Detail-Log darunter.
+                        deleted += removed;
                         if (removed > 0)
                             Log($"    Cleanup-Kinder: {removed}x '{rel.Entity}' via '{rel.LookupField}' " +
                                 $"von {item.EntityName} {item.Id} gelöscht");

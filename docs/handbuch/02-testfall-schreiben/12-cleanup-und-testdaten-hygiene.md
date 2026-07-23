@@ -242,7 +242,8 @@ weiterzulöschen.
 
 ### Log-Sichtbarkeit
 
-Jede Räumung erscheint im Step-Log (`jbe_fulllog` bzw. CLI-Ausgabe):
+Jede Räumung erscheint im Step-Log (`jbe_fulllog` bzw. CLI-Ausgabe); die
+Summenzeile zählt gelöschte Kinder mit (im Beispiel: 3 Kinder + 1 Parent = 4):
 
 ```
 Cleanup...

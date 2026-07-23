@@ -311,6 +311,15 @@ public class CleanupTrackingTests
         // ... VOR dem Parent (sonst hätte dessen Restrict-Simulation geworfen):
         Assert.True(svc.ParentDeleted);
         Assert.Equal(0, result.CleanupFailedCount);
+
+        // Die Summenzeile zählt die Kind-Deletes MIT (2 Kinder + 1 Parent = 3) —
+        // Kind-FEHLER erhöhen 'failed', also müssen Kind-Erfolge 'deleted' erhöhen,
+        // sonst widerspricht die Steps-Tab-Zeile dem Detail-Log ("Cleanup-Kinder:
+        // 2x ... gelöscht") direkt darüber (Handbuch Kap. 12, Log-Sichtbarkeit).
+        var cleanupStep = Assert.Single(
+            result.Results[0].StepResults,
+            s => string.Equals(s.Action, "Cleanup", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("Cleanup: 3 gelöscht, 0 fehlgeschlagen", cleanupStep.Description);
     }
 
     [Fact]
