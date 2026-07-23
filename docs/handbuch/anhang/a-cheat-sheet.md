@@ -193,6 +193,25 @@ Testfall, anpassen, fertig.
   } }
 ```
 
+## GrantAccess / ModifyAccess (Record-Sharing)
+
+```json
+{ "stepNumber": 3, "action": "ExecuteRequest",
+  "requestName": "GrantAccess",
+  "fields": {
+    "Target":          { "$type": "EntityReference", "entity": "contact", "ref": "con" },
+    "PrincipalAccess": {
+      "$type": "PrincipalAccess",
+      "principal":  { "$type": "EntityReference", "entity": "team", "ref": "teamAT" },
+      "accessMask": "ReadAccess,WriteAccess,AppendAccess"
+    }
+  } }
+```
+
+`accessMask` = `AccessRights`-Komma-Flags (case-insensitiv): `ReadAccess`, `WriteAccess`,
+`AppendAccess`, `AppendToAccess`, `CreateAccess`, `DeleteAccess`, `ShareAccess`, `AssignAccess`.
+`RevokeAccess` braucht statt `PrincipalAccess` nur `Target` + `Revokee` (beide EntityReference).
+
 ## Custom Action / Custom API aufrufen
 
 Kanonisch ab v5.3.7 (ADR-0007) via `ExecuteRequest`:

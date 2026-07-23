@@ -415,7 +415,32 @@ Legacy-Verben `CallCustomApi` und `ExecuteAction` werden als Aliasse durchgereic
 | OptionSetValue | `{ "$type": "OptionSetValue", "value": <number> }` | `{ "$type": "OptionSetValue", "value": 3 }` |
 | Money | `{ "$type": "Money", "value": <number> }` | `{ "$type": "Money", "value": 1500 }` |
 | Entity | `{ "$type": "Entity", "entity": "<logicalname>", "fields": { ... } }` | Für Parameter wie `OpportunityClose` |
-| EntityCollection | `{ "$type": "EntityCollection", "entities": [ ... ] }` | Selten, z.B. in `GrantAccess` |
+| EntityCollection | `{ "$type": "EntityCollection", "entities": [ ... ] }` | Z.B. activityparty-Partylists (`requiredattendees`) |
+| PrincipalAccess | `{ "$type": "PrincipalAccess", "principal": { "$type": "EntityReference", ... }, "accessMask": "<AccessRights-Komma-Flags>" }` | Für `GrantAccess`/`ModifyAccess` (Record-Sharing) |
+
+**PrincipalAccess im Detail** (für `GrantAccess`/`ModifyAccess`; `RevokeAccess` braucht nur
+zwei EntityReferences `Target` + `Revokee`):
+
+```json
+{ "stepNumber": 3, "action": "ExecuteRequest",
+  "requestName": "GrantAccess",
+  "fields": {
+    "Target":          { "$type": "EntityReference", "entity": "contact", "ref": "con" },
+    "PrincipalAccess": {
+      "$type": "PrincipalAccess",
+      "principal":  { "$type": "EntityReference", "entity": "team", "ref": "teamAT" },
+      "accessMask": "ReadAccess,WriteAccess,AppendAccess"
+    }
+  }
+}
+```
+
+- `principal` ist ein normales `$type EntityReference`-Objekt (`ref`-Alias oder feste `id`);
+  typische Principals sind `team` und `systemuser`.
+- `accessMask` sind die SDK-`AccessRights`-Flags als Komma-String, case-insensitiv:
+  `None`, `ReadAccess`, `WriteAccess`, `AppendAccess`, `AppendToAccess`, `CreateAccess`,
+  `DeleteAccess`, `ShareAccess`, `AssignAccess`. Ungültige Werte brechen den Step mit
+  einer Fehlermeldung ab, die die erlaubten Flags auflistet.
 
 **Häufige SDK-Messages:**
 

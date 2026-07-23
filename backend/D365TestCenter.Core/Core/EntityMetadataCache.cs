@@ -191,6 +191,11 @@ public sealed class EntityMetadataCache
         ["emails"] = "email",
         ["appointments"] = "appointment",
         ["annotations"] = "annotation",
+        // Kanonische Share-Principals (ADR-2026-07-23, $type PrincipalAccess):
+        // offline auflösbar, damit GrantAccess-/ModifyAccess-Setups nicht an
+        // der Plural-Heuristik hängen ("teams" endet nicht auf "es").
+        ["teams"] = "team",
+        ["systemusers"] = "systemuser",
     };
 
     /// <summary>Checks if a field is a Lookup (Lookup, Customer, Owner).</summary>

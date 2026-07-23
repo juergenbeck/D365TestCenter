@@ -1,3 +1,4 @@
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
@@ -1574,9 +1575,10 @@ public sealed class TestRunner
                 "MONEY" => new Money(obj["value"]!.Value<decimal>()),
                 "ENTITY" => ResolveEntityParam(obj, ctx),
                 "ENTITYCOLLECTION" => ResolveEntityCollectionParam(obj, ctx),
+                "PRINCIPALACCESS" => ResolvePrincipalAccessParam(obj, ctx),
                 _ => throw new InvalidOperationException(
                     $"Unbekannter $type: '{typeName}'. " +
-                    $"Erlaubt: EntityReference, Guid, GuidArray, OptionSetValue, Money, Entity, EntityCollection")
+                    $"Erlaubt: EntityReference, Guid, GuidArray, OptionSetValue, Money, Entity, EntityCollection, PrincipalAccess")
             };
         }
 
@@ -1644,6 +1646,43 @@ public sealed class TestRunner
                 collection.Entities.Add((Entity)ResolveTypedValue(item, ctx));
         }
         return collection;
+    }
+
+    /// <summary>
+    /// ADR-2026-07-23 (Backlog O, Markant-Bridge T11): SDK-Parametertyp
+    /// PrincipalAccess für GrantAccess-/ModifyAccess-Requests.
+    /// "principal" wird rekursiv aufgelöst und muss eine EntityReference ergeben;
+    /// "accessMask" sind AccessRights-Komma-Flags (case-insensitiv, Platzhalter
+    /// erlaubt). netstandard2.0: nicht-generisches Enum.Parse.
+    /// </summary>
+    private PrincipalAccess ResolvePrincipalAccessParam(JObject obj, TestContext ctx)
+    {
+        if (obj["principal"] is not JObject principalObj)
+            throw new InvalidOperationException(
+                "PrincipalAccess braucht 'principal' (Objekt mit $type EntityReference).");
+        if (ResolveTypedValue(principalObj, ctx) is not EntityReference principal)
+            throw new InvalidOperationException(
+                "PrincipalAccess: 'principal' muss eine EntityReference ergeben " +
+                "($type EntityReference mit 'entity' und 'ref'/'id').");
+
+        var maskRaw = obj["accessMask"]?.Value<string>();
+        if (string.IsNullOrWhiteSpace(maskRaw))
+            throw new InvalidOperationException(
+                "PrincipalAccess braucht 'accessMask' (Komma-Flags, z.B. \"ReadAccess,WriteAccess\").");
+        var maskResolved = _placeholderEngine.Resolve(maskRaw!, ctx);
+        AccessRights mask;
+        try
+        {
+            mask = (AccessRights)Enum.Parse(typeof(AccessRights), maskResolved, ignoreCase: true);
+        }
+        catch (ArgumentException)
+        {
+            throw new InvalidOperationException(
+                $"PrincipalAccess: accessMask '{maskResolved}' ungültig. " +
+                $"Erlaubt (Komma-Flags): {string.Join(", ", Enum.GetNames(typeof(AccessRights)))}");
+        }
+
+        return new PrincipalAccess { Principal = principal, AccessMask = mask };
     }
 
     // ================================================================
