@@ -245,6 +245,20 @@ public sealed class TestStep
     [JsonProperty("recordId")]
     public string? RecordId { get; set; }
 
+    /// <summary>
+    /// Deklarative Kind-Beziehungen für den Cleanup (ADR-2026-07-23-0808): Beim
+    /// Cleanup-Delete des von diesem Step registrierten Records löscht die Engine
+    /// ZUERST alle Records der deklarierten Kind-Entität, deren Lookup auf den
+    /// Record zeigt (Query zur Cleanup-Zeit -> erfasst auch Kinder, die Plugins
+    /// asynchron und in dynamischer Anzahl erzeugt haben, z.B. Restrict-Delete-
+    /// Monatszeilen an einer Test-LSP). Gültig auf CreateRecord sowie — nur in
+    /// Verbindung mit Tracking — FindRecord/WaitForRecord (trackForCleanup:true)
+    /// und TrackRecord. Bewusst KEIN Metadaten-Discovery und genau EINE Ebene:
+    /// der Test-Autor deklariert die ihm bekannte Seiteneffekt-Beziehung explizit.
+    /// </summary>
+    [JsonProperty("cleanupChildren")]
+    public List<CleanupChildRelation>? CleanupChildren { get; set; }
+
     [JsonProperty("filter")]
     [JsonConverter(typeof(FilterListConverter))]
     public List<FilterCondition>? Filter { get; set; }
@@ -495,6 +509,25 @@ public sealed class ExpectExceptionSpec
 }
 
 /// <summary>
+/// Eine deklarierte Cleanup-Kind-Beziehung (ADR-2026-07-23-0808): Records der
+/// Kind-Entität, deren Lookup auf den registrierten Parent zeigt, werden im
+/// Cleanup VOR dem Parent gelöscht. Deckt plugin-erzeugte Kind-Mengen dynamischer
+/// Größe ab (z.B. lm_umsatzplan-Monatszeilen an einer Test-LSP, Restrict-Delete),
+/// die per trackForCleanup/TrackRecord nicht deklarierbar sind, weil ihre finale
+/// Menge erst zur Cleanup-Zeit feststeht.
+/// </summary>
+public sealed class CleanupChildRelation
+{
+    /// <summary>Kind-Entität, EntitySetName (Plural, Web-API-Form) oder LogicalName.</summary>
+    [JsonProperty("entity")]
+    public string Entity { get; set; } = "";
+
+    /// <summary>Lookup-Feld der Kind-Entität, das auf den registrierten Parent zeigt.</summary>
+    [JsonProperty("lookupField")]
+    public string LookupField { get; set; } = "";
+}
+
+/// <summary>
 /// Eine einzelne Vergleichsklausel einer Step-Condition (ADR-0011):
 /// left &lt;operator&gt; right. left/right laufen durch die PlaceholderEngine;
 /// operator ist einer aus <see cref="ValueComparator.SupportedOperators"/>.
@@ -605,6 +638,14 @@ public sealed class TestContext
     /// <summary>Alle erstellten Entity-IDs für Cleanup nach dem Test.</summary>
     public List<(string EntityName, Guid Id)> CreatedEntities { get; set; } = new List<(string, Guid)>();
 
+    /// <summary>
+    /// Deklarierte Cleanup-Kind-Beziehungen je getracktem Record
+    /// (ADR-2026-07-23-0808). Schlüssel = (EntityName, Id) wie in
+    /// CreatedEntities; der Cleanup löscht die Kinder VOR dem Parent.
+    /// </summary>
+    public Dictionary<(string EntityName, Guid Id), List<CleanupChildRelation>> CleanupChildRelations { get; set; }
+        = new Dictionary<(string, Guid), List<CleanupChildRelation>>();
+
     /// <summary>Snapshots für EnvironmentVariable-Auto-Restore im Cleanup.</summary>
     public List<EnvVarSnapshot> EnvVarSnapshots { get; set; } = new List<EnvVarSnapshot>();
 
@@ -640,7 +681,8 @@ public sealed class TestContext
     /// sonst löscht der Cleanup geteilte Stammdaten (z.B. den per FindRecord gelesenen
     /// markant_fg_fieldconfig) auf der Ziel-Umgebung. Ein gefundener Record ist kein erzeugter.
     /// </summary>
-    public void RegisterRecord(string alias, string entityName, Guid id, bool trackForCleanup = true)
+    public void RegisterRecord(string alias, string entityName, Guid id, bool trackForCleanup = true,
+        List<CleanupChildRelation>? cleanupChildren = null)
     {
         Records[alias] = (entityName, id);
         // Dedup: derselbe Record darf nur EINMAL in der Löschliste stehen (z.B.
@@ -649,6 +691,11 @@ public sealed class TestContext
         // eine falsche Cleanup-Warnung.
         if (trackForCleanup && !CreatedEntities.Contains((entityName, id)))
             CreatedEntities.Add((entityName, id));
+
+        // Kind-Deklarationen wirken nur für Records, die auch gelöscht werden
+        // (ADR-2026-07-23-0808); bei Mehrfach-Registrierung gewinnt die letzte.
+        if (trackForCleanup && cleanupChildren is { Count: > 0 })
+            CleanupChildRelations[(entityName, id)] = cleanupChildren;
     }
 }
 

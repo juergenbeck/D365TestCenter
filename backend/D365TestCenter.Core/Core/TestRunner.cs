@@ -1201,7 +1201,7 @@ public sealed class TestRunner
         ApplyFields(entity, resolvedFields, ctx);
 
         var id = _service.Create(entity);
-        ctx.RegisterRecord(alias, entityName, id);
+        ctx.RegisterRecord(alias, entityName, id, cleanupChildren: step.CleanupChildren);
         Log($"      CreateRecord [{alias}] in '{entityName}': {id}");
 
         // Auto-Retrieve: wenn columns definiert, Server-generierte Felder laden
@@ -1269,7 +1269,7 @@ public sealed class TestRunner
                 "Ein unaufgelöster Platzhalter oder Tippfehler würde sonst still nichts tracken.");
 
         var alias = step.Alias ?? $"tracked_{step.StepNumber}";
-        ctx.RegisterRecord(alias, entityName, id);
+        ctx.RegisterRecord(alias, entityName, id, cleanupChildren: step.CleanupChildren);
         Log($"      TrackRecord [{alias}] in '{entityName}': {id} (für Cleanup vorgemerkt)");
     }
 
@@ -1314,7 +1314,8 @@ public sealed class TestRunner
         // NUR, wenn der gefundene Record während dieses Laufs von der getesteten API
         // SERVERSEITIG erzeugt wurde (z.B. invoice einer Beleg-API) - dann räumt der
         // Cleanup ihn mit ab und er blockiert nicht den Delete der Eltern-Records.
-        ctx.RegisterRecord(alias, entityName, found.Id, trackForCleanup: step.TrackForCleanup);
+        ctx.RegisterRecord(alias, entityName, found.Id, trackForCleanup: step.TrackForCleanup,
+            cleanupChildren: step.CleanupChildren);
         ctx.FoundRecords[alias] = found;
         Log($"      WaitForRecord [{alias}] gefunden: {found.Id} ({sw.ElapsedMilliseconds}ms)");
 
@@ -2415,10 +2416,46 @@ public sealed class TestRunner
 
         foreach (var item in toDelete)
         {
+            // Deklarierte Kind-Beziehungen (ADR-2026-07-23-0808) VOR dem Parent räumen —
+            // Query zur Cleanup-Zeit, damit auch asynchron/in dynamischer Anzahl von
+            // Plugins erzeugte Kinder (z.B. Restrict-Delete-Monatszeilen an einer
+            // Test-LSP) vollständig erfasst sind.
+            if (ctx.CleanupChildRelations.TryGetValue(item, out var childRelations))
+            {
+                foreach (var rel in childRelations)
+                {
+                    try
+                    {
+                        var removed = DeleteCleanupChildren(rel, item.Id);
+                        if (removed > 0)
+                            Log($"    Cleanup-Kinder: {removed}x '{rel.Entity}' via '{rel.LookupField}' " +
+                                $"von {item.EntityName} {item.Id} gelöscht");
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        if (string.IsNullOrEmpty(firstError))
+                            firstError = $"Kinder '{rel.Entity}' von {item.EntityName} {item.Id}: {ex.Message}";
+                        Log($"    Kind-Löschung fehlgeschlagen: '{rel.Entity}' via '{rel.LookupField}' " +
+                            $"von {item.EntityName} {item.Id} -- {ex.Message}");
+                    }
+                }
+            }
+
             try
             {
                 _service.Delete(item.EntityName, item.Id);
                 deleted++;
+            }
+            catch (FaultException<OrganizationServiceFault> ex)
+                when (ex.Detail?.ErrorCode == ObjectDoesNotExistErrorCode)
+            {
+                // Bereits geräumt — typisch: die Plattform-Cascade beim Delete eines
+                // Eltern-Records hat den getrackten Record mitgenommen (z.B. LSP beim
+                // Leistungs-Delete). Kein Datenleck, darum kein Cleanup-Fehlschlag;
+                // die CLEANUP-WARNUNG-Zahl bleibt so ein echter Rest-Indikator.
+                deleted++;
+                Log($"    Bereits gelöscht (kaskadiert): {item.EntityName} {item.Id}");
             }
             catch (Exception ex)
             {
@@ -2444,6 +2481,105 @@ public sealed class TestRunner
         // sich nicht im Step-Log verstecken (der Outcome bleibt bewusst unberührt).
         tcResult.CleanupFailedCount = failed + envFailed;
     }
+
+    /// <summary>
+    /// Dataverse-Fehlercode ObjectDoesNotExist: das Ziel eines Requests existiert
+    /// nicht (mehr). Im Cleanup kein Fehlschlag, sondern "bereits geräumt".
+    /// </summary>
+    private const int ObjectDoesNotExistErrorCode = unchecked((int)0x80040217);
+
+    /// <summary>
+    /// Maximal abgeräumte Kinder je deklarierter Beziehung (Schutz gegen eine
+    /// versehentlich zu breite Deklaration, z.B. Lookup-Feld eines Stammdaten-Parents).
+    /// </summary>
+    private const int MaxCleanupChildren = 10_000;
+
+    /// <summary>
+    /// Löscht alle Records der deklarierten Kind-Beziehung, deren Lookup auf den
+    /// Parent zeigt (ADR-2026-07-23-0808). Die Query läuft zur Cleanup-Zeit und wird
+    /// wiederholt, bis sie leer ist (Deletes verschieben die Seiten; deshalb kein
+    /// PagingCookie-Fortschritt, sondern frisches Nachladen). Toleriert werden 404
+    /// (parallel z.B. vom async-Abbau-Job eines Plugins gelöscht) und der
+    /// Plattform-Konflikt "More than one concurrent Delete requests detected"
+    /// (live belegt: der Buchungs-Delete stößt den async LST-Abbau an, der dieselben
+    /// lm_umsatzplan-Zeilen löscht) — Konflikte werden in einer Folgerunde mit kurzer
+    /// Wartezeit nachgeprüft statt still als erledigt zu gelten. Jeder andere
+    /// Kind-Delete-Fehler wirft (verhindert zugleich eine Endlosschleife über
+    /// unlöschbare Kinder). Liefert die Anzahl selbst gelöschter Kinder.
+    /// </summary>
+    private int DeleteCleanupChildren(CleanupChildRelation rel, Guid parentId)
+    {
+        if (string.IsNullOrWhiteSpace(rel.Entity) || string.IsNullOrWhiteSpace(rel.LookupField))
+            throw new InvalidOperationException(
+                "cleanupChildren: 'entity' und 'lookupField' sind Pflicht (z.B. " +
+                "{ \"entity\": \"lm_umsatzplans\", \"lookupField\": \"lm_bestellungid\" }).");
+
+        var childEntity = ResolveEntity(rel.Entity);
+        var removed = 0;
+        var conflictRounds = 0;
+
+        while (true)
+        {
+            var query = new QueryExpression(childEntity)
+            {
+                ColumnSet = new ColumnSet(false),
+                PageInfo = new PagingInfo { PageNumber = 1, Count = 500 }
+            };
+            query.Criteria.AddCondition(rel.LookupField, ConditionOperator.Equal, parentId);
+
+            var page = _service.RetrieveMultiple(query);
+            if (page.Entities.Count == 0) return removed;
+
+            var conflicts = 0;
+            foreach (var child in page.Entities)
+            {
+                if (removed >= MaxCleanupChildren)
+                    throw new InvalidOperationException(
+                        $"cleanupChildren: Abbruch bei {MaxCleanupChildren} gelöschten Kindern in " +
+                        $"'{childEntity}' via '{rel.LookupField}' — Deklaration prüfen (Amok-Schutz).");
+                try
+                {
+                    _service.Delete(childEntity, child.Id);
+                    removed++;
+                }
+                catch (FaultException<OrganizationServiceFault> ex)
+                    when (ex.Detail?.ErrorCode == ObjectDoesNotExistErrorCode)
+                {
+                    // Parallel abgebaut — Ziel erreicht, nichts nachzuprüfen.
+                }
+                catch (Exception ex) when (IsConcurrentDeleteConflict(ex))
+                {
+                    // Ein anderer Prozess (async-Plugin-Job) löscht den Record GERADE.
+                    // Nicht blind als erledigt werten: die Folgerunde prüft per Query
+                    // nach — scheiterte der parallele Delete, versuchen wir es erneut.
+                    conflicts++;
+                }
+            }
+
+            if (conflicts > 0)
+            {
+                if (++conflictRounds > 10)
+                    throw new InvalidOperationException(
+                        $"cleanupChildren: Konkurrierende Deletes auf '{childEntity}' via " +
+                        $"'{rel.LookupField}' klingen nach {conflictRounds - 1} Warte-Runden nicht ab.");
+                System.Threading.Thread.Sleep(1000);
+            }
+            else if (!page.MoreRecords)
+            {
+                return removed;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Erkennt den Dataverse-Konflikt "More than one concurrent Delete requests
+    /// detected for an Entity ..." (zwei Prozesse löschen denselben Record).
+    /// Message-basiert, weil der Fault über beide Service-Verpackungen (SDK-Fault,
+    /// gewrappte Exception) mit stabilem Text, aber ohne verlässlich dokumentierten
+    /// Fehlercode ankommt.
+    /// </summary>
+    private static bool IsConcurrentDeleteConflict(Exception ex)
+        => ex.Message?.IndexOf("concurrent Delete request", StringComparison.OrdinalIgnoreCase) >= 0;
 
     /// <summary>
     /// Stellt den Vor-Set-Zustand einer EnvironmentVariable wieder her.

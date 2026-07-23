@@ -270,6 +270,215 @@ public class CleanupTrackingTests
         Assert.Contains("account", cleanupStep.Message);
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  ADR-2026-07-23-0808: deklarative Cleanup-Kind-Beziehungen
+    //  (cleanupChildren) + 404-Toleranz im Cleanup
+    // ════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void CleanupChildren_DeletesDeclaredChildrenBeforeParent()
+    {
+        var svc = new RestrictCleanupService();
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase>
+        {
+            new()
+            {
+                Id = "CHILD01",
+                Title = "cleanupChildren räumt Restrict-Kinder vor dem Parent",
+                Enabled = true,
+                Steps = new List<TestStep>
+                {
+                    // Simuliert die Test-LSP, an der ein Plugin asynchron Monatszeilen
+                    // (Restrict-Delete-Kinder) erzeugt hat: ohne die Deklaration
+                    // scheitert der Cleanup-Delete des Parents dauerhaft.
+                    new()
+                    {
+                        StepNumber = 1, Action = "CreateRecord", Entity = "lm_bestellung", Alias = "lsp",
+                        CleanupChildren = new List<CleanupChildRelation>
+                        {
+                            new() { Entity = "lm_umsatzplan", LookupField = "lm_bestellungid" }
+                        }
+                    }
+                }
+            }
+        });
+
+        Assert.Equal(0, result.ErrorCount);
+        // Beide plugin-erzeugten Kinder wurden zur Cleanup-Zeit gefunden und gelöscht ...
+        Assert.Equal(2, svc.DeletedChildIds.Count);
+        // ... VOR dem Parent (sonst hätte dessen Restrict-Simulation geworfen):
+        Assert.True(svc.ParentDeleted);
+        Assert.Equal(0, result.CleanupFailedCount);
+    }
+
+    [Fact]
+    public void CleanupChildren_WithoutDeclaration_ParentDeleteStillFails()
+    {
+        // Gegenprobe: ohne Deklaration bleibt das heutige Verhalten (Restrict-Blocker
+        // wird als Cleanup-Fehler gezählt, die Kinder bleiben liegen).
+        var svc = new RestrictCleanupService();
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase>
+        {
+            new()
+            {
+                Id = "CHILD02",
+                Title = "Ohne cleanupChildren blockt der Restrict-Delete weiter",
+                Enabled = true,
+                Steps = new List<TestStep>
+                {
+                    new() { StepNumber = 1, Action = "CreateRecord", Entity = "lm_bestellung", Alias = "lsp" }
+                }
+            }
+        });
+
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Empty(svc.DeletedChildIds);
+        Assert.False(svc.ParentDeleted);
+        Assert.Equal(1, result.CleanupFailedCount);
+    }
+
+    [Fact]
+    public void CleanupChildren_ConcurrentDeleteConflict_ReconcilesInFollowUpRound()
+    {
+        // Live belegt (LM DEV): der async LST-Abbau-Job des Buchungs-Delete löscht
+        // dieselben lm_umsatzplan-Kinder parallel -> "More than one concurrent Delete
+        // requests detected". Der Cleanup wertet das nicht als Fehler, sondern prüft
+        // in einer Folgerunde nach (Query leer = Ziel erreicht).
+        var svc = new RestrictCleanupService { ConflictOnFirstChildDelete = true };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase>
+        {
+            new()
+            {
+                Id = "CHILD04",
+                Title = "Konkurrierender Kind-Delete wird in Folgerunde rekonziliert",
+                Enabled = true,
+                Steps = new List<TestStep>
+                {
+                    new()
+                    {
+                        StepNumber = 1, Action = "CreateRecord", Entity = "lm_bestellung", Alias = "lsp",
+                        CleanupChildren = new List<CleanupChildRelation>
+                        {
+                            new() { Entity = "lm_umsatzplan", LookupField = "lm_bestellungid" }
+                        }
+                    }
+                }
+            }
+        });
+
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.CleanupFailedCount);
+        // Kind 1 hat der "parallele Job" gelöscht (Konflikt), Kind 2 wir selbst:
+        Assert.Single(svc.DeletedChildIds);
+        Assert.True(svc.ParentDeleted);
+    }
+
+    [Fact]
+    public void CleanupDelete_ObjectDoesNotExist_CountsAsAlreadyCleaned()
+    {
+        // Ein getrackter Record, den die Plattform-Cascade beim Delete eines
+        // Eltern-Records bereits mitgenommen hat, wirft 404/ObjectDoesNotExist —
+        // das ist kein Datenleck und darf die CLEANUP-WARNUNG nicht mehr erhöhen.
+        var svc = new RestrictCleanupService { ThrowNotExistOnParentDelete = true };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase>
+        {
+            new()
+            {
+                Id = "CHILD03",
+                Title = "404 beim Cleanup-Delete zählt als bereits geräumt",
+                Enabled = true,
+                Steps = new List<TestStep>
+                {
+                    new() { StepNumber = 1, Action = "CreateRecord", Entity = "lm_bestellung", Alias = "lsp" }
+                }
+            }
+        });
+
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.CleanupFailedCount);
+        Assert.False(svc.ParentDeleted); // der Delete kam nie durch — er warf 404
+    }
+
+    /// <summary>
+    /// Fake für die cleanupChildren-Wirkungstests: Create legt den Parent an, an dem
+    /// zwei "plugin-erzeugte" Kinder (lm_umsatzplan) hängen. RetrieveMultiple auf die
+    /// Kind-Entität liefert die noch lebenden Kinder; Delete des Parents wirft, solange
+    /// Kinder leben (Restrict-Simulation), bzw. optional 404/ObjectDoesNotExist.
+    /// </summary>
+    private sealed class RestrictCleanupService : IOrganizationService
+    {
+        public Guid ParentId { get; private set; }
+        public readonly List<Guid> LivingChildIds = new();
+        public readonly List<Guid> DeletedChildIds = new();
+        public bool ParentDeleted { get; private set; }
+        public bool ThrowNotExistOnParentDelete { get; set; }
+        public bool ConflictOnFirstChildDelete { get; set; }
+
+        public Guid Create(Entity entity)
+        {
+            ParentId = Guid.NewGuid();
+            LivingChildIds.Add(Guid.NewGuid());
+            LivingChildIds.Add(Guid.NewGuid());
+            return ParentId;
+        }
+
+        public void Delete(string entityName, Guid id)
+        {
+            if (entityName == "lm_umsatzplan")
+            {
+                if (ConflictOnFirstChildDelete)
+                {
+                    // Simuliert den parallelen async-Job: ER löscht das Kind (es lebt
+                    // nicht mehr), unser Delete-Versuch scheitert am Plattform-Konflikt.
+                    ConflictOnFirstChildDelete = false;
+                    LivingChildIds.Remove(id);
+                    throw new InvalidOperationException(
+                        $"More than one concurrent Delete requests detected for an Entity {id} and ObjectTypeCode 11553.");
+                }
+                LivingChildIds.Remove(id);
+                DeletedChildIds.Add(id);
+                return;
+            }
+            if (ThrowNotExistOnParentDelete)
+            {
+                var fault = new Microsoft.Xrm.Sdk.OrganizationServiceFault
+                {
+                    ErrorCode = unchecked((int)0x80040217),
+                    Message = $"{entityName} With Id = {id} Does Not Exist"
+                };
+                throw new System.ServiceModel.FaultException<Microsoft.Xrm.Sdk.OrganizationServiceFault>(
+                    fault, new System.ServiceModel.FaultReason(fault.Message));
+            }
+            if (LivingChildIds.Count > 0)
+                throw new InvalidOperationException(
+                    "The object you tried to delete is associated with another object and cannot be deleted.");
+            ParentDeleted = true;
+        }
+
+        public EntityCollection RetrieveMultiple(QueryBase query)
+        {
+            var ec = new EntityCollection();
+            if (query is QueryExpression qe && qe.EntityName == "lm_umsatzplan")
+                foreach (var childId in LivingChildIds)
+                    ec.Entities.Add(new Entity("lm_umsatzplan", childId));
+            return ec;
+        }
+
+        public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet) => new Entity(entityName, id);
+        public void Update(Entity entity) { }
+        public OrganizationResponse Execute(OrganizationRequest request) => new OrganizationResponse();
+        public void Associate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) { }
+        public void Disassociate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) { }
+    }
+
     /// <summary>
     /// Minimaler IOrganizationService-Fake mit Wirkungs-Tracking: Create vergibt eine
     /// Id und merkt sie, Delete merkt die gelöschte Id, RetrieveMultiple liefert für
