@@ -28,14 +28,14 @@
     <ProjectReference Include="..\D365TestCenter.Core\D365TestCenter.Core.csproj" />
   </ItemGroup>
 
-  <!-- ProjectReference-Assemblies + Bogus ins Paket einschliessen (CrmSdk bleibt aussen) -->
+  <!-- ProjectReference-Assemblies + Bogus ins Paket einschließen (CrmSdk bleibt außen) -->
   <PropertyGroup>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <!--
     Kopiert das frisch gebaute NuGet-Paket automatisch nach solution/src/pluginpackages/,
-    damit `pac solution pack` immer den aktuellen Plugin-Code einschliesst.
+    damit `pac solution pack` immer den aktuellen Plugin-Code einschließt.
     Hintergrund: FB-26 (stale nupkg in solution/src nach Backend-Rebuild).
   -->
   <Target Name="CopyNupkgToSolutionSrc" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
@@ -46,8 +46,8 @@
   </Target>
 
   <!--
-    Alle ReferenceCopyLocalPaths ins Paket einschliessen, aber Microsoft.*, System.* und
-    CrmSdk DLLs ausschliessen (sind in der Sandbox verfuegbar).
+    Alle ReferenceCopyLocalPaths ins Paket einschließen, aber Microsoft.*, System.* und
+    CrmSdk DLLs ausschließen (sind in der Sandbox verfügbar).
   -->
   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
     <ItemGroup>
