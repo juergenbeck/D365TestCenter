@@ -15,6 +15,7 @@ typische Fallen, und wofür sie da sind.
 | [`WaitForRecord` / `FindRecord`](#waitforrecord--findrecord) | Warten bis ein Record existiert (mit `orderBy`/`top` ab v5.3) |
 | [`WaitForFieldValue`](#waitforfieldvalue) | Warten bis ein Feld einen Wert hat |
 | [`WaitForNotExists`](#waitfornotexists) | Warten bis ein Record nicht mehr existiert (async-Lösch-Tests, v5.3.12) |
+| [`TrackRecord`](#trackrecord) | Serverseitig erzeugten Record (bekannte ID) fürs Cleanup vormerken (2026-07-17) |
 | [`ExecuteRequest`](#executerequest) | Beliebige SDK-Message (Merge, QualifyLead, Custom Actions, Custom APIs) |
 | [`SetEnvironmentVariable`](#setenvironmentvariable-plugin-v53) | Environment-Variable setzen mit Auto-Restore (v5.3+) |
 | [`RetrieveEnvironmentVariable`](#retrieveenvironmentvariable-plugin-v53) | Environment-Variable lesen (v5.3+) |
@@ -23,6 +24,12 @@ typische Fallen, und wofür sie da sind.
 **Negative-Path-Tests (v5.3+):** Für Steps die als erwartetes Ergebnis
 einen Fehler werfen sollen, gibt es zwei optionale Felder
 `expectFailure` und `expectException` — siehe [09-negative-path.md](09-negative-path.md).
+
+**Cleanup-Steuerung:** Für Records, die nicht der Test selbst, sondern die
+getestete API oder ein Plugin erzeugt, gibt es die optionalen Felder
+`trackForCleanup` (WaitForRecord/FindRecord), die Action `TrackRecord` und
+die Kind-Deklaration `cleanupChildren` — ausführlich in
+[12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md).
 
 **Konditionale Steps (ADR-0011):** Jeder Step kann ein optionales Feld
 `condition` tragen, das ihn überspringt, wenn eine Laufzeit-Bedingung nicht
@@ -107,6 +114,7 @@ Legt einen neuen Record an.
 | `fields` | ja | Feldwerte als Objekt. Inkl. Platzhalter. |
 | `alias` | nein | Name zum späteren Referenzieren. Empfohlen. |
 | `columns` | nein | Felder, die nach dem Create zurückgelesen werden sollen (für AutoNumber, Server-generierte Werte). |
+| `cleanupChildren` | nein | Kind-Beziehungen, die der Cleanup VOR diesem Record abräumt (plugin-erzeugte Kinder, z.B. Restrict-Delete-Monatszeilen) — siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 | `description` | nein | Log-Kommentar. |
 
 **Besonderheiten:**
@@ -222,6 +230,8 @@ Record sicher schon existiert (statt darauf zu warten).
 | `timeoutSeconds` | nein | Default 120. |
 | `orderBy` | nein | Sortierung (Plugin v5.3+), siehe unten. |
 | `top` | nein | Max-Treffer (Plugin v5.3+), Default 1. |
+| `trackForCleanup` | nein | Default **false** (gefundener Record ist Bestand). `true` NUR für Records, die die getestete API in DIESEM Lauf serverseitig erzeugt hat — dann räumt der Cleanup sie mit ab. Siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
+| `cleanupChildren` | nein | Kind-Beziehungen für den Cleanup; nur zusammen mit `trackForCleanup: true` wirksam. Siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 
 **Typisches Szenario:** Ein Plugin legt einen abhängigen Record an,
 du weißt nicht wann, brauchst ihn aber für den nächsten Step.
@@ -336,6 +346,37 @@ wenn der async-Job mal länger braucht als der Wait) ein einzelner
 `WaitForNotExists`-Step. Er scheitert von selbst, wenn der Record innerhalb des
 Timeouts nicht verschwindet, ein separater `Assert NotExists` ist dann nicht
 mehr nötig.
+
+## TrackRecord
+
+Registriert einen Record mit **bereits bekannter ID** in Registry und
+Cleanup-Löschliste — für Records, die die getestete API serverseitig erzeugt
+und deren ID als Output liefert (dann braucht es keine `WaitForRecord`-Query).
+
+```json
+{ "stepNumber": 6, "action": "TrackRecord",
+  "entity": "invoices",
+  "recordId": "{cancel.outputs.GutschriftInvoiceId}",
+  "alias": "gutschrift"
+}
+```
+
+| Feld | Pflicht | Bedeutung |
+|---|:---:|---|
+| `entity` | ja | EntitySetName (Plural). |
+| `recordId` | ja | GUID des Records, platzhalterauflösbar (typisch `{alias.outputs.X}`). |
+| `alias` | nein | Name zum späteren Referenzieren. |
+| `cleanupChildren` | nein | Kind-Beziehungen für den Cleanup — siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
+
+**Besonderheiten:**
+
+- Unauflösbarer Platzhalter oder Nicht-GUID -> harter Error (`Outcome=Error`),
+  kein stilles Nichts-Tracken; der Pre-Run-Validator meldet fehlende Felder
+  als `TRACKRECORD_MISSING_FIELDS`.
+- Dedup: Zeigt `recordId` auf einen schon getrackten Record, entsteht kein
+  zweiter Löschlisten-Eintrag.
+- Vollständiges Cleanup-Bild (wann `TrackRecord` vs. `trackForCleanup` vs.
+  `cleanupChildren`): [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md).
 
 ## ExecuteRequest
 

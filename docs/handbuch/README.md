@@ -40,6 +40,7 @@ als Async-Plugin im Server und protokolliert jeden Schritt als
 5. [Negative-Path-Tests](02-testfall-schreiben/09-negative-path.md) — `expectFailure` für erwartete Fehler (v5.3+)
 6. [Pitfalls und Plattform-Constraints](02-testfall-schreiben/10-pitfalls.md) — state-locked Creation, Plattform-Exception, Cold-Start, Lookup-Binds
 7. [Pre-Run-Validation](02-testfall-schreiben/11-pre-run-validation.md) — statischer Lint vor jedem Run plus `validate`-Cli (v5.3.8+)
+8. [Cleanup und Testdaten-Hygiene](02-testfall-schreiben/12-cleanup-und-testdaten-hygiene.md) — `trackForCleanup`, `TrackRecord`, `cleanupChildren` für serverseitig/plugin-erzeugte Records
 
 ### Du willst einen Test ausführen
 
