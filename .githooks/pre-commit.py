@@ -7,6 +7,14 @@ AUTO-GENERATED aus ~/.claude/hook-templates/python/pre-commit.py
 Prüft staged Dateien auf Umlaut-Verstöße (ASCII-Ersatz ae/oe/ue/ss statt ä/ö/ü/ß)
 im Datei-Inhalt, via gemeinsamer Lib .githooks/umlaut_check_lib.py.
 
+Zusätzlich (seit 2026-07-25): staged .md-Dateien werden auf verbotene Typografie
+geprüft (Halbgeviertstrich U+2013, Geviertstrich U+2014, Pfeil U+2192). Ersatz:
+Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->. Gilt in beiden file_scope-Profilen
+nur für .md (Code kann legitime Unicode-Zeichen aus Fremdquellen enthalten),
+nutzt dieselben Pfad-Ausschlüsse wie der Umlaut-Check; Code-Fences und
+Inline-Code sind ausgenommen (wörtliche Fremd-Zitate). Block/Warn folgt derselben
+per-Datei-Entscheidung (is_blocking_file) wie der Umlaut-Check.
+
 Das Verhalten kommt aus der optionalen .githooks/umlaut-allowlist.json:
   file_scope  : "md_only" (Default) prüft nur .md; "all_text" prüft alle Textdateien.
   enforcement : "block" (Default) -> Exit 1 bei Treffer; "warn" -> nur melden, Exit 0.
@@ -71,6 +79,32 @@ BINARY_EXT = {
     '.mkv', '.woff', '.woff2', '.ttf', '.otf', '.eot', '.exe', '.dll', '.pdb', '.so',
     '.dylib', '.bin', '.dat', '.class', '.jar', '.pyc', '.o', '.a', '.lib', '.nupkg', '.snk',
 }
+
+
+# Verbotene Typografie in .md (deutsche Doku-Prosa). Wörtliche Fremd-Zitate mit
+# diesen Zeichen gehören in Code-Fences oder Inline-Code (hier ausgenommen).
+TYPO_FORBIDDEN = {'–': 'Halbgeviertstrich', '—': 'Geviertstrich',
+                  '→': 'Pfeil'}
+_TYPO_INLINE_RE = re.compile(r'`[^`]*`')
+
+
+def get_typo_violations(lines):
+    """(zeilennr, labels, zeilentext) für Typografie-Treffer ausserhalb von
+    Code-Fences und Inline-Code."""
+    hits = []
+    in_fence = False
+    for n, line in enumerate(lines, start=1):
+        stripped = line.lstrip()
+        if stripped.startswith('```') or stripped.startswith('~~~'):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        clean = _TYPO_INLINE_RE.sub('', line)
+        labels = sorted({lab for ch, lab in TYPO_FORBIDDEN.items() if ch in clean})
+        if labels:
+            hits.append((n, labels, line))
+    return hits
 
 
 def git(*args):
@@ -163,6 +197,7 @@ def main():
     repo_root = git('rev-parse', '--show-toplevel').strip()
 
     violations = []
+    typo_violations = []
     for rel in files:
         full = os.path.join(repo_root, rel)
         if not os.path.isfile(full):
@@ -180,8 +215,12 @@ def main():
         lines = content.split('\n')
         for h in get_umlaut_violations(lines):
             violations.append((rel, h))
+        # Typografie: nur .md (auch im all_text-Profil), gleiche Ausschlüsse.
+        if rel.lower().endswith('.md'):
+            for t in get_typo_violations(lines):
+                typo_violations.append((rel, t))
 
-    if not violations:
+    if not violations and not typo_violations:
         return 0
 
     # Pro Datei block vs. warn entscheiden (block_extensions/warn_extensions/global).
@@ -206,12 +245,34 @@ def main():
                 snippet = text[:117] + '...' if len(text) > 120 else text
                 w('      > %s\n' % snippet)
 
+    # Typografie-Treffer: gleiche block/warn-Entscheidung pro Datei wie Umlaute.
+    typo_block, typo_warn = [], []
+    for rel, t in typo_violations:
+        (typo_block if is_blocking_file(rel, cfg) else typo_warn).append((rel, t))
+
+    def report_typo(group_viol, title):
+        w('\n=================================================================\n')
+        w(' %s\n' % title)
+        w('=================================================================\n\n')
+        for rel, group in groupby(group_viol, key=lambda x: x[0]):
+            w('  %s\n' % rel)
+            for _, (n, labels, text) in group:
+                w('    Zeile %4d [Typografie]: %s -> stattdessen Komma, Punkt, '
+                  'Doppelpunkt bzw. ASCII-Pfeil ->.\n' % (n, ', '.join(labels)))
+                snippet = text.strip()
+                snippet = snippet[:117] + '...' if len(snippet) > 120 else snippet
+                w('      > %s\n' % snippet)
+
     if block_viol:
         report(block_viol, 'Pre-Commit-Hook: Umlaut-Verstöße erkannt (Commit blockiert)')
     if warn_viol:
         report(warn_viol, 'Pre-Commit-Hook: Umlaut-Verstöße (WARNUNG, blockt NICHT)')
+    if typo_block:
+        report_typo(typo_block, 'Pre-Commit-Hook: verbotene Typografie in .md (Commit blockiert)')
+    if typo_warn:
+        report_typo(typo_warn, 'Pre-Commit-Hook: verbotene Typografie in .md (WARNUNG, blockt NICHT)')
     w('\n Bypass im Notfall: git commit --no-verify (DOKUMENTIEREN, warum)\n\n')
-    return 1 if block_viol else 0
+    return 1 if (block_viol or typo_block) else 0
 
 
 if __name__ == '__main__':

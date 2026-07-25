@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# commit-msg Hook — AUTO-GENERATED
+# commit-msg Hook, AUTO-GENERATED
 #
 # Quelle:    ~/.claude/umlaute-triggers.json (Version 2, Stand 2026-07-16)
 # Generator: ~/.claude/scripts/Sync-UmlautTriggers.ps1
 # Manuelle Änderungen werden beim nächsten Sync überschrieben.
 #
 # Zweck:     Blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten
-#            (ae/oe/ue/ss statt ä/ö/ü/ß).
+#            (ae/oe/ue/ss statt ä/ö/ü/ß) sowie mit verbotener Typografie
+#            (Halbgeviert-/Geviertstrich, Pfeil-Sonderzeichen) in der Message.
 #
 # Aktivierung pro Clone (einmalig):
 #   git config core.hooksPath .githooks
@@ -70,6 +71,39 @@ EOF
 
 Quelle der Trigger-Liste: ~/.claude/umlaute-triggers.json
 Pflege:                   pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
+
+Umgehen (nur in echten Ausnahmen):
+    git commit --no-verify
+
+============================================================
+EOF
+    exit 1
+fi
+
+# Verbotene Typografie in der Commit-Message: Halbgeviertstrich, Geviertstrich,
+# Pfeil-Sonderzeichen. Ersatz: Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->.
+# Backtick-Zitate sind in $STRIPPED bereits entfernt (Zitat-Ausnahme).
+# Alternation ganzer UTF-8-Sequenzen (kein [Klassen]-Match: der wäre in C-Locale
+# byteweise und träfe auch fremde Zeichen mit gemeinsamen UTF-8-Bytes).
+TYPO_LINES=$(printf '%s\n' "$STRIPPED" | grep -nE '–|—|→' | cut -d: -f1)
+if [ -n "$TYPO_LINES" ]; then
+    cat >&2 <<'EOF'
+
+============================================================
+  COMMIT BLOCKIERT: verbotene Typografie in Commit-Message
+============================================================
+
+Halbgeviertstrich, Geviertstrich und Pfeil-Sonderzeichen sind
+verboten. Stattdessen Komma, Punkt, Doppelpunkt bzw. ASCII-
+Pfeil ->. Zitate mit solchen Zeichen in Backticks setzen.
+
+Trefferzeilen (Backtick-Zitate bereits ignoriert):
+EOF
+    printf '%s\n' "$TYPO_LINES" | while IFS= read -r n; do
+        [ -n "$n" ] || continue
+        printf '%s:%s\n' "$n" "$(printf '%s\n' "$STRIPPED" | sed -n "${n}p")" >&2
+    done
+    cat >&2 <<'EOF'
 
 Umgehen (nur in echten Ausnahmen):
     git commit --no-verify
