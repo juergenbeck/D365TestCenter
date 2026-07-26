@@ -36,7 +36,7 @@ _RE_INLINE = re.compile(r"`[^`]*`")
 
 
 def violations(text):
-    """Fundstellen ausserhalb von Code-Fences und Inline-Code, als Label-Menge."""
+    """Fundstellen außerhalb von Code-Fences und Inline-Code, als Label-Menge."""
     found = set()
     in_fence = False
     for line in text.split("\n"):

@@ -89,7 +89,7 @@ _TYPO_INLINE_RE = re.compile(r'`[^`]*`')
 
 
 def get_typo_violations(lines):
-    """(zeilennr, labels, zeilentext) für Typografie-Treffer ausserhalb von
+    """(zeilennr, labels, zeilentext) für Typografie-Treffer außerhalb von
     Code-Fences und Inline-Code."""
     hits = []
     in_fence = False
