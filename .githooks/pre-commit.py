@@ -7,6 +7,16 @@ AUTO-GENERATED aus ~/.claude/hook-templates/python/pre-commit.py
 Prüft staged Dateien auf Umlaut-Verstöße (ASCII-Ersatz ae/oe/ue/ss statt ä/ö/ü/ß)
 im Datei-Inhalt, via gemeinsamer Lib .githooks/umlaut_check_lib.py.
 
+PRÜFEBENE (ADR-028, seit 2026-07-27, NICHT ohne neues ADR umdrehen): geprüft wird,
+was der Commit HINZUFÜGT, nicht der Dateibestand. Der Scan läuft weiterhin über den
+ganzen Dateiinhalt (nur so stimmen Code-Fences und mehrzeilige Inline-Spans),
+gemeldet wird aber nur, was in einer hinzugefügten Zeile steht (parse_added_lines).
+Grund: sonst verlangt der Hook Änderungen an eingefrorener Historie, sobald jemand
+eine alte Datei aus anderem Grund anfasst, und die Pfad-Ausnahmeliste muss jede
+Ordner-Umbenennung nachziehen (bei handover/ -> sessions/ ist genau das misslungen).
+Neue Dateien bestehen nur aus hinzugefügten Zeilen und werden weiterhin vollständig
+geprüft; Altbestand bereinigt man bewusst mit .githooks/fix-typografie.py.
+
 Zusätzlich (seit 2026-07-25): staged .md-Dateien werden auf verbotene Typografie
 geprüft (Halbgeviertstrich U+2013, Geviertstrich U+2014, Pfeil U+2192). Ersatz:
 Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->. Gilt in beiden file_scope-Profilen
@@ -112,6 +122,35 @@ def git(*args):
                           encoding='utf-8').stdout
 
 
+# Diff-Hunk-Kopf: @@ -alt,n +neu,m @@ - die Gruppe ist die erste Zeilennummer im NEUEN Stand.
+_RE_HUNK = re.compile(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@')
+
+
+def parse_added_lines(diff_text):
+    """Menge der Zeilennummern (1-basiert, neuer Dateizustand), die der Commit
+    hinzufügt. Grundlage der diff-basierten Prüfung nach ADR-028. Robust gegen die
+    +++/---Header. Leere Menge (etwa reine Umbenennung ohne Inhaltsänderung) heißt:
+    dieser Commit fügt nichts hinzu, also gibt es nichts zu verantworten."""
+    added = set()
+    new_ln = 0
+    for line in diff_text.split('\n'):
+        if line.startswith('@@'):
+            m = _RE_HUNK.match(line)
+            if m:
+                new_ln = int(m.group(1))
+            continue
+        if line.startswith('+++') or line.startswith('---'):
+            continue
+        if line.startswith('+'):
+            added.add(new_ln)
+            new_ln += 1
+        elif line.startswith('-'):
+            continue
+        else:
+            new_ln += 1
+    return added
+
+
 def _norm_ext(ext):
     """Normalisiert eine Endung auf lowercase mit führendem Punkt ('.cs')."""
     ext = str(ext).strip().lower()
@@ -213,11 +252,23 @@ def main():
         if '\x00' in content:  # Binär-Absicherung (all_text)
             continue
         lines = content.split('\n')
-        for h in get_umlaut_violations(lines):
-            violations.append((rel, h))
+        uml = get_umlaut_violations(lines)
         # Typografie: nur .md (auch im all_text-Profil), gleiche Ausschlüsse.
-        if rel.lower().endswith('.md'):
-            for t in get_typo_violations(lines):
+        typ = get_typo_violations(lines) if rel.lower().endswith('.md') else []
+        if not uml and not typ:
+            continue
+        # ADR-028: verantwortet wird nur, was dieser Commit hinzufügt. Der Scan oben
+        # braucht die GANZE Datei (Code-Fences und mehrzeilige Inline-Spans lassen sich
+        # aus einem Diff-Ausschnitt nicht korrekt erkennen), gemeldet wird danach nur,
+        # was in einer hinzugefügten Zeile steht. Eine neue Datei besteht ausschließlich
+        # aus hinzugefügten Zeilen und wird damit weiterhin vollständig geprüft.
+        # Der git-Aufruf steht bewusst hinter dem Treffer-Check: ohne Treffer kostet er nichts.
+        added = parse_added_lines(git('diff', '--cached', '-U0', '--', rel))
+        for h in uml:
+            if h['line'] in added:
+                violations.append((rel, h))
+        for t in typ:
+            if t[0] in added:
                 typo_violations.append((rel, t))
 
     if not violations and not typo_violations:
