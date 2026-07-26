@@ -10,9 +10,15 @@ namespace D365TestCenter.Cli.UiAutomation;
 /// then persists the cookies + localStorage to a JSON file that can be loaded
 /// by --browser-state in the run command.
 ///
-/// Hard-guard: only DEV URLs are accepted. PROD/TEST/DATATEST setups are
-/// refused with a clear error — the Markant access matrix forbids non-DEV
-/// UI test traffic.
+/// Hard-guard: only DEV and TEST URLs are accepted. PROD, DATATEST and CDHTEST
+/// setups are refused with a clear error.
+///
+/// TEST was opened up on 2026-07-26 so that the manual Zephyr tester cases, which
+/// are written against TEST and reference fixed TEST records, can be mirrored by
+/// automated runs. Read-only checks on TEST are explicitly allowed by the Markant
+/// access matrix; anything that writes still needs a per-action approval. This
+/// guard only governs where a login state may be created, it cannot enforce
+/// read-only behaviour, so test cases targeting TEST must be read-only by design.
 /// </summary>
 public static class StorageStateSetup
 {
@@ -24,12 +30,24 @@ public static class StorageStateSetup
             return 1;
         }
 
-        // DEV-only hard-guard. Markant access matrix: PROD/TEST/DATATEST = READONLY.
-        if (!org.Contains("-dev.", StringComparison.OrdinalIgnoreCase))
+        // Hard-guard: DEV (voller Zugriff) und TEST (nur lesende UI-Fälle) sind erlaubt,
+        // PROD, DATATEST und CDHTEST bleiben gesperrt.
+        var istDev = org.Contains("-dev.", StringComparison.OrdinalIgnoreCase);
+        var istTest = org.Contains("-test.", StringComparison.OrdinalIgnoreCase);
+
+        if (!istDev && !istTest)
         {
-            Console.Error.WriteLine($"FEHLER: --org '{org}' ist nicht eine DEV-URL.");
-            Console.Error.WriteLine("Storage-State-Setup ist auf DEV beschränkt (Markant-Zugriffsmatrix).");
+            Console.Error.WriteLine($"FEHLER: --org '{org}' ist weder eine DEV- noch eine TEST-URL.");
+            Console.Error.WriteLine("Storage-State-Setup ist auf DEV und TEST beschränkt (Markant-Zugriffsmatrix).");
             return 2;
+        }
+
+        if (istTest)
+        {
+            Console.WriteLine("HINWEIS: Anmeldezustand für TEST.");
+            Console.WriteLine("  Auf TEST sind ausschließlich LESENDE UI-Fälle zulässig (Goldene Regel).");
+            Console.WriteLine("  Jeder schreibende Eingriff braucht dort eine ausdrückliche Freigabe je Aktion.");
+            Console.WriteLine();
         }
 
         Console.WriteLine($"==> Storage-State-Setup");
@@ -52,7 +70,7 @@ public static class StorageStateSetup
 
         Console.WriteLine();
         Console.WriteLine(">> Bitte jetzt im geöffneten Browser einloggen (MFA ggf.).");
-        Console.WriteLine(">> Skript wartet AUTOMATISCH bis Markant DEV geladen ist (Timeout 5 Min).");
+        Console.WriteLine(">> Skript wartet AUTOMATISCH bis die Markant-Umgebung geladen ist (Timeout 5 Min).");
         Console.WriteLine();
 
         try
@@ -76,7 +94,7 @@ public static class StorageStateSetup
         {
             Console.Error.WriteLine();
             Console.Error.WriteLine("    TIMEOUT (5 Min): Login nicht erkannt.");
-            Console.Error.WriteLine("    Prüfen: Bist du auf der Markant-DEV-Hauptseite?");
+            Console.Error.WriteLine("    Prüfen: Bist du auf der Hauptseite der Ziel-Umgebung?");
             await browser.CloseAsync();
             return 3;
         }
