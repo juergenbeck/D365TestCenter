@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """PreToolUse-Sperre: blockt Write/Edit auf .md-Dateien, wenn der zu schreibende
-Inhalt verbotene Typografie enthält (Halbgeviertstrich U+2013, Geviertstrich U+2014,
-Pfeil U+2192). Ersatz laut globaler CLAUDE.md "Sprache und Stil": Komma, Punkt,
-Doppelpunkt bzw. ASCII-Pfeil ->.
+Inhalt verbotene Typografie enthält (Halbgeviertstrich U+2013, Geviertstrich U+2014
+sowie die fünf Pfeile U+2192, U+2190, U+2194, U+21D2, U+21D4). Ersatz laut globaler
+CLAUDE.md "Sprache und Stil": Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->.
 
 Code-Fences und Inline-Code sind ausgenommen (dort dürfen wörtlich zitierte
 Fremdinhalte stehen).
@@ -30,7 +30,11 @@ import sys
 TYPO = {
     "–": "Halbgeviertstrich",
     "—": "Geviertstrich",
-    "→": "Pfeil (statt dessen ->)",
+    "→": "Pfeil rechts (stattdessen ->)",
+    "←": "Pfeil links (stattdessen <-)",
+    "↔": "Doppelpfeil (stattdessen <->)",
+    "⇒": "Doppelpfeil rechts (stattdessen =>)",
+    "⇔": "Doppelpfeil beidseitig (stattdessen <=>)",
 }
 _RE_INLINE = re.compile(r"`[^`]*`")
 

@@ -2,7 +2,7 @@
 """PreToolUse-Sperre für prosa-tragende Tool-Aufrufe (AskUserQuestion, TaskCreate,
 TaskUpdate): BLOCKT per permissionDecision "deny", wenn in einem deutschen
 Frei-Text-Feld ein ASCII-Surrogat (ae/oe/ue/ss statt ä/ö/ü/ß) ODER verbotene
-Typografie (Halbgeviert-/Geviertstrich, Pfeil) steht. Der Aufruf erreicht den User
+Typografie (Halbgeviert-/Geviertstrich, die fünf Pfeile) steht. Der Aufruf erreicht den User
 bzw. das System dann nicht; Claude bekommt die Begründung zurück und muss mit echten
 Umlauten neu absetzen.
 
@@ -43,7 +43,9 @@ import json
 import re
 import sys
 
-TYPO = {"–": "Halbgeviertstrich", "—": "Geviertstrich", "→": "Pfeil"}
+TYPO = {"–": "Halbgeviertstrich", "—": "Geviertstrich", "→": "Pfeil rechts",
+        "←": "Pfeil links", "↔": "Doppelpfeil", "⇒": "Doppelpfeil rechts",
+        "⇔": "Doppelpfeil beidseitig"}
 
 # >>> AUTO-GENERATED:TOOLUMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
 TOOL_TRIGGERS = r'\b\w*(abhaengig|abloest|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|allmaehl|anhaenge|aufgeloest|aufloesung|aufraeum|ausfueh|ausgefuehrt|auszueg|beduerf|begruend|behoerde|beruecks|bestaet|bezueg|braeuch|bruech|bruecke|buerg|domaene|durchfueh|durchgefuehrt|einfueh|einfuehr|empfaenger|enthaelt|entitaeten|ergaen|ergaenz|erlaeuter|erloes|erschoepft|erwaeg|erwaehnt|fachdomaene|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuehrend|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaehrli|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gepruft|geschaeft|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengen|haengt|haetten|haeufig|haupts|hinzugefuegt|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|klaerung|knuepf|koennen|koennte|konformitaet|kraeft|kuendig|kuenft|kuenftig|kuerz|laed|laenge|laengst|laesst|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|natuerlich|noetig|nuetz|nuetzlich|oeffn|plaene|praemi|praesent|praezis|primaer|pruef|pruefen|pruefung|qualitaet|raeum|realitaet|regulaer|rueck|ruecksprach|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|stoerung|strassen|stueck|stuetz|taegli|taetig|tatsaechli|temporaer|tonalitaet|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|uebersicht|ueberspring|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|ungueltig|unmoegl|verfueg|verknuepf|veroeffentl|verstaend|verstaendlich|verstaerken|verstoss|vollstaendig|vorgaenger|vorraet|vorschlaeg|waecht|waehl|waehr|waere|waerts|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|ausschliess|ausschliesslich|aussen|äusser|ausserdem|ausserhalb|aussert|aussreich|begruess|beiss|einschliess|fliess|gemaess|geniess|giess|groess|gross|gröss|grosse|grosser|grosses|hauptstrass|heiss|laess|maess|mäss|massg|massnahm|regelmaess|reiss|schiess|schliess|süss|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b|\b(ausser|busse|draussen|fasse|hauptstrasse)\b'

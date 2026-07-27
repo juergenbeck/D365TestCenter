@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Ersetzt verbotene Typografie (U+2013, U+2014, U+2192) in Markdown regelbasiert.
+"""Ersetzt verbotene Typografie (U+2013, U+2014 und die fünf Pfeile U+2192, U+2190,
+U+2194, U+21D2, U+21D4) in Markdown regelbasiert.
 
 Die Schreibregel (globale CLAUDE.md, Abschnitt Sprache und Stil) verbietet Halbgeviert-,
 Geviertstrich und Pfeil-Sonderzeichen. In Code-Fences und Inline-Code sind sie als
@@ -40,9 +41,11 @@ except Exception:
 
 INLINE = re.compile(r'`[^`]*`')
 DASH = '–—'          # Halbgeviert, Geviert
-# Pfeil-Sonderzeichen und ihr ASCII-Ersatz. Die letzten vier stehen nicht in der
-# LMApp-Regel, aber in Markants typo_check_lib; sie hier mitzuführen kostet nichts
-# und macht das Werkzeug für die ganze Hook-Familie brauchbar.
+# Pfeil-Sonderzeichen und ihr ASCII-Ersatz. Bis 2026-07-27 kannte nur Markants
+# typo_check_lib alle fünf, die zentrale Kette dagegen nur den Rechtspfeil; das
+# Werkzeug war dadurch strenger als der Hook, den es bedient. Seit dem Rollout
+# derselben Menge in pre-commit.py, block-typografie.py, check-tool-umlaute.py und
+# den commit-msg-Hook decken sich Werkzeug und Durchsetzung wieder.
 ARROWS = {'→': '->', '←': '<-', '↔': '<->', '⇒': '=>', '⇔': '<=>'}
 FORBIDDEN = DASH + ''.join(ARROWS)
 

@@ -18,7 +18,9 @@ Neue Dateien bestehen nur aus hinzugefügten Zeilen und werden weiterhin vollst�
 geprüft; Altbestand bereinigt man bewusst mit .githooks/fix-typografie.py.
 
 Zusätzlich (seit 2026-07-25): staged .md-Dateien werden auf verbotene Typografie
-geprüft (Halbgeviertstrich U+2013, Geviertstrich U+2014, Pfeil U+2192). Ersatz:
+geprüft (Halbgeviertstrich U+2013, Geviertstrich U+2014 sowie die fünf Pfeile
+U+2192, U+2190, U+2194, U+21D2, U+21D4; die vier zusätzlichen Pfeile seit
+2026-07-27, vorher kannte die zentrale Kette nur U+2192). Ersatz:
 Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->. Gilt in beiden file_scope-Profilen
 nur für .md (Code kann legitime Unicode-Zeichen aus Fremdquellen enthalten),
 nutzt dieselben Pfad-Ausschlüsse wie der Umlaut-Check; Code-Fences und
@@ -94,7 +96,9 @@ BINARY_EXT = {
 # Verbotene Typografie in .md (deutsche Doku-Prosa). Wörtliche Fremd-Zitate mit
 # diesen Zeichen gehören in Code-Fences oder Inline-Code (hier ausgenommen).
 TYPO_FORBIDDEN = {'–': 'Halbgeviertstrich', '—': 'Geviertstrich',
-                  '→': 'Pfeil'}
+                  '→': 'Pfeil rechts', '←': 'Pfeil links',
+                  '↔': 'Doppelpfeil', '⇒': 'Doppelpfeil rechts',
+                  '⇔': 'Doppelpfeil beidseitig'}
 _TYPO_INLINE_RE = re.compile(r'`[^`]*`')
 
 

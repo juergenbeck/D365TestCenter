@@ -85,7 +85,9 @@ fi
 # Backtick-Zitate sind in $STRIPPED bereits entfernt (Zitat-Ausnahme).
 # Alternation ganzer UTF-8-Sequenzen (kein [Klassen]-Match: der wäre in C-Locale
 # byteweise und träfe auch fremde Zeichen mit gemeinsamen UTF-8-Bytes).
-TYPO_LINES=$(printf '%s\n' "$STRIPPED" | grep -nE '–|—|→' | cut -d: -f1)
+# Seit 2026-07-27 alle fünf Pfeile (U+2192, U+2190, U+2194, U+21D2, U+21D4), vorher
+# nur der Rechtspfeil: dieselbe Menge wie in pre-commit.py und den PreToolUse-Sperren.
+TYPO_LINES=$(printf '%s\n' "$STRIPPED" | grep -nE '–|—|→|←|↔|⇒|⇔' | cut -d: -f1)
 if [ -n "$TYPO_LINES" ]; then
     cat >&2 <<'EOF'
 
