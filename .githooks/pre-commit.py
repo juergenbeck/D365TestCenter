@@ -70,18 +70,24 @@ from umlaut_check_lib import get_umlaut_violations
 COMPANION_RE = re.compile(
     r'\.(pdf|docx?|xlsx?|pptx?|vcf|txt|csv|ics|jpe?g|png|gif|odt|ods)\.md$', re.I)
 
-# Default-Ausschlüsse für das md_only-Profil: gespiegelte Skill-Bibliothek, eingefrorene
-# Historie/Traceability, Planungs-/Backlog-/Jira-Dumps, Archive, generierte Outputs.
+# Default-Ausschlüsse für das md_only-Profil: gespiegelte Skill-Bibliothek, Dumps
+# (Jira, Backlog, Planung), generierte Outputs und Scans, 1:1-Kopien und Fremdtext.
 # NUR im md_only-Profil aktiv. Im all_text-Profil definiert das Repo seine Ausschlüsse
 # vollständig über generated[] - sonst würde z.B. .claude/skills/ fälschlich ausgenommen,
 # obwohl ein Repo (Markant) seine Skills bewusst prüft.
+#
+# Seit 2026-07-27 (ADR-028) NICHT mehr ausgenommen: eigene Prosa in handover/, changelog/,
+# reviews/, research/, recherche/, poc/, _archive/, 99_archiv/ sowie alte-notizen,
+# lessons-learned und skeptiker-review. Die Ausnahme gab es, weil der Hook den ganzen
+# Dateibestand prüfte und eingefrorene Historie sonst zur Änderung gezwungen hätte; seit
+# der diff-basierten Prüfung ist dieser Grund weg. Was bleibt, führt den Verstoß als
+# DATEN (Fremdtext, Dump, generierte Kopie) und darf inhaltlich nicht angetastet werden.
 DEFAULT_EXCLUDE_RE = re.compile(
     r'(^|/)(\.github|\.claude)/skills/'
-    r'|(^|/)(handover|changelog|reviews|research|recherche|poc|backlog|planung|jira|output|scans|99_archiv|99_confluence-export)/'
-    r'|(^|/)_archive/'
+    r'|(^|/)(backlog|planung|jira|output|scans|99_confluence-export)/'
     r'|(^|/)Wissen/temp/'
     r'|(^|/)memory-snapshot[^/]*/'
-    r'|(feedback|bug-report|alte-notizen|lessons-learned|skeptiker-review)', re.I)
+    r'|(feedback|bug-report)', re.I)
 
 # Binär-Endungen (nur all_text-Profil relevant): zeilenweiser Textcheck wäre sinnlos.
 BINARY_EXT = {
