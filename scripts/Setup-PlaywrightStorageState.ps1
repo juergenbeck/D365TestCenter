@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Creates a Playwright storage-state file for UI tests against Markant DEV (ADR-0006).
+    Creates a Playwright storage-state file for UI tests against Markant DEV or TEST (ADR-0006).
 
 .DESCRIPTION
     Wrapper around `D365TestCenter.Cli ui-setup`. Opens a headed Chromium,
     waits for manual login (MFA if needed), persists the storage-state.
 
-    DEV-only hard-guard is enforced inside the CLI. PROD/TEST/DATATEST URLs
-    are refused (Markant access matrix).
+    A DEV-and-TEST hard guard is enforced inside the CLI. PROD, DATATEST,
+    CDHTEST and other URLs are refused (Markant access matrix).
 
 .PARAMETER Org
     Dataverse org URL. Default: https://markant-dev.crm4.dynamics.com

@@ -320,7 +320,7 @@ public static class Program
 
         // ── ui-setup command (ADR-0006) ──────────────────────────
         var uiSetupCommand = new Command("ui-setup",
-            "Create a Playwright storage-state by interactive login (UI tests). DEV-only hard-guard.");
+            "Create a Playwright storage-state by interactive login for DEV or TEST UI tests.");
         uiSetupCommand.AddOption(orgOption);
         uiSetupCommand.AddOption(new Option<string>("--output", () => "auth/markant-dev-juergen.json",
             "Output path for the storage-state JSON"));

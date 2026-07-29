@@ -5,7 +5,7 @@ namespace D365TestCenter.Cli.UiAutomation;
 /// <summary>
 /// Interactive Playwright storage-state setup for UI tests (ADR-0006).
 ///
-/// Opens a headed Chromium pointed at the Markant DEV org URL, waits up to
+/// Opens a headed Chromium pointed at a Markant DEV or TEST org URL, waits up to
 /// 5 minutes for the user to complete the manual login (with MFA if needed),
 /// then persists the cookies + localStorage to a JSON file that can be loaded
 /// by --browser-state in the run command.
@@ -15,10 +15,10 @@ namespace D365TestCenter.Cli.UiAutomation;
 ///
 /// TEST was opened up on 2026-07-26 so that the manual Zephyr tester cases, which
 /// are written against TEST and reference fixed TEST records, can be mirrored by
-/// automated runs. Read-only checks on TEST are explicitly allowed by the Markant
-/// access matrix; anything that writes still needs a per-action approval. This
-/// guard only governs where a login state may be created, it cannot enforce
-/// read-only behaviour, so test cases targeting TEST must be read-only by design.
+/// automated runs. TEST permits the read and write steps required by the
+/// commissioned test case without a separate approval for each write. This guard
+/// only governs where a login state may be created and does not expand the scope
+/// of the commissioned test.
 /// </summary>
 public static class StorageStateSetup
 {
@@ -30,8 +30,8 @@ public static class StorageStateSetup
             return 1;
         }
 
-        // Hard-guard: DEV (voller Zugriff) und TEST (nur lesende UI-Fälle) sind erlaubt,
-        // PROD, DATATEST und CDHTEST bleiben gesperrt.
+        // Hard guard: DEV and TEST are accepted. PROD, DATATEST, CDHTEST and
+        // all other hosts remain blocked.
         var istDev = org.Contains("-dev.", StringComparison.OrdinalIgnoreCase);
         var istTest = org.Contains("-test.", StringComparison.OrdinalIgnoreCase);
 
@@ -44,9 +44,10 @@ public static class StorageStateSetup
 
         if (istTest)
         {
-            Console.WriteLine("HINWEIS: Anmeldezustand für TEST.");
-            Console.WriteLine("  Auf TEST sind ausschließlich LESENDE UI-Fälle zulässig (Goldene Regel).");
-            Console.WriteLine("  Jeder schreibende Eingriff braucht dort eine ausdrückliche Freigabe je Aktion.");
+            foreach (var line in GetTestEnvironmentNotice())
+            {
+                Console.WriteLine(line);
+            }
             Console.WriteLine();
         }
 
@@ -110,4 +111,12 @@ public static class StorageStateSetup
         await browser.CloseAsync();
         return 0;
     }
+
+    internal static IReadOnlyList<string> GetTestEnvironmentNotice() =>
+    [
+        "HINWEIS: Anmeldezustand für TEST.",
+        "  Auf TEST sind die beauftragten UI-Testfälle mit Lese- und Schreibschritten zulässig.",
+        "  Schreibschritte benötigen keine gesonderte Freigabe je Aktion.",
+        "  Der Anmeldezustand erweitert den beauftragten Testumfang nicht."
+    ];
 }
