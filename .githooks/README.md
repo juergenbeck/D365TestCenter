@@ -60,3 +60,26 @@ synchronisieren:
 ```powershell
 pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Apply
 ```
+
+### Der Stamm muss lang genug sein
+
+Der Sync misst vorher automatisch, ob ein Stamm korrekte deutsche Wörter blockt,
+und bricht ab, wenn ja. Grundlage ist eine echte Wortliste (die mit LibreOffice
+gelieferte Hunspell-Datei `de_DE_frami.dic`); jeder Treffer darin ist beweisbar
+ein Fehlalarm. Nur die Prüfung, ohne Sync:
+
+```powershell
+pwsh ~/.claude/scripts/Sync-UmlautTriggers.ps1 -Verify
+```
+
+Warum das nötig ist: Der zu kurze Stamm `haupts` blockte Hauptstrang, Hauptsache,
+Hauptstadt und sogar das korrekt geschriebene Wort hauptsächlich. Der Hook
+vergleicht in der C-Locale, dort zählt ein Umlaut nicht als Wortzeichen und bildet
+eine Wortgrenze direkt hinter dem Stamm. Ein zu kurzer Stamm trifft deshalb auch
+Wörter, die den Umlaut richtig schreiben.
+
+Meldet die Prüfung einen Treffer, gibt es drei Wege: den Stamm länger fassen
+(`haupts` wurde zu `hauptsaech`), das korrekte Wort in `whitelist_tokens`
+aufnehmen (verlustfrei, neutralisiert nur das ganze Token und erhält die Erkennung
+im Kompositum), oder den Stamm mit Begründung in `accepted_false_positives`
+eintragen. `-SkipVerify` umgeht die Sperre, sollte aber die Ausnahme bleiben.
