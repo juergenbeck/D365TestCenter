@@ -39,6 +39,18 @@ Restmenge ist damit klein. Ausnahmen des Repos per `--exclude <regex>`
 ausschließen (Muster nicht mit `/` beginnen lassen: Git-Bash wandelt das in
 einen Windows-Pfad um, und der Ausschluss läuft ins Leere).
 
+## Betreff einer Commit-Message nie mit `#` beginnen
+
+Belegt 2026-07-31: Eine Message mit dem Betreff `#40267 abgeschlossen: …` überlebt zwar ein
+direktes `git commit -m`, wird aber bei einem späteren `git rebase` durch den Editor gereicht,
+und dort gilt `#` am Zeilenanfang als Kommentarzeichen. Der Betreff verschwindet ersatzlos, die
+erste Body-Zeile rutscht an seine Stelle, und der Commit trägt danach dauerhaft eine
+Roman-Message ohne Titel. Sichtbar wird das erst im Log nach dem Rebase, also zu spät.
+
+Ticketnummern gehören deshalb hinter ein Wort: `Ticket 40267 abgeschlossen: …` oder
+`40267 abgeschlossen: …`. Im Body sind `#`-Verweise unkritisch, solange sie nicht am Zeilenanfang
+stehen.
+
 ## Pflege
 
 Neuen Verstoß-Stamm entdeckt? In `~/.claude/umlaute-triggers.json` ergänzen
