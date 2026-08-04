@@ -8,7 +8,7 @@ gesetzt wird.
 > Hook-Kette (`umlaut_check_lib.py`, `pre-commit.py`, `pre-commit`,
 > `fix-typografie.py`, `.claude/hooks/check-umlaute.py`,
 > `.claude/hooks/check-tool-umlaute.py`,
-> `.claude/hooks/block-typografie.py`) werden
+> `.claude/hooks/block-typografie.py`, `.claude/hooks/check-git-sync.py`) werden
 > automatisch aus der zentralen
 > Trigger-Liste `~/.claude/umlaute-triggers.json` plus den Templates unter
 > `~/.claude/hook-templates/python/` generiert. Manuelle Änderungen werden
