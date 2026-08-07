@@ -14,6 +14,8 @@ Quelle wie der Commit-Hook):
                 "all_text" prüft zusätzlich alle weiteren Textdateien (nur die Änderung).
   generated[] : Regex-Liste (repo-relativer Pfad), ausgeschlossene Pfade.
   exceptions[]: [{path}] exakte oder glob-Einzeldatei-Ausnahmen.
+  fence_scope : was INNERHALB eines Code-Fences in .md geprüft wird (ADR-2026-08-08-0117):
+                "off" | "comments" | "comments+literals" (Default "comments+literals").
 Fehlt die Config: md_only, keine Zusatz-Ausschlüsse (verhält sich wie zuvor).
 
 Scope-Begründung: .md wird ganz geprüft (geringer Alt-Drift, Verstöße überall
@@ -48,7 +50,8 @@ BINARY_EXT = {
 def load_config(githooks_dir):
     """Liest .githooks/umlaut-allowlist.json. Defaults (fehlt/kaputt): md_only,
     keine Zusatz-Ausschlüsse."""
-    cfg = {'file_scope': 'md_only', 'generated': [], 'exceptions': []}
+    cfg = {'file_scope': 'md_only', 'generated': [], 'exceptions': [],
+           'fence_scope': 'comments+literals'}
     path = os.path.join(githooks_dir, 'umlaut-allowlist.json')
     if not os.path.isfile(path):
         return cfg
@@ -70,6 +73,8 @@ def load_config(githooks_dir):
     if data.get('exceptions'):
         cfg['exceptions'] = [e['path'] for e in data['exceptions']
                              if isinstance(e, dict) and e.get('path')]
+    if data.get('fence_scope'):
+        cfg['fence_scope'] = str(data['fence_scope'])
     return cfg
 
 
@@ -153,7 +158,14 @@ def main():
         lines = new_text.split('\n')
         scope_note = ' (in der Änderung)'
 
-    hits = get_umlaut_violations(lines)
+    # Fence-Prüfung nur für .md (ADR-2026-08-08-0117): deutsche Kommentare und
+    # Meldungstexte im Beispielcode sind Prosa. Sie hier zu melden ist der
+    # wirksamste Hebel, weil die Warnung in der Session ankommt, in der die Datei
+    # entsteht. Warnt nur, blockt nie.
+    try:
+        hits = get_umlaut_violations(lines, cfg['fence_scope'] if is_md else None)
+    except TypeError:
+        hits = get_umlaut_violations(lines)  # ältere Lib ohne fence_scope
     if not hits:
         return 0
 
@@ -161,6 +173,10 @@ def main():
     details = []
     for h in hits:
         note = ' (alleinstehend)' if h['block'] == 2 else ''
+        if h.get('scope') == 'fence-kommentar':
+            note += ' (Kommentar im Code-Fence)'
+        elif h.get('scope') == 'fence-literal':
+            note += ' (Text im Code-Fence)'
         details.append("  '%s'%s -> %s" % (h['match'], note, h['text']))
     msg = ("UMLAUT-VERSTÖSSE in %s%s: %d gefunden.\n%s\n"
            "Bitte echte Umlaute (ä ö ü ß) statt ae/oe/ue/ss verwenden. "

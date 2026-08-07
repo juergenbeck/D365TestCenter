@@ -15,11 +15,17 @@ Verhaltensgleich zur PowerShell-Lib umlaut-check-lib.ps1 in den Windows-Repos
 (Markant): gleiche Stamm-Liste (fc=true-Teilmenge der zentralen Trigger-JSON),
 gleiche Filter (Code-Fences, Inline-Code, Autolinks, URLs, Link-Targets, technische
 Bezeichner, Slug-/Domain-/Dateinamen-Tokens).
+
+Seit 2026-08-08 (ADR-2026-08-08-0117) ist der Fence-Skip abstufbar: der Parameter
+fence_scope von get_umlaut_violations schaltet die Prüfung von Kommentaranteilen
+und Prosa-Zeichenketten INNERHALB eines Fences zu. Anlass war eine committete
+Anleitung, deren deutsche C#-Kommentare alle Prüfungen passierten. Default bleibt
+der vollständige Skip, damit Altaufrufer unverändert arbeiten.
 """
 import re
 
 # >>> AUTO-GENERATED:UMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
-UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|aufraeum|ausfueh|ausgefuehrt|beduerf|begruend|behoerde|bestaet|braeuch|bruech|bruecke|buerg|durchfueh|einfueh|Empfaenger|enthaelt|Ergaen|ergaenz|erlaeuter|erloes|erwaeg|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengt|haetten|haeufig|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|knuepf|koennen|koennte|kraeft|kuendig|kuenft|kuerz|laed|laenge|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|moechte|moegli|muessen|muesste|naechst|naehe|naemli|natuerlich|noetig|nuetz|oeffn|praemi|praesent|praezis|primaer|pruef|qualitaet|raeum|regulaer|rueck|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|Stueck|stuetz|taegli|taetig|tatsaechli|temporaer|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|uebernom|uebersetz|uebersich|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|verfueg|verknuepf|veroeffentl|verstaend|Verstoss|vorraet|waehl|waehr|waere|waerts|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg)\w*\b|\b\w*(ausserhalb|aussert|fliess|geniess|heiss|liess|maess|schliess)\w*\b'
+UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|aufraeum|ausfueh|ausgefuehrt|beduerf|begruend|behoerde|bestaet|braeuch|bruech|bruecke|buerg|durchfueh|einfueh|Empfaenger|enthaelt|Ergaen|ergaenz|erlaeuter|erloes|erwaeg|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengt|haetten|haeufig|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|knuepf|koennen|koennte|kraeft|kuendig|kuenft|kuerz|laed|laenge|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|moechte|moegli|muessen|muesste|naechst|naehe|naemli|natuerlich|noetig|nuetz|oeffn|praemi|praesent|praezis|primaer|pruef|qualitaet|raeum|regulaer|rueck|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|Stueck|stuend|stuetz|taegli|taetig|tatsaechli|temporaer|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|uebernom|uebersetz|uebersich|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|verfueg|verknuepf|veroeffentl|verstaend|Verstoss|vorraet|waehl|waehr|waere|waerts|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg)\w*\b|\b\w*(ausserhalb|aussert|fliess|geniess|heiss|liess|maess|schliess)\w*\b'
 
 # Block 2: alleinstehende Woerter
 UMLAUT_BLOCK2 = r'\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b'
@@ -67,6 +73,10 @@ _RE_HANDLE = re.compile(r'^\W*@\w')
 
 # Test-IsJsonKey: umgebender Token ist ein JSON-Objekt-Schlüssel ("feldname":).
 _RE_JSON_KEY = re.compile(r'^"[^"]+"\s*:')
+
+# Prosa-Wort für die Literal-Heuristik der Fence-Prüfung: rein alphabetisch
+# (inklusive Umlauten), Apostroph und Bindestrich erlaubt, mindestens zwei Zeichen.
+_RE_PROSA_WORT = re.compile(r"[A-Za-zÄÖÜäöüß'-]{2,}")
 
 # Test-IsFrontmatterValue: die Zeile ist ein YAML-Frontmatter-Skalar mit genau EINEM
 # Wert-Token (`key: wert` oder `- wert`). Der Treffer im Wert (Gruppe 1) ist ein
@@ -156,6 +166,106 @@ def is_frontmatter_value(text, start, end):
     return start >= m.start(1) and end <= m.end(1)
 
 
+def looks_like_prose(text):
+    """Heuristik für Zeichenketten-Literale in Code-Fences: deutscher Menschentext
+    hat mindestens zwei rein alphabetische Wörter mit Leerzeichen dazwischen. Filtert
+    Pfade, Formatangaben, Bezeichner-Werte und einzelne Tokens heraus."""
+    words = [w for w in text.split()
+             if _RE_PROSA_WORT.fullmatch(w)]
+    return len(words) >= 2
+
+
+def _fence_segments(line, state):
+    """Liefert die Kommentar- und Literal-Abschnitte einer Zeile INNERHALB eines
+    Code-Fences als [(start, end, art)] mit art in {'kommentar','literal'}.
+
+    Erkannt werden Zeilenkommentare (//, ///, #, --) und Blockkommentare
+    (/* */, <!-- -->); die Blockformen tragen über Zeilengrenzen, dafür merkt
+    sich state['block'] das offene Ende ('*/' bzw. '-->').
+
+    Präzisionsregeln aus dem Trockenlauf 2026-08-08 (ADR-2026-08-08-0117):
+      - Kommentarzeichen INNERHALB einer Zeichenkette öffnen keinen Kommentar
+        (sonst macht jede URL oder jeder Farbwert den Zeilenrest zum Kommentar).
+      - # und -- gelten nur mit folgendem Leerzeichen. Das hält #include, #region,
+        #fff und --flag draußen.
+      - -- direkt hinter +, | oder \\ ist ein ASCII-Baumdiagramm (+-- ordner/),
+        kein SQL-Kommentar. War die einzige gemessene Fehlalarmklasse.
+      - // direkt hinter : ist Teil eines Schemas (http://), kein Kommentar.
+    """
+    segs = []
+    n = len(line)
+    i = 0
+    if state.get('block'):
+        closer = state['block']
+        idx = line.find(closer)
+        if idx == -1:
+            segs.append((0, n, 'kommentar'))
+            return segs
+        segs.append((0, idx + len(closer), 'kommentar'))
+        state['block'] = None
+        i = idx + len(closer)
+
+    quote = None
+    qstart = 0
+    while i < n:
+        ch = line[i]
+        if quote:
+            if ch == '\\':
+                i += 2
+                continue
+            if ch == quote:
+                segs.append((qstart + 1, i, 'literal'))
+                quote = None
+            i += 1
+            continue
+        if ch in ('"', "'", '`'):
+            quote = ch
+            qstart = i
+            i += 1
+            continue
+        if line.startswith('//', i) and not (i > 0 and line[i - 1] == ':'):
+            segs.append((i, n, 'kommentar'))
+            return segs
+        if ch == '#' and (i + 1 >= n or line[i + 1].isspace()):
+            segs.append((i, n, 'kommentar'))
+            return segs
+        if (line.startswith('--', i) and (i + 2 >= n or line[i + 2].isspace())
+                and not (i > 0 and line[i - 1] in '+|\\-')):
+            segs.append((i, n, 'kommentar'))
+            return segs
+        if line.startswith('/*', i):
+            idx = line.find('*/', i + 2)
+            if idx == -1:
+                state['block'] = '*/'
+                segs.append((i, n, 'kommentar'))
+                return segs
+            segs.append((i, idx + 2, 'kommentar'))
+            i = idx + 2
+            continue
+        if line.startswith('<!--', i):
+            idx = line.find('-->', i + 4)
+            if idx == -1:
+                state['block'] = '-->'
+                segs.append((i, n, 'kommentar'))
+                return segs
+            segs.append((i, idx + 3, 'kommentar'))
+            i = idx + 3
+            continue
+        i += 1
+    return segs
+
+
+def _mask_to(line, segs):
+    """Längenerhaltende Kopie der Zeile, in der nur die übergebenen Abschnitte
+    stehen; alles andere wird zu Leerzeichen. Längenerhaltend, damit die
+    Umgebungs-Token-Heuristik und die Spaltenlogik unverändert greifen."""
+    out = [' '] * len(line)
+    for start, end, _art in segs:
+        for k in range(start, min(end, len(line))):
+            out[k] = line[k]
+    return ''.join(out)
+
+
 def _surrounding_token(text, start, end):
     s = start
     while s > 0 and not text[s - 1].isspace():
@@ -166,14 +276,58 @@ def _surrounding_token(text, start, end):
     return text[s:e]
 
 
-def get_umlaut_violations(lines):
+def _collect(clean, idx, raw_line, scope, result, in_frontmatter=False):
+    """Sammelt die Treffer beider Trigger-Blöcke aus einem bereits gefilterten Text
+    und hängt sie an result. Reihenfolge und Heuristiken sind unverändert; scope
+    trennt Prosa von den Fence-Fundstellen."""
+    for m in _RE_BLOCK1.finditer(clean):
+        val = m.group(0)
+        tok = _surrounding_token(clean, m.start(), m.end())
+        if (val.lower() not in _WHITELIST_LOWER
+                and not is_code_identifier(val)
+                and not is_slug_token(tok)
+                and not is_technical_token(tok)
+                and not is_json_key(tok)
+                and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
+            result.append({'line': idx + 1, 'match': val, 'text': raw_line.strip(),
+                           'block': 1, 'scope': scope})
+
+    for m in _RE_BLOCK2.finditer(clean):
+        val = m.group(0)
+        tok = _surrounding_token(clean, m.start(), m.end())
+        if (not is_code_identifier(val)
+                and not is_slug_token(tok)
+                and not is_technical_token(tok)
+                and not is_json_key(tok)
+                and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
+            result.append({'line': idx + 1, 'match': val, 'text': raw_line.strip(),
+                           'block': 2, 'scope': scope})
+
+
+def get_umlaut_violations(lines, fence_scope=None):
     """Nimmt die Zeilen einer Markdown-Datei und liefert pro Verstoss ein dict
-    {line, match, text, block}. Wendet Fence-Skip, Inline-Code-, Autolink-, URL-,
+    {line, match, text, block, scope}. Wendet Inline-Code-, Autolink-, URL-,
     Link-Target-Filter sowie Whitelist-, Bezeichner-, Slug-, Technical-, JSON-Key-
-    und Frontmatter-Wert-Heuristik an."""
+    und Frontmatter-Wert-Heuristik an.
+
+    fence_scope steuert, was INNERHALB eines Code-Fences geprüft wird
+    (ADR-2026-08-08-0117); Default ist der bisherige vollständige Fence-Skip,
+    damit Altaufrufer unverändert bleiben:
+      None / 'off'          : Fence komplett überspringen (bisheriges Verhalten)
+      'comments'            : zusätzlich Kommentaranteile prüfen
+      'comments+literals'   : zusätzlich Zeichenketten, die nach Prosa aussehen
+    Der übrige Code der Zeile wird dabei maskiert, nie geprüft: Bezeichner, Pfade
+    und Formatangaben dürfen laut Konvention ASCII tragen.
+
+    scope trägt je Treffer 'prosa', 'fence-kommentar' oder 'fence-literal', damit
+    der Commit-Hook Fence-Fundstellen getrennt berichten und anders gewichten kann.
+    """
+    if fence_scope == 'off':
+        fence_scope = None
     result = []
     in_fence = False
     in_frontmatter = False
+    fence_state = {'block': None}
     for i, line in enumerate(lines):
         # Führendes YAML-Frontmatter (--- ... --- ab Zeile 1) tracken, analog zum
         # in_fence-Zustand. Werte darin sind technische Felder; ein einzelner
@@ -188,33 +342,28 @@ def get_umlaut_violations(lines):
             continue
         if _RE_FENCE.match(line):
             in_fence = not in_fence
+            fence_state['block'] = None
             continue
         if in_fence:
+            if not fence_scope:
+                continue
+            segs = _fence_segments(line, fence_state)
+            komm = [s for s in segs if s[2] == 'kommentar']
+            if komm:
+                _collect(_RE_URL.sub('', _mask_to(line, komm)), i, line,
+                         'fence-kommentar', result)
+            if fence_scope == 'comments+literals':
+                lit = [s for s in segs if s[2] == 'literal'
+                       and looks_like_prose(line[s[0]:s[1]])]
+                if lit:
+                    _collect(_RE_URL.sub('', _mask_to(line, lit)), i, line,
+                             'fence-literal', result)
             continue
         clean = _RE_INLINE.sub('', line)
         clean = _RE_AUTOLINK.sub('', clean)
         clean = _RE_URL.sub('', clean)
         clean = _RE_LINKTARGET.sub(']()', clean)
 
-        for m in _RE_BLOCK1.finditer(clean):
-            val = m.group(0)
-            tok = _surrounding_token(clean, m.start(), m.end())
-            if (val.lower() not in _WHITELIST_LOWER
-                    and not is_code_identifier(val)
-                    and not is_slug_token(tok)
-                    and not is_technical_token(tok)
-                    and not is_json_key(tok)
-                    and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
-                result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 1})
-
-        for m in _RE_BLOCK2.finditer(clean):
-            val = m.group(0)
-            tok = _surrounding_token(clean, m.start(), m.end())
-            if (not is_code_identifier(val)
-                    and not is_slug_token(tok)
-                    and not is_technical_token(tok)
-                    and not is_json_key(tok)
-                    and not (in_frontmatter and is_frontmatter_value(clean, m.start(), m.end()))):
-                result.append({'line': i + 1, 'match': val, 'text': line.strip(), 'block': 2})
+        _collect(clean, i, line, 'prosa', result, in_frontmatter)
 
     return result

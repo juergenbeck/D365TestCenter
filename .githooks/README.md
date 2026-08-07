@@ -39,6 +39,32 @@ Restmenge ist damit klein. Ausnahmen des Repos per `--exclude <regex>`
 ausschließen (Muster nicht mit `/` beginnen lassen: Git-Bash wandelt das in
 einen Windows-Pfad um, und der Ausschluss läuft ins Leere).
 
+## Code-Fences in Markdown: Kommentare werden geprüft
+
+Seit dem 08.08.2026 überspringt der Datei-Inhalt-Check einen Code-Fence nicht mehr
+vollständig. Geprüft wird, was darin deutscher Menschentext ist: Kommentare
+(`//`, `///`, `#`, `--`, `/* */`, `<!-- -->`) und Zeichenketten, die nach Prosa
+aussehen. Der übrige Code bleibt ungeprüft, Bezeichner, Pfade und Formatangaben
+dürfen weiter ASCII tragen.
+
+Anlass war eine committete Anleitung, deren deutsche C#-Kommentare (`Rueckgabe`,
+`Identitaetsdatensatz`, `verfuegbar`) alle Prüfungen passierten, weil der Fence
+bewusst übersprungen wurde. Das war die gefährlichere Variante des bekannten
+Fence-Problems: die Datei wirkt geprüft, und Lehrmaterial wird nachgeahmt.
+
+Die Prüfung **warnt zunächst nur** und blockiert keinen Commit, auch dort nicht, wo
+`.md` sonst blockend geführt wird. Zwei Felder in `umlaut-allowlist.json` steuern sie:
+
+```json
+"fence_scope": "comments+literals",
+"fence_enforcement": "warn"
+```
+
+`fence_scope` kennt `off`, `comments` und `comments+literals`, `fence_enforcement`
+kennt `warn` und `block`. Ohne Eintrag gelten die oben gezeigten Werte. Wirksam ist
+vor allem die Schreib-Warnung: sie meldet den Verstoß in der Session, in der die
+Datei entsteht. Entscheid und Messung: ADR-2026-08-08-0117 im Repo `claudecode`.
+
 ## Betreff einer Commit-Message nie mit `#` beginnen
 
 Belegt 2026-07-31: Eine Message mit dem Betreff `#40267 abgeschlossen: …` überlebt zwar ein

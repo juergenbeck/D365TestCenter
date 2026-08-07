@@ -37,6 +37,11 @@ Das Verhalten kommt aus der optionalen .githooks/umlaut-allowlist.json:
                 So lässt sich "Doku blockt, Code warnt" abbilden.
   generated[] : Regex-Liste (repo-relativer Pfad, Vorwärts-Slashes), strukturelle Ausschlüsse.
   exceptions[]: [{path}] exakte oder glob-Einzeldatei-Ausnahmen.
+  fence_scope : was INNERHALB eines Code-Fences in .md geprüft wird (ADR-2026-08-08-0117):
+                "off" | "comments" | "comments+literals" (Default "comments+literals").
+  fence_enforcement : "warn" (Default) -> Fence-Treffer melden, Exit 0; "block" -> Exit 1.
+                Bewusst getrennt vom globalen enforcement, damit .md weiter blockend
+                geführt werden kann, während die neue Fence-Prüfung erst nur warnt.
 Fehlt die Config: md_only + block + eingebaute Default-Ausschlüsse (COMPANION_RE,
 DEFAULT_EXCLUDE_RE) - verhält sich exakt wie die bisherige py-Repo-Version.
 
@@ -185,7 +190,8 @@ def load_config(githooks_dir):
     block, keine Zusatz-Ausschlüsse - verhält sich wie die bisherige py-Repo-Version."""
     cfg = {'file_scope': 'md_only', 'enforcement': 'block',
            'generated': [], 'exceptions': [],
-           'block_extensions': set(), 'warn_extensions': set()}
+           'block_extensions': set(), 'warn_extensions': set(),
+           'fence_scope': 'comments+literals', 'fence_enforcement': 'warn'}
     path = os.path.join(githooks_dir, 'umlaut-allowlist.json')
     if not os.path.isfile(path):
         return cfg
@@ -209,6 +215,10 @@ def load_config(githooks_dir):
         cfg['block_extensions'] = {_norm_ext(e) for e in data['block_extensions']}
     if data.get('warn_extensions'):
         cfg['warn_extensions'] = {_norm_ext(e) for e in data['warn_extensions']}
+    if data.get('fence_scope'):
+        cfg['fence_scope'] = str(data['fence_scope'])
+    if data.get('fence_enforcement'):
+        cfg['fence_enforcement'] = str(data['fence_enforcement'])
     return cfg
 
 
@@ -262,9 +272,12 @@ def main():
         if '\x00' in content:  # Binär-Absicherung (all_text)
             continue
         lines = content.split('\n')
-        uml = get_umlaut_violations(lines)
+        # Fence-Prüfung nur für .md: nur dort sind Code-Fences ein Konstrukt,
+        # Quelldateien prüft die Kette ohnehin direkt (ADR-2026-08-08-0117).
+        is_md = rel.lower().endswith('.md')
+        uml = get_umlaut_violations(lines, cfg['fence_scope'] if is_md else None)
         # Typografie: nur .md (auch im all_text-Profil), gleiche Ausschlüsse.
-        typ = get_typo_violations(lines) if rel.lower().endswith('.md') else []
+        typ = get_typo_violations(lines) if is_md else []
         if not uml and not typ:
             continue
         # ADR-028: verantwortet wird nur, was dieser Commit hinzufügt. Der Scan oben
@@ -286,9 +299,14 @@ def main():
 
     # Pro Datei block vs. warn entscheiden (block_extensions/warn_extensions/global).
     # Reihenfolge bleibt erhalten, gleiche rel bleiben konsekutiv -> groupby trägt.
-    block_viol, warn_viol = [], []
+    # Fence-Fundstellen laufen in einem eigenen Kanal (fence_enforcement), damit
+    # .md weiter blockend geführt werden kann, während die neue Prüfung erst warnt.
+    block_viol, warn_viol, fence_viol = [], [], []
     for rel, h in violations:
-        (block_viol if is_blocking_file(rel, cfg) else warn_viol).append((rel, h))
+        if h.get('scope', 'prosa') != 'prosa':
+            fence_viol.append((rel, h))
+        else:
+            (block_viol if is_blocking_file(rel, cfg) else warn_viol).append((rel, h))
 
     w = sys.stderr.write
 
@@ -299,7 +317,12 @@ def main():
         for rel, group in groupby(group_viol, key=lambda x: x[0]):
             w('  %s\n' % rel)
             for _, h in group:
+                scope = h.get('scope', 'prosa')
                 note = ', alleinstehend' if h['block'] == 2 else ''
+                if scope == 'fence-kommentar':
+                    note += ', Kommentar im Code-Fence'
+                elif scope == 'fence-literal':
+                    note += ', Text im Code-Fence'
                 w("    Zeile %4d [Umlaut]: '%s'%s -> ASCII-Ersatz statt echtem "
                   "ä/ö/ü/ß. Siehe Skill umlaute.\n" % (h['line'], h['match'], note))
                 text = h['text']
@@ -324,16 +347,24 @@ def main():
                 snippet = snippet[:117] + '...' if len(snippet) > 120 else snippet
                 w('      > %s\n' % snippet)
 
+    fence_blockt = cfg['fence_enforcement'] == 'block'
+
     if block_viol:
         report(block_viol, 'Pre-Commit-Hook: Umlaut-Verstöße erkannt (Commit blockiert)')
     if warn_viol:
         report(warn_viol, 'Pre-Commit-Hook: Umlaut-Verstöße (WARNUNG, blockt NICHT)')
+    if fence_viol:
+        report(fence_viol, 'Pre-Commit-Hook: Umlaut-Verstöße in Code-Fences (Commit blockiert)'
+               if fence_blockt else
+               'Pre-Commit-Hook: Umlaut-Verstöße in Code-Fences (WARNUNG, blockt NICHT)')
+        w('    Deutsche Kommentare und Meldungstexte im Beispielcode sind Prosa und\n'
+          '    umlautpflichtig; Bezeichner, Pfade und Formatangaben bleiben ungeprüft.\n')
     if typo_block:
         report_typo(typo_block, 'Pre-Commit-Hook: verbotene Typografie in .md (Commit blockiert)')
     if typo_warn:
         report_typo(typo_warn, 'Pre-Commit-Hook: verbotene Typografie in .md (WARNUNG, blockt NICHT)')
     w('\n Bypass im Notfall: git commit --no-verify (DOKUMENTIEREN, warum)\n\n')
-    return 1 if (block_viol or typo_block) else 0
+    return 1 if (block_viol or typo_block or (fence_viol and fence_blockt)) else 0
 
 
 if __name__ == '__main__':
