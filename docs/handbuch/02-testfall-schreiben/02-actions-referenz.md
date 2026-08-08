@@ -414,9 +414,29 @@ Legacy-Verben `CallCustomApi` und `ExecuteAction` werden als Aliasse durchgereic
 | Guid | `{ "$type": "Guid", "ref": "<alias>" }` | `{ "$type": "Guid", "ref": "lead1" }` |
 | OptionSetValue | `{ "$type": "OptionSetValue", "value": <number> }` | `{ "$type": "OptionSetValue", "value": 3 }` |
 | Money | `{ "$type": "Money", "value": <number> }` | `{ "$type": "Money", "value": 1500 }` |
-| Entity | `{ "$type": "Entity", "entity": "<logicalname>", "fields": { ... } }` | Für Parameter wie `OpportunityClose` |
+| Entity | `{ "$type": "Entity", "entity": "<logicalname>", "fields": { ... } }` | New entity; optional `ref` or `id` targets an existing record |
 | EntityCollection | `{ "$type": "EntityCollection", "entities": [ ... ] }` | Z.B. activityparty-Partylists (`requiredattendees`) |
 | PrincipalAccess | `{ "$type": "PrincipalAccess", "principal": { "$type": "EntityReference", ... }, "accessMask": "<AccessRights-Komma-Flags>" }` | Für `GrantAccess`/`ModifyAccess` (Record-Sharing) |
+
+**Entity identity for xMultiple requests:** An Entity without `ref` or `id` keeps
+`Guid.Empty` and is suitable for `CreateMultiple`. For `UpdateMultiple`, set exactly one
+of `ref` (a record alias) or `id` (a GUID, placeholders allowed). All entities in one
+EntityCollection must use the same logical name; the engine sets `EntityCollection.EntityName`
+from that homogeneous set.
+
+```json
+{ "stepNumber": 4, "action": "ExecuteRequest", "requestName": "UpdateMultiple",
+  "fields": {
+    "Targets": { "$type": "EntityCollection", "entities": [
+      { "$type": "Entity", "entity": "account", "ref": "account1",
+        "fields": { "name": "Updated account 1" } },
+      { "$type": "Entity", "entity": "account",
+        "id": "00000000-0000-0000-0000-000000000002",
+        "fields": { "name": "Updated account 2" } }
+    ] }
+  }
+}
+```
 
 **PrincipalAccess im Detail** (für `GrantAccess`/`ModifyAccess`; `RevokeAccess` braucht nur
 zwei EntityReferences `Target` + `Revokee`):

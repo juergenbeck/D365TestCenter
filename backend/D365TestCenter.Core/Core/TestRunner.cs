@@ -1626,6 +1626,24 @@ public sealed class TestRunner
         var entityName = obj["entity"]!.Value<string>()!;
         entityName = _entityMetadata.ResolveLogicalName(entityName);
         var entity = new Entity(entityName);
+
+        var hasRef = obj.ContainsKey("ref");
+        var hasId = obj.ContainsKey("id");
+        if (hasRef && hasId)
+            throw new InvalidOperationException(
+                "Entity accepts either 'ref' (alias) or 'id' (GUID), but not both.");
+
+        if (hasRef)
+        {
+            var refAlias = _placeholderEngine.Resolve(obj["ref"]!.Value<string>()!, ctx);
+            entity.Id = ctx.ResolveRecordId(refAlias);
+        }
+        else if (hasId)
+        {
+            var idValue = _placeholderEngine.Resolve(obj["id"]!.Value<string>()!, ctx);
+            entity.Id = Guid.Parse(idValue);
+        }
+
         if (obj.ContainsKey("fields") && obj["fields"] is JObject fieldsObj)
         {
             foreach (var prop in fieldsObj.Properties())
@@ -1640,11 +1658,21 @@ public sealed class TestRunner
     private EntityCollection ResolveEntityCollectionParam(JObject obj, TestContext ctx)
     {
         var collection = new EntityCollection();
+        string? entityName = null;
         if (obj.ContainsKey("entities") && obj["entities"] is JArray items)
         {
             foreach (var item in items)
-                collection.Entities.Add((Entity)ResolveTypedValue(item, ctx));
+            {
+                var entity = (Entity)ResolveTypedValue(item, ctx);
+                if (entityName == null)
+                    entityName = entity.LogicalName;
+                else if (!string.Equals(entityName, entity.LogicalName, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException(
+                        "EntityCollection entities must use the same logical name for xMultiple requests.");
+                collection.Entities.Add(entity);
+            }
         }
+        collection.EntityName = entityName;
         return collection;
     }
 
