@@ -48,7 +48,15 @@ STAND_LINES, STAND_BYTES = 400, 40 * 1024
 # Das Cockpit trägt je Strom eine Zeile, das Detail steht in der verlinkten Datei.
 # Es ist im gemessenen Bestand der am stärksten verrottete Dateityp: vier von zwölf
 # über 40 KB, alle vier ausschließlich über die Byte-Schwelle auffällig.
-COCKPIT_LINES, COCKPIT_BYTES = 150, 40 * 1024
+#
+# Für Cockpits gilt BEWUSST KEINE Zeilenschwelle (None). Die Zeilenzahl eines Cockpits
+# ist durch die Zahl der Ströme bestimmt und damit legitime Streuung, nicht Verfall: das
+# Cockpit von D365TestCenter-Workspace hat 350 Zeilen bei 93 Zeichen je Zeile und ist
+# kerngesund, Markants Infopool-Cockpit führt 114 Ströme. Die Krankheit des Dateityps
+# sind fette Zellen, und die trifft ausschließlich die Byte-Schwelle. Eine zunächst
+# gesetzte Schwelle von 150 Zeilen fand am Bestand keinen einzigen echten Fall und
+# erzeugte nur Fehlalarme (gemessen 2026-08-08).
+COCKPIT_LINES, COCKPIT_BYTES = None, 40 * 1024
 JOURNAL_LINES, JOURNAL_BYTES = 400, 40 * 1024
 
 # Beide Namensschemata sind in der Familie belegt und quer verteilt (session-state.md
@@ -208,7 +216,8 @@ def main():
     except Exception:
         return 0  # Datei nicht lesbar: nichts melden
 
-    if lines <= lim_lines and size <= lim_bytes:
+    zu_lang = lim_lines is not None and lines > lim_lines
+    if not zu_lang and size <= lim_bytes:
         return 0
 
     session_id = str(data.get('session_id') or 'unknown')
@@ -224,7 +233,7 @@ def main():
         return 0
 
     exceeded = []
-    if lines > lim_lines:
+    if zu_lang:
         exceeded.append('%d Zeilen (Schwelle %d)' % (lines, lim_lines))
     if size > lim_bytes:
         exceeded.append('%.1f KB (Schwelle %.0f KB)' % (size / 1024.0, lim_bytes / 1024.0))
