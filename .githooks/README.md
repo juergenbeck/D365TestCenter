@@ -159,3 +159,25 @@ Die Messung selbst liegt im Repo `claudecode` unter
 Wichtig für die Laufzeit: die Tokenisierung macht ripgrep, nicht Python. Die
 Python-Fassung lief über Stunden ohne Ergebnis, mit ripgrep sind es 26 Sekunden
 für 24500 Dateien.
+
+### Entscheidend ist das Trefferbild, nicht die Häufigkeit
+
+Bevor ein Kandidat in die Liste wandert, wird gemessen, welche echten Tokens er
+fangen würde. Das Werkzeug dafür liegt neben der Messung oben und heißt
+`bewerte-kandidaten.py`; es zeigt je Kandidat die Wörterbuch-Fehlalarme und die
+Tokens des Bestands mit Häufigkeit. Erst dieses zweite Bild trägt die
+Entscheidung, denn die Wörterbuch-Prüfung sieht den Namensfall nicht.
+
+Drei Muster, an denen ein Kandidat 2026-08-09 durchgefallen ist, jeweils belegt:
+Eigennamen und Adressen (`strasse`, `muehle`, `kuehn`); Firmennamen aus
+Datendumps, wo die ASCII-Form die Form der Daten selbst ist (`getraenke`,
+`kaese`, `gemuese`); und Stämme, deren Masse auf technische Bezeichner fällt
+(`flaech` traf die WFS-Attribute `flaecheninanspruchnahme` und `flaecheqm`,
+`eigentuem` traf `eigentuemernutzer`). Ist ein Wort zugleich Prosa und Name, ist
+der Eintrag als exaktes Wort (`words` / `ss_words`) der saubere Weg: `weiss`
+fängt so das Verb, lässt aber `Weissenburger` und `Edelweiss` in Ruhe.
+
+Und: `fc: true` wirkt in **beiden** Wort-Blöcken. Bis 2026-08-09 rendete der Sync
+nur `words` in die Datei-Inhalt-Lib, ein `fc: true` auf einem `ss_words`-Eintrag
+blieb still wirkungslos. Der Defekt war latent, weil vorher jeder Eintrag dieses
+Blocks `fc: false` trug.
