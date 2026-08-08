@@ -25,18 +25,19 @@ der vollständige Skip, damit Altaufrufer unverändert arbeiten.
 import re
 
 # >>> AUTO-GENERATED:UMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
-UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aeltest|aender|aendert|aenderung|aerger|aergerli|aerztl|aeusser|aufraeum|ausfueh|ausgefuehrt|beduerf|begruend|behoerde|bestaet|braeuch|bruech|bruecke|buerg|durchfueh|einfueh|Empfaenger|enthaelt|Ergaen|ergaenz|erlaeuter|erloes|erwaeg|faehig|faehr|faell|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuellen|fuellt|fuellung|fuer|gaeng|gebaeud|gebuehr|gefaehr|gefaess|gehoer|gelaend|geloescht|gemaess|genueg|gewaehr|glaeub|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengt|haetten|haeufig|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|knuepf|koennen|koennte|kraeft|kuendig|kuenft|kuerz|laed|laenge|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maerkt|moechte|moegli|muessen|muesste|naechst|naehe|naemli|natuerlich|noetig|nuetz|oeffn|praemi|praesent|praezis|primaer|pruef|qualitaet|raeum|regulaer|rueck|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|spaet|spaeter|staend|staerk|stoer|Stueck|stuend|stuetz|taegli|taetig|tatsaechli|temporaer|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|uebernom|uebersetz|uebersich|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|verfueg|verknuepf|veroeffentl|verstaend|Verstoss|vorraet|waehl|waehr|waere|waerts|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg)\w*\b|\b\w*(ausserhalb|aussert|fliess|geniess|heiss|liess|maess|schliess)\w*\b'
+UMLAUT_BLOCK1 = r'\b\w*(abhaengig|aehn|aelter|aeltest|aender|aendert|aenderung|aequivalent|aerger|aergerli|aerztl|aeusser|aufraeum|aufwaend|ausfueh|ausgefuehrt|beduerf|begruend|behoerde|bestaet|braeuch|bruech|bruecke|buendel|buerg|buero|duerfen|durchfueh|einfueh|Empfaenger|enthaelt|entwuerf|Ergaen|ergaenz|erlaeuter|erloes|erwaeg|faehig|faehr|faell|faelsch|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuellen|fuellt|fuellung|fuenf|fuer|gaeng|gaest|gebaeud|gebuehr|gedaechtnis|gefaehr|gefaess|gehoer|gelaend|geloescht|gemaess|gemuetlich|genueg|geruest|gespraech|gewaehr|glaeub|glueck|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengt|haetten|haeufig|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|knuepf|koennen|koennte|koerper|kraeft|kuech|kuendig|kuenft|kuerz|laed|laenge|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maengel|maerkt|maerz|moechte|moegli|muessen|muesste|naechst|naehe|naemli|natuerlich|noetig|nuetz|oeffn|oekonomie|persoenlich|praemi|praesent|praezedenz|praezis|primaer|pruef|qualitaet|quarantaene|raeum|regulaer|rueck|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schaerf|schaetz|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|sekretaer|spaet|spaeter|staend|staerk|stoer|Stueck|stuend|stuetz|taegli|taetig|tatsaechli|temporaer|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|uebernom|uebersetz|uebersich|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|urspruengl|verfueg|verknuepf|veroeffentl|verstaend|Verstoss|voellig|vorraet|waehl|waehr|waere|waerme|waerts|widerspruech|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg)\w*\b|\b\w*(ausserhalb|aussert|fliess|geniess|heiss|liess|maess|mutmass|schliess|schmeiss|stoess|stoss)\w*\b'
 
 # Block 2: alleinstehende Woerter
-UMLAUT_BLOCK2 = r'\b(gaebe|haette|moecht|moege|ueber|wuerde|wuerden)\b'
+UMLAUT_BLOCK2 = r'\b(bloss|folgendermassen|gaebe|gleichermassen|gruss|haette|moecht|moege|muell|spass|ueber|weiss|weisst|wuerde|wuerden)\b'
 
 UMLAUT_WHITELIST = [
     '22_qualitaets', 'abhaengig_von', 'Address', 'ausfuehrungs_modi', 'Azure', 'bfuer',
-    'Class', 'Daemon', 'Failed', 'Issue', 'kongruent', 'Layer',
-    'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2', 'Payload', 'Pipeline',
-    'Plugin', 'preissperre', 'Process', 'pruef', 'Queue', 'rescue',
-    'Sandbox', 'Schedule', 'Session', 'Source', 'Stage', 'Status',
-    'Trace', 'User', 'Value', 'vorausschauend',
+    'BudgetPraeventionIntegration', 'Class', 'Daemon', 'Failed', 'Issue', 'kongruent',
+    'Layer', 'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2', 'Payload',
+    'Pipeline', 'Plugin', 'preissperre', 'Process', 'pruef', 'Queue',
+    'rescue', 'Sandbox', 'schaetzle', 'Schedule', 'schmeissner', 'Session',
+    'Source', 'Stage', 'Status', 'Trace', 'User', 'Value',
+    'vorausschauend',
 ]
 # <<< AUTO-GENERATED:UMLAUT-DATA
 
