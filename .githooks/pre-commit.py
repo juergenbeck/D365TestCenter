@@ -22,10 +22,19 @@ geprüft (Halbgeviertstrich U+2013, Geviertstrich U+2014 sowie die fünf Pfeile
 U+2192, U+2190, U+2194, U+21D2, U+21D4; die vier zusätzlichen Pfeile seit
 2026-07-27, vorher kannte die zentrale Kette nur U+2192). Ersatz:
 Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->. Gilt in beiden file_scope-Profilen
-nur für .md (Code kann legitime Unicode-Zeichen aus Fremdquellen enthalten),
-nutzt dieselben Pfad-Ausschlüsse wie der Umlaut-Check; Code-Fences und
-Inline-Code sind ausgenommen (wörtliche Fremd-Zitate). Block/Warn folgt derselben
-per-Datei-Entscheidung (is_blocking_file) wie der Umlaut-Check.
+für die Prosa-Endungen in TYPO_EXT (.md, .html, .htm, .txt), NICHT für Code (der
+kann legitime Unicode-Zeichen aus Fremdquellen enthalten), nutzt dieselben
+Pfad-Ausschlüsse wie der Umlaut-Check; Code-Fences und Inline-Code sind
+ausgenommen (wörtliche Fremd-Zitate), in HTML zusätzlich <code>/<pre>. Block/Warn
+folgt derselben per-Datei-Entscheidung (is_blocking_file) wie der Umlaut-Check;
+mit der üblichen Repo-Config (enforcement warn, block_extensions [".md"]) warnen
+.html/.htm/.txt also, während .md blockt. Wer sie ebenfalls blockend führen will,
+trägt die Endung in block_extensions ein.
+
+.html/.htm/.txt seit 2026-08-08 (Anlass in LMApp): Ein DevOps-Ticket-Kommentar lag
+als .html im Repo, enthielt sechs Geviertstriche und passierte die gesamte Kette
+ungehindert, weil sie nur .md kannte. Ausgerechnet die Texte, die nach außen gehen,
+liegen selten als .md vor.
 
 Das Verhalten kommt aus der optionalen .githooks/umlaut-allowlist.json:
   file_scope  : "md_only" (Default) prüft nur .md; "all_text" prüft alle Textdateien.
@@ -104,20 +113,33 @@ BINARY_EXT = {
 }
 
 
-# Verbotene Typografie in .md (deutsche Doku-Prosa). Wörtliche Fremd-Zitate mit
-# diesen Zeichen gehören in Code-Fences oder Inline-Code (hier ausgenommen).
+# Verbotene Typografie in Prosa-Dateien. Wörtliche Fremd-Zitate mit diesen Zeichen
+# gehören in Code-Fences oder Inline-Code, in HTML in <code>/<pre> (hier ausgenommen).
 TYPO_FORBIDDEN = {'–': 'Halbgeviertstrich', '—': 'Geviertstrich',
                   '→': 'Pfeil rechts', '←': 'Pfeil links',
                   '↔': 'Doppelpfeil', '⇒': 'Doppelpfeil rechts',
                   '⇔': 'Doppelpfeil beidseitig'}
 _TYPO_INLINE_RE = re.compile(r'`[^`]*`')
+_HTML_INLINE_RE = re.compile(r'<(code|pre)\b[^>]*>.*?</\1>', re.DOTALL | re.I)
+_HTML_OPEN_RE = re.compile(r'<(code|pre)\b', re.I)
+_HTML_CLOSE_RE = re.compile(r'</(code|pre)>', re.I)
+
+# Endungen, die der Typografie-Check prüft. .md und .html/.htm sind Prosa, die nach
+# außen geht; .txt seit 2026-08-08 dabei, dort aber bewusst NUR hier und nicht in der
+# PreToolUse-Schreibsperre (Fremdinhalt wie Logs und Exporte hat in .txt keine
+# Zitat-Ausnahme, ein hartes deny wäre dort ein Fehlalarm ohne Ausweg). Über
+# block_extensions/warn_extensions der umlaut-allowlist.json je Repo steuerbar.
+TYPO_EXT = ('.md', '.html', '.htm', '.txt')
 
 
-def get_typo_violations(lines):
+def get_typo_violations(lines, is_html=False):
     """(zeilennr, labels, zeilentext) für Typografie-Treffer außerhalb von
-    Code-Fences und Inline-Code."""
+    Code-Fences und Inline-Code; bei is_html zusätzlich ohne <code>/<pre>.
+    Zeilenweise (statt über den ganzen Text), weil die Zeilennummer für die
+    added-lines-Filterung nach ADR-028 gebraucht wird."""
     hits = []
     in_fence = False
+    in_html_quote = False
     for n, line in enumerate(lines, start=1):
         stripped = line.lstrip()
         if stripped.startswith('```') or stripped.startswith('~~~'):
@@ -126,6 +148,20 @@ def get_typo_violations(lines):
         if in_fence:
             continue
         clean = _TYPO_INLINE_RE.sub('', line)
+        if is_html:
+            clean = _HTML_INLINE_RE.sub('', clean)  # <code>x</code> in einer Zeile
+            if in_html_quote:
+                # Im mehrzeiligen Block: erst ab dem schließenden Tag wieder prüfen.
+                if _HTML_CLOSE_RE.search(clean):
+                    in_html_quote = False
+                    clean = _HTML_CLOSE_RE.split(clean)[-1]
+                else:
+                    continue
+            if _HTML_OPEN_RE.search(clean):
+                # Block beginnt hier und endet nicht in dieser Zeile (Inline-Fall ist
+                # oben schon entfernt): ab dem öffnenden Tag nicht mehr prüfen.
+                in_html_quote = True
+                clean = _HTML_OPEN_RE.split(clean)[0]
         labels = sorted({lab for ch, lab in TYPO_FORBIDDEN.items() if ch in clean})
         if labels:
             hits.append((n, labels, line))
@@ -241,7 +277,11 @@ def staged_files(scope):
     """Staged Added/Modified/Copied, nach file_scope gefiltert."""
     out = git('diff', '--cached', '--name-only', '--diff-filter=ACM').splitlines()
     if scope == 'md_only':
-        return [f for f in out if f.endswith('.md')]
+        # .md für den Umlaut- UND Typografie-Check, die übrigen TYPO_EXT allein für
+        # den Typografie-Check (siehe main): sonst liefe die Regel im md_only-Profil
+        # an genau den Kommunikationstexten vorbei, für die sie 2026-08-08 erweitert
+        # wurde.
+        return [f for f in out if f.lower().endswith(TYPO_EXT)]
     # all_text: alle nicht-binären Dateien (NUL-Byte-Absicherung beim Lesen).
     return [f for f in out if os.path.splitext(f)[1].lower() not in BINARY_EXT]
 
@@ -274,10 +314,18 @@ def main():
         lines = content.split('\n')
         # Fence-Prüfung nur für .md: nur dort sind Code-Fences ein Konstrukt,
         # Quelldateien prüft die Kette ohnehin direkt (ADR-2026-08-08-0117).
-        is_md = rel.lower().endswith('.md')
-        uml = get_umlaut_violations(lines, cfg['fence_scope'] if is_md else None)
-        # Typografie: nur .md (auch im all_text-Profil), gleiche Ausschlüsse.
-        typ = get_typo_violations(lines) if is_md else []
+        low = rel.lower()
+        is_md = low.endswith('.md')
+        is_html = low.endswith(('.html', '.htm'))
+        # Umlaut-Check unverändert: im md_only-Profil nur .md, sonst alle Textdateien.
+        # Die zusätzlich eingesammelten TYPO_EXT-Dateien (.html/.htm/.txt) sind dort
+        # NUR für den Typografie-Check da und bleiben vom Umlaut-Check unberührt.
+        if scope == 'md_only' and not is_md:
+            uml = []
+        else:
+            uml = get_umlaut_violations(lines, cfg['fence_scope'] if is_md else None)
+        # Typografie: Prosa-Endungen (auch im all_text-Profil), gleiche Ausschlüsse.
+        typ = get_typo_violations(lines, is_html=is_html) if low.endswith(TYPO_EXT) else []
         if not uml and not typ:
             continue
         # ADR-028: verantwortet wird nur, was dieser Commit hinzufügt. Der Scan oben

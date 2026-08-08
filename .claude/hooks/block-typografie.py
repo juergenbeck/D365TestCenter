@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
-"""PreToolUse-Sperre: blockt Write/Edit auf .md-Dateien, wenn der zu schreibende
-Inhalt verbotene Typografie enthält (Halbgeviertstrich U+2013, Geviertstrich U+2014
-sowie die fünf Pfeile U+2192, U+2190, U+2194, U+21D2, U+21D4). Ersatz laut globaler
-CLAUDE.md "Sprache und Stil": Komma, Punkt, Doppelpunkt bzw. ASCII-Pfeil ->.
+"""PreToolUse-Sperre: blockt Write/Edit auf .md-, .html- und .htm-Dateien, wenn der
+zu schreibende Inhalt verbotene Typografie enthält (Halbgeviertstrich U+2013,
+Geviertstrich U+2014 sowie die fünf Pfeile U+2192, U+2190, U+2194, U+21D2, U+21D4).
+Ersatz laut globaler CLAUDE.md "Sprache und Stil": Komma, Punkt, Doppelpunkt bzw.
+ASCII-Pfeil ->.
 
 Code-Fences und Inline-Code sind ausgenommen (dort dürfen wörtlich zitierte
-Fremdinhalte stehen).
+Fremdinhalte stehen), in HTML zusätzlich <code>- und <pre>-Bereiche.
+
+HTML seit 2026-08-08 (LMApp): Ein DevOps-Ticket-Kommentar lag als .html im Repo,
+enthielt sechs Geviertstriche, wurde von keiner Stufe der Kette gemeldet und stand
+damit bereits am Work Item. Aufgefallen erst beim Zurücklesen des geposteten
+Kommentars. Gerade die Kommunikationstexte, die nach außen gehen (Ticket-Antworten,
+Mail-Entwürfe, Reports), liegen selten als .md vor - die Sperre lief also an ihrem
+wichtigsten Anwendungsfall vorbei.
+
+.txt ist hier BEWUSST NICHT dabei: Textdateien tragen häufig Fremdinhalt (Logs,
+Exporte, Dumps), den man wörtlich behalten muss und für den es in .txt keine
+Zitat-Ausnahme gibt; eine harte Schreibsperre erzeugte dort Fehlalarme ohne
+Ausweg. Für .txt greift stattdessen der Commit-Check in pre-commit.py, der über
+die umlaut-allowlist.json je Endung auf warn oder block gestellt werden kann.
 
 AUTO-GENERATED aus ~/.claude/hook-templates/python/block-typografie.py
 (ausgerollt von ~/.claude/scripts/Sync-UmlautTriggers.ps1). Nicht von Hand
@@ -37,10 +51,19 @@ TYPO = {
     "⇔": "Doppelpfeil beidseitig (stattdessen <=>)",
 }
 _RE_INLINE = re.compile(r"`[^`]*`")
+# HTML-Gegenstück zur Fence-/Inline-Ausnahme: wörtlich zitierter Fremdinhalt steht
+# dort in <code> oder <pre>. Über den ganzen Text (nicht zeilenweise), weil diese
+# Blöcke mehrzeilig sind. DOTALL, damit . auch Zeilenumbrüche trifft.
+_RE_HTML_QUOTED = re.compile(r"<(code|pre)\b.*?</\1>", re.DOTALL | re.IGNORECASE)
+
+BLOCKED_EXT = (".md", ".html", ".htm")
 
 
-def violations(text):
-    """Fundstellen außerhalb von Code-Fences und Inline-Code, als Label-Menge."""
+def violations(text, is_html=False):
+    """Fundstellen außerhalb von Code-Fences und Inline-Code, als Label-Menge.
+    Bei is_html zusätzlich ohne <code>- und <pre>-Bereiche."""
+    if is_html:
+        text = _RE_HTML_QUOTED.sub("", text)
     found = set()
     in_fence = False
     for line in text.split("\n"):
@@ -72,8 +95,10 @@ def main():
         return 0
 
     path = str(ti.get("file_path") or "")
-    if not path.lower().endswith(".md"):
+    low = path.lower()
+    if not low.endswith(BLOCKED_EXT):
         return 0
+    is_html = low.endswith((".html", ".htm"))
 
     texts = []
     if tool == "Write":
@@ -87,16 +112,19 @@ def main():
     if not texts:
         return 0
 
-    hits = violations("\n".join(texts))
+    hits = violations("\n".join(texts), is_html=is_html)
     if not hits:
         return 0
 
+    quote_hint = ("<code>- oder <pre>-Bereiche" if is_html
+                  else "Code-Fences oder Inline-Code")
+    kind = ".html" if is_html else ".md"
     reason = (
-        "Typografie-Sperre (.md): verbotene Zeichen im neuen Inhalt: "
+        "Typografie-Sperre (" + kind + "): verbotene Zeichen im neuen Inhalt: "
         + ", ".join(hits)
         + ". Regel (CLAUDE.md, Sprache/Stil): stattdessen Komma, Punkt, "
           "Doppelpunkt bzw. ASCII-Pfeil ->. Wörtliche Fremd-Zitate mit solchen "
-          "Zeichen in Code-Fences oder Inline-Code setzen. Inhalt korrigieren "
+          "Zeichen in " + quote_hint + " setzen. Inhalt korrigieren "
           "und erneut schreiben."
     )
     out = {"hookSpecificOutput": {"hookEventName": "PreToolUse",
