@@ -39,7 +39,7 @@ STRIPPED_LC=$(printf '%s\n' "$STRIPPED" | tr 'A-Z' 'a-z')
 
 # Whitelist-Tokens neutralisieren, damit englische Fachbegriffe (User, Queue, Status,
 # Plugin, ...) und Code-Bezeichner nicht falsch matchen.
-WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|process|pruef|queue|rescue|sandbox|schedule|session|source|stage|status|trace|user|value|vorausschauend)\b'
+WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|preissperre|process|pruef|queue|rescue|sandbox|schedule|session|source|stage|status|trace|user|value|vorausschauend)\b'
 if [ -n "$WHITELIST_REGEX" ]; then
     STRIPPED_LC=$(printf '%s\n' "$STRIPPED_LC" | sed -E "s/$WHITELIST_REGEX//g")
 fi
