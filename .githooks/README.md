@@ -109,3 +109,23 @@ Meldet die Prüfung einen Treffer, gibt es drei Wege: den Stamm länger fassen
 aufnehmen (verlustfrei, neutralisiert nur das ganze Token und erhält die Erkennung
 im Kompositum), oder den Stamm mit Begründung in `accepted_false_positives`
 eintragen. `-SkipVerify` umgeht die Sperre, sollte aber die Ausnahme bleiben.
+
+### Ein Stamm auf einem Eigennamen wird nicht aufgehalten
+
+Die Prüfung oben misst gegen das Wörterbuch. Nachnamen wie Müller, Schäfer,
+Schröder oder Krüger stehen dort als gültige Wörter, ein Stamm darauf gilt ihr
+also als bekannter Fehlalarm und nicht als Verbot. Genau solche Stämme wären aber
+schädlich: die ASCII-Form eines Namens ist in E-Mail-Adressen, Benutzernamen und
+Dateinamen die richtige Schreibweise, nicht der Verstoß.
+
+Belegt 2026-08-08 an einer Gegenmessung über alle Repos: von 593 Wörtern, die
+heute ungeblockt durchkommen, ist der Großteil Eigenname oder Adressbestandteil,
+angeführt von `mueller` mit 2086 Vorkommen. Vor jeder Stamm-Ergänzung deshalb
+prüfen, ob das Wort auch als Name vorkommt, und im Zweifel den Stamm so lang
+fassen, dass er nur die Prosaform trifft.
+
+Die Messung selbst liegt im Repo `claudecode` unter
+`vorgaenge/2026-08-08-umlaut-check-code-fence-kommentare/werkzeug/finde-stamm-luecken.py`.
+Wichtig für die Laufzeit: die Tokenisierung macht ripgrep, nicht Python. Die
+Python-Fassung lief über Stunden ohne Ergebnis, mit ripgrep sind es 26 Sekunden
+für 24500 Dateien.
