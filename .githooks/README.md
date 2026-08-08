@@ -66,6 +66,35 @@ kennt `warn` und `block`. Ohne Eintrag gelten die oben gezeigten Werte. Wirksam 
 vor allem die Schreib-Warnung: sie meldet den Verstoß in der Session, in der die
 Datei entsteht. Entscheid und Messung: ADR-2026-08-08-0117 im Repo `claudecode`.
 
+## Typografie: auch HTML und Text, nicht nur Markdown
+
+Seit dem 08.08.2026 prüft die Kette die verbotene Typografie nicht mehr nur in
+`.md`:
+
+| Stufe | Endungen | Wirkung |
+|---|---|---|
+| Schreibsperre `block-typografie.py` (PreToolUse) | `.md`, `.html`, `.htm` | blockt den Schreibvorgang |
+| Commit-Check `pre-commit.py` | `.md`, `.html`, `.htm`, `.txt` | block oder warn je Endung |
+| `commit-msg` | Commit-Message | blockt den Commit |
+
+Anlass: Ein Ticket-Kommentar lag als `.html` im Repo, trug sechs Geviertstriche
+und passierte jede Stufe, weil sie nur Markdown kannte. Aufgefallen ist es erst
+beim Zurücklesen des bereits geposteten Kommentars. Genau die Texte, die nach
+außen gehen (Ticket-Antworten, Mail-Entwürfe, Reports), liegen selten als `.md`
+vor.
+
+**Zitat-Ausnahme in HTML:** `<code>` und `<pre>` entsprechen den Code-Fences in
+Markdown, einzeilig wie mehrzeilig. Wörtlich zitierter Fremdtext gehört dorthin.
+
+**`.txt` bewusst nicht in der Schreibsperre:** Textdateien tragen oft Fremdinhalt
+(Logs, Exporte, Dumps), den man unverändert behalten muss, und dort gibt es keine
+Zitat-Ausnahme. Ein hartes `deny` wäre ein Fehlalarm ohne Ausweg. Der Commit-Check
+erfasst `.txt` trotzdem, dort ist die Meldung folgenlos korrigierbar.
+
+Mit der üblichen Repo-Konfiguration (`enforcement: warn`, `block_extensions:
+[".md"]`) warnen die neuen Endungen beim Commit, während `.md` blockt. Wer `.html`
+ebenfalls blockend führen will, trägt die Endung in `block_extensions` ein.
+
 ## Betreff einer Commit-Message nie mit `#` beginnen
 
 Belegt 2026-07-31: Eine Message mit dem Betreff `#40267 abgeschlossen: …` überlebt zwar ein
