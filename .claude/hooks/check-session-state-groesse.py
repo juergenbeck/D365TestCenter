@@ -30,6 +30,7 @@ der Bereinigung selbst.
 """
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -56,6 +57,39 @@ JOURNAL_LINES, JOURNAL_BYTES = 400, 40 * 1024
 # rund 300 Dateien samt aller Verweise brächte inhaltlich nichts, deshalb deckt der
 # Hook schlicht beide ab.
 STAND_NAMES = ('session-state.md', 'sessionstate.md')
+
+# Selbst-erklärte, eingefrorene Archive sind kein Verfall, sondern korrekt verwaltete
+# Historie und dürfen beliebig groß sein. Belegt an XrmForge-Workspace
+# docs/05_traceability/session-state.md: 1.558 Zeilen, aber in Zeile 3 als EINGEFROREN
+# ausgewiesen und per ADR-0006 zweimal abgelöst (erst STATE.md, dann cockpit.md). Solche
+# Dateien liegen nicht zwingend in einem sessions/- oder handover/-Ordner, der Pfad-Filter
+# oben greift dort also nicht.
+#
+# Zwei Bedingungen, beide nötig, sonst entstehen Fehlalarme:
+#  (1) ganz oben, gemessen in ZEICHEN statt Zeilen. Eine Zeilengrenze ist wertlos, wenn
+#      eine einzelne Tabellenzeile 21.861 Zeichen trägt (Riverty cockpit.md) - dann läge
+#      der halbe Dateiinhalt im vermeintlichen Kopf.
+#  (2) in der Kopf-Blockquote oder einer Überschrift. Ohne das matcht jede beiläufige
+#      Prosa-Erwähnung: Markants INT-0039 ist ein lebender Stand und schreibt bei
+#      Zeichen 880 "die eingefrorenen Snapshots".
+FROZEN_RE = re.compile(
+    r"eingefroren|nicht weiter (angeh|gepfleg|fortgeschrieb)|abgel(ö|oe)st durch",
+    re.IGNORECASE)
+FROZEN_FENSTER = 1000
+
+
+def ist_eingefroren(pfad):
+    """True, wenn die Datei sich selbst im Kopf als eingefrorenes Archiv ausweist."""
+    try:
+        with open(pfad, 'rb') as fh:
+            kopf = fh.read(4096).decode('utf-8', errors='replace')[:FROZEN_FENSTER]
+    except Exception:
+        return False
+    for zeile in kopf.split('\n'):
+        s = zeile.lstrip()
+        if (s.startswith('>') or s.startswith('#')) and FROZEN_RE.search(s):
+            return True
+    return False
 
 WOHIN_STAND = (
     "Die lebende Stand-Datei wird ÜBERSCHRIEBEN, nicht angehängt. Sie trägt den\n"
@@ -162,6 +196,9 @@ def main():
     lower = norm.lower()
     if any(seg in lower for seg in ('/sessions/', '/handover/', '/archiv/', '/archive/',
                                     '/.claude/worktrees/')):
+        return 0
+
+    if ist_eingefroren(file_path):
         return 0
 
     try:
