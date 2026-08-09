@@ -134,11 +134,38 @@ vergleicht in der C-Locale, dort zählt ein Umlaut nicht als Wortzeichen und bil
 eine Wortgrenze direkt hinter dem Stamm. Ein zu kurzer Stamm trifft deshalb auch
 Wörter, die den Umlaut richtig schreiben.
 
-Meldet die Prüfung einen Treffer, gibt es drei Wege: den Stamm länger fassen
+Meldet die Prüfung einen Treffer, gibt es vier Wege: den Stamm länger fassen
 (`haupts` wurde zu `hauptsaech`), das korrekte Wort in `whitelist_tokens`
 aufnehmen (verlustfrei, neutralisiert nur das ganze Token und erhält die Erkennung
-im Kompositum), oder den Stamm mit Begründung in `accepted_false_positives`
+im Kompositum), das Vorderglied in `wortfugen` aufnehmen (siehe nächster
+Abschnitt), oder den Stamm mit Begründung in `accepted_false_positives`
 eintragen. `-SkipVerify` umgeht die Sperre, sollte aber die Ausnahme bleiben.
+
+### Einzelnes Wort oder produktives Vorderglied?
+
+Die Wahl zwischen `whitelist_tokens` und `wortfugen` entscheidet, ob die Pflege
+irgendwann fertig wird.
+
+`whitelist_tokens` ist richtig für **ein einzelnes Wort**: einen Eigennamen, einen
+englischen Fachbegriff, einen Code-Bezeichner. Der Eintrag wirkt auf genau dieses
+Token, jede weitere Form braucht einen eigenen.
+
+`wortfugen` ist richtig für ein **produktives Vorderglied**, das beliebig viele
+Komposita bildet. Endet es auf `s` und beginnt das Hinterglied ebenfalls mit `s`,
+entsteht eine Buchstabenfolge, die einen Stamm vortäuscht: `Preis` plus `Stufe`
+ergibt `preisstufe` und enthält damit `reiss`. Ein Eintrag deckt alle Komposita
+und alle Flexionsformen zugleich ab.
+
+Der Mechanismus **trennt die Fuge auf**, statt das Wort zu verwerfen: aus
+`preisstufe` wird `preis stufe`. Das ist bewusst so, denn ein Verwerfen nähme
+einen echten Verstoß im hinteren Wortteil mit. `Preisschaetzung` trägt neben der
+harmlosen Fuge das echte Surrogat `schaetz`, und dieser Treffer bleibt erhalten.
+
+Vorgeschichte: Bis zum 09.08.2026 gab es nur den Token-Weg. Er hat den Fall
+`preissperre` gelöst und `preisstufe`, `preisstufen`, `preisschildern` und
+`preissperrung` offen gelassen; im Wörterbuch stehen rund dreißig weitere. Eine
+davon hat eine Rückfrage an den Nutzer hart geblockt. Detail:
+`decisions/ADR-2026-08-09-1507` im Repo `claudecode`.
 
 ### Ein Stamm auf einem Eigennamen wird nicht aufgehalten
 

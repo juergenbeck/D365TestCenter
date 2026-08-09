@@ -34,10 +34,9 @@ UMLAUT_WHITELIST = [
     '22_qualitaets', 'abhaengig_von', 'Address', 'ausfuehrungs_modi', 'Azure', 'bfuer',
     'BudgetPraeventionIntegration', 'Class', 'Daemon', 'Failed', 'Issue', 'kongruent',
     'Layer', 'loesch', 'over', 'overall', 'ParseFailureCount_ZweiMsMitKaputtemJson_Zaehlt_Beide_B_B2', 'Payload',
-    'Pipeline', 'Plugin', 'preissperre', 'Process', 'pruef', 'Queue',
-    'rescue', 'Sandbox', 'schaetzle', 'Schedule', 'schmeissner', 'Session',
-    'Source', 'Stage', 'Status', 'Trace', 'User', 'Value',
-    'vorausschauend',
+    'Pipeline', 'Plugin', 'Process', 'pruef', 'Queue', 'rescue',
+    'Sandbox', 'schaetzle', 'Schedule', 'schmeissner', 'Session', 'Source',
+    'Stage', 'Status', 'Trace', 'User', 'Value', 'vorausschauend',
 ]
 # <<< AUTO-GENERATED:UMLAUT-DATA
 

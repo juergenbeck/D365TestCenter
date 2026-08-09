@@ -37,9 +37,21 @@ STRIPPED=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
 # Trigger- und Whitelist-Regex werden vom Generator lowercase gerendert.
 STRIPPED_LC=$(printf '%s\n' "$STRIPPED" | tr 'A-Z' 'a-z')
 
+# Wortfugen auftrennen: ein Kompositum-Vorderglied auf -s (Preis, Kreis) erzeugt vor
+# einem s-Anfang eine Folge, die einen Stamm vortäuscht (Preisstufe enthält "reiss").
+# Ein Leerzeichen in die Fuge trennt den Fehlalarm auf und erhält dabei einen echten
+# Verstoß im hinteren Wortteil: "preisschaetzung" wird zu "preis schaetzung", der
+# Fehlalarm fällt weg, das echte "schaetz" bleibt erkennbar. Anders als die
+# Whitelist, die das ganze Token verwerfen und den echten Treffer mitnehmen würde.
+# Zeilennummern bleiben unverändert, nur Spalten verschieben sich.
+FUGEN_REGEX='(kreis|preis)s'
+if [ -n "$FUGEN_REGEX" ]; then
+    STRIPPED_LC=$(printf '%s\n' "$STRIPPED_LC" | sed -E "s/$FUGEN_REGEX/\1 s/g")
+fi
+
 # Whitelist-Tokens neutralisieren, damit englische Fachbegriffe (User, Queue, Status,
 # Plugin, ...) und Code-Bezeichner nicht falsch matchen.
-WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|budgetpraeventionintegration|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|preissperre|process|pruef|queue|rescue|sandbox|schaetzle|schedule|schmeissner|session|source|stage|status|trace|user|value|vorausschauend)\b'
+WHITELIST_REGEX='\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|budgetpraeventionintegration|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|process|pruef|queue|rescue|sandbox|schaetzle|schedule|schmeissner|session|source|stage|status|trace|user|value|vorausschauend)\b'
 if [ -n "$WHITELIST_REGEX" ]; then
     STRIPPED_LC=$(printf '%s\n' "$STRIPPED_LC" | sed -E "s/$WHITELIST_REGEX//g")
 fi

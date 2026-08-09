@@ -49,7 +49,8 @@ TYPO = {"–": "Halbgeviertstrich", "—": "Geviertstrich", "→": "Pfeil rechts
 
 # >>> AUTO-GENERATED:TOOLUMLAUT-DATA. Quelle: ~/.claude/umlaute-triggers.json. Nicht von Hand editieren.
 TOOL_TRIGGERS = r'\b\w*(abhaengig|abloest|aehn|aelter|aeltest|aender|aendert|aenderung|aequivalent|aerger|aergerli|aerztl|aeusser|allmaehl|anhaenge|aufgeloest|aufloesung|aufraeum|aufwaend|ausfueh|ausgefuehrt|auszueg|beduerf|begruend|behoerde|beruecks|bestaet|bezueg|braeuch|bruech|bruecke|buendel|buerg|buero|domaene|duerfen|durchfueh|durchgefuehrt|einfueh|einfuehr|empfaenger|enthaelt|entitaeten|entwuerf|ergaen|ergaenz|erlaeuter|erloes|erschoepft|erwaeg|erwaehnt|fachdomaene|faehig|faehr|faell|faelsch|faerb|fluess|frueh|frueher|fueg|fuehl|fuehr|fuehrend|fuellen|fuellt|fuellung|fuenf|fuer|gaeng|gaest|gebaeud|gebuehr|gedaechtnis|gefaehr|gefaehrli|gefaess|gehoer|gelaend|geloescht|gemaess|gemuetlich|genueg|gepruft|geruest|geschaeft|gespraech|gewaehr|glaeub|glueck|groesse|gruen|gruend|gueltig|haelt|haendl|haeng|haengen|haengt|haetten|haeufig|hauptsaech|hinzugefuegt|hoechste|hoeh|hoehe|hoehere|hoer|itaet|jaehrli|juenger|klaer|klaerung|knuepf|koennen|koennte|koerper|konformitaet|kraeft|kuech|kuendig|kuenft|kuenftig|kuerz|laed|laenge|laengst|laesst|laeuf|laeuft|loes|loesch|loeschen|loest|loesung|luecke|maengel|maerkt|maerz|massnahme|moechte|moegen|moegli|moeglich|muessen|muesste|naechst|naechster|naehe|naemli|natuerlich|noetig|nuetz|nuetzlich|oeffn|oekonomie|persoenlich|plaene|praefix|praemi|praesent|praevent|praezedenz|praezis|primaer|pruef|pruefen|pruefung|qualitaet|quarantaene|raeum|realitaet|regulaer|rueck|ruecksprach|ruehr|ruestung|saemtli|saetz|schaed|schaeft|schaerf|schaetz|schlaeg|schluess|schluessel|schoen|schoepf|schraenk|schuetz|schwaech|sekretaer|spaet|spaeter|staedt|staend|staerk|stoer|stoerung|strassen|stueck|stuend|stuetz|taegli|taetig|tatsaechli|temporaer|tonalitaet|traeg|tragfaeh|ueben|ueber|ueberall|ueberarb|ueberblick|ueberlauf|uebernom|ueberpruef|ueberprueft|ueberschr|uebersetz|uebersich|uebersicht|ueberspring|uebertra|ueberwach|ueblich|uebrig|uebt|uebung|umstaend|ungefaehr|ungueltig|unmoegl|urspruengl|verfueg|verknuepf|veroeffentl|verstaend|verstaendlich|verstaerken|verstoss|voellig|vollstaendig|vorgaenger|vorraet|vorschlaeg|waecht|waehl|waehr|waere|waerme|waerts|widerspruech|woechentl|woertlich|wuensch|wuerd|zaehl|zaehler|zoeger|zueg|zurueck|zusaetz|zusaetzli)\w*\b|\b\w*(abschliess|anschliess|ausschliess|ausschliesslich|aussen|äusser|ausserdem|ausserhalb|aussert|aussreich|begruess|beiss|einschliess|fliess|gemaess|geniess|giess|groess|gross|gröss|grosse|grosser|grosses|hauptstrass|heiss|laess|liess|maess|mäss|massg|massnahm|mutmass|regelmaess|reiss|schiess|schliess|schmeiss|stoess|stoss|süss|verschliess|verstoess)\w*\b|\b(gaebe|haette|moecht|moege|muell|ueber|wuerde|wuerden)\b|\b(ausser|bloss|busse|draussen|fasse|folgendermassen|gleichermassen|gruss|hauptstrasse|spass|weiss|weisst)\b'
-TOOL_WHITELIST = r'\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|budgetpraeventionintegration|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|preissperre|process|pruef|queue|rescue|sandbox|schaetzle|schedule|schmeissner|session|source|stage|status|trace|user|value|vorausschauend)\b'
+TOOL_WHITELIST = r'\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azure|bfuer|budgetpraeventionintegration|class|daemon|failed|issue|kongruent|layer|loesch|over|overall|parsefailurecount_zweimsmitkaputtemjson_zaehlt_beide_b_b2|payload|pipeline|plugin|process|pruef|queue|rescue|sandbox|schaetzle|schedule|schmeissner|session|source|stage|status|trace|user|value|vorausschauend)\b'
+TOOL_FUGEN = r'(kreis|preis)s'
 # <<< AUTO-GENERATED:TOOLUMLAUT-DATA
 
 # Case-insensitiv (wie der commit-msg-Hook, der auf einer lowercase-Kopie matcht,
@@ -60,6 +61,16 @@ TOOL_WHITELIST = r'\b(22_qualitaets|abhaengig_von|address|ausfuehrungs_modi|azur
 _RE_TRIGGERS = re.compile(TOOL_TRIGGERS, re.IGNORECASE)
 _RE_WHITELIST = re.compile(TOOL_WHITELIST, re.IGNORECASE)
 _RE_INLINE = re.compile(r'`[^`]*`')
+
+# Wortfugen (Feld wortfugen der Trigger-JSON, seit 2026-08-09): Ein Vorderglied auf -s
+# erzeugt vor einem s-Anfang eine Folge, die einen Stamm vortäuscht, "Preisstufe"
+# enthält "reiss". Die Fuge wird durch ein Leerzeichen aufgetrennt, statt das Token
+# wie bei der Whitelist ganz zu verwerfen: so verschwindet der Fehlalarm, ein echter
+# Verstoß im hinteren Wortteil (`Preisschaetzung`) bleibt aber erkennbar. Anlass war
+# eine per deny abgewiesene AskUserQuestion zur Preisstufe eines Azure-Dienstes.
+# Leerer Wert heißt "keine Fugen konfiguriert": dann NICHT kompilieren, eine leere
+# Regex würde sonst vor jedem Zeichen ein Leerzeichen einfügen.
+_RE_FUGEN = re.compile(TOOL_FUGEN, re.IGNORECASE) if TOOL_FUGEN else None
 
 
 def collect_fields(tool, ti):
@@ -121,6 +132,8 @@ def main():
     matches = set()
     for _where, text in fields:
         clean = _RE_INLINE.sub('', text)
+        if _RE_FUGEN is not None:
+            clean = _RE_FUGEN.sub(r'\1 s', clean)
         clean = _RE_WHITELIST.sub('', clean)
         for m in _RE_TRIGGERS.finditer(clean):
             matches.add(m.group(0))
