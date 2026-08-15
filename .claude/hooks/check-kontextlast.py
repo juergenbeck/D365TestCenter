@@ -30,6 +30,38 @@ except Exception:
 SCHWELLEN = [50, 70, 85]
 DEFAULT_WINDOW = 1000000
 
+# Kontextfenster je Modell. Quelle: Skill `claude-api` (Modelltabelle, Stand 2026-06-24),
+# gegengeprüft am 15.08.2026 an den real erreichten Maxima von 1153 Transcripten: kein
+# gemessener Wert überschreitet sein dokumentiertes Fenster, Opus 4.8 schöpfte 857.815
+# Token (86 Prozent von 1M) aus.
+#
+# Ohne diese Tabelle würde eine Haiku-Session (200k Fenster) mit dem 1M-Default bei
+# echten 85 Prozent als 17 Prozent gemeldet und die Warnung bliebe aus - derselbe
+# Fehler wie eine geschätzte Zahl, nur in die andere Richtung.
+MODELL_FENSTER = {
+    'claude-opus-5': 1000000,
+    'claude-fable-5': 1000000,
+    'claude-mythos-5': 1000000,
+    'claude-opus-4-8': 1000000,
+    'claude-opus-4-7': 1000000,
+    'claude-opus-4-6': 1000000,
+    'claude-sonnet-5': 1000000,
+    'claude-sonnet-4-6': 1000000,
+    'claude-haiku-4-5': 200000,
+}
+
+
+def fenster_aus_modell(modell):
+    """Fenster zum Modell, auch bei angehängtem Datums-Suffix."""
+    if not modell:
+        return None
+    if modell in MODELL_FENSTER:
+        return MODELL_FENSTER[modell]
+    for basis, fenster in MODELL_FENSTER.items():
+        if modell.startswith(basis):
+            return fenster
+    return None
+
 REAKTION = {
     50: "Leise Schwelle: Übergabe nach dem laufenden Mikro-Auftrag einplanen, Stand-Meldung "
         "vorbereiten. Der User entscheidet, ob übergeben wird, kein Auto-Start-Imperativ.",
@@ -50,12 +82,12 @@ UEBERGABE_HINWEIS = (
 def kontext_tokens(transcript_path):
     """Summe der Eingabe-Token des jüngsten usage-Eintrags = aktuelle Kontextfüllung."""
     if not transcript_path or not os.path.isfile(transcript_path):
-        return None
+        return None, None
     try:
         with open(transcript_path, encoding='utf-8', errors='replace') as fh:
             lines = fh.readlines()
     except Exception:
-        return None
+        return None, None
     for line in reversed(lines):
         line = line.strip()
         if not line or '"usage"' not in line:
@@ -79,8 +111,9 @@ def kontext_tokens(transcript_path):
             if isinstance(val, (int, float)):
                 total += int(val)
         if total > 0:
-            return total
-    return None
+            nachricht = obj.get('message') if isinstance(obj.get('message'), dict) else {}
+            return total, (nachricht.get('model') or obj.get('model'))
+    return None, None
 
 
 def main():
@@ -97,16 +130,26 @@ def main():
     transcript_path = data.get('transcript_path', '')
     session_id = data.get('session_id', 'unknown')
 
-    tokens = kontext_tokens(transcript_path)
+    tokens, modell = kontext_tokens(transcript_path)
     if not tokens:
         return 0
 
-    try:
-        window = int(os.environ.get('CLAUDE_CONTEXT_WINDOW', DEFAULT_WINDOW))
-    except Exception:
-        window = DEFAULT_WINDOW
+    # Vorrang hat die Umgebungsvariable, sonst das Fenster des Modells, sonst der Default.
+    if os.environ.get('CLAUDE_CONTEXT_WINDOW'):
+        try:
+            window = int(os.environ['CLAUDE_CONTEXT_WINDOW'])
+            herkunft = 'CLAUDE_CONTEXT_WINDOW'
+        except Exception:
+            window, herkunft = DEFAULT_WINDOW, 'Default (CLAUDE_CONTEXT_WINDOW unlesbar)'
+    else:
+        aus_modell = fenster_aus_modell(modell)
+        if aus_modell:
+            window, herkunft = aus_modell, 'Modell ' + str(modell)
+        else:
+            window = DEFAULT_WINDOW
+            herkunft = 'Default (Modell %s unbekannt)' % (modell or 'nicht ermittelt')
     if window <= 0:
-        window = DEFAULT_WINDOW
+        window, herkunft = DEFAULT_WINDOW, 'Default (ungültiger Wert)'
 
     pct = tokens * 100 // window
 
@@ -140,10 +183,10 @@ def main():
     msg = (
         "KONTEXTLAST ~%d%% (Hook check-kontextlast)\n\n"
         "Echte Kontextfüllung: ~%dk von ~%dk Token (jüngster usage-Eintrag des Transcripts; "
-        "Schwelle %d%% erreicht; Fenster justierbar via CLAUDE_CONTEXT_WINDOW).\n\n"
+        "Schwelle %d%% erreicht; Fenster aus: %s, justierbar via CLAUDE_CONTEXT_WINDOW).\n\n"
         "%s\n\n"
         "%s"
-        % (pct, tk, wk, reached, REAKTION[reached], UEBERGABE_HINWEIS)
+        % (pct, tk, wk, reached, herkunft, REAKTION[reached], UEBERGABE_HINWEIS)
     )
     print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit',
                                              'additionalContext': msg}}, ensure_ascii=False))
