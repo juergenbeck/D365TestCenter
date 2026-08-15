@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit-Hook: warnt an Schwellen (50/70/85 Prozent), wenn der Kontext voll läuft.
-
-HANDGESCHRIEBEN (nicht auto-generiert). Wird NICHT von Sync-UmlautTriggers.ps1 verwaltet.
-D365TestCenter-Variante der Familien-Vorlage; Messkern nach Palas-Vorbild, Familien-Standard per
-claudecode-ADR-2026-07-04-0943 (löst die frühere Byte-Heuristik ab, die systematisch
-überschätzte: die Transcript-JSONL wächst append-only, verworfene Tool-Outputs und
-Vor-Compact-Historie zählten mit).
+"""UserPromptSubmit-Hook: warnt an Schwellen, wenn der Kontext voll läuft.
 
 Misst die ECHTE Kontextfüllung aus dem jüngsten usage-Eintrag des Transcripts
-(input_tokens + cache_read_input_tokens + cache_creation_input_tokens); das ist auch nach
-einem Compact korrekt. Das Kontextfenster ist modell-/session-abhängig und nicht zuverlässig
-aus dem Transcript ablesbar; es kommt aus der Umgebungsvariablen CLAUDE_CONTEXT_WINDOW
-(Default 1000000, fehlalarm-frei bei großem Fenster). Die Meldung nennt immer die absolute
+(input_tokens + cache_read_input_tokens + cache_creation_input_tokens); das ist auch
+nach einem Compact korrekt. Familien-Standard seit claudecode-ADR-2026-07-04-0943
+(Palas-Vorbild), löst die frühere Byte-Heuristik bytes/3.5 ab, die systematisch
+überschätzte: die Transcript-JSONL wächst append-only, verworfene Tool-Outputs und
+Vor-Compact-Historie zählten mit.
+
+Das Kontextfenster folgt dem Modell (siehe MODELL_FENSTER), Vorrang hat die
+Umgebungsvariable CLAUDE_CONTEXT_WINDOW. Die Meldung nennt immer die absolute
 Token-Zahl, die unabhängig vom angenommenen Fenster korrekt ist.
 
 State-File pro Session, damit dieselbe Schwelle nicht mehrfach feuert.
 fail-open: jeder Fehler -> Exit 0.
+
+GENERIERT aus ~/.claude/hook-templates/python/check-kontextlast.py durch
+Sync-UmlautTriggers.ps1. Änderungen am Rahmen gehören ins Template, nicht hierher.
+AUSGENOMMEN ist die mit KONTEXTLAST-TEXTE markierte Region weiter unten: die ist
+repo-spezifisch, wird vom Sync NIE überschrieben und gehört genau hierher
+(ADR-2026-08-15-1143 im Repo claudecode).
 """
 import json
 import os
@@ -32,12 +36,11 @@ DEFAULT_WINDOW = 1000000
 
 # Kontextfenster je Modell. Quelle: Skill `claude-api` (Modelltabelle, Stand 2026-06-24),
 # gegengeprüft am 15.08.2026 an den real erreichten Maxima von 1153 Transcripten: kein
-# gemessener Wert überschreitet sein dokumentiertes Fenster, Opus 4.8 schöpfte 857.815
-# Token (86 Prozent von 1M) aus.
+# gemessener Wert überschreitet sein dokumentiertes Fenster.
 #
 # Ohne diese Tabelle würde eine Haiku-Session (200k Fenster) mit dem 1M-Default bei
 # echten 85 Prozent als 17 Prozent gemeldet und die Warnung bliebe aus - derselbe
-# Fehler wie eine geschätzte Zahl, nur in die andere Richtung.
+# Fehler wie eine geschätzte Zahl, nur in die andere Richtung und ohne Korrektiv.
 MODELL_FENSTER = {
     'claude-opus-5': 1000000,
     'claude-fable-5': 1000000,
@@ -62,25 +65,9 @@ def fenster_aus_modell(modell):
             return fenster
     return None
 
-REAKTION = {
-    50: "Leise Schwelle: Übergabe nach dem laufenden Mikro-Auftrag einplanen, Stand-Meldung "
-        "vorbereiten. Der User entscheidet, ob übergeben wird, kein Auto-Start-Imperativ.",
-    70: "Deutliche Schwelle: nächsten sinnvollen Schnitt suchen, Übergabe-Vorschlag formulieren "
-        "und User-Entscheidung abwarten, bevor neue Arbeitsblöcke beginnen.",
-    85: "Kritische Schwelle: nichts Neues mehr anfangen, keine neuen Nachlade-Reads. Jetzt "
-        "übergeben oder den Stand als Spec/Briefing im Repo sichern, bevor Auto-Compact die "
-        "scharfen Details (exakte Namen, Zeilennummern, Belege) verdichtet.",
-}
-
-UEBERGABE_HINWEIS = (
-    "Bei Übergabe: ordentliche Übergabe nach der Konvention des D365TestCenter-Workspace-Repos "
-    "(dort liegen Session-State und Arbeitsregeln); dieses Produkt-Repo hat kein eigenes "
-    "Session-System."
-)
-
 
 def kontext_tokens(transcript_path):
-    """Summe der Eingabe-Token des jüngsten usage-Eintrags = aktuelle Kontextfüllung."""
+    """Jüngster usage-Eintrag: (Summe der Eingabe-Token, Modell) = aktuelle Kontextfüllung."""
     if not transcript_path or not os.path.isfile(transcript_path):
         return None, None
     try:
@@ -96,6 +83,7 @@ def kontext_tokens(transcript_path):
             obj = json.loads(line)
         except Exception:
             continue
+        # Subagenten laufen in eigenen Fenstern; ihre Last gehört nicht in diese Zahl.
         if obj.get('isSidechain') is True:
             continue
         usage = None
@@ -116,6 +104,71 @@ def kontext_tokens(transcript_path):
     return None, None
 
 
+def fenster_ableiten(modell):
+    """(Fenster, Herkunft). Vorrang: Umgebungsvariable, dann Modell, dann Default."""
+    if os.environ.get('CLAUDE_CONTEXT_WINDOW'):
+        try:
+            window = int(os.environ['CLAUDE_CONTEXT_WINDOW'])
+            herkunft = 'CLAUDE_CONTEXT_WINDOW'
+        except Exception:
+            window, herkunft = DEFAULT_WINDOW, 'Default (CLAUDE_CONTEXT_WINDOW unlesbar)'
+    else:
+        aus_modell = fenster_aus_modell(modell)
+        if aus_modell:
+            window, herkunft = aus_modell, 'Modell ' + str(modell)
+        else:
+            window = DEFAULT_WINDOW
+            herkunft = 'Default (Modell %s unbekannt)' % (modell or 'nicht ermittelt')
+    if window <= 0:
+        window, herkunft = DEFAULT_WINDOW, 'Default (ungültiger Wert)'
+    return window, herkunft
+
+
+# === KONTEXTLAST-TEXTE ANFANG (repo-spezifisch, vom Sync nicht angetastet) ===
+# Alles zwischen diesen beiden Markern gehört diesem Repo. Der Sync rendert den
+# Rahmen darum herum neu und lässt diese Region unverändert stehen. Pflicht ist
+# genau eine Funktion:
+#
+#     meldung(pct, tokens, window, reached, herkunft) -> str
+#
+# pct = Prozent (int), tokens/window = absolute Token (int), reached = erreichte
+# Schwelle (int), herkunft = woher das Fenster stammt (str). Konstanten, die nur
+# der Meldungstext braucht, gehören ebenfalls hierher.
+
+REAKTION = {
+    50: "Leise Schwelle: Übergabe nach dem laufenden Mikro-Auftrag einplanen, Stand-Meldung "
+        "vorbereiten. Der User entscheidet, ob übergeben wird, kein Auto-Start-Imperativ.",
+    70: "Deutliche Schwelle: nächsten sinnvollen Schnitt suchen, Übergabe-Vorschlag formulieren "
+        "und User-Entscheidung abwarten, bevor neue Arbeitsblöcke beginnen.",
+    85: "Kritische Schwelle: nichts Neues mehr anfangen, keine neuen Nachlade-Reads. Jetzt "
+        "übergeben oder den Stand als Spec/Briefing im Repo sichern, bevor Auto-Compact die "
+        "scharfen Details (exakte Namen, Zeilennummern, Belege) verdichtet.",
+}
+
+UEBERGABE_HINWEIS = (
+    "Bei Übergabe: ordentliche Übergabe nach der Konvention des D365TestCenter-Workspace-Repos "
+    "(dort liegen Session-State und Arbeitsregeln); dieses Produkt-Repo hat kein eigenes "
+    "Session-System."
+)
+
+
+def meldung(pct, tokens, window, reached, herkunft):
+    """Der an Claude gemeldete Text. Repo-spezifisch, aus der Vorgängerfassung übernommen."""
+    tk = round(tokens / 1000)
+    wk = round(window / 1000)
+    return (
+            "KONTEXTLAST ~%d%% (Hook check-kontextlast)\n\n"
+            "Echte Kontextfüllung: ~%dk von ~%dk Token (jüngster usage-Eintrag des Transcripts; "
+            "Schwelle %d%% erreicht; Fenster aus: %s, justierbar via CLAUDE_CONTEXT_WINDOW).\n\n"
+            "%s\n\n"
+            "%s"
+            % (pct, tk, wk, reached, herkunft, REAKTION[reached], UEBERGABE_HINWEIS)
+        )
+
+
+# === KONTEXTLAST-TEXTE ENDE ===
+
+
 def main():
     raw = ''
     try:
@@ -134,26 +187,10 @@ def main():
     if not tokens:
         return 0
 
-    # Vorrang hat die Umgebungsvariable, sonst das Fenster des Modells, sonst der Default.
-    if os.environ.get('CLAUDE_CONTEXT_WINDOW'):
-        try:
-            window = int(os.environ['CLAUDE_CONTEXT_WINDOW'])
-            herkunft = 'CLAUDE_CONTEXT_WINDOW'
-        except Exception:
-            window, herkunft = DEFAULT_WINDOW, 'Default (CLAUDE_CONTEXT_WINDOW unlesbar)'
-    else:
-        aus_modell = fenster_aus_modell(modell)
-        if aus_modell:
-            window, herkunft = aus_modell, 'Modell ' + str(modell)
-        else:
-            window = DEFAULT_WINDOW
-            herkunft = 'Default (Modell %s unbekannt)' % (modell or 'nicht ermittelt')
-    if window <= 0:
-        window, herkunft = DEFAULT_WINDOW, 'Default (ungültiger Wert)'
-
+    window, herkunft = fenster_ableiten(modell)
     pct = tokens * 100 // window
 
-    # höchste noch nicht gemeldete Schwelle aus dem State-File
+    # höchste bereits gemeldete Schwelle aus dem State-File
     state_dir = os.path.join(tempfile.gettempdir(), 'claude-kontextlast')
     try:
         os.makedirs(state_dir, exist_ok=True)
@@ -163,7 +200,9 @@ def main():
     last_level = 0
     try:
         with open(state_file, encoding='utf-8') as fh:
-            last_level = int(json.load(fh).get('lastLevel', 0))
+            st = json.load(fh)
+            # lastSchwelle: Altbestand aus Innoform, damit ein laufender State nicht neu feuert.
+            last_level = int(st.get('lastLevel', st.get('lastSchwelle', 0)) or 0)
     except Exception:
         last_level = 0
 
@@ -178,16 +217,11 @@ def main():
     except Exception:
         pass
 
-    tk = round(tokens / 1000)
-    wk = round(window / 1000)
-    msg = (
-        "KONTEXTLAST ~%d%% (Hook check-kontextlast)\n\n"
-        "Echte Kontextfüllung: ~%dk von ~%dk Token (jüngster usage-Eintrag des Transcripts; "
-        "Schwelle %d%% erreicht; Fenster aus: %s, justierbar via CLAUDE_CONTEXT_WINDOW).\n\n"
-        "%s\n\n"
-        "%s"
-        % (pct, tk, wk, reached, herkunft, REAKTION[reached], UEBERGABE_HINWEIS)
-    )
+    try:
+        msg = meldung(pct, tokens, window, reached, herkunft)
+    except Exception:
+        return 0
+
     print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit',
                                              'additionalContext': msg}}, ensure_ascii=False))
     return 0
