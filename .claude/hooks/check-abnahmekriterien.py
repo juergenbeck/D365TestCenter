@@ -89,12 +89,12 @@ nicht ohne Rückfrage entscheiden. Bitte in Befehl, Vergleich, Messwert oder Dat
 # seine Vorlagen unter projekte/common/... ab, andere unter 06_traceability/. Derselbe
 # Pfad-statt-Funktion-Fehler wie bei der Kickoff-Erkennung (siehe oben).
 # Pfade werden vor dem Vergleich auf Schrägstriche normalisiert. Eine Zeichenklasse mit
-# beiden Trennern ist auf Windows eine Fehlerquelle: [\/] enthaelt kein Backslash, weil
+# beiden Trennern ist auf Windows eine Fehlerquelle: [\/] enthält kein Backslash, weil
 # Python \/ innerhalb der Klasse als / liest, und der Ausdruck matcht dann nie.
 TEMPLATE_DIR_RE = re.compile(r'(^|/)_templates?(/|$)', re.IGNORECASE)
 TEMPLATE_FILE_RE = re.compile(r'(adr|kickoff)[^/]*\.md$', re.IGNORECASE)
 
-# Verzeichnisse, die bei der Suche nie betreten werden. Ohne diese Bremse laeuft der Hook in
+# Verzeichnisse, die bei der Suche nie betreten werden. Ohne diese Bremse läuft der Hook in
 # einem Repo mit 25.000 Dateien bei jedem Schreibvorgang durch den ganzen Baum.
 SKIP_DIRS = {'.git', 'node_modules', '__pycache__', '.venv', 'venv', 'bin', 'obj',
              'worktrees', '.claude', 'Reels', 'dist', 'build'}
@@ -114,7 +114,7 @@ def _repo_root(start):
 
 
 def _repo_knows_rule(start):
-    """True, wenn irgendeine ADR-/Kickoff-Vorlage im Repo den Abschnitt selbst traegt."""
+    """True, wenn irgendeine ADR-/Kickoff-Vorlage im Repo den Abschnitt selbst trägt."""
     root = _repo_root(start)
     if not root:
         return False
