@@ -29,7 +29,10 @@ except Exception:
 # agent-system/zellen/*/handover/ liegen. Maßgeblich ist der Dateiname nach der familienweit
 # stabilen Übergabe-Konvention, nicht der Ordner.
 ADR_RE = re.compile(
-    r'/(decisions|entscheidungen)/(ADR[-_]|OE[-_]|\d{4}-)[^/]+\.md$', re.IGNORECASE)
+    # [^/]* um den Ordnernamen: D365TestCenter-Workspace führt 02_decisions/, andere
+    # könnten 01_entscheidungen/ nutzen. Ohne das blieben dort 13 ADRs unerkannt.
+    r'/[^/]*(decisions|entscheidungen)[^/]*/(ADR[-_]|OE[-_]|\d{4}-)[^/]+\.md$',
+    re.IGNORECASE)
 # <yyyy-mm-dd>-<hhmm>-kickoff-<kebab>.md, unabhängig vom Ordner. Der Zeitstempel trennt echte
 # Session-Kickoffs von Fremdtreffern wie einer Terminnotiz "...-ui-kickoff-workshop.md".
 KICKOFF_RE = re.compile(
