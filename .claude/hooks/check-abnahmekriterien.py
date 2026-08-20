@@ -83,32 +83,58 @@ nicht ohne Rückfrage entscheiden. Bitte in Befehl, Vergleich, Messwert oder Dat
 # Erkennungsmerkmal ist eine Vorlage, die den Abschnitt selbst trägt. Fehlt sie, schweigt er.
 # Grund: eine Meldung in einem Repo, dessen Arbeitsweise die Regel nicht kennt, ist Lärm ohne
 # Adressaten, und der erste Reflex darauf wäre, den Hook ganz abzuschalten.
-TEMPLATE_CANDIDATES = (
-    '_templates/adr.md', '_templates/kickoff.md',
-    'decisions/_templates/adr.md', '_template/adr.md',
-    '06_traceability/_templates/adr.md', '06_traceability/_templates/kickoff.md',
-)
+# Was als Vorlage gilt: eine Datei unter einem Vorlagen-Verzeichnis, deren Name auf ADR oder
+# Kickoff deutet. Bewusst KEINE feste Pfadliste. Eine solche Liste war die erste Fassung, und
+# sie hätte nur die drei Repos erreicht, deren Ablage der von claudecode gleicht; Markant legt
+# seine Vorlagen unter projekte/common/... ab, andere unter 06_traceability/. Derselbe
+# Pfad-statt-Funktion-Fehler wie bei der Kickoff-Erkennung (siehe oben).
+# Pfade werden vor dem Vergleich auf Schrägstriche normalisiert. Eine Zeichenklasse mit
+# beiden Trennern ist auf Windows eine Fehlerquelle: [\/] enthaelt kein Backslash, weil
+# Python \/ innerhalb der Klasse als / liest, und der Ausdruck matcht dann nie.
+TEMPLATE_DIR_RE = re.compile(r'(^|/)_templates?(/|$)', re.IGNORECASE)
+TEMPLATE_FILE_RE = re.compile(r'(adr|kickoff)[^/]*\.md$', re.IGNORECASE)
+
+# Verzeichnisse, die bei der Suche nie betreten werden. Ohne diese Bremse laeuft der Hook in
+# einem Repo mit 25.000 Dateien bei jedem Schreibvorgang durch den ganzen Baum.
+SKIP_DIRS = {'.git', 'node_modules', '__pycache__', '.venv', 'venv', 'bin', 'obj',
+             'worktrees', '.claude', 'Reels', 'dist', 'build'}
+MAX_TIEFE = 5
 
 
-def _repo_knows_rule(start):
-    """Sucht ab dem Datei-Verzeichnis aufwärts eine Vorlage mit dem Abschnitt."""
+def _repo_root(start):
     d = os.path.dirname(os.path.abspath(start))
     for _ in range(12):
         if os.path.isdir(os.path.join(d, '.git')):
-            for rel in TEMPLATE_CANDIDATES:
-                full = os.path.join(d, rel.replace('/', os.sep))
-                if os.path.isfile(full):
-                    try:
-                        with open(full, encoding='utf-8-sig') as fh:
-                            if HEADING_RE.search(fh.read()):
-                                return True
-                    except Exception:
-                        pass
-            return False
+            return d
         parent = os.path.dirname(d)
         if parent == d:
-            return False
+            return None
         d = parent
+    return None
+
+
+def _repo_knows_rule(start):
+    """True, wenn irgendeine ADR-/Kickoff-Vorlage im Repo den Abschnitt selbst traegt."""
+    root = _repo_root(start)
+    if not root:
+        return False
+    for dirpath, dirnames, filenames in os.walk(root):
+        tiefe = dirpath[len(root):].count(os.sep)
+        if tiefe >= MAX_TIEFE:
+            dirnames[:] = []
+            continue
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and not d.startswith('.')]
+        if not TEMPLATE_DIR_RE.search(dirpath.replace(os.sep, '/')):
+            continue
+        for name in filenames:
+            if not TEMPLATE_FILE_RE.search(name):
+                continue
+            try:
+                with open(os.path.join(dirpath, name), encoding='utf-8-sig') as fh:
+                    if HEADING_RE.search(fh.read()):
+                        return True
+            except Exception:
+                pass
     return False
 
 
