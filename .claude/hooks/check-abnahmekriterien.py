@@ -42,7 +42,7 @@ TEMPLATE_RE = re.compile(r'/_templates?/', re.IGNORECASE)
 # Der Abschnitt zählt als vorhanden, wenn die Überschrift da ist UND darunter Text steht.
 HEADING_RE = re.compile(r'^#{2,3}\s*fertig,?\s*wenn\b', re.IGNORECASE | re.MULTILINE)
 
-# Zustandsworte ohne Messgrösse. Nur als Hinweis, nicht als Ausschluss.
+# Zustandsworte ohne Messgröße. Nur als Hinweis, nicht als Ausschluss.
 VAGUE_RE = re.compile(
     r'^\s*[-*]\s*.*\b(sauber umgesetzt|funktioniert|dokumentiert|erledigt|fertig)\s*\.?\s*$',
     re.IGNORECASE | re.MULTILINE)
