@@ -71,6 +71,20 @@ MSG_EMPTY = """ABNAHMEKRITERIEN LEER (Hook check-abnahmekriterien)
 Die Überschrift "Fertig, wenn" steht da, darunter aber nichts Zählbares. Entweder Kriterien
 eintragen oder "entfällt" plus Begründung."""
 
+MSG_TEMPLATE = """ABNAHMEKRITERIEN NUR VORLAGENTEXT (Hook check-abnahmekriterien)
+
+  {path_}
+
+Unter „Fertig, wenn" steht bisher nur der Text der Vorlage, also die Ausfüllhilfe. Das ist
+der Normalfall direkt nach dem Anlegen und noch keine Entscheidung: es ist nichts gemessen,
+was ein Dritter nachvollziehen könnte.
+
+Die Anleitung darf stehenbleiben - sobald eigene Kriterien darunter stehen, schweigt diese
+Meldung. Ein Kriterium nennt einen Befehl mit erwartetem Ergebnis, einen Vergleich gegen einen
+benannten Stand, eine Messung mit Zielwert oder eine Datei mit erwartetem Inhalt, dazu die
+Gegenprobe. Gibt es nichts zu messen: „entfällt" plus Begründung."""
+
+
 MSG_VAGUE = """ABNAHMEKRITERIEN UNSCHARF (Hook check-abnahmekriterien)
 
   {path_}
@@ -116,11 +130,24 @@ def _repo_root(start):
     return None
 
 
-def _repo_knows_rule(start):
-    """True, wenn irgendeine ADR-/Kickoff-Vorlage im Repo den Abschnitt selbst trägt."""
+def _section_body(text, match):
+    """Text zwischen der Überschrift und der nächsten Überschrift gleicher oder höherer Ebene."""
+    rest = text[match.end():]
+    next_heading = re.search(r'^#{1,3}\s', rest, re.MULTILINE)
+    return rest[:next_heading.start()] if next_heading else rest
+
+
+def _vorlagen_abschnitte(start):
+    """Die Abschnittstexte „Fertig, wenn" aller ADR-/Kickoff-Vorlagen des Repos.
+
+    Bis ADR-2026-08-21-2010 hat diese Suche nur gezählt, ob es eine Vorlage GIBT (Opt-in).
+    Ihr Text wurde weggeworfen - und genau der ist der Maßstab dafür, ob ein ADR schon
+    ausgefüllt ist oder noch die bloße Anleitung trägt.
+    """
     root = _repo_root(start)
     if not root:
-        return False
+        return []
+    gefunden = []
     for dirpath, dirnames, filenames in os.walk(root):
         tiefe = dirpath[len(root):].count(os.sep)
         if tiefe >= MAX_TIEFE:
@@ -134,18 +161,47 @@ def _repo_knows_rule(start):
                 continue
             try:
                 with open(os.path.join(dirpath, name), encoding='utf-8-sig') as fh:
-                    if HEADING_RE.search(fh.read()):
-                        return True
+                    text = fh.read()
             except Exception:
-                pass
-    return False
+                continue
+            treffer = HEADING_RE.search(text)
+            if treffer:
+                gefunden.append(_section_body(text, treffer))
+    return gefunden
 
 
-def _section_body(text, match):
-    """Text zwischen der Überschrift und der nächsten Überschrift gleicher oder höherer Ebene."""
-    rest = text[match.end():]
-    next_heading = re.search(r'^#{1,3}\s', rest, re.MULTILINE)
-    return rest[:next_heading.start()] if next_heading else rest
+def _repo_knows_rule(start):
+    """True, wenn irgendeine ADR-/Kickoff-Vorlage im Repo den Abschnitt selbst trägt."""
+    return bool(_vorlagen_abschnitte(start))
+
+
+def _woerter(zeile):
+    """Wortzahl einer Zeile ohne Listenmarker und Auszeichnung."""
+    return len(re.sub(r'^[\s>*\-+\d.)]+', '', zeile).split())
+
+
+def _eigener_rest(section_body, vorlagen):
+    """(Zahl der Vorlagenzeilen im Abschnitt, Zeilen mit eigener Substanz).
+
+    Verglichen wird zeilenweise auf getrimmten Zeichenketten. Wer die Ausfüllhilfe stehen
+    lässt und seine Kriterien darunter schreibt, behält Substanz und bekommt deshalb keine
+    Meldung - das ist der häufigste echte Arbeitsstil (ADR-2026-08-21-2010, Punkt 2).
+    """
+    bekannt = set()
+    for v in vorlagen:
+        bekannt.update(z.strip() for z in v.splitlines() if z.strip())
+    treffer = 0
+    eigen = []
+    for zeile in section_body.splitlines():
+        nackt = zeile.strip()
+        if not nackt:
+            continue
+        if nackt in bekannt:
+            treffer += 1
+            continue
+        if _woerter(nackt) >= 3:
+            eigen.append(nackt)
+    return treffer, eigen
 
 
 def _emit(msg):
@@ -189,6 +245,11 @@ def main():
     lines = [z for z in section_body.splitlines() if z.strip()]
     if not lines:
         _emit(MSG_EMPTY.format(path_=norm))
+        return 0
+
+    treffer, eigen = _eigener_rest(section_body, _vorlagen_abschnitte(path_))
+    if treffer and not eigen:
+        _emit(MSG_TEMPLATE.format(path_=norm))
         return 0
 
     vague = VAGUE_RE.findall(section_body)
