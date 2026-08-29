@@ -77,6 +77,69 @@ JOURNAL_LINES, JOURNAL_BYTES = 400, 40 * 1024
 # Entscheid: ADR-2026-08-29-191843 im Repo claudecode.
 COCKPIT_ZELLE = 400
 
+# Die Zellenschwelle ist je Repo überschreibbar (2026-08-29, ADR-2026-08-29-210151).
+# Anlass: Innoform und DeutscheBahn tragen Cockpit-Zellen mit einem Median von 1.654 und
+# 517 Zeichen; dort käme die Meldung bei fast jeder Pflege. Sie beim Rollout schlicht
+# auszulassen war keine Lösung, sondern eine Wette darauf, dass niemand den Generator
+# laufen lässt - der rollt in ALLE target_repos aus.
+#
+# Getragen wird die Konfiguration von einer optionalen `.claude/hook-config.json` im
+# Repo, die der Sync nicht anfasst (sie steht auf keiner seiner Renderlisten):
+#     { "session_state_groesse": { "cockpit_zelle": 2000 } }
+# 0 schaltet die Zellenprüfung ab. Bei fehlender, unlesbarer, kaputter Datei oder einem
+# unbrauchbaren Wert gilt COCKPIT_ZELLE - Verhalten ändert sich nur dort, wo es jemand
+# entschieden hat.
+CONFIG_REL = ('.claude', 'hook-config.json')
+CONFIG_MAX_EBENEN = 12
+
+
+def _config_datei(start):
+    """Sucht die Konfiguration vom bearbeiteten Pfad aufwärts bis zur Repo-Wurzel.
+
+    Bewusst über den file_path statt über CLAUDE_PROJECT_DIR: der Pfad liegt dem Hook
+    ohnehin vor, die Suche ist ohne gesetzte Umgebung prüfbar, und sie trifft auch dann
+    das richtige Repo, wenn die Session aus einem anderen Verzeichnis heraus arbeitet.
+    CLAUDE_PROJECT_DIR bleibt Rückfallebene.
+    """
+    try:
+        ordner = os.path.dirname(os.path.abspath(start))
+        for _ in range(CONFIG_MAX_EBENEN):
+            kandidat = os.path.join(ordner, *CONFIG_REL)
+            if os.path.isfile(kandidat):
+                return kandidat
+            if os.path.isdir(os.path.join(ordner, '.git')):
+                return None  # Repo-Wurzel erreicht, ohne Konfiguration
+            eltern = os.path.dirname(ordner)
+            if eltern == ordner:
+                return None
+            ordner = eltern
+    except Exception:
+        return None
+    return None
+
+
+def zellengrenze(file_path):
+    """Die geltende Zellenschwelle. Bei jedem Zweifel der Standardwert (fail-open)."""
+    try:
+        pfad = _config_datei(file_path)
+        if not pfad:
+            basis = os.environ.get('CLAUDE_PROJECT_DIR')
+            if basis:
+                kandidat = os.path.join(basis, *CONFIG_REL)
+                if os.path.isfile(kandidat):
+                    pfad = kandidat
+        if not pfad:
+            return COCKPIT_ZELLE
+        with open(pfad, encoding='utf-8-sig') as fh:
+            daten = json.load(fh)
+        wert = daten['session_state_groesse']['cockpit_zelle']
+    except Exception:
+        return COCKPIT_ZELLE
+    # bool ist in Python ein int - true ginge sonst als Schwelle 1 durch.
+    if isinstance(wert, bool) or not isinstance(wert, int) or wert < 0:
+        return COCKPIT_ZELLE
+    return wert
+
 # Beide Namensschemata sind in der Familie belegt und quer verteilt (session-state.md
 # u.a. in Markant, Zastrpay, LMApp, MelanieInterieurDesign; sessionstate.md u.a. in
 # Riverty, DeutscheBahn, claudecode), zwei Repos mischen beide. Eine Umbenennung von
@@ -283,8 +346,9 @@ def main():
     # Melde-Schlüssel, damit eine bereits abgesetzte Größenwarnung derselben Datei diese
     # Meldung nicht verschluckt - es sind zwei verschiedene Befunde mit zwei verschiedenen
     # Handlungen.
-    if label == 'Cockpit':
-        lang = fette_zellen(neuer_text(str(data.get('tool_name') or ''), ti))
+    grenze = zellengrenze(file_path)
+    if label == 'Cockpit' and grenze > 0:
+        lang = fette_zellen(neuer_text(str(data.get('tool_name') or ''), ti), grenze)
         if lang:
             try:
                 os.makedirs(state_dir_z, exist_ok=True)
@@ -296,7 +360,7 @@ def main():
                         "COCKPIT-ZELLE ZU LANG: %s\n"
                         "Gemessen: %d Zelle(n) über %d Zeichen im neu geschriebenen Text, "
                         "längste %d Zeichen.\nAnfang: %s...\n\n%s"
-                        % (norm, len(lang), COCKPIT_ZELLE, len(laengste),
+                        % (norm, len(lang), grenze, len(laengste),
                            laengste[:90], WOHIN_ZELLE))
                     print(json.dumps({'hookSpecificOutput': {
                         'hookEventName': 'PostToolUse',
