@@ -289,8 +289,8 @@ def main():
             try:
                 os.makedirs(state_dir_z, exist_ok=True)
                 sf = os.path.join(state_dir_z, 'session-' + session_id_z + '.json')
-                schluessel = lower + '#zelle'
-                if not already_warned(sf, schluessel):
+                zellen_key = lower + '#zelle'
+                if not already_warned(sf, zellen_key):
                     laengste = max(lang, key=len)
                     msg_z = (
                         "COCKPIT-ZELLE ZU LANG: %s\n"
@@ -301,7 +301,7 @@ def main():
                     print(json.dumps({'hookSpecificOutput': {
                         'hookEventName': 'PostToolUse',
                         'additionalContext': msg_z}}, ensure_ascii=False))
-                    mark_warned(sf, schluessel)
+                    mark_warned(sf, zellen_key)
             except Exception:
                 pass  # Fail-open: die Größenprüfung unten läuft trotzdem
 
