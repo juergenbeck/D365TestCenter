@@ -58,6 +58,24 @@ STAND_LINES, STAND_BYTES = 400, 40 * 1024
 # erzeugte nur Fehlalarme (gemessen 2026-08-08).
 COCKPIT_LINES, COCKPIT_BYTES = None, 40 * 1024
 JOURNAL_LINES, JOURNAL_BYTES = 400, 40 * 1024
+# Zusätzlich zur Dateigröße: die einzelne fette Zelle (2026-08-29). Die Byte-Schwelle
+# greift erst bei 40 KB, eine einzelne Zelle bleibt darunter beliebig lange unsichtbar -
+# und wenn sie greift, trifft die Bereinigung jemanden, der die Zellen nicht geschrieben
+# hat. Anlass: ein vollständiger Cockpit-Rückbau (35 fette Zellen auf null) hielt keine
+# drei Stunden, bevor die nächste Session wieder auf 1.135 Zeichen ging.
+#
+# ENTSCHEIDEND ist, WAS geprüft wird: der neu geschriebene Text, nicht die Datei. Über
+# alle 12 Cockpits der Familie gemessen (272 Zellen, Median 353, p90 1.210, längste
+# 10.442) träfe eine Schwelle von 400 auf die ganze Datei 90 Zellen in 7 von 12 Cockpits.
+# Eine Meldung, die ein Drittel des Bestands betrifft und die niemand verursacht hat,
+# wird weggelesen - genau der Fehler, den dieser Hook mit einer Zeilenschwelle von 150
+# schon einmal gemacht und zurückgenommen hat.
+#
+# Weil nur Neugeschriebenes geprüft wird, DARF die Schwelle die Zielgröße der Regel
+# abbilden statt oberhalb des p90 zu liegen. Eine kalibrierte Schwelle von rund 1.200
+# hätte den Anlassfall mit 1.135 Zeichen nicht gefangen.
+# Entscheid: ADR-2026-08-29-191843 im Repo claudecode.
+COCKPIT_ZELLE = 400
 
 # Beide Namensschemata sind in der Familie belegt und quer verteilt (session-state.md
 # u.a. in Markant, Zastrpay, LMApp, MelanieInterieurDesign; sessionstate.md u.a. in
@@ -135,6 +153,55 @@ WOHIN_JOURNAL = (
 )
 
 
+WOHIN_ZELLE = (
+    "Je Strom EIN Satz, kein Absatz: Status und was offen ist. Das Detail gehört in die\n"
+    "verlinkte lebende Stand-Datei, die ohnehin autoritativ ist.\n\n"
+    "Diese Meldung betrifft NUR den Text, den du gerade geschrieben hast, nicht den\n"
+    "Altbestand der Datei. Sie ist also jetzt mit einem Satz zu beheben - später kostet\n"
+    "dasselbe eine Aufräumaktion, und die trifft dann jemand anderen.\n\n"
+    "Was in der Zelle bleibt: der aktuelle Status, ein Satz dazu, das Offene.\n"
+    "Was in die Stand-Datei gehört: Begründungen, Messwerte, Verlauf, Einzelbefunde."
+)
+
+# Datenzeile einer Markdown-Tabelle, ohne die Trennzeile |---|---|.
+TABELLENZEILE_RE = re.compile(r'^\|(?!\s*[-: ]+\|)')
+
+
+def neuer_text(tool, tool_input):
+    """Der Text, den dieser Aufruf schreibt - nicht der Dateiinhalt.
+
+    Damit misst die Zellenprüfung die Änderung statt der Umwelt: wer eine fette Zelle
+    schreibt, wird gewarnt; wer eine Datei mit fettem Altbestand an anderer Stelle
+    anfasst, nicht. Dasselbe Muster fährt block-typografie.py im selben Verzeichnis.
+    """
+    teile = []
+    if tool == 'Write':
+        wert = tool_input.get('content')
+        if isinstance(wert, str):
+            teile.append(wert)
+    elif tool == 'Edit':
+        wert = tool_input.get('new_string')
+        if isinstance(wert, str):
+            teile.append(wert)
+    elif tool == 'MultiEdit':
+        for eintrag in tool_input.get('edits') or []:
+            if isinstance(eintrag, dict):
+                wert = eintrag.get('new_string')
+                if isinstance(wert, str):
+                    teile.append(wert)
+    return '\n'.join(teile)
+
+
+def fette_zellen(text, grenze=COCKPIT_ZELLE):
+    """Tabellenzeilen des neuen Textes, die über der Grenze liegen."""
+    treffer = []
+    for zeile in text.split('\n'):
+        z = zeile.rstrip()
+        if TABELLENZEILE_RE.match(z) and len(z) > grenze:
+            treffer.append(z)
+    return treffer
+
+
 def klassifiziere(basename):
     """Gibt (Art, Zeilen-Schwelle, Byte-Schwelle, Botschaft) zurück oder None."""
     n = basename.lower()
@@ -208,6 +275,35 @@ def main():
 
     if ist_eingefroren(file_path):
         return 0
+
+    session_id_z = str(data.get('session_id') or 'unknown')
+    state_dir_z = os.path.join(tempfile.gettempdir(), 'claude-session-state-groesse')
+
+    # Fette Zelle im NEU GESCHRIEBENEN Text. Läuft vor der Größenprüfung und mit eigenem
+    # Melde-Schlüssel, damit eine bereits abgesetzte Größenwarnung derselben Datei diese
+    # Meldung nicht verschluckt - es sind zwei verschiedene Befunde mit zwei verschiedenen
+    # Handlungen.
+    if label == 'Cockpit':
+        lang = fette_zellen(neuer_text(str(data.get('tool_name') or ''), ti))
+        if lang:
+            try:
+                os.makedirs(state_dir_z, exist_ok=True)
+                sf = os.path.join(state_dir_z, 'session-' + session_id_z + '.json')
+                schluessel = lower + '#zelle'
+                if not already_warned(sf, schluessel):
+                    laengste = max(lang, key=len)
+                    msg_z = (
+                        "COCKPIT-ZELLE ZU LANG: %s\n"
+                        "Gemessen: %d Zelle(n) über %d Zeichen im neu geschriebenen Text, "
+                        "längste %d Zeichen.\nAnfang: %s...\n\n%s"
+                        % (norm, len(lang), COCKPIT_ZELLE, len(laengste),
+                           laengste[:90], WOHIN_ZELLE))
+                    print(json.dumps({'hookSpecificOutput': {
+                        'hookEventName': 'PostToolUse',
+                        'additionalContext': msg_z}}, ensure_ascii=False))
+                    mark_warned(sf, schluessel)
+            except Exception:
+                pass  # Fail-open: die Größenprüfung unten läuft trotzdem
 
     try:
         size = os.path.getsize(file_path)
