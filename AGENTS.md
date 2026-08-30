@@ -36,7 +36,7 @@ At session start, always read the Workspace's `AGENTS.md` and `ZUSAMMENARBEIT.md
 ## Language
 
 - Code, comments, docs, commit messages: **English**
-- Communication with Juergen: **German with proper umlauts (ä, ö, ü, ß) — never ae/oe/ue/ss as ASCII surrogates**
+- Communication with Juergen: **German with proper umlauts (ä, ö, ü, ß) - never ae/oe/ue/ss as ASCII surrogates**
 - Pre-commit hook in `.githooks/commit-msg` enforces this for commit messages. Activate per clone (one-time):
   ```
   git config core.hooksPath .githooks
