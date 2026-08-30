@@ -44,7 +44,11 @@ _WHITELIST_LOWER = {w.lower() for w in UMLAUT_WHITELIST}  # -contains ist in Pow
 
 _RE_BLOCK1 = re.compile(UMLAUT_BLOCK1, re.IGNORECASE)
 _RE_BLOCK2 = re.compile(UMLAUT_BLOCK2, re.IGNORECASE)
-_RE_FENCE = re.compile(r'^\s*```')
+# Blockquote-Marker vor dem Fence zulassen (ADR-2026-08-30-222659): ein in ein Zitat
+# eingerückter Code-Block ('> ```') wurde sonst gar nicht als Fence erkannt, und sein
+# Inhalt lief als gewöhnliche Prosa durch die volle Prüfung. Betrifft jede Datei, die
+# fremde Terminal-Ausgaben, Mails oder Befunde wörtlich zitiert.
+_RE_FENCE = re.compile(r'^\s*(?:>\s*)*```')
 _RE_INLINE = re.compile(r'`+[^`]+`+')
 _RE_AUTOLINK = re.compile(r'<[^>\s]+>')
 _RE_URL = re.compile(r'(https?://|www\.)\S+', re.IGNORECASE)
