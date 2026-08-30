@@ -226,7 +226,7 @@ WOHIN_ZELLE = (
     "Was in die Stand-Datei gehört: Begründungen, Messwerte, Verlauf, Einzelbefunde."
 )
 
-WOHIN_UNGEPRUEFT = (
+WOHIN_NICHT_MESSBAR = (
     "Der Hook konnte die Zellenlänge dieses Edits NICHT messen - das ist keine\n"
     "Entwarnung. Bei einem Edit, der nur einen Teil einer Zelle austauscht, wird die\n"
     "Zielzeile aus der Datei rekonstruiert; hier war sie nicht eindeutig auffindbar.\n\n"
@@ -331,7 +331,7 @@ def zellenbefund(tool, tool_input, grenze, file_path):
     if tool == 'Write':
         return fette_zellen(text, grenze), None
 
-    lang, ungeprueft = [], None
+    lang, nicht_messbar = [], None
     for zeile in text.splitlines():
         z = zeile.rstrip()
         if not z.strip():
@@ -351,7 +351,7 @@ def zellenbefund(tool, tool_input, grenze, file_path):
             # Mehrdeutigkeit eindeutig gemessen. Ohne diese Einschränkung meldete schon
             # ein Edit an einem mehrfach vorkommenden Kurztext ein Nichtmessen.
             if any(len(t) > grenze for t in treffer):
-                ungeprueft = ungeprueft or grund
+                nicht_messbar = nicht_messbar or grund
         elif grund == 'keine-tabellenzeile':
             continue  # Prosa-Edit, kein Zellen-Edit
         elif TABELLENZEILE_RE.match(z):
@@ -360,8 +360,8 @@ def zellenbefund(tool, tool_input, grenze, file_path):
             if len(z) > grenze:
                 lang.append(z)
         else:
-            ungeprueft = ungeprueft or grund
-    return lang, ungeprueft
+            nicht_messbar = nicht_messbar or grund
+    return lang, nicht_messbar
 
 
 def klassifiziere(basename):
@@ -447,9 +447,9 @@ def main():
     # Handlungen.
     grenze = zellengrenze(file_path)
     if label == 'Cockpit' and grenze > 0:
-        lang, ungeprueft = zellenbefund(
+        lang, nicht_messbar = zellenbefund(
             str(data.get('tool_name') or ''), ti, grenze, file_path)
-        if lang or ungeprueft:
+        if lang or nicht_messbar:
             try:
                 os.makedirs(state_dir_z, exist_ok=True)
                 sf = os.path.join(state_dir_z, 'session-' + session_id_z + '.json')
@@ -472,14 +472,14 @@ def main():
                     # Fehlbauart, die ADR-2026-08-30-110755 in der Verlustprüfung
                     # beseitigt hat. Eigener Melde-Schlüssel, damit die Befund-Meldung
                     # derselben Datei sie nicht verschluckt.
-                    ung_key = lower + '#zelle-ungeprueft'
-                    if not already_warned(sf, ung_key):
+                    key_nicht_messbar = lower + '#zelle-nicht_messbar'
+                    if not already_warned(sf, key_nicht_messbar):
                         msg_u = ("ZELLENLÄNGE NICHT GEPRÜFT: %s\nGrund: %s\n\n%s"
-                                 % (norm, ungeprueft, WOHIN_UNGEPRUEFT))
+                                 % (norm, nicht_messbar, WOHIN_NICHT_MESSBAR))
                         print(json.dumps({'hookSpecificOutput': {
                             'hookEventName': 'PostToolUse',
                             'additionalContext': msg_u}}, ensure_ascii=False))
-                        mark_warned(sf, ung_key)
+                        mark_warned(sf, key_nicht_messbar)
             except Exception:
                 pass  # Fail-open: die Größenprüfung unten läuft trotzdem
 
