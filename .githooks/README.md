@@ -107,6 +107,35 @@ Ticketnummern gehören deshalb hinter ein Wort: `Ticket 40267 abgeschlossen: …
 `40267 abgeschlossen: …`. Im Body sind `#`-Verweise unkritisch, solange sie nicht am Zeilenanfang
 stehen.
 
+## Technische Bezeichner in einer Commit-Message gehören in Backticks
+
+Der `commit-msg`-Hook sieht Zeichenketten, keine Bedeutung. Ein Dateiname, ein Pfad, ein
+Ordner- oder Vorgangsname mit einem Surrogat-Stamm blockt deshalb den Commit, obwohl die
+Schreibweise im Bezeichner völlig korrekt ist. Backtick-Zitate ignoriert der Hook, das ist
+der Ausweg.
+
+Zwei Belege derselben Ursache: Am 27.08.2026 blockte `alho/pruefe_belegkette.py` über den
+Stamm `pruef`. Am 30.08.2026 blockte eine Nachricht, die den Vorgangsnamen
+`kontoabruf-doku-und-abloesungsregel` im Fließtext nannte, über den Stamm `abloesung`. Der
+zweite Fall ist der tückischere: Ein Ordnername ohne Dateiendung sieht wie Prosa aus, und man
+nimmt ihn beim Schreiben gar nicht als Bezeichner wahr. Betroffen sind Vorgangsordner, Branch-
+und Strangnamen, Skript-Schalter und Konfigurationsschlüssel.
+
+**Achtung, die Backticks kollidieren mit der Shell.** In `git commit -m "..."` führt Bash
+alles zwischen Backticks als Befehl aus und setzt dessen Ausgabe ein; die Nachricht landet
+dann verstümmelt in der Historie, und der Commit läuft trotzdem durch. Die Nachricht deshalb
+in einfache Anführungszeichen setzen oder die Backticks escapen. Unter PowerShell tritt das
+nicht auf.
+
+Eine Nachricht lässt sich ohne Commit-Versuch prüfen:
+
+```bash
+bash .githooks/commit-msg <datei>
+```
+
+Exit 0 heißt sauber. Das ist billiger als ein Fehlversuch, dessen Grund auf den ersten Blick
+unverständlich ist, weil die Nachricht selbst korrekte Umlaute trägt.
+
 ## Pflege
 
 Neuen Verstoß-Stamm entdeckt? In `~/.claude/umlaute-triggers.json` ergänzen
