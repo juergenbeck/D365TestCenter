@@ -406,10 +406,19 @@ def mark_warned(state_file, key):
 
 def main():
     try:
-        raw = sys.stdin.read()
-        if not raw:
+        # BINÄR lesen und selbst als UTF-8 dekodieren. `sys.stdin.read()` nimmt auf
+        # Windows die Locale-Kodierung (cp1252), und dann kommt jeder Umlaut im neuen
+        # Text verstümmelt an. Für die reine Längenmessung fiel das kaum auf; seit die
+        # Zielzeile über einen TEXTVERGLEICH in der Datei gesucht wird, scheitert er
+        # damit zuverlässig - gemessen am 30.08.2026 an einer echten Cockpit-Zeile von
+        # 476 Zeichen, die unter UTF-8-Locale gemeldet wurde und unter cp1252 nicht.
+        # Deutsche Cockpit-Zellen tragen fast immer Umlaute, die Prüfung liefe also im
+        # Hauptfall leer. Denselben Fallstrick hat block-typografie.py im selben
+        # Verzeichnis (globale CLAUDE.md, Abschnitt Typografie-Sperre).
+        roh = sys.stdin.buffer.read()
+        if not roh:
             return 0
-        data = json.loads(raw)
+        data = json.loads(roh.decode('utf-8', errors='replace'))
     except Exception:
         return 0  # Fail-open
 
