@@ -226,6 +226,18 @@ WOHIN_ZELLE = (
     "Was in die Stand-Datei gehört: Begründungen, Messwerte, Verlauf, Einzelbefunde."
 )
 
+WOHIN_UNGEPRUEFT = (
+    "Der Hook konnte die Zellenlänge dieses Edits NICHT messen - das ist keine\n"
+    "Entwarnung. Bei einem Edit, der nur einen Teil einer Zelle austauscht, wird die\n"
+    "Zielzeile aus der Datei rekonstruiert; hier war sie nicht eindeutig auffindbar.\n\n"
+    "Zwei Ursachen sind möglich: der ersetzte Text steht so nicht in der Datei (ein\n"
+    "späterer Edit hat ihn verändert), oder er kommt in mehreren Tabellenzeilen vor,\n"
+    "von denen mindestens eine über der Schwelle liegt.\n\n"
+    "Hast du gerade eine Cockpit-Zelle fortgeschrieben, prüfe ihre Länge selbst: je\n"
+    "Strom EIN Satz, Status und was offen ist. Das Detail gehört in die verlinkte\n"
+    "lebende Stand-Datei."
+)
+
 # Datenzeile einer Markdown-Tabelle, ohne die Trennzeile |---|---|.
 TABELLENZEILE_RE = re.compile(r'^\|(?!\s*[-: ]+\|)')
 
@@ -263,6 +275,93 @@ def fette_zellen(text, grenze=COCKPIT_ZELLE):
         if TABELLENZEILE_RE.match(z) and len(z) > grenze:
             treffer.append(z)
     return treffer
+
+
+def ist_ganze_zeile(z):
+    """True, wenn der Text eine vollständige Tabellenzeile ist (Pipe vorn UND hinten)."""
+    return bool(TABELLENZEILE_RE.match(z)) and z.endswith('|')
+
+
+def zielzeilen(file_path, fragment):
+    """Die Tabellenzeile(n) der Datei, die das Fragment enthalten.
+
+    Rückgabe (zeilen, grund). Bei genau einem Treffer ist `zeilen` einelementig und
+    `grund` None; sonst sagt `grund`, WARUM nicht gemessen werden konnte -
+    'keine-tabellenzeile' ist dabei kein Versagen, sondern der Normalfall eines
+    Prosa-Edits am Kopf der Datei.
+    """
+    try:
+        with open(file_path, 'rb') as fh:
+            inhalt = fh.read().decode('utf-8', errors='replace')
+    except Exception:
+        return [], 'unlesbar'
+    treffer = []
+    for zeile in inhalt.splitlines():
+        z = zeile.rstrip()
+        if TABELLENZEILE_RE.match(z) and fragment in z:
+            treffer.append(z)
+    if len(treffer) == 1:
+        return treffer, None
+    if len(treffer) > 1:
+        return treffer, 'mehrdeutig'
+    if fragment in inhalt:
+        return [], 'keine-tabellenzeile'
+    return [], 'nicht-gefunden'
+
+
+def zellenbefund(tool, tool_input, grenze, file_path):
+    """(lange Zeilen, Grund fürs Nichtmessen) für diesen Aufruf.
+
+    ENTSCHEIDEND ist der Unterschied zwischen Write und Edit. Bei `Write` ist der neue
+    Text die ganze Datei, jede Zeile also vollständig - dort misst die Direktprüfung
+    richtig. Bei `Edit` ist der neue Text regelmäßig ein BRUCHSTÜCK seiner Zeile: wer
+    eine bestehende Zelle fortschreibt, tauscht ihren Schlussteil aus. Ein solches
+    Bruchstück trägt keine führende Pipe (wird also gar nicht betrachtet) oder ist
+    kürzer als die Zeile, die dabei entsteht (wird also zu niedrig gemessen). Gemessen an
+    der längsten echten Zeile in claudecodes cockpit.md (548 Zeichen, Schwelle 400)
+    schwieg der Hook bei einem Schlussteil von 473 und bei einem Anfang von 350 Zeichen.
+
+    Deshalb wird bei einem Bruchstück die ZIELZEILE aus der Datei rekonstruiert - der
+    Hook läuft als PostToolUse, die Datei trägt den neuen Stand also bereits. Geprüft
+    wird ausschließlich die berührte Zeile, nie die übrigen: der fette Altbestand
+    bleibt unangetastet, genau wie ADR-2026-08-29-191843 es will.
+    Entscheid: ADR-2026-08-30-170207 im Repo claudecode.
+    """
+    text = neuer_text(tool, tool_input)
+    if tool == 'Write':
+        return fette_zellen(text, grenze), None
+
+    lang, ungeprueft = [], None
+    for zeile in text.splitlines():
+        z = zeile.rstrip()
+        if not z.strip():
+            continue
+        if ist_ganze_zeile(z):
+            # Ihre eigene Zielzeile: direkt messen wie bisher, unabhängig davon, ob die
+            # Datei inzwischen weiter verändert wurde.
+            if len(z) > grenze:
+                lang.append(z)
+            continue
+        treffer, grund = zielzeilen(file_path, z)
+        if grund is None:
+            if len(treffer[0]) > grenze:
+                lang.append(treffer[0])
+        elif grund == 'mehrdeutig':
+            # Liegen alle Kandidaten unter der Schwelle, ist das Ergebnis trotz
+            # Mehrdeutigkeit eindeutig gemessen. Ohne diese Einschränkung meldete schon
+            # ein Edit an einem mehrfach vorkommenden Kurztext ein Nichtmessen.
+            if any(len(t) > grenze for t in treffer):
+                ungeprueft = ungeprueft or grund
+        elif grund == 'keine-tabellenzeile':
+            continue  # Prosa-Edit, kein Zellen-Edit
+        elif TABELLENZEILE_RE.match(z):
+            # nicht-gefunden oder unlesbar, aber mit führender Pipe: ersatzweise direkt
+            # messen, damit die Neuerung hier kein Rückschritt gegenüber vorher ist.
+            if len(z) > grenze:
+                lang.append(z)
+        else:
+            ungeprueft = ungeprueft or grund
+    return lang, ungeprueft
 
 
 def klassifiziere(basename):
@@ -348,24 +447,39 @@ def main():
     # Handlungen.
     grenze = zellengrenze(file_path)
     if label == 'Cockpit' and grenze > 0:
-        lang = fette_zellen(neuer_text(str(data.get('tool_name') or ''), ti), grenze)
-        if lang:
+        lang, ungeprueft = zellenbefund(
+            str(data.get('tool_name') or ''), ti, grenze, file_path)
+        if lang or ungeprueft:
             try:
                 os.makedirs(state_dir_z, exist_ok=True)
                 sf = os.path.join(state_dir_z, 'session-' + session_id_z + '.json')
-                zellen_key = lower + '#zelle'
-                if not already_warned(sf, zellen_key):
-                    laengste = max(lang, key=len)
-                    msg_z = (
-                        "COCKPIT-ZELLE ZU LANG: %s\n"
-                        "Gemessen: %d Zelle(n) über %d Zeichen im neu geschriebenen Text, "
-                        "längste %d Zeichen.\nAnfang: %s...\n\n%s"
-                        % (norm, len(lang), grenze, len(laengste),
-                           laengste[:90], WOHIN_ZELLE))
-                    print(json.dumps({'hookSpecificOutput': {
-                        'hookEventName': 'PostToolUse',
-                        'additionalContext': msg_z}}, ensure_ascii=False))
-                    mark_warned(sf, zellen_key)
+                if lang:
+                    zellen_key = lower + '#zelle'
+                    if not already_warned(sf, zellen_key):
+                        laengste = max(lang, key=len)
+                        msg_z = (
+                            "COCKPIT-ZELLE ZU LANG: %s\n"
+                            "Gemessen: %d Zelle(n) über %d Zeichen, längste %d Zeichen.\n"
+                            "Anfang: %s...\n\n%s"
+                            % (norm, len(lang), grenze, len(laengste),
+                               laengste[:90], WOHIN_ZELLE))
+                        print(json.dumps({'hookSpecificOutput': {
+                            'hookEventName': 'PostToolUse',
+                            'additionalContext': msg_z}}, ensure_ascii=False))
+                        mark_warned(sf, zellen_key)
+                else:
+                    # Nichtmessen sichtbar machen statt still durchzuwinken - dieselbe
+                    # Fehlbauart, die ADR-2026-08-30-110755 in der Verlustprüfung
+                    # beseitigt hat. Eigener Melde-Schlüssel, damit die Befund-Meldung
+                    # derselben Datei sie nicht verschluckt.
+                    ung_key = lower + '#zelle-ungeprueft'
+                    if not already_warned(sf, ung_key):
+                        msg_u = ("ZELLENLÄNGE NICHT GEPRÜFT: %s\nGrund: %s\n\n%s"
+                                 % (norm, ungeprueft, WOHIN_UNGEPRUEFT))
+                        print(json.dumps({'hookSpecificOutput': {
+                            'hookEventName': 'PostToolUse',
+                            'additionalContext': msg_u}}, ensure_ascii=False))
+                        mark_warned(sf, ung_key)
             except Exception:
                 pass  # Fail-open: die Größenprüfung unten läuft trotzdem
 
