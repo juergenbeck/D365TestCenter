@@ -53,6 +53,19 @@ Anlass war eine committete Anleitung, deren deutsche C#-Kommentare (`Rueckgabe`,
 bewusst übersprungen wurde. Das war die gefährlichere Variante des bekannten
 Fence-Problems: die Datei wirkt geprüft, und Lehrmaterial wird nachgeahmt.
 
+**Ein zitierter Fence zählt seit dem 30.08.2026 auch als Fence.** Bis dahin verlangte
+`_RE_FENCE` Leerraum vor den Backticks; ein Code-Block, der in eine Blockquote eingerückt
+ist, wurde deshalb gar nicht als Fence erkannt, und sein Inhalt lief als gewöhnliche Prosa
+durch die volle Prüfung. Betroffen war jede Datei, die fremde Terminal-Ausgaben, Mails oder
+Befunde wörtlich zitiert - solchen Text darf man gerade nicht glattziehen, er ist ja der
+Beleg. Entscheid und Messung: ADR-2026-08-30-222659 im Repo claudecode.
+
+Zwei Dinge, die beim Nachmessen der Kette Zeit kosten: `fence_scope` steht **nicht** in
+jeder `umlaut-allowlist.json`. Wer den Wert direkt ausliest, bekommt `None` - und `None`
+heißt in der Lib „Fence komplett überspringen", also ein anderes Verhalten als beim Commit.
+Maßgeblich ist der Default aus `pre-commit.py`. Und eine Fence-Fundstelle blockiert nie
+einen Commit: sie läuft in den eigenen Kanal `fence_enforcement`.
+
 Die Prüfung **warnt zunächst nur** und blockiert keinen Commit, auch dort nicht, wo
 `.md` sonst blockend geführt wird. Zwei Felder in `umlaut-allowlist.json` steuern sie:
 
