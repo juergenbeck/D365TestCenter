@@ -66,6 +66,16 @@ heißt in der Lib „Fence komplett überspringen", also ein anderes Verhalten a
 Maßgeblich ist der Default aus `pre-commit.py`. Und eine Fence-Fundstelle blockiert nie
 einen Commit: sie läuft in den eigenen Kanal `fence_enforcement`.
 
+**Ein mehrzeiliges wörtliches Zitat gehört in einen Fence, nicht in einen Inline-Span.**
+Der Filter für Inline-Code arbeitet zeilenweise: Ein Span, der über einen Zeilenumbruch
+läuft, hat auf keiner der beiden Zeilen ein Backtick-Paar, und der Inhalt wird als Prosa
+geprüft. Wer eine Programmausgabe im Wortlaut zitiert, bekommt dadurch einen Fehlalarm auf
+Text, den er gerade nicht glattziehen darf. Beide denkbaren Behebungen im Code wurden am
+Bestand gemessen und verworfen: sie hätten 858 beziehungsweise 79 Stellen von der Prüfung
+ausgenommen, gegen null gemessene Fehlalarme (ADR-2026-08-31-062932). Im Fence greift
+dagegen die Fence-Behandlung, und nichts wird ungeprüft. `--no-verify` ist nicht der
+Ausweg: es schaltet die ganze Kette ab, für eine Formatfrage.
+
 Die Prüfung **warnt zunächst nur** und blockiert keinen Commit, auch dort nicht, wo
 `.md` sonst blockend geführt wird. Zwei Felder in `umlaut-allowlist.json` steuern sie:
 
