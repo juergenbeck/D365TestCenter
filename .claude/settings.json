@@ -6,12 +6,12 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-kontextlast.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-kontextlast.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           },
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-wissens-persistenz.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-wissens-persistenz.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       }
@@ -23,7 +23,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-tool-umlaute.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-tool-umlaute.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       },
@@ -33,7 +33,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/block-typografie.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/block-typografie.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       }
@@ -45,7 +45,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-umlaute.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-umlaute.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       },
@@ -55,7 +55,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-session-state-groesse.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-session-state-groesse.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       },
@@ -65,7 +65,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-abnahmekriterien.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-abnahmekriterien.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       }
@@ -76,7 +76,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/precompact-handover.py\""
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/precompact-handover.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\""
           }
         ]
       }
@@ -98,7 +98,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-git-sync.py\"",
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-git-sync.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\"",
             "timeout": 20,
             "statusMessage": "Git-Zustand prüfen"
           }
