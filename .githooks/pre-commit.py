@@ -58,6 +58,13 @@ Projekt-spezifische Zusatz-Prüfungen (z.B. Markants Z4-Drift-/Header-/Scope-Che
 liegen NICHT hier, sondern im projekt-lokalen .githooks/pre-commit-local.py, das der
 Wrapper nach diesem Hook aufruft (nur, wenn dieser Exit 0 lieferte).
 
+Nicht-UTF-8-Bytes (seit 2026-09-03, ADR-2026-09-03-001352): git-Ausgaben werden mit
+errors='replace' dekodiert, sonst stirbt der Hook an einem Konsolenprotokoll in der
+Codepage der Konsole (stdout bleibt None, AttributeError, Exit 1 ohne einen einzigen
+Fund im Report). Weil die Ersetzung die Prüfung dieser Datei unzuverlässig macht, wird
+jede betroffene Datei per melde_unvollstaendig() genannt; der Exitcode ändert sich
+dadurch nicht.
+
 Bei Verstoß (block): Report auf stderr, Exit 1. Sauber/warn: Exit 0.
 Bypass im Notfall: git commit --no-verify (dokumentieren, warum).
 """
@@ -169,8 +176,31 @@ def get_typo_violations(lines, is_html=False):
 
 
 def git(*args):
+    # errors='replace' ist hier Betriebssicherheit, nicht Kosmetik (ADR-2026-09-03-001352):
+    # Enthält eine staged Datei Bytes, die kein UTF-8 sind (etwa ein Konsolenprotokoll, das eine
+    # PowerShell-Umleitung in der Codepage der Konsole geschrieben hat), scheitert das Dekodieren
+    # sonst im Lesethread von subprocess. Die Ausnahme erreicht das Hauptprogramm NICHT, stdout
+    # bleibt None, und der Hook stirbt in parse_added_lines mit einem AttributeError - also mit
+    # Exit 1, der Signatur eines echten Befunds, obwohl er nichts geprüft hat. Ein Prüfwerkzeug,
+    # das an seinem Prüfgegenstand abstürzt, prüft nicht, es blockiert nur.
     return subprocess.run(['git', *args], capture_output=True, text=True,
-                          encoding='utf-8').stdout
+                          encoding='utf-8', errors='replace').stdout
+
+
+def melde_unvollstaendig(rel, grund):
+    """Nennt eine Datei, deren Prüfung an Nicht-UTF-8-Bytes scheitert (ADR-2026-09-03-001352).
+
+    errors='replace' in git() verhindert den Absturz, macht die Prüfung dieser einen Datei aber
+    unzuverlässig: Nicht dekodierbare Bytes werden zu U+FFFD, und ein darin versteckter
+    Halbgeviertstrich oder Umlaut-Verstoß ist danach nicht mehr auffindbar. Eine stillschweigend
+    verfälscht geprüfte Datei ist schlimmer als eine ungeprüfte, weil man sich auf sie beruft.
+    Der Hinweis ändert den Exitcode bewusst NICHT: er meldet die Reichweite der Prüfung, keinen
+    Befund am Prüfgegenstand."""
+    sys.stderr.write(
+        '\n HINWEIS: %s enthält Bytes, die kein UTF-8 sind (%s).\n'
+        '  Die Prüfung dieser Datei ist deshalb unvollständig.\n'
+        '  Bei einem Konsolenprotokoll beim Erzeugen [Console]::OutputEncoding auf UTF-8\n'
+        '  setzen und die Datei neu schreiben.\n\n' % (rel, grund))
 
 
 # Diff-Hunk-Kopf: @@ -alt,n +neu,m @@ - die Gruppe ist die erste Zeilennummer im NEUEN Stand.
@@ -307,7 +337,13 @@ def main():
             # BOM-Zeichen und H1-/Fence-Erkennung schlüge fehl; ohne BOM wie utf-8.
             with open(full, encoding='utf-8-sig') as fh:
                 content = fh.read()
-        except (UnicodeDecodeError, OSError):
+        except UnicodeDecodeError:
+            # Bisher stilles continue. Die Datei bleibt ungeprüft, das ist richtig (raten, welche
+            # Codepage gemeint war, erzeugt Fundstellen, die im Original nicht stehen) - aber es
+            # wird gesagt, statt sie als geprüft durchgehen zu lassen.
+            melde_unvollstaendig(rel, 'Dateiinhalt nicht als UTF-8 lesbar')
+            continue
+        except OSError:
             continue
         if '\x00' in content:  # Binär-Absicherung (all_text)
             continue
@@ -334,7 +370,14 @@ def main():
         # was in einer hinzugefügten Zeile steht. Eine neue Datei besteht ausschließlich
         # aus hinzugefügten Zeilen und wird damit weiterhin vollständig geprüft.
         # Der git-Aufruf steht bewusst hinter dem Treffer-Check: ohne Treffer kostet er nichts.
-        added = parse_added_lines(git('diff', '--cached', '-U0', '--', rel))
+        diff_text = git('diff', '--cached', '-U0', '--', rel)
+        if '\ufffd' in diff_text:  # das Ersatzzeichen aus errors='replace'
+            # Der Arbeitsbaum-Stand war als UTF-8 lesbar, der Diff ist es nicht (typisch: die alte
+            # Fassung in HEAD oder im Index stammt aus einer Konsolen-Umleitung). Ohne diesen
+            # Hinweis tauscht errors='replace' nur einen lauten Absturz gegen ein leises
+            # Vorbeisehen: die Zuordnung Fundstelle -> hinzugefügte Zeile kann danebengreifen.
+            melde_unvollstaendig(rel, 'Diff nicht vollständig dekodierbar')
+        added = parse_added_lines(diff_text)
         for h in uml:
             if h['line'] in added:
                 violations.append((rel, h))
