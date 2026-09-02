@@ -109,7 +109,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; \"$PYBIN\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-repo-stand.py\"",
+            "command": "command -v python3 >/dev/null 2>&1 && PYBIN=python3 || PYBIN=python; HOOK=\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-repo-stand.py\"; [ -f \"$HOOK\" ] || exit 0; \"$PYBIN\" -B \"$HOOK\"",
             "timeout": 20,
             "statusMessage": "Repo-Stand messen"
           }
