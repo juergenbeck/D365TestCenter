@@ -87,7 +87,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && git config core.hooksPath .githooks && BRANCH=$(git rev-parse --abbrev-ref HEAD) && git pull --rebase --autostash origin \"$BRANCH\" -q && git push origin \"$BRANCH\" -q 2>&1",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && git config core.hooksPath .githooks && BRANCH=$(git rev-parse --abbrev-ref HEAD)",
             "timeout": 30,
             "statusMessage": "Git-Sync läuft"
           }
