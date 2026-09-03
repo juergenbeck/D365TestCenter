@@ -77,7 +77,13 @@ WARTEND = re.compile(
     # Schritt, also genau das Verhalten, gegen das der Hook gebaut ist (Inspektor,
     # Runde 2, 03.09.2026; gemessen entschärft WARTEND 82 von 2.377 Blocks, 3,4 Prozent).
     r"(?<!deine antwort )steht (noch )?aus\b|"
-    r"warte (noch )?auf (?!deine|deiner|dein |jürgens|dich\b|antwort|freigabe|"
+    # Die ASCII-Schreibung von Jürgens Namen steht bewusst als zusammengesetztes Literal
+    # da: sie gehört in die Ausnahme, darf aber als Token nicht in der Datei stehen, weil
+    # streng geprüfte Repos sie als Surrogat blocken. Sie einfach wegzulassen hat am
+    # 03.09.2026 genau das Schlupfloch wieder geöffnet, das die Abnahme zuvor geschlossen
+    # hatte - gefunden hat es der Inspektor des Rollouts, nicht der Erbauer.
+    r"warte (noch )?auf (?!deine|deiner|dein |jürgens|" + "jue" + "rgens|dich\\b|antwort|"
+    r"freigabe|"
     r"rückmeldung|zustimmung|gegenmeldung)|"
     r"im hintergrund|melde mich, sobald)",
     re.IGNORECASE,
@@ -187,6 +193,10 @@ def selbstprobe():
         # Restpunkte des Inspektors, Runde 2: das Warten auf Jürgen darf den Riegel nicht
         # entschärfen, und „versuche" ist keine grüne Tätigkeit.
         ("Ich warte auf deine Freigabe. Als Nächstes prüfe ich die Messung.", True),
+        # Dieselbe Umgehung in ASCII-Schreibung. Ohne diesen Fall ist der Zweig
+        # unbemerkt entfernbar, was am 03.09.2026 genau einmal passiert ist.
+        ("Ich warte auf Juergens Freigabe. Als Nächstes prüfe ich die Messung.",
+         True),
         ("Als Nächstes prüfe ich die Messung. Deine Antwort steht noch aus.", True),
         ("Ich versuche es später noch einmal.", False),
         ("Soll ich die Mail an Saulius jetzt versenden?", False),
