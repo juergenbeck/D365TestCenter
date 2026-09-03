@@ -52,7 +52,7 @@ FRAGE = re.compile(
     r"soll der\b|soll das\b|sag bescheid,? (wenn|ob)\b|gib bescheid,? (wenn|ob)\b)",
     re.IGNORECASE,
 )
-ANKUENDIGUNG = re.compile(
+ANSAGE = re.compile(
     r"(ich mache\b|mache ich\b|als nächstes\b|der nächste schritt\b|"
     r"nächster schritt\b|ich beginne\b|ich fahre fort\b|ich starte\b|ich nehme mir\b|"
     r"nehme ich mir\b|ich prüfe\b|ich messe\b|ich sehe mir\b|ich lege\b|ich baue\b|"
@@ -77,14 +77,14 @@ WARTEND = re.compile(
     # Schritt, also genau das Verhalten, gegen das der Hook gebaut ist (Inspektor,
     # Runde 2, 03.09.2026; gemessen entschärft WARTEND 82 von 2.377 Blocks, 3,4 Prozent).
     r"(?<!deine antwort )steht (noch )?aus\b|"
-    r"warte (noch )?auf (?!deine|deiner|dein |jürgens|juergens|dich\b|antwort|freigabe|"
+    r"warte (noch )?auf (?!deine|deiner|dein |jürgens|dich\b|antwort|freigabe|"
     r"rückmeldung|zustimmung|gegenmeldung)|"
     r"im hintergrund|melde mich, sobald)",
     re.IGNORECASE,
 )
 
 # --- Grüne Tätigkeiten: das, was ohne Rückfrage getan werden darf --------------------
-GRUEN = re.compile(
+ERLAUBT = re.compile(
     r"(lesen|liest|ansehen|anschauen|sichten|nachlesen|"
     r"messen|misst|zählen|prüfen|prüfe|nachmessen|nachprüfen|verifizieren|"
     # „(?<!ver)suche" statt „\bsuche": die Wortgrenze bräche „Ursachensuche", ein realer
@@ -107,7 +107,7 @@ def letzter_absatz(text):
     return teile[-1] if teile else ""
 
 
-def letzte_absaetze(text, anzahl=2):
+def letzte_abschnitte(text, anzahl=2):
     """Die letzten Absätze zusammen. Die Tätigkeit steht oft einen Satz vor der
     Ankündigung: „Der nächste Schritt ist X ... mache ich dort weiter". Wer nur den
     letzten Absatz liest, sieht das „mache ich" und nicht, worum es geht."""
@@ -127,7 +127,7 @@ def satz_um(text, pos, grenze=140):
 def beurteile(nachricht):
     """Gibt (blocken, begründung) zurück. Im Zweifel: nicht blocken."""
     absatz = letzter_absatz(nachricht)
-    ende = letzte_absaetze(nachricht)
+    ende = letzte_abschnitte(nachricht)
     if not absatz:
         return False, ""
     # Rot wird über den weiteren Bereich geprüft: im Zweifel enden lassen.
@@ -136,13 +136,13 @@ def beurteile(nachricht):
     if WARTEND.search(ende):
         return False, ""
     treffer_frage = FRAGE.search(absatz)
-    treffer_ank = ANKUENDIGUNG.search(absatz)
-    if not treffer_frage and not treffer_ank:
+    treffer_ansage = ANSAGE.search(absatz)
+    if not treffer_frage and not treffer_ansage:
         return False, ""
-    if not GRUEN.search(ende):
+    if not ERLAUBT.search(ende):
         return False, ""
     art = "als Frage" if treffer_frage else "als Ankündigung"
-    treffer = treffer_frage or treffer_ank
+    treffer = treffer_frage or treffer_ansage
     wort = treffer.group(0)
     # Den ganzen Satz mitgeben, nicht nur das Auslöserwort: sonst nennt die Begründung
     # „mache ich" statt der Sache, um die es geht (Inspektor-Befund zu K2, 03.09.2026).
@@ -165,7 +165,7 @@ def beurteile(nachricht):
 def selbstprobe():
     """Positivfall und Gegenfälle. Findet die Probe ihren Positivfall nicht, ist das
     Werkzeug defekt und meldet 2, nicht 0 und nicht 1."""
-    faelle = [
+    proben = [
         # (Text, erwartet_blocken)
         ("Da ich damit gerade das Verfahren in der Hand habe, mache ich dort weiter, "
          "sofern du nichts anderes willst.", True),
@@ -195,7 +195,7 @@ def selbstprobe():
         ("", False),
     ]
     fehler = []
-    for text, erwartet in faelle:
+    for text, erwartet in proben:
         ist, _ = beurteile(text)
         if ist != erwartet:
             fehler.append(f"  erwartet {erwartet}, ist {ist}: {text[:70]!r}")
@@ -203,8 +203,8 @@ def selbstprobe():
         print("Selbstprobe GESCHEITERT:", file=sys.stderr)
         print("\n".join(fehler), file=sys.stderr)
         return 2
-    print(f"Selbstprobe bestanden ({len(faelle)} Fälle, davon "
-          f"{sum(1 for _, e in faelle if e)} Positivfälle).")
+    print(f"Selbstprobe bestanden ({len(proben)} Fälle, davon "
+          f"{sum(1 for _, e in proben if e)} Positivfälle).")
     return 0
 
 
@@ -226,12 +226,12 @@ def main():
         daten = json.loads(roh.decode("utf-8", "replace"))
         if daten.get("stop_hook_active"):
             return 0                            # schon einmal geblockt, jetzt durchlassen
-        blocken, begruendung = beurteile(daten.get("last_assistant_message") or "")
+        blocken, grund = beurteile(daten.get("last_assistant_message") or "")
         if not blocken:
             return 0
         # Beide belegten Blockierwege bedienen, siehe Modul-Docstring.
-        print(json.dumps({"decision": "block", "reason": begruendung}, ensure_ascii=False))
-        print(begruendung, file=sys.stderr)
+        print(json.dumps({"decision": "block", "reason": grund}, ensure_ascii=False))
+        print(grund, file=sys.stderr)
         return 2
     except Exception:
         return 0
