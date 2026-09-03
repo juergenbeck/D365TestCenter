@@ -84,9 +84,15 @@ WARTEND = re.compile(
     # Die Schreibweise als Token ist NICHT verboten: der Selbstprobenfall weiter unten
     # führt sie im Klartext, und die Umlaut-Prüfung meldet auf dieser Datei null Verstöße
     # (Inspektor-Restpunkt, Rollout-Abnahme Runde 2).
-    r"warte (noch )?auf (?!deine|deiner|dein |jürgens|" + "jue" + "rgens|dich\\b|antwort|"
-    r"freigabe|"
-    r"rückmeldung|zustimmung|gegenmeldung)|"
+    # Der Lookahead überspringt einen optionalen Bestimmer (Artikel oder Possessiv) und
+    # führt den Namen ohne Genitiv-s, damit er den Genitiv als Präfix mitnimmt. Vorher
+    # kannte er nur unmittelbar folgende Wortformen, und „ich warte auf Jürgen" wie
+    # „ich warte auf die Rückmeldung" liefen daran vorbei (Restpunkt des Inspektors der
+    # Rollout-Runde 2 vom 03.09.2026; behoben mit ADR-2026-09-03-221001).
+    r"warte (noch )?auf (?!(?:(?:die|der|das|den|dem|eine|einen|einer|"
+    r"deine|deiner|deinen|deinem|dein) +)?"
+    r"(?:jürgen|" + "jue" + "rgen|antwort|freigabe|rückmeldung|zustimmung|"
+    r"gegenmeldung|entscheidung)|dich\b)|"
     r"im hintergrund|melde mich, sobald)",
     re.IGNORECASE,
 )
@@ -200,6 +206,17 @@ def selbstprobe():
         ("Ich warte auf Juergens Freigabe. Als Nächstes prüfe ich die Messung.",
          True),
         ("Als Nächstes prüfe ich die Messung. Deine Antwort steht noch aus.", True),
+        # Vier Formen des Wartens auf Jürgen, je ein eigener Fall (ADR-2026-09-03-221001).
+        # Mit Genitiv-s und in ASCII stehen sie schon oben; hier die beiden Formen, die
+        # der Lookahead vorher nicht kannte, plus die ASCII-Form ohne Genitiv-s.
+        ("Ich warte auf Jürgen. Als Nächstes prüfe ich die Messung.", True),
+        ("Ich warte auf die Rückmeldung. Als Nächstes prüfe ich die Messung.", True),
+        ("Ich warte auf Juergen. Als Nächstes prüfe ich die Messung.", True),
+        ("Ich warte auf deine Entscheidung. Als Nächstes prüfe ich die Messung.", True),
+        # Gegenproben: das Warten auf einen Prozess bleibt eine Ausnahme, mit Artikel
+        # ebenso wie ohne. Wäre der Bestimmer nicht optional, fielen diese Fälle mit.
+        ("Ich warte auf den Lauf. Als Nächstes prüfe ich sein Ergebnis.", False),
+        ("Der Lauf läuft noch. Sobald er durch ist, prüfe ich das Ergebnis.", False),
         ("Ich versuche es später noch einmal.", False),
         ("Soll ich die Mail an Saulius jetzt versenden?", False),
         ("Als Nächstes wäre der Deploy nach PROD fällig.", False),
