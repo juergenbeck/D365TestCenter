@@ -92,7 +92,12 @@ WARTEND = re.compile(
     r"warte (noch )?auf (?!(?:(?:die|der|das|den|dem|eine|einen|einer|"
     r"deine|deiner|deinen|deinem|dein) +)?"
     r"(?:jürgen|" + "jue" + "rgen|antwort|freigabe|rückmeldung|zustimmung|"
-    r"gegenmeldung|entscheidung)|dich\b)|"
+    # Die Possessive stehen ZUSÄTZLICH als freie Alternative da, nicht nur als
+    # Bestimmer vor der Wortliste: „warte auf deine Einschätzung" und „warte auf
+    # deinen Auftrag" waren vorher gedeckt und wären es sonst nicht mehr. Eine
+    # Verschärfung, die dabei anderswo Fläche verliert, ist keine (Inspektor,
+    # 03.09.2026, Abnahme zu ADR-2026-09-03-221001).
+    r"gegenmeldung|entscheidung)|dich\b|dein\w*\b)|"
     r"im hintergrund|melde mich, sobald)",
     re.IGNORECASE,
 )
@@ -203,6 +208,14 @@ def selbstprobe():
         ("Ich warte auf deine Freigabe. Als Nächstes prüfe ich die Messung.", True),
         # Dieselbe Umgehung in ASCII-Schreibung. Ohne diesen Fall ist der Zweig
         # unbemerkt entfernbar, was am 03.09.2026 genau einmal passiert ist.
+        ("Ich warte auf Jürgens Freigabe. Als Nächstes prüfe ich die Messung.",
+         True),
+        # Ein Possessiv vor einem beliebigen Substantiv bleibt gedeckt, sonst
+        # verliert die Verschärfung Fläche, die sie vorher hatte.
+        ("Ich warte auf deine Einschätzung. Als Nächstes prüfe ich die Messung.",
+         True),
+        ("Ich warte auf deinen Auftrag. Als Nächstes prüfe ich die Messung.",
+         True),
         ("Ich warte auf Juergens Freigabe. Als Nächstes prüfe ich die Messung.",
          True),
         ("Als Nächstes prüfe ich die Messung. Deine Antwort steht noch aus.", True),
