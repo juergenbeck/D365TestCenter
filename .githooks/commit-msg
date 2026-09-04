@@ -7,8 +7,10 @@
 # Manuelle Änderungen werden beim nächsten Sync überschrieben.
 #
 # Zweck:     Blockt Commits mit ASCII-Ersatz für Umlaute in deutschen Texten
-#            (ae/oe/ue/ss statt ä/ö/ü/ß) sowie mit verbotener Typografie
-#            (Halbgeviert-/Geviertstrich, Pfeil-Sonderzeichen) in der Message.
+#            (ae/oe/ue/ss statt ä/ö/ü/ß), mit verbotener Typografie
+#            (Halbgeviert-/Geviertstrich, Pfeil-Sonderzeichen) und mit einem
+#            KI-Attributionshinweis (Co-Authored-By auf Claude oder Anthropic,
+#            "Generated with Claude", die Anthropic-Absenderadresse) in der Message.
 #
 # Aktivierung pro Clone (einmalig):
 #   git config core.hooksPath .githooks
@@ -18,6 +20,13 @@
 #
 # Erlaubt sind Surrogate INNERHALB von Inline-Code (`...`), weil dort Zitate
 # des Verstoß-Patterns stehen (Audit-Reports, Lessons-Doku, Skill-Updates).
+#
+# Die Attributionsprüfung ignoriert zusätzlich ganze Code-Fences, weil ein
+# Trailer eine ganze Zeile ist und in einen Fence gehört. Vorbehalt: Nur bei
+# GERADER Zahl von Fence-Zeilen, sonst liefe der sed-Bereich bis zum Dateiende
+# und verschluckte den Trailer. Steht in der Nachricht sonst noch ein einzelnes
+# unpaariges ```, greift die Fence-Ausnahme daher nicht und ein gefenctes Zitat
+# blockt; dann das unpaarige Zeichen schließen oder das Zitat inline setzen.
 
 set -e
 
@@ -128,9 +137,12 @@ ATTRIB_LC=$(printf '%s\n' "$ATTRIB_SHOW" | tr 'A-Z' 'a-z')
 
 # Der Trailer-Schlüssel allein reicht nicht: "Co-Authored-By:" für einen echten
 # Menschen ist ein legitimer Git-Trailer und bleibt erlaubt. Verlangt wird deshalb
-# claude oder anthropic dahinter. Am Korpus gemessen (5000+ Commits): 16 Treffer,
-# das sind genau die 16 bekannten Trailer, und null Fehlalarme auf den 316 Zeilen,
-# die Claude legitim erwähnen. Ein blanker Treffer auf "claude" wäre unbrauchbar.
+# claude oder anthropic dahinter. Ein blanker Treffer auf "claude" wäre
+# unbrauchbar: das Repo claudecode handelt über weite Strecken von Claude Code.
+# Präzision am Korpus des Repos claudecode gemessen, Stand 04.09.2026: 16 echte
+# Verstöße erkannt, keine legitime Erwähnung getroffen. Die Zahl ist eine datierte
+# Messung und KEIN Sollwert, denn der Korpus wächst mit jeder Sitzung; maßgeblich
+# ist die Eigenschaft, nicht der Zahlenwert (ADR-2026-09-04-163302, Nachtrag).
 ATTRIB_REGEX='co-authored-by:[[:space:]]*.*(claude|anthropic)|generated with[[:space:]]*\[?claude|noreply@anthropic\.com'
 
 ATTRIB_LINES=$(printf '%s\n' "$ATTRIB_LC" | grep -nE "$ATTRIB_REGEX" | cut -d: -f1)

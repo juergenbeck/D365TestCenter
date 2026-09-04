@@ -162,6 +162,15 @@ einen Inline-Span. Ohne diese Ausnahme wäre genau der Commit blockiert, der den
 festhält. Die Vorverarbeitung der Umlaut- und der Typografie-Prüfung bleibt davon unberührt,
 dort gilt weiterhin allein die Inline-Ausnahme.
 
+**Ein Vorbehalt, der in der Praxis auffällt:** Die Fence-Ausnahme greift nur bei einer
+**geraden** Zahl von Fence-Zeilen in der Nachricht. Grund ist der `sed`-Bereich, der ohne
+schließende Marke bis zum Dateiende läuft und dann alles dahinter verschluckt, auch den
+Trailer; ein einzelnes unpaariges ``` hätte den Riegel sonst vollständig ausgehebelt.
+
+Praktische Folge: Steht in derselben Nachricht sonst noch ein unpaariges ```, blockt auch
+ein korrekt gefenctes Zitat. Dann das unpaarige Zeichen schließen oder das Zitat in
+Inline-Backticks setzen. Eine Nachricht ohne Fence ist davon nie betroffen.
+
 Der Altbestand wird **nicht** per Amend bereinigt: die ältesten der 16 Commits liegen über
 5000 Commits unter HEAD, und der Branch ist geteilt.
 
