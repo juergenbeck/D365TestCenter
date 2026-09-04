@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B \"$(git rev-parse --show-toplevel)/.codex/autarkie/check-turn-ende.py\"",
+            "commandWindows": "py -3 -B \"$(git rev-parse --show-toplevel)/.codex/autarkie/check-turn-ende.py\"; exit $LASTEXITCODE",
+            "timeout": 10,
+            "statusMessage": "Ausführbare nächste Schritte fortsetzen"
+          }
+        ]
+      }
+    ]
+  }
+}
