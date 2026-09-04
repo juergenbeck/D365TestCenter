@@ -112,7 +112,18 @@ fi
 # der drei Backticks eines Fence-Markers als leeres Paar wegnehmen und den Marker
 # zerstören. sed führt die -e-Befehle je Zeile in Reihenfolge aus, das d des Range
 # beendet die Zeile sofort.
-ATTRIB_SHOW=$(sed -E -e '/^[[:space:]]*```/,/^[[:space:]]*```/d' -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
+# Ein sed-Bereich /start/,/ende/ läuft bis zum Dateiende, wenn das Ende fehlt. Bei
+# einer UNGERADEN Zahl von Fence-Zeilen würde der Strip deshalb alles hinter dem
+# letzten ``` verschlucken, und ein einzelnes ``` irgendwo in der Nachricht
+# hätte den ganzen Riegel ausgehebelt. Ein unpaariger Fence ist ohnehin kein
+# gültiger Block, also wird dann gar kein Fence-Strip angewandt und es bleibt bei
+# der Inline-Ausnahme. Gefunden bei der Abnahme am 04.09.2026.
+FENCE_ZAHL=$(grep -cE '^[[:space:]]*```' "$MSG_FILE" || true)
+if [ $((FENCE_ZAHL % 2)) -eq 0 ] && [ "$FENCE_ZAHL" -gt 0 ]; then
+    ATTRIB_SHOW=$(sed -E -e '/^[[:space:]]*```/,/^[[:space:]]*```/d'        -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
+else
+    ATTRIB_SHOW=$(sed -E -e 's/`[^`]*`//g' -e '/^#/d' "$MSG_FILE")
+fi
 ATTRIB_LC=$(printf '%s\n' "$ATTRIB_SHOW" | tr 'A-Z' 'a-z')
 
 # Der Trailer-Schlüssel allein reicht nicht: "Co-Authored-By:" für einen echten
