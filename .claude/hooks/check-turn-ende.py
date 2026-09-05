@@ -51,7 +51,15 @@ ROT = re.compile(
     r"text an \w|entwurf an \w|schreiben an \w|antwort an \w|beitrag an \w|"
     r"push --force|force-?push|reset --hard|rebase|--amend|branch löschen|"
     r"rm -rf|\bdrop\b|unwiederbringlich|"
-    r"rechnung|angebot|vertrag|kündig|honorar|zahlung)",
+    # „kündig" meint die Kündigung, nicht die Ankündigung. Ohne den Lookbehind traf
+    # die Alternative jede Form von „ankündigen", „Ankündigung", „Ankündigungssatz" -
+    # also ausgerechnet den Wortschatz, mit dem über diesen Riegel gesprochen wird, und
+    # damit blieb er für die Arbeit an sich selbst blind. Gemessen am 05.09.2026 über
+    # 39.001 Antworten: 38 Ankündigungen blieben allein wegen dieser Alternative stehen,
+    # bei 9 davon war jeder Treffer eine Form von „ankündig…". Echte Komposita wie
+    # „Sonderkündigungsrecht" bleiben rot, ein gemischter Satz („Ankündigung einer
+    # Kündigung") greift über das zweite Vorkommen (ADR-2026-09-05-132333).
+    r"rechnung|angebot|vertrag|(?<!an)kündig|honorar|zahlung)",
     re.IGNORECASE,
 )
 
