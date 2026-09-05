@@ -36,10 +36,19 @@ import sys
 
 # --- Rote Handlungen: hier endet der Turn, die Freigabe ist Jürgens ------------------
 ROT = re.compile(
-    r"(mail|e-?mail|anschreiben|nachricht an|ticket-?kommentar|jira|teams|devops|"
+    r"(mail|e-?mail|anschreiben|nachricht an|ticket-?kommentar|jira|devops|"
+    # Teams nur als WEG nach außen, nicht als Produktname. Die blanke Alternative „teams"
+    # bremste den Riegel an jedem technischen Bericht über den Dienst - gemessen 108
+    # Antworten, in denen allein sie den Block verhinderte, darunter Sätze über den
+    # CDP-Port, den Teams-Prozess und die Teams-UI; sie traf sogar „TeamViewer". Ein
+    # Beitrag in einen Kanal bleibt rot (ADR-2026-09-05-004350).
+    r"teams-nachricht|teams-kanal|in teams\b|über teams|via teams|"
     r"versenden|verschicken|rausschicken|hinausgehen|absenden|"
     r"deploy|deployment|prod\b|produktiv|cutover|"
-    r"text an \w|entwurf an \w|schreiben an \w|antwort an \w|"
+    # „beitrag an <Person>" kam mit derselben Messung dazu: dieser Grenzfall war bis dahin
+    # allein über das zu grobe „teams" gedeckt und wäre nach dessen Präzisierung offen
+    # gewesen. Wer eine Alternative entschärft, prüft, was nur über sie gedeckt war.
+    r"text an \w|entwurf an \w|schreiben an \w|antwort an \w|beitrag an \w|"
     r"push --force|force-?push|reset --hard|rebase|--amend|branch löschen|"
     r"rm -rf|\bdrop\b|unwiederbringlich|"
     r"rechnung|angebot|vertrag|kündig|honorar|zahlung)",
@@ -68,7 +77,23 @@ ANSAGE = re.compile(
     # Ankündigung strukturell. Die Gegenrichtung „jetzt \w+e ich" steht bewusst NICHT hier:
     # sie blockte am Bestand „Ab jetzt schreibe ich nicht mehr in state.md", also eine
     # Verneinung am Übergabeschluss (ADR-2026-09-04-170824).
-    r"ich \w+e jetzt\b)",
+    r"ich \w+e jetzt\b|"
+    # Die Ich-Form im Präsens, GENERISCH. Drei Einzelfälle in drei Tagen (erfassen,
+    # schreiben, sortieren) haben gezeigt, dass eine Verbliste die Ankündigung nicht
+    # fängt: sie ist endlich, die Sprache nicht. Gemessen tragen 2.772 Antworten eine
+    # Ich-Form mit einem Verb, das die Wortliste nicht kennt, verteilt auf 286 Verben.
+    # Das ist dieselbe Ausweichbewegung, gegen die ADR-2026-09-03-113147 gebaut wurde,
+    # nur eine Ebene höher: dort wich die Satzform aus, hier das Vokabular.
+    #
+    # Der Ausschluss der Hilfs- und Zustandsverben ist Teil des Entscheids, nicht
+    # Umsetzungsdetail: sie enden ebenfalls auf -e, und ohne ihn würde „Ich habe die
+    # Messung abgeschlossen" als Ankündigung gelten. Was die Form NICHT leistet, ist die
+    # Unterscheidung von „ich tue etwas Konkretes" und „ich frage, was du willst" - dafür
+    # bleibt ERLAUBT der Filter (ADR-2026-09-05-011212).
+    r"\bich\s+(?!(?:habe|hatte|bin|war|kann|konnte|muss|musste|will|wollte|soll|sollte|"
+    r"darf|durfte|werde|wurde|wäre|hätte|würde|möchte|denke|glaube|finde|meine|sehe|"
+    r"verstehe|danke|freue|hoffe|vermute|melde|sage|antworte|frage|warte|bleibe|stehe|"
+    r"lasse|bitte)\b)[a-zäöüß]{3,}e\b)",
     re.IGNORECASE,
 )
 
@@ -123,14 +148,23 @@ WARTEND = re.compile(
 
 # --- Grüne Tätigkeiten: das, was ohne Rückfrage getan werden darf --------------------
 ERLAUBT = re.compile(
-    r"(lesen|liest|ansehen|anschauen|sichten|nachlesen|"
-    r"messen|misst|zählen|prüfen|prüfe|nachmessen|nachprüfen|verifizieren|"
+    # WORTSTÄMME, nicht Vollformen. Die Liste stand bis zum 05.09.2026 auf Infinitiven
+    # („schreiben", „messen", „committen") und traf damit keine einzige finite Verbform -
+    # also ausgerechnet die erste Person Singular, in der eine Ankündigung fast immer
+    # formuliert ist. „Ich schreibe das jetzt in den Stand und die Runlist und committe."
+    # fand hier nichts. Gemessen waren 3.658 Antworten, in denen ANSAGE oder FRAGE traf
+    # und ERLAUBT nichts fand; die Umstellung blockt 1.916 zusätzlich bei null Verlust
+    # (ADR-2026-09-05-004350).
+    r"(les|liest|ansehen|anschau|sicht|nachles|"
+    r"mess|misst|zähl|prüf|nachmess|nachprüf|verifizier|"
     # „(?<!ver)suche" statt „\bsuche": die Wortgrenze bräche „Ursachensuche", ein realer
     # Fall aus den Transkripten. Ausgenommen wird nur „versuche" (Inspektor, Runde 2).
-    r"(?<!ver)suche|suchen|durchsuchen|greppen|kartieren|erheben|auswerten|analysieren|"
-    r"bauen|umbauen|schreiben|anlegen|ergänzen|nachziehen|korrigieren|beheben|"
-    r"aufbereiten|entwerfen|dokumentieren|committen|adr\b|nachweis|test|trockenlauf|"
-    r"weiter|fortfahren|fortsetzen|dranbleiben|angehen|vornehmen|in angriff|"
+    r"(?<!ver)suche|suchen|durchsuch|grepp|kartier|erheb|auswert|analysier|"
+    # „bau" braucht seine Endungen ausgeschrieben, sonst trifft der blanke Stamm jedes
+    # „Baustein", „Baum" und „Bauart".
+    r"bau(e|en|st|t)?\b|umbau|schreib|anleg|ergänz|nachzieh|korrigier|beheb|"
+    r"aufbereit|entwerf|dokumentier|committ|adr\b|nachweis|test|trockenlauf|"
+    r"weiter|fortfahr|fortsetz|dranbleib|angeh|vornehm|in angriff|"
     # Substantivformen: „die Auswertung", „die Prüfung" benennen dieselbe Tätigkeit wie
     # das Verb, und Antworten formulieren so mindestens ebenso oft.
     r"auswertung|prüfung|messung|analyse|sichtung|recherche|bereinigung|umbau|"
@@ -145,7 +179,20 @@ ERLAUBT = re.compile(
     # wirklich sieht - jede Antwort ohne Werkzeugaufruf, rund 36.900 - sind es 149
     # zusätzliche Blocks bei null Verlust; die Turn-Enden allein sind zu eng, um die
     # Fehltrefferseite zu zeigen (ADR-2026-09-04-170824, Nachtrag zu Kriterium 3).
-    r"erfass|zuordn|ordne .{0,20}zu\b|einarbeit|nacharbeit)",
+    r"erfass|zuordn|ordne .{0,20}zu\b|einarbeit|nacharbeit|"
+    # Die Spitze der Kandidatenliste, systematisch über den Bestand erhoben statt am
+    # Einzelfall geraten: 2.772 Antworten, 286 Verben, häufigste `zieh` (282), `schau`
+    # (176), `start` (103), `setz` (94). Wer hier ergänzt, erhebt zuerst neu
+    # (`messung/erkennungsluecke.py`), statt das nächste Einzelwort nachzutragen.
+    #
+    # ERLAUBT ist seit ADR-2026-09-05-011212 die EINZIGE Stelle, die eine angekündigte
+    # Tätigkeit von einer Frage nach dem Thema trennt - ANSAGE erkennt die Ich-Form
+    # generisch. Eine Bauart ohne diesen Filter wurde gemessen und verworfen: sie blockte
+    # 43 Prozent aller Antworten, darunter jeden Sessionstart („Bereit. Was soll ich
+    # tun?").
+    r"zieh|schau|start|setz|nutz|trag|fahr|häng|arbeit|reparier|beginn|klär|schließ|"
+    r"ersetz|sortier|trenn|räum|pfleg|stell .{0,15}(fest|her|um)|"
+    r"nehme .{0,12}(zurück|vor|mit)|führe .{0,12}(aus|zusammen|durch))",
     re.IGNORECASE,
 )
 
@@ -282,6 +329,32 @@ def selbstprobe():
         ("Ich warte jetzt auf das Urteil des Inspektors und ziehe danach Stand und "
          "Journal des Vorgangs nach.", False),
         ("Ich warte jetzt auf deine Freigabe. Als Nächstes prüfe ich die Messung.", True),
+        # Der Riverty-Fall vom 04.09.2026, den Jürgen mit „schon wieder" gezeigt hat. Er
+        # lief aus zwei unabhängigen Gründen durch: ERLAUBT kannte nur Infinitive, und ROT
+        # griff auf „Teams" im Absatz davor. Der Positivfall führt beide Absätze, damit er
+        # beide Ursachen bindet (ADR-2026-09-05-004350).
+        ("Übrig bleibt allein der FAQ-Connector. Office 365, Excel Online und Teams haben "
+         "null Flow-Verbraucher und sind nicht anzulegen.\n\n"
+         "Ich schreibe das jetzt in den Stand und die Runlist und committe.", True),
+        # Teams als Weg nach außen bleibt rot, in beiden gebräuchlichen Formen.
+        ("Ich stelle den Befund als Beitrag in den Teams-Kanal.", False),
+        ("Ich schicke ihm die Zusammenfassung über Teams.", False),
+        # Der Grenzfall, der vorher allein über das zu grobe „teams" gedeckt war.
+        ("Soll ich den kurzen Beitrag an Marc entwerfen?", False),
+        # Der dritte Anlassfall, 05.09.2026 aus Riverty. Weder ANSAGE noch ERLAUBT trafen:
+        # „ich \w+e jetzt" scheitert an dem „das" zwischen Verb und Adverb, und `sortier`
+        # stand nicht in der Liste (ADR-2026-09-05-011212).
+        ("Ich sortiere das jetzt sauber: erledigt-aber-nicht-markiert von echt offen "
+         "trennen, und je Schritt sagen, ob es an uns, an einem Dritten oder an einer "
+         "Entscheidung hängt.", True),
+        # Die Gegenfälle zum Hilfsverb-Ausschluss. Ohne ihn würde die generische Ich-Form
+        # jeden Abschlussbericht blocken; diese beiden binden das.
+        ("Ich habe die Messung abgeschlossen und den Befund abgelegt.", False),
+        ("Ich melde mich, sobald der Lauf durch ist.", False),
+        # Sessionstart: die Sitzung hat keine Arbeit, sondern fragt nach dem Thema. Hier
+        # trennt allein ERLAUBT - eine Bauart ohne diesen Filter blockte genau das.
+        ("Bereit. Was soll ich tun?", False),
+        ("Hallo Jürgen. Womit soll ich anfangen?", False),
         ("Ich versuche es später noch einmal.", False),
         ("Soll ich die Mail an Saulius jetzt versenden?", False),
         ("Als Nächstes wäre der Deploy nach PROD fällig.", False),
