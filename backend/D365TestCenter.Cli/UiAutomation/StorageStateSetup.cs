@@ -134,9 +134,14 @@ public static class StorageStateSetup
         umgebung = string.Empty;
         if (string.IsNullOrWhiteSpace(org)) return false;
 
-        if (org.Contains("-cdhtest.", StringComparison.OrdinalIgnoreCase)) umgebung = "CDHTEST";
-        else if (org.Contains("-dev.", StringComparison.OrdinalIgnoreCase)) umgebung = "DEV";
-        else if (org.Contains("-test.", StringComparison.OrdinalIgnoreCase)) umgebung = "TEST";
+        // Only the host counts. A marker in path or query (e.g. "?x=-cdhtest.")
+        // must not open the guard for a PROD host.
+        if (!Uri.TryCreate(org, UriKind.Absolute, out var uri)) return false;
+        var host = uri.Host + ".";
+
+        if (host.Contains("-cdhtest.", StringComparison.OrdinalIgnoreCase)) umgebung = "CDHTEST";
+        else if (host.Contains("-dev.", StringComparison.OrdinalIgnoreCase)) umgebung = "DEV";
+        else if (host.Contains("-test.", StringComparison.OrdinalIgnoreCase)) umgebung = "TEST";
         else return false;
 
         return true;

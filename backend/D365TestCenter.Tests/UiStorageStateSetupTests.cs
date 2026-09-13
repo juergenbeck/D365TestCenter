@@ -47,6 +47,9 @@ public sealed class UiStorageStateSetupTests
     [InlineData("https://markant-datatest.crm4.dynamics.com")]
     [InlineData("https://markant-accept.crm4.dynamics.com")]
     [InlineData("https://example.crm4.dynamics.com")]
+    [InlineData("https://markant-prod.crm4.dynamics.com/main.aspx?x=-cdhtest.")]
+    [InlineData("https://markant-prod.crm4.dynamics.com/-test./main.aspx")]
+    [InlineData("markant-cdhtest.crm4.dynamics.com")]
     [InlineData("")]
     public void TryResolveEnvironment_RefusesEverythingElse(string org)
     {
@@ -55,7 +58,7 @@ public sealed class UiStorageStateSetupTests
     }
 
     [Fact]
-    public async Task UiSetupHelp_ListsDevAndTest()
+    public async Task UiSetupHelp_ListsDevTestAndCdhTest()
     {
         var originalOut = Console.Out;
         var originalError = Console.Error;
