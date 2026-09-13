@@ -256,7 +256,11 @@ Quelle, letzter Lauf, Trend, Datei-Link. Spalten, für die eine Definition kein 
 ### `ui-setup` — Playwright-Storage-State anlegen
 
 Erzeugt per interaktivem Login einen Playwright-Storage-State für UI-Tests (`BrowserAction` im `run`-Pfad,
-ADR-0006). Harter DEV-Guard (nur Nicht-Produktiv-Umgebungen).
+ADR-0006). Harter Umgebungs-Guard: angenommen werden DEV, TEST und CDHTEST (CDHTEST seit dem
+12.09.2026, Markant-ADR-2026-09-12-1152); PROD, ACCEPT, DATATEST und jede sonstige Adresse werden mit
+Exit-Code 2 abgewiesen. Bei TEST und CDHTEST erscheint vor dem Browserstart der Hinweis, dass die
+beauftragten Testfälle dort Lese- und Schreibschritte ohne gesonderte Freigabe je Aktion ausführen
+dürfen.
 
 ```
 ui-setup --org <url> [--output <pfad>]
@@ -267,6 +271,9 @@ ui-setup --org <url> [--output <pfad>]
 | `--output` | `auth/<org>-<user>.json` | Ausgabepfad des Storage-State-JSON (in `.gitignore` halten) |
 
 Der erzeugte State wird danach an `run --browser-state <pfad>` übergeben.
+
+Eigene Exit-Codes dieses Befehls: `2` gesperrte Umgebung, `3` Zeitüberschreitung (fünf Minuten ohne
+erkannten Login), `4` Browserfenster vor dem Login geschlossen.
 
 ---
 

@@ -13,15 +13,45 @@ public sealed class ConsoleOutputCollection
 [Collection(ConsoleOutputCollection.Name)]
 public sealed class UiStorageStateSetupTests
 {
-    [Fact]
-    public void TestEnvironmentNotice_AllowsReadAndWriteWithoutPerActionApproval()
+    [Theory]
+    [InlineData("TEST")]
+    [InlineData("CDHTEST")]
+    public void WriteEnabledNotice_AllowsReadAndWriteWithoutPerActionApproval(string umgebung)
     {
-        var notice = string.Join(Environment.NewLine, StorageStateSetup.GetTestEnvironmentNotice());
+        var notice = string.Join(
+            Environment.NewLine,
+            StorageStateSetup.GetWriteEnabledEnvironmentNotice(umgebung));
 
+        Assert.Contains(umgebung, notice);
         Assert.Contains("Lese- und Schreibschritte", notice);
         Assert.Contains("keine gesonderte Freigabe je Aktion", notice);
         Assert.Contains("erweitert den beauftragten Testumfang nicht", notice);
         Assert.DoesNotContain("ausschließlich LESENDE", notice);
+    }
+
+    // Hard guard (ADR-2026-09-12-1152): DEV, TEST und CDHTEST sind zugelassen,
+    // alles andere bleibt gesperrt. CDHTEST kam am 12.09.2026 dazu, weil es seit
+    // dem 08.08.2026 dieselbe dauerhafte Schreibfreigabe trägt wie TEST.
+    [Theory]
+    [InlineData("https://markant-dev.crm4.dynamics.com", "DEV")]
+    [InlineData("https://markant-test.crm4.dynamics.com", "TEST")]
+    [InlineData("https://markant-cdhtest.crm4.dynamics.com", "CDHTEST")]
+    public void TryResolveEnvironment_AcceptsDevTestAndCdhTest(string org, string erwartet)
+    {
+        Assert.True(StorageStateSetup.TryResolveEnvironment(org, out var umgebung));
+        Assert.Equal(erwartet, umgebung);
+    }
+
+    [Theory]
+    [InlineData("https://markant-prod.crm4.dynamics.com")]
+    [InlineData("https://markant-datatest.crm4.dynamics.com")]
+    [InlineData("https://markant-accept.crm4.dynamics.com")]
+    [InlineData("https://example.crm4.dynamics.com")]
+    [InlineData("")]
+    public void TryResolveEnvironment_RefusesEverythingElse(string org)
+    {
+        Assert.False(StorageStateSetup.TryResolveEnvironment(org, out var umgebung));
+        Assert.Equal(string.Empty, umgebung);
     }
 
     [Fact]
@@ -48,7 +78,7 @@ public sealed class UiStorageStateSetupTests
         }
 
         var help = output.ToString() + error.ToString();
-        Assert.Contains("DEV or TEST", help);
+        Assert.Contains("DEV, TEST or CDHTEST", help);
         Assert.DoesNotContain("DEV-only", help);
     }
 }

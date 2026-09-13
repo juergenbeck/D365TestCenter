@@ -165,7 +165,7 @@ dotnet backend\D365TestCenter.Cli\bin\Debug\net8.0\D365TestCenter.Cli.dll ui-set
     --output auth\storage-state.json
 ```
 
-Headed Chromium opens, you log in interactively (incl. MFA), the resulting browser state is persisted as JSON. The `ui-setup` sub-command has a hard guard against non-DEV subdomains. Storage-state files are short-lived (~24h for SPA flows) and must not be committed to source control.
+Headed Chromium opens, you log in interactively (incl. MFA), the resulting browser state is persisted as JSON. The `ui-setup` sub-command has a hard guard on the target environment: DEV, TEST and CDHTEST are accepted, PROD, ACCEPT, DATATEST and every other host are refused. Storage-state files are short-lived (~24h for SPA flows) and must not be committed to source control.
 
 ### Running UI tests
 

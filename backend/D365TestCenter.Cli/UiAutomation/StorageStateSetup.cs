@@ -5,20 +5,24 @@ namespace D365TestCenter.Cli.UiAutomation;
 /// <summary>
 /// Interactive Playwright storage-state setup for UI tests (ADR-0006).
 ///
-/// Opens a headed Chromium pointed at a Markant DEV or TEST org URL, waits up to
-/// 5 minutes for the user to complete the manual login (with MFA if needed),
-/// then persists the cookies + localStorage to a JSON file that can be loaded
-/// by --browser-state in the run command.
+/// Opens a headed Chromium pointed at a Markant DEV, TEST or CDHTEST org URL,
+/// waits up to 5 minutes for the user to complete the manual login (with MFA if
+/// needed), then persists the cookies + localStorage to a JSON file that can be
+/// loaded by --browser-state in the run command.
 ///
-/// Hard-guard: only DEV and TEST URLs are accepted. PROD, DATATEST and CDHTEST
-/// setups are refused with a clear error.
+/// Hard-guard: only DEV, TEST and CDHTEST URLs are accepted. PROD, ACCEPT,
+/// DATATEST and every other host are refused with a clear error.
 ///
 /// TEST was opened up on 2026-07-26 so that the manual Zephyr tester cases, which
 /// are written against TEST and reference fixed TEST records, can be mirrored by
-/// automated runs. TEST permits the read and write steps required by the
-/// commissioned test case without a separate approval for each write. This guard
-/// only governs where a login state may be created and does not expand the scope
-/// of the commissioned test.
+/// automated runs. CDHTEST followed on 2026-09-12 (ADR-2026-09-12-1152) for the
+/// same reason: it carries the same standing write approval as TEST since
+/// 2026-08-08, and six mirrored cases target it. Both environments permit the
+/// read and write steps required by the commissioned test case without a
+/// separate approval for each write. DATATEST carries that approval too but has
+/// no UI test case, so it stays blocked until one exists. This guard only
+/// governs where a login state may be created and does not expand the scope of
+/// the commissioned test.
 /// </summary>
 public static class StorageStateSetup
 {
@@ -30,21 +34,16 @@ public static class StorageStateSetup
             return 1;
         }
 
-        // Hard guard: DEV and TEST are accepted. PROD, DATATEST, CDHTEST and
-        // all other hosts remain blocked.
-        var istDev = org.Contains("-dev.", StringComparison.OrdinalIgnoreCase);
-        var istTest = org.Contains("-test.", StringComparison.OrdinalIgnoreCase);
-
-        if (!istDev && !istTest)
+        if (!TryResolveEnvironment(org, out var umgebung))
         {
-            Console.Error.WriteLine($"FEHLER: --org '{org}' ist weder eine DEV- noch eine TEST-URL.");
-            Console.Error.WriteLine("Storage-State-Setup ist auf DEV und TEST beschränkt (Markant-Zugriffsmatrix).");
+            Console.Error.WriteLine($"FEHLER: --org '{org}' ist weder eine DEV-, TEST- noch CDHTEST-URL.");
+            Console.Error.WriteLine("Storage-State-Setup ist auf DEV, TEST und CDHTEST beschränkt (Markant-Zugriffsmatrix).");
             return 2;
         }
 
-        if (istTest)
+        if (umgebung is "TEST" or "CDHTEST")
         {
-            foreach (var line in GetTestEnvironmentNotice())
+            foreach (var line in GetWriteEnabledEnvironmentNotice(umgebung))
             {
                 Console.WriteLine(line);
             }
@@ -99,6 +98,16 @@ public static class StorageStateSetup
             await browser.CloseAsync();
             return 3;
         }
+        catch (PlaywrightException ex)
+        {
+            // Fenster vom Benutzer geschlossen oder Browser weggebrochen. Ohne
+            // diesen Zweig endet der Befehl mit einer unbehandelten Ausnahme und
+            // einem Stapelabzug statt einer lesbaren Meldung.
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("    ABBRUCH: Browser wurde geschlossen, bevor der Login erkannt war.");
+            Console.Error.WriteLine($"    Meldung: {ex.Message}");
+            return 4;
+        }
 
         await context.StorageStateAsync(new BrowserContextStorageStateOptions { Path = output });
         Console.WriteLine();
@@ -112,10 +121,36 @@ public static class StorageStateSetup
         return 0;
     }
 
-    internal static IReadOnlyList<string> GetTestEnvironmentNotice() =>
+    /// <summary>
+    /// Hard guard: maps an org URL to the environment label a storage state may be
+    /// created for. DEV, TEST and CDHTEST are accepted, everything else is refused.
+    ///
+    /// The markers are disjoint on purpose: "markant-cdhtest." does not contain
+    /// "-test." (an 'h' precedes "test."), and neither does "markant-datatest.",
+    /// so adding CDHTEST does not widen the two existing markers.
+    /// </summary>
+    internal static bool TryResolveEnvironment(string org, out string umgebung)
+    {
+        umgebung = string.Empty;
+        if (string.IsNullOrWhiteSpace(org)) return false;
+
+        if (org.Contains("-cdhtest.", StringComparison.OrdinalIgnoreCase)) umgebung = "CDHTEST";
+        else if (org.Contains("-dev.", StringComparison.OrdinalIgnoreCase)) umgebung = "DEV";
+        else if (org.Contains("-test.", StringComparison.OrdinalIgnoreCase)) umgebung = "TEST";
+        else return false;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Notice shown before the browser starts for an environment that carries the
+    /// standing Markant write approval (TEST since 2026-07-26, CDHTEST since
+    /// 2026-08-08). <paramref name="umgebung"/> is the environment label.
+    /// </summary>
+    internal static IReadOnlyList<string> GetWriteEnabledEnvironmentNotice(string umgebung) =>
     [
-        "HINWEIS: Anmeldezustand für TEST.",
-        "  Auf TEST sind die beauftragten UI-Testfälle mit Lese- und Schreibschritten zulässig.",
+        $"HINWEIS: Anmeldezustand für {umgebung}.",
+        $"  Auf {umgebung} sind die beauftragten UI-Testfälle mit Lese- und Schreibschritten zulässig.",
         "  Schreibschritte benötigen keine gesonderte Freigabe je Aktion.",
         "  Der Anmeldezustand erweitert den beauftragten Testumfang nicht."
     ];
