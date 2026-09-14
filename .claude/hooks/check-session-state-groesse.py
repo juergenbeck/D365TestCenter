@@ -161,9 +161,18 @@ STAND_NAMES = ('session-state.md', 'sessionstate.md')
 #  (2) in der Kopf-Blockquote oder einer Überschrift. Ohne das matcht jede beiläufige
 #      Prosa-Erwähnung: Markants INT-0039 ist ein lebender Stand und schreibt bei
 #      Zeichen 880 "die eingefrorenen Snapshots".
+#
+# Dazu (3): die Zeile erklärt die DATEI SELBST für eingefroren. Die Kopf-Blockquote allein
+# genügt nicht, denn nach jeder Verdichtung verweist sie auf den Snapshot ("Der Vollstand
+# ist eingefroren als sessions/..."). Gemessen am 14.09.2026: von 13 lebenden Dateien, die
+# als eingefroren galten, erklärten sich 3 selbst, 10 verwiesen nur, zwei davon über der
+# Alarmschwelle. Selbsterklärung heißt deshalb: das Großwort EINGEFROREN (case-sensitiv),
+# "eingefroren ab/seit", "nicht weiter ..." oder "abgelöst durch" (ADR-2026-09-14-092528).
 FROZEN_RE = re.compile(
-    r"eingefroren|nicht weiter (angeh|gepfleg|fortgeschrieb)|abgel(ö|oe)st durch",
-    re.IGNORECASE)
+    r"EINGEFROREN"
+    r"|(?i:eingefroren (ab|seit)\b)"
+    r"|(?i:nicht weiter (angeh|gepfleg|fortgeschrieb))"
+    r"|(?i:abgel(ö|oe)st durch)")
 FROZEN_FENSTER = 1000
 
 
