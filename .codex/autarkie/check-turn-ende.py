@@ -2,7 +2,7 @@
 # GENERATED FILE. DO NOT EDIT.
 # Source: werkzeuge/hook-sync/templates/python/check-turn-ende.py
 # Template-Version: codex-autarkie-v1
-# Source-SHA256: 06af26bc079a1a94e5ccc9014043dc4fcc0a505fb01da0bd61f7eb202f2513a7
+# Source-SHA256: 789dbeedb03f1210cb3b48976bdcbb0e0ccea6c856146be290fb18e2759db782
 """Stop-Hook: hält den Turn fest, solange die Antwort einen grünen Schritt benennt.
 
 Entscheid: ADR-2026-09-03-113147 (Das Anhalten des Turns wird geregelt, nicht die Form
@@ -55,7 +55,23 @@ ROT = re.compile(
     r"text an \w|entwurf an \w|schreiben an \w|antwort an \w|beitrag an \w|"
     r"push --force|force-?push|reset --hard|rebase|--amend|branch löschen|"
     r"rm -rf|\bdrop\b|unwiederbringlich|"
-    r"rechnung|angebot|vertrag|kündig|honorar|zahlung)",
+    # „kündig" meint die Kündigung, nicht die Ankündigung. Ohne den Lookbehind traf
+    # die Alternative jede Form von „ankündigen", „Ankündigung", „Ankündigungssatz" -
+    # also ausgerechnet den Wortschatz, mit dem über diesen Riegel gesprochen wird, und
+    # damit blieb er für die Arbeit an sich selbst blind. Gemessen am 05.09.2026 über
+    # 39.001 Antworten: 38 Ankündigungen blieben allein wegen dieser Alternative stehen,
+    # bei 9 davon war jeder Treffer eine Form von „ankündig…". Echte Komposita wie
+    # „Sonderkündigungsrecht" bleiben rot, ein gemischter Satz („Ankündigung einer
+    # Kündigung") greift über das zweite Vorkommen (ADR-2026-09-05-132333).
+    #
+    # Die zwei zusätzlichen Lookbehinds kamen am selben Tag dazu: `(?<!an)` sieht nur die
+    # zwei Zeichen davor, und im Partizip „angekündigt" steht dazwischen das Präfix `ge`,
+    # in „anzukündigen" ein `zu`. Beide blieben deshalb rot, ebenso „unangekündigt" und
+    # „vorangekündigt" - also genau die Formen, in denen eine Sitzung über einen
+    # versäumten Schritt spricht. Gemessen über 40.097 Antworten sind 65 Antworten mit zusammen
+    # 66 Fundstellen betroffen, alle 65 von Hand gelesen und ausnahmslos Ankündigungsformen, keine
+    # einzige Kündigung (ADR-2026-09-05-184158).
+    r"rechnung|angebot|vertrag|(?<!an)(?<!ange)(?<!anzu)kündig|honorar|zahlung)",
     re.IGNORECASE,
 )
 
@@ -359,6 +375,27 @@ def selbstprobe():
         # trennt allein ERLAUBT - eine Bauart ohne diesen Filter blockte genau das.
         ("Bereit. Was soll ich tun?", False),
         ("Hallo Jürgen. Womit soll ich anfangen?", False),
+        # Der Anlassfall des Partizip-Befundes vom 05.09.2026: Eine Sitzung stellt
+        # ausdrücklich fest, ihr Schritt sei grün, und blieb trotzdem stehen, weil
+        # „angekündigt" unter dem alten Lookbehind rot war. Ohne diesen Fall ist die
+        # Erweiterung auf `(?<!ange)` von nichts gebunden (ADR-2026-09-05-184158).
+        ("Der Hook hat recht in einem Punkt: Empfehlung C ist Bauarbeit im eigenen Repo "
+         "und damit grün - die habe ich angekündigt statt gemacht. Ich setze sie jetzt "
+         "um.", True),
+        # Die Gegenrichtung: eine echte Kündigung bleibt rot. Der Satz führt bewusst
+        # KEIN zweites rotes Wort - die erste Fassung sagte „die Kündigung des
+        # Vertrags" und wurde von der Alternative `vertrag` gehalten, nicht von
+        # `kündig`; sie band die Gegenrichtung damit gar nicht. Derselbe Fehler war in
+        # diesem Vorgang am selben Tag schon einmal aufgetreten (Inspektor,
+        # ADR-2026-09-05-132333), und er ist nur an der Mutation zu sehen: entfernt man
+        # `kündig` ganz aus ROT, muss dieser Fall von False auf True kippen.
+        ("Ich schreibe die Kündigung und lege sie dir vor.", False),
+        # Die beiden übrigen Lookbehind-Zweige, je mit eigenem Fall. Ohne sie sind
+        # `(?<!anzu)` und `(?<!an)` allein über einen Zeichenketten-Vergleich gedeckt
+        # und von keinem Verhalten (Inspektor der Partizip-Abnahme, Befund B2).
+        ("Der Riegel hat recht - ich führe den Schritt aus, statt ihn anzukündigen. "
+         "Ich prüfe zuerst den Stand.", True),
+        ("Die Ankündigung war unpräzise formuliert. Ich messe den Stand nach.", True),
         ("Ich versuche es später noch einmal.", False),
         ("Soll ich die Mail an Saulius jetzt versenden?", False),
         ("Als Nächstes wäre der Deploy nach PROD fällig.", False),
