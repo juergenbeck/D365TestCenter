@@ -2,7 +2,7 @@
 # GENERATED FILE. DO NOT EDIT.
 # Source: werkzeuge/hook-sync/templates/python/check-turn-ende.py
 # Template-Version: codex-autarkie-v1
-# Source-SHA256: 789dbeedb03f1210cb3b48976bdcbb0e0ccea6c856146be290fb18e2759db782
+# Source-SHA256: f2275d6830bcec6134a671098164048b6a60029adf4abb3f0ff7f3490cab1b88
 """Stop-Hook: hält den Turn fest, solange die Antwort einen grünen Schritt benennt.
 
 Entscheid: ADR-2026-09-03-113147 (Das Anhalten des Turns wird geregelt, nicht die Form
@@ -246,6 +246,27 @@ def beurteile(nachricht):
     ende = letzte_abschnitte(nachricht)
     if not absatz:
         return False, ""
+    # ADR-2026-09-14-144316: Eine Systemnennung im Quellenabsatz verdeckte eine
+    # Ich-Empfehlung. Die Zusatzprüfung erteilt bewusst KEINE Handlungserlaubnis:
+    # Auch eine nur im Kontext genannte Freigabegrenze bleibt bindend.
+    if (ROT.search(ende) and not ROT.search(absatz)
+            and not WARTEND.search(absatz)
+            and re.search(r"\bich\s+(?:würde|empfehle)\b", absatz, re.IGNORECASE)
+            and ERLAUBT.search(absatz)):
+        return True, (
+            "Die Antwort empfiehlt einen konkreten nächsten Schritt, während ein "
+            "System- oder Risikobegriff im vorherigen Absatz die normale Prüfung "
+            "verdeckt. Prüfe vor dem Abschluss den nächsten Schritt des laufenden "
+            "Auftrags anhand der tatsächlichen Erlaubnis und Abhängigkeiten erneut. "
+            "Dieser Hinweis erteilt keine Freigabe. Auch Freigabegrenzen aus dem "
+            "vorherigen Absatz bleiben bindend. Ein unklarer Retest beginnt mit der "
+            "lesenden Klärung seiner Wirkung und vorhandenen Erlaubnis. Führe nur "
+            "bereits erlaubte und ausführbare Arbeit fort. Ist der Schritt erledigt, "
+            "tatsächlich blockiert oder freigabepflichtig, benenne das konkrete "
+            "Ergebnis oder die fehlende Voraussetzung und beende den Turn. "
+            "Ausdrückliche Stopps und reine Auskunftsaufträge bleiben maßgeblich; "
+            "erzeuge daraus keinen neuen Auftrag."
+        )
     # Rot wird über den weiteren Bereich geprüft: im Zweifel enden lassen.
     if ROT.search(ende):
         return False, ""
