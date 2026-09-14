@@ -242,6 +242,27 @@ def beurteile(nachricht):
     ende = letzte_abschnitte(nachricht)
     if not absatz:
         return False, ""
+    # ADR-2026-09-14-144316: Eine Systemnennung im Quellenabsatz verdeckte eine
+    # Ich-Empfehlung. Die Zusatzprüfung erteilt bewusst KEINE Handlungserlaubnis:
+    # Auch eine nur im Kontext genannte Freigabegrenze bleibt bindend.
+    if (ROT.search(ende) and not ROT.search(absatz)
+            and not WARTEND.search(absatz)
+            and re.search(r"\bich\s+(?:würde|empfehle)\b", absatz, re.IGNORECASE)
+            and ERLAUBT.search(absatz)):
+        return True, (
+            "Die Antwort empfiehlt einen konkreten nächsten Schritt, während ein "
+            "System- oder Risikobegriff im vorherigen Absatz die normale Prüfung "
+            "verdeckt. Prüfe vor dem Abschluss den nächsten Schritt des laufenden "
+            "Auftrags anhand der tatsächlichen Erlaubnis und Abhängigkeiten erneut. "
+            "Dieser Hinweis erteilt keine Freigabe. Auch Freigabegrenzen aus dem "
+            "vorherigen Absatz bleiben bindend. Ein unklarer Retest beginnt mit der "
+            "lesenden Klärung seiner Wirkung und vorhandenen Erlaubnis. Führe nur "
+            "bereits erlaubte und ausführbare Arbeit fort. Ist der Schritt erledigt, "
+            "tatsächlich blockiert oder freigabepflichtig, benenne das konkrete "
+            "Ergebnis oder die fehlende Voraussetzung und beende den Turn. "
+            "Ausdrückliche Stopps und reine Auskunftsaufträge bleiben maßgeblich; "
+            "erzeuge daraus keinen neuen Auftrag."
+        )
     # Rot wird über den weiteren Bereich geprüft: im Zweifel enden lassen.
     if ROT.search(ende):
         return False, ""
