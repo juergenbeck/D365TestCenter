@@ -137,11 +137,11 @@ def main():
     if len(teile) != 2:
         return 0
     try:
-        voraus, zurueck = int(teile[0]), int(teile[1])
+        voraus, hinten = int(teile[0]), int(teile[1])
     except ValueError:
         return 0
 
-    if voraus == 0 and zurueck == 0:
+    if voraus == 0 and hinten == 0:
         return 0
 
     kopf = "REPO-STAND (Hook check-repo-stand), Branch %s" % branch
@@ -152,22 +152,22 @@ def main():
         if operation_laeuft(repo):
             melde("%s\n\nLokal %d Commit(s) hinter origin, NICHT nachgezogen: eine "
                   "Merge-, Rebase- oder Cherry-Pick-Operation ist noch offen.\n\n%s"
-                  % (kopf, zurueck, sichtbar))
+                  % (kopf, hinten, sichtbar))
             return 0
         rc, out, err = git_mit_sperre(repo, 'merge', '--ff-only', '--quiet', ziel)
         if rc == 0:
             melde("%s\n\n%d Commit(s) von origin nachgezogen (Fast-Forward). Der "
                   "Arbeitsbaum ist auf dem aktuellen Stand.\n\nNenne das dem User in "
-                  "einem Satz." % (kopf, zurueck))
+                  "einem Satz." % (kopf, hinten))
             return 0
         melde("%s\n\nLokal %d Commit(s) hinter origin, NICHT nachgezogen. git hat den "
               "Fast-Forward verweigert und nichts verändert:\n%s\n\nMeist überschreibt "
               "der neue Stand eine uncommittete Datei. Diese Datei committen (falls "
               "eigene Arbeit) und danach:  git merge --ff-only %s\n\n%s"
-              % (kopf, zurueck, auszug(err or out), ziel, sichtbar))
+              % (kopf, hinten, auszug(err or out), ziel, sichtbar))
         return 0
 
-    if zurueck == 0:
+    if hinten == 0:
         melde("%s\n\nLokal %d Commit(s) vor origin, also noch nicht gepusht. Auf anderen "
               "Rechnern fehlt dieser Stand.\n\nPushen:  git push origin %s\n\n%s"
               % (kopf, voraus, branch, sichtbar))
@@ -181,7 +181,7 @@ def main():
         melde("%s\n\nDIVERGENZ: lokal %d Commit(s) voraus, %d zurück. NICHT nachgezogen, "
               "weil %s\n\nEin Merge wird nur bei sauberem Arbeitsbaum versucht, damit ein "
               "Abbruch keine Änderung mitreißt. Erst committen, dann:  git merge --no-edit "
-              "%s\n\n%s" % (kopf, voraus, zurueck, grund, ziel, sichtbar))
+              "%s\n\n%s" % (kopf, voraus, hinten, grund, ziel, sichtbar))
         return 0
 
     rc, out, err = git_mit_sperre(repo, 'merge', '--no-edit', '--quiet', ziel)
@@ -189,7 +189,7 @@ def main():
         melde("%s\n\nDivergenz aufgelöst: %d Commit(s) von origin per Merge nachgezogen, "
               "%d lokale Commit(s) bleiben erhalten und sind noch nicht gepusht.\n\n"
               "Pushen:  git push origin %s\n\nNenne das dem User in einem Satz."
-              % (kopf, zurueck, voraus, branch))
+              % (kopf, hinten, voraus, branch))
         return 0
 
     merge_head = git_pfad(repo, 'MERGE_HEAD')
@@ -199,7 +199,7 @@ def main():
           "gescheitert und wurde zurückgenommen, der Stand ist unverändert:\n%s\n\n"
           "Das muss inhaltlich entschieden werden:  git merge %s  und die Konflikte "
           "als Vereinigung beider Seiten auflösen.\n\n%s"
-          % (kopf, voraus, zurueck, auszug(err or out), ziel, sichtbar))
+          % (kopf, voraus, hinten, auszug(err or out), ziel, sichtbar))
     return 0
 
 
