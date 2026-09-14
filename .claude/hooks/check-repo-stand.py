@@ -1,67 +1,83 @@
 #!/usr/bin/env python3
-"""SessionStart-Hook: misst den Stand gegen origin und meldet ihn, ohne einzugreifen.
+"""SessionStart-Hook: gleicht den Stand mit origin ab und zieht ihn selbst nach.
 
 AUTO-GENERATED aus ~/.claude/hook-templates/python/check-repo-stand.py
 (ausgerollt von Sync-UmlautTriggers.ps1). Nicht von Hand editieren, sondern am
 Template ändern und neu syncen.
 
-Anlass (TOOL-0034, belegt am 30.08.2026): Der bisherige SessionStart-Sync setzte
-`git pull --rebase --autostash origin <branch>` ab und warnte bei jedem Fehlschlag mit
-der schärfsten Meldung, die der Sessionstart kennt. Diese Warnung war über Wochen
-unbegründet, belegt in 15 Handovers seit dem 19.07.2026 und in 17 Sync-Logs, einmal
-mit einer falschen Verlustmeldung als Folge.
+Maßstab (Jürgen, 14.09.2026, ADR-2026-09-14-085634): Jedes Repo soll sich anfühlen wie
+OneDrive, eine Sitzung startet also auf dem aktuellen Stand. Vom 30.08. bis 14.09.2026
+hat dieser Hook nur gemessen und gemeldet; das war ein Irrtum und ist aufgehoben.
 
-Die Ursache ist gemessen: ein Wettlauf um .git/FETCH_HEAD. `git pull` schreibt diese
-Datei und liest sie danach wieder, um das Rebase-Ziel zu bestimmen. Schreibt ein
-zweiter git-Prozess im selben Arbeitsbaum in dieses Zeitfenster, liest der Rebase-Teil
-mehr mergefähige Einträge, als sein eigener Fetch hinterlassen hat, und bricht ab.
-Gemessen mit drei gleichzeitigen Prozessen: 157 Fehler in 180 Läufen, während
-derselbe Aufruf allein in 60 Läufen kein einziges Mal scheiterte.
+Die Bauart folgt zwei Messungen aus TOOL-0034 (30.08.2026), die weiter gelten:
 
-Zwei Konsequenzen stecken in diesem Hook:
+1. `git pull` schreibt und liest `.git/FETCH_HEAD`. Laufen mehrere git-Prozesse im selben
+   Arbeitsbaum gleichzeitig, bricht der Rebase-Teil ab (157 Fehler in 180 Läufen mit drei
+   parallelen Prozessen). Deshalb holt der Hook mit --no-write-fetch-head und ruft nie
+   `git pull` auf.
+2. Fetch plus Rebase mit Autostash verlor bei unsauberem Arbeitsbaum und Gleichzeitigkeit
+   eine lokale Änderung ohne Eintrag in `git stash list`. Deshalb gibt es hier keinen
+   Stash und keinen Rebase.
 
-1. Er rebased NICHT mehr. Er misst und meldet. Damit fällt der Fehlalarm weg, und
-   zugleich ist ein Verlustrisiko ausgeschlossen, das bei der naheliegenden Abhilfe
-   (fetch und rebase getrennt) gemessen wurde: bei unsauberem Arbeitsbaum und
-   Gleichzeitigkeit verschwand dort die lokale Änderung aus dem Arbeitsbaum, ohne
-   Eintrag in `git stash list`, auffindbar nur noch über `git fsck --lost-found`.
+Nachgezogen wird so:
 
-2. Sein eigener Fetch läuft mit --no-write-fetch-head und fasst die umkämpfte Datei
-   deshalb gar nicht erst an. Ohne diesen Schalter würde der Hook zwar selbst nicht
-   mehr scheitern, aber weiterhin parallele Läufe zu Fall bringen: gemessen 21 Fehler
-   in 60 Läufen eines fremden Prozesses, allein durch einen nebenher laufenden Fetch.
+- nur hinter origin: `git merge --ff-only`. Würde eine lokale Änderung überschrieben,
+  verweigert git selbst und fasst nichts an.
+- voraus und hinter: `git merge --no-edit`, aber nur bei sauberem getrackten Arbeitsbaum,
+  weil ein `merge --abort` uncommittete Änderungen mitreißen kann. Kein Rebase, denn er
+  stellt HEAD zwischenzeitlich ab, und ein Commit einer parallelen Sitzung landete dann
+  auf einem abgehängten HEAD.
+- nur voraus: nichts ändern, Push empfehlen.
 
-Das Nachziehen ist damit bewusst Handarbeit und wird nur noch empfohlen, nicht
-ausgeführt. Der Schwester-Hook check-git-sync.py prüft weiterhin auf Konfliktreste,
-liegengebliebenen Autostash und abgebrochene Operationen.
+Was nicht nachgezogen werden kann, wird mit Grund gemeldet. Der Schwester-Hook
+check-git-sync.py prüft weiterhin auf Konfliktreste und abgebrochene Operationen.
 
 ensure_ascii=True gegen die Windows-cp1252-stdout-Falle.
-fail-open: jeder Fehler -> Exit 0, ohne Ausgabe.
+fail-open: jeder unerwartete Fehler -> Exit 0, ohne Ausgabe.
 """
 import json
 import os
 import subprocess
 import sys
+import time
 
 try:
     sys.stdout.reconfigure(encoding='utf-8')
 except Exception:
     pass
 
-TIMEOUT = 20
+FETCH_TIMEOUT = 10
+LOCAL_TIMEOUT = 6
+LOCK_VERSUCHE = 3
+LOCK_PAUSE = 0.5
 
 
-def git(repo, *args):
-    """git-Aufruf, gibt (rc, stdout) zurück."""
+def git(repo, *args, timeout=LOCAL_TIMEOUT):
+    """git-Aufruf, gibt (rc, stdout, stderr) zurück."""
+    env = dict(os.environ)
+    env['GIT_TERMINAL_PROMPT'] = '0'
+    env['GIT_EDITOR'] = 'true'
     try:
         r = subprocess.run(
             ['git', '-C', repo] + list(args),
             capture_output=True, text=True, encoding='utf-8',
-            errors='replace', timeout=TIMEOUT,
+            errors='replace', timeout=timeout, env=env,
         )
-        return r.returncode, r.stdout.strip()
-    except Exception:
-        return 1, ''
+        return r.returncode, r.stdout.strip(), r.stderr.strip()
+    except Exception as exc:
+        return 1, '', str(exc)
+
+
+def git_mit_sperre(repo, *args):
+    """Wiederholt kurz, solange nur .git/index.lock belegt ist."""
+    rc, out, err = 1, '', ''
+    for versuch in range(LOCK_VERSUCHE):
+        rc, out, err = git(repo, *args)
+        if rc == 0 or 'index.lock' not in (out + err):
+            break
+        if versuch < LOCK_VERSUCHE - 1:
+            time.sleep(LOCK_PAUSE)
+    return rc, out, err
 
 
 def melde(text):
@@ -71,82 +87,119 @@ def melde(text):
         ensure_ascii=True))
 
 
+def git_pfad(repo, name):
+    rc, out, _ = git(repo, 'rev-parse', '--git-path', name)
+    if rc != 0 or not out:
+        return None
+    return out if os.path.isabs(out) else os.path.join(repo, out)
+
+
+def operation_laeuft(repo):
+    for name in ('MERGE_HEAD', 'rebase-merge', 'rebase-apply', 'CHERRY_PICK_HEAD'):
+        pfad = git_pfad(repo, name)
+        if pfad and os.path.exists(pfad):
+            return True
+    return False
+
+
+def auszug(text, zeilen=8):
+    teile = [z for z in text.splitlines() if z.strip()]
+    return '\n'.join('   ' + z for z in teile[:zeilen])
+
+
 def main():
     repo = os.environ.get('CLAUDE_PROJECT_DIR') or '.'
-    rc, _ = git(repo, 'rev-parse', '--git-dir')
+    rc, _, _ = git(repo, 'rev-parse', '--git-dir')
     if rc != 0:
         return 0
 
-    rc, branch = git(repo, 'rev-parse', '--abbrev-ref', 'HEAD')
+    rc, branch, _ = git(repo, 'rev-parse', '--abbrev-ref', 'HEAD')
     if rc != 0 or not branch or branch == 'HEAD':
         return 0
+    ziel = 'origin/%s' % branch
 
     # Schonend holen: aktualisiert refs/remotes/origin/<branch>, lässt FETCH_HEAD
-    # unberührt und stört damit keinen parallel laufenden Sync.
-    rc, _ = git(repo, 'fetch', '--no-write-fetch-head', 'origin', branch, '--quiet')
+    # unberührt und stört damit keinen parallel laufenden git-Prozess.
+    rc, _, _ = git(repo, 'fetch', '--no-write-fetch-head', 'origin', branch, '--quiet',
+                   timeout=FETCH_TIMEOUT)
     if rc != 0:
         melde(
             "REPO-STAND NICHT PRÜFBAR (Hook check-repo-stand)\n\n"
             "Der Abgleich mit origin ist fehlgeschlagen, etwa wegen fehlender "
             "Netzverbindung oder Anmeldung. Der lokale Stand kann veraltet sein.\n\n"
-            "Vor Aussagen zum Repo-Stand von Hand prüfen:  "
-            "git fetch origin %s && git status -sb" % branch
+            "Von Hand nachziehen:  git fetch origin %s && git merge --ff-only %s\n\n"
+            "MELDE DAS DEM USER SICHTBAR." % (branch, ziel)
         )
         return 0
 
-    rc, zahlen = git(repo, 'rev-list', '--left-right', '--count',
-                     'HEAD...origin/%s' % branch)
-    if rc != 0 or not zahlen:
-        return 0
-    teile = zahlen.split()
+    rc, zahlen, _ = git(repo, 'rev-list', '--left-right', '--count', 'HEAD...%s' % ziel)
+    teile = zahlen.split() if rc == 0 else []
     if len(teile) != 2:
         return 0
     try:
-        voraus, zurück = int(teile[0]), int(teile[1])
+        voraus, zurueck = int(teile[0]), int(teile[1])
     except ValueError:
         return 0
 
-    if voraus == 0 and zurück == 0:
+    if voraus == 0 and zurueck == 0:
         return 0
 
-    kopf = "REPO-STAND WEICHT VON ORIGIN AB (Hook check-repo-stand)"
-    zeilen = [kopf, "", "Branch: %s" % branch]
+    kopf = "REPO-STAND (Hook check-repo-stand), Branch %s" % branch
+    sichtbar = ("MELDE DAS DEM USER SICHTBAR, bevor du inhaltlich weiterarbeitest. "
+                "Diese Meldung sieht nur Claude, nicht der User.")
 
-    if voraus and zurück:
-        zeilen += [
-            "",
-            "ECHTE DIVERGENZ: lokal %d Commit(s) voraus, gleichzeitig %d zurück."
-            % (voraus, zurück),
-            "Beide Seiten haben sich bewegt. Das ist der Fall, der von Hand "
-            "entschieden werden muss, BEVOR Stand-Aussagen getroffen werden.",
-            "",
-            "Vorschlag:  git pull --rebase --autostash origin %s" % branch,
-            "Danach prüfen:  git diff --name-only --diff-filter=U  und  git stash list",
-        ]
-    elif zurück:
-        zeilen += [
-            "",
-            "Lokal %d Commit(s) hinter origin. Kein Konflikt, nur veraltet: parallele "
-            "Sessions oder der Infopool-Sync haben inzwischen gepusht." % zurück,
-            "",
-            "Nachziehen (dieser Hook tut es bewusst NICHT selbst):",
-            "   git pull --rebase --autostash origin %s" % branch,
-        ]
-    else:
-        zeilen += [
-            "",
-            "Lokal %d Commit(s) vor origin, also noch nicht gepusht. Kein Fehler, "
-            "aber auf anderen Rechnern fehlt dieser Stand." % voraus,
-            "",
-            "Pushen:  git push origin %s" % branch,
-        ]
+    if voraus == 0:
+        if operation_laeuft(repo):
+            melde("%s\n\nLokal %d Commit(s) hinter origin, NICHT nachgezogen: eine "
+                  "Merge-, Rebase- oder Cherry-Pick-Operation ist noch offen.\n\n%s"
+                  % (kopf, zurueck, sichtbar))
+            return 0
+        rc, out, err = git_mit_sperre(repo, 'merge', '--ff-only', '--quiet', ziel)
+        if rc == 0:
+            melde("%s\n\n%d Commit(s) von origin nachgezogen (Fast-Forward). Der "
+                  "Arbeitsbaum ist auf dem aktuellen Stand.\n\nNenne das dem User in "
+                  "einem Satz." % (kopf, zurueck))
+            return 0
+        melde("%s\n\nLokal %d Commit(s) hinter origin, NICHT nachgezogen. git hat den "
+              "Fast-Forward verweigert und nichts verändert:\n%s\n\nMeist überschreibt "
+              "der neue Stand eine uncommittete Datei. Diese Datei committen (falls "
+              "eigene Arbeit) und danach:  git merge --ff-only %s\n\n%s"
+              % (kopf, zurueck, auszug(err or out), ziel, sichtbar))
+        return 0
 
-    zeilen += [
-        "",
-        "MELDE DAS DEM USER SICHTBAR, bevor du inhaltlich weiterarbeitest. Diese "
-        "Meldung sieht nur Claude, nicht der User.",
-    ]
-    melde('\n'.join(zeilen))
+    if zurueck == 0:
+        melde("%s\n\nLokal %d Commit(s) vor origin, also noch nicht gepusht. Auf anderen "
+              "Rechnern fehlt dieser Stand.\n\nPushen:  git push origin %s\n\n%s"
+              % (kopf, voraus, branch, sichtbar))
+        return 0
+
+    # Voraus und hinter: Merge nur bei sauberem getrackten Arbeitsbaum.
+    rc, status, _ = git(repo, 'status', '--porcelain', '--untracked-files=no')
+    if rc != 0 or status or operation_laeuft(repo):
+        grund = ("uncommittete Änderungen an getrackten Dateien:\n%s" % auszug(status)
+                 if status else "eine Operation ist noch offen oder der Status war nicht lesbar")
+        melde("%s\n\nDIVERGENZ: lokal %d Commit(s) voraus, %d zurück. NICHT nachgezogen, "
+              "weil %s\n\nEin Merge wird nur bei sauberem Arbeitsbaum versucht, damit ein "
+              "Abbruch keine Änderung mitreißt. Erst committen, dann:  git merge --no-edit "
+              "%s\n\n%s" % (kopf, voraus, zurueck, grund, ziel, sichtbar))
+        return 0
+
+    rc, out, err = git_mit_sperre(repo, 'merge', '--no-edit', '--quiet', ziel)
+    if rc == 0:
+        melde("%s\n\nDivergenz aufgelöst: %d Commit(s) von origin per Merge nachgezogen, "
+              "%d lokale Commit(s) bleiben erhalten und sind noch nicht gepusht.\n\n"
+              "Pushen:  git push origin %s\n\nNenne das dem User in einem Satz."
+              % (kopf, zurueck, voraus, branch))
+        return 0
+
+    merge_head = git_pfad(repo, 'MERGE_HEAD')
+    if merge_head and os.path.exists(merge_head):
+        git(repo, 'merge', '--abort')
+    melde("%s\n\nDIVERGENZ: lokal %d Commit(s) voraus, %d zurück. Der Merge ist "
+          "gescheitert und wurde zurückgenommen, der Stand ist unverändert:\n%s\n\n"
+          "Das muss inhaltlich entschieden werden:  git merge %s  und die Konflikte "
+          "als Vereinigung beider Seiten auflösen.\n\n%s"
+          % (kopf, voraus, zurueck, auszug(err or out), ziel, sichtbar))
     return 0
 
 
