@@ -2,7 +2,7 @@
 # GENERATED FILE. DO NOT EDIT.
 # Source: werkzeuge/hook-sync/templates/python/check-turn-ende.py
 # Template-Version: codex-autarkie-v1
-# Source-SHA256: ced9b5083de4019b448ee0d57b053535b57345f7a7dc8f35afa19f6d0e072540
+# Source-SHA256: 97d31f21c0a1b8138084bfa3f68df6d29a17e402dac5304ec8812551ed5d8f06
 """Stop-Hook: hält den Turn fest, solange die Antwort einen grünen Schritt benennt.
 
 Entscheid: ADR-2026-09-03-113147 (Das Anhalten des Turns wird geregelt, nicht die Form
@@ -251,6 +251,27 @@ def step_sentences(text):
     return re.split(r"(?<=[.!?])\s+|\n+", text)
 
 
+def lesende_systempruefung(satz):
+    """Begrenzte Neubewertung, keine Erlaubnis: PROD kann Datenherkunft sein.
+
+    ADR-2026-09-15-134750. Nur explizit lesende Kandidaten; weitere Risiken,
+    Verneinungen und gemischte Schreibhandlungen bleiben konservativ gesperrt.
+    """
+    if not re.search(r"\blesend\b", satz, re.IGNORECASE):
+        return False
+    if re.search(r"\b(?:nicht|kein\w*)\b", satz, re.IGNORECASE):
+        return False
+    if re.search(
+        r"\b(?:lösch\w*|schreib\w*|änder\w*|veränder\w*|bereinig(?:e|en|st|t)|"
+        r"patch\w*|updat\w*|import\w*|deploy\w*|erstell\w*|anleg\w*|"
+        r"entfern\w*|überschreib\w*|korrigier\w*|reparier\w*|"
+        r"apply|delete|insert|truncate|merge)\b", satz, re.IGNORECASE
+    ):
+        return False
+    return all(re.fullmatch(r"prod|produktiv", m.group(), re.IGNORECASE)
+               for m in ROT.finditer(satz))
+
+
 def next_step_sentence(absatz):
     """Explizite nächste Schritte erkennen, ohne daraus eine Erlaubnis abzuleiten."""
     if WARTEND.search(absatz):
@@ -264,7 +285,8 @@ def next_step_sentence(absatz):
         if satz.rstrip().endswith("?"):
             continue
         if ROT.search(satz):
-            continue
+            if not lesende_systempruefung(satz):
+                continue
         return satz.strip()
     return None
 
