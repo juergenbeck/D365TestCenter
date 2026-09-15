@@ -247,6 +247,27 @@ def step_sentences(text):
     return re.split(r"(?<=[.!?])\s+|\n+", text)
 
 
+def lesende_systempruefung(satz):
+    """Begrenzte Neubewertung, keine Erlaubnis: PROD kann Datenherkunft sein.
+
+    ADR-2026-09-15-134750. Nur explizit lesende Kandidaten; weitere Risiken,
+    Verneinungen und gemischte Schreibhandlungen bleiben konservativ gesperrt.
+    """
+    if not re.search(r"\blesend\b", satz, re.IGNORECASE):
+        return False
+    if re.search(r"\b(?:nicht|kein\w*)\b", satz, re.IGNORECASE):
+        return False
+    if re.search(
+        r"\b(?:lösch\w*|schreib\w*|änder\w*|veränder\w*|bereinig(?:e|en|st|t)|"
+        r"patch\w*|updat\w*|import\w*|deploy\w*|erstell\w*|anleg\w*|"
+        r"entfern\w*|überschreib\w*|korrigier\w*|reparier\w*|"
+        r"apply|delete|insert|truncate|merge)\b", satz, re.IGNORECASE
+    ):
+        return False
+    return all(re.fullmatch(r"prod|produktiv", m.group(), re.IGNORECASE)
+               for m in ROT.finditer(satz))
+
+
 def next_step_sentence(absatz):
     """Explizite nächste Schritte erkennen, ohne daraus eine Erlaubnis abzuleiten."""
     if WARTEND.search(absatz):
@@ -260,7 +281,8 @@ def next_step_sentence(absatz):
         if satz.rstrip().endswith("?"):
             continue
         if ROT.search(satz):
-            continue
+            if not lesende_systempruefung(satz):
+                continue
         return satz.strip()
     return None
 
