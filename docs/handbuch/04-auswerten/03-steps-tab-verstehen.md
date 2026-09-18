@@ -86,10 +86,10 @@ Klick eine Zeile an um das Step-Detail zu öffnen:
 
 Nur bei `Assert`-Steps gefüllt:
 
-- **Feld** (`jbe_assertionfield`) — was wurde geprüft
-- **Operator** (`jbe_assertionoperator`) — welche Vergleichslogik
-- **Erwartet** (`jbe_expectedvalue`) — was sollte drinstehen
-- **Tatsächlich** (`jbe_actualvalue`) — was war's wirklich
+- **Feld** (`jbe_assertionfield`): was wurde geprüft
+- **Operator** (`jbe_assertionoperator`): welche Vergleichslogik
+- **Erwartet** (`jbe_expectedvalue`): was sollte drinstehen
+- **Tatsächlich** (`jbe_actualvalue`): was war's wirklich
 
 Die Differenz zwischen **Erwartet** und **Tatsächlich** ist deine
 wichtigste Debug-Information.
@@ -105,9 +105,9 @@ dir anschauen.
 
 ## Input- und Output-Daten
 
-- **Input-Daten** (`jbe_inputdata`) — das Roh-JSON das diese Action
+- **Input-Daten** (`jbe_inputdata`): das Roh-JSON das diese Action
   ausgelöst hat (mit aufgelösten Platzhaltern).
-- **Output-Daten** (`jbe_outputdata`) — die Antwort vom Server (bei
+- **Output-Daten** (`jbe_outputdata`): die Antwort vom Server (bei
   Bedarf gekürzt).
 
 Die meisten Tests brauchen diese Felder nie. Bei tief verschachtelten
@@ -129,10 +129,10 @@ Die Engine schreibt:
 Ein erfahrener Leser überfliegt den Step-Tab so:
 
 1. **Alle Steps auf Erfolg?** Super, Test ist sauber.
-2. **Welcher Step hat gekippt?** — oft gibt es nur einen Assert-Fehler,
+2. **Welcher Step hat gekippt?** oft gibt es nur einen Assert-Fehler,
    alle anderen sind OK.
-3. **Was war Erwartet vs Tatsächlich?** — hier kommt die Diagnose her.
-4. **Dauerte der Step ungewöhnlich lange?** — Hinweis auf Timing-
+3. **Was war Erwartet vs Tatsächlich?** hier kommt die Diagnose her.
+4. **Dauerte der Step ungewöhnlich lange?** Hinweis auf Timing-
    Probleme.
 
 ## Dauern pro Action-Typ (Erfahrungswerte)

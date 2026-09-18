@@ -44,9 +44,13 @@ Eine einzige HTML-Datei (~8700 Zeilen), deployed als Dataverse Web Resource. Ent
 ### 1. Deployment
 
 ```powershell
-# deploy-config.json mit der eigenen Umgebungs-URL anpassen
-.\scripts\Deploy-Solution.ps1
+pac auth create --environment https://your-org.crm4.dynamics.com
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
 ```
+
+Die Solution bringt Publisher, Tabellen, OptionSets, App, Web Resources, Plugin-Paket, Custom APIs und
+Plugin-Steps mit. Details: `docs/05_deployment-handbuch.md`.
 
 ### 2. Testfälle importieren
 

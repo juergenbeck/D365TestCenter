@@ -1,4 +1,4 @@
-# Quickstart — 5 Beispiele in 15 Minuten
+# Quickstart: 5 Beispiele in 15 Minuten
 
 Fünf progressiv aufgebaute Beispiele, die dich durch die wichtigsten
 Features führen. Am Ende des Kapitels hast du fünf laufende Tests und
@@ -8,7 +8,7 @@ alle Kern-Patterns gesehen.
 deinem Browser. Du brauchst Schreibrechte auf `jbe_testcase` und
 `jbe_testrun`.
 
-## QS-01 — Account anlegen und Website setzen
+## QS-01: Account anlegen und Website setzen
 
 **Ziel:** Einen Account erzeugen, die Website setzen, prüfen dass sie
 korrekt gespeichert wurde. Drei Actions, das minimale Skelett.
@@ -136,11 +136,11 @@ Testschritte  (3 Einträge + Cleanup)
 +----+--------------+-------+-------------+----------------------+
 ```
 
-Gratulation — dein erster Test läuft.
+Gratulation, dein erster Test läuft.
 
 ---
 
-## QS-02 — Contact an Account, Lookup-Binding
+## QS-02: Contact an Account, Lookup-Binding
 
 **Ziel:** Account mit Child-Contact anlegen, Contact aktualisieren, beide
 Records im Dataverse-Graph verbinden.
@@ -218,7 +218,7 @@ Records im Dataverse-Graph verbinden.
 
 - `"parentcustomerid_account@odata.bind": "/accounts({acc.id})"`
   Das ist der kanonische Weg, einen **polymorphen** Lookup-Wert beim
-  Create zu setzen — `parentcustomerid` kann auf Account oder Contact
+  Create zu setzen, `parentcustomerid` kann auf Account oder Contact
   zeigen, deshalb das `_account`-Suffix für die Disambiguierung.
 
   **Single-Target-Lookups** (Lookup mit nur einer Ziel-Entity, z.B.
@@ -255,7 +255,7 @@ Nach dem Speichern und einem Run-Start erwartest du:
 
 ---
 
-## QS-03 — Lead qualifizieren (Custom Action)
+## QS-03: Lead qualifizieren (Custom Action)
 
 **Ziel:** Einen Lead anlegen, per `QualifyLead`-Action qualifizieren, und
 prüfen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
@@ -263,7 +263,7 @@ prüfen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 
 **Was du lernst:**
 
-- `ExecuteRequest` — Microsoft-Standard-Messages wie `QualifyLead`, `Merge`,
+- `ExecuteRequest`, Microsoft-Standard-Messages wie `QualifyLead`, `Merge`,
   `SetState` aufrufen
 - Parameter-Typen mit `$type`: `EntityReference`, `OptionSetValue`,
   `Guid`, `Entity`, `Money`
@@ -371,7 +371,7 @@ prüfen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 - **Warum `waitSeconds: 3`?** `QualifyLead` triggert nachgelagerte
   Plugins (Contact/Opportunity werden asynchron angelegt). Das Test
   Center wartet 3 Sekunden, bevor die Asserts loslaufen. Eleganter ist
-  `WaitForFieldValue` oder `WaitForRecord` — siehe QS-04.
+  `WaitForFieldValue` oder `WaitForRecord`, siehe QS-04.
 
 - **`Status: 3`** ist der OptionSetValue für "Qualified". Die Werte sind
   entity-spezifisch; für `lead` sind `3=Qualified`, `4=Disqualified`.
@@ -392,7 +392,7 @@ prüfen dass der Lead deaktiviert wurde und die erwarteten Folge-Records
 
 ---
 
-## QS-04 — Async Plugin: WaitForFieldValue
+## QS-04: Async Plugin: WaitForFieldValue
 
 **Ziel:** Eine Opportunity schließen (`WinOpportunity`), das triggert
 ein Folge-Plugin das `actualrevenue` setzt. Wir warten gezielt auf den
@@ -400,7 +400,7 @@ Feldwert statt blind Sekunden zu verbrennen.
 
 **Was du lernst:**
 
-- `WaitForFieldValue` — intelligenter Ersatz für `waitSeconds`
+- `WaitForFieldValue`, intelligenter Ersatz für `waitSeconds`
 - Timeout-Strategie
 - Wann `Wait` sinnvoll ist und wann nicht
 
@@ -503,7 +503,7 @@ Feldwert statt blind Sekunden zu verbrennen.
 
 ---
 
-## QS-05 — Record löschen und Negativ-Assert
+## QS-05: Record löschen und Negativ-Assert
 
 **Ziel:** Einen Task anlegen, löschen, prüfen dass er wirklich weg ist.
 Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
@@ -566,7 +566,7 @@ Das zeigt: auch "etwas existiert nicht mehr" ist eine valide Assertion.
 ```
 
 **Warum nicht einfach `Record`-Assert nach dem Delete?** Weil der Record
-weg ist — ein `target: "Record"` kann ihn nicht mehr laden. `target:
+weg ist, ein `target: "Record"` kann ihn nicht mehr laden. `target:
 "Query"` mit `NotExists` ist der richtige Weg: das Test Center macht eine
 Abfrage und prüfte dass sie 0 Treffer liefert.
 

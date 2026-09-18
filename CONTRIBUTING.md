@@ -121,9 +121,9 @@ Examples:
 See `docs/05_deployment-handbuch.md` for detailed instructions.
 
 Quick start:
-1. Edit `scripts/deploy-config.json` with your environment URL
-2. Set `$headers` with a valid Bearer token
-3. Run `scripts/Deploy-Solution.ps1`
+1. Sign in with the Power Platform CLI: `pac auth create --environment <url>`
+2. Build the package: `pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged`
+3. Import it: `pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins`
 
 ## License
 

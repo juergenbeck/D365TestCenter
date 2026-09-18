@@ -110,7 +110,7 @@ Mit `--strict` ist auch eine Warning ein Build-Failure. Nützlich für CI.
 
 Beim normalen Run via Cli, Custom-API (`jbe_RunIntegrationTests`) oder
 CRUD-Trigger-Plugin (`RunTestsOnStatusChange`) läuft derselbe Validator
-automatisch — die Logik lebt in `D365TestCenter.Core`, also im
+automatisch, die Logik lebt in `D365TestCenter.Core`, also im
 Engine-Pfad, der alle drei Aufrufer nutzen (ADR-0003 Single-Engine).
 
 Bei einem Error-Finding sieht der Tester einen kurzen Test-Run-Eintrag:

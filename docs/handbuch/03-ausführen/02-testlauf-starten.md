@@ -44,13 +44,13 @@ Klick auf **+ Neu**.
 
 ### Die Felder im Detail
 
-**Name** — frei wählbar. Gute Beispiele:
+**Name**: frei wählbar. Gute Beispiele:
 - `Regression vor Release`
 - `Sprint 63 Testlauf`
 - `Smoke Test 24.04 nachmittags`
 - `MGR01 nach Plugin-Fix`
 
-**Testcase-Filter** — steuert WELCHE Tests laufen:
+**Testcase-Filter**: steuert WELCHE Tests laufen:
 
 | Filter | Wirkung |
 |---|---|
@@ -66,7 +66,7 @@ Klick auf **+ Neu**.
 **Records behalten** (`jbe_keeprecords`):
 
 - **Nicht angehakt** (Default): Testdaten werden nach dem Lauf gelöscht.
-- **Angehakt**: Testdaten bleiben — nützlich wenn du nach dem Lauf
+- **Angehakt**: Testdaten bleiben, nützlich wenn du nach dem Lauf
   manuell im Browser verifizieren willst was passiert ist.
 
 ## Schritt 3: Speichern = Start
@@ -80,7 +80,7 @@ geworden und arbeitet den Lauf im Hintergrund ab.
 ## Schritt 4: Zuschauen
 
 Auf derselben Seite siehst du live die Aktualisierungen (durch den Browser-
-Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
+Cache kann es 2-3 Sekunden brauchen, notfalls **F5** drücken):
 
 ```
 +-- Testlauf: Regression 24.04 ---------------------------+
@@ -129,13 +129,13 @@ Richtlinien:
 
 **Sandbox-Timeout:** D365 Plugins haben eine 2-Minuten-Grenze pro Sync-
 Aufruf. Das Test-Center arbeitet asynchron in Batches zu je ~12 Tests;
-jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen
-— die Engine macht das automatisch.
+jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen,
+die Engine macht das automatisch.
 
 ## Run abbrechen?
 
 Gibt es **nicht**. Einmal gestartet läuft der Lauf durch. Du kannst aber
-den Testrun-Record löschen, während er läuft — das beendet nicht das
+den Testrun-Record löschen, während er läuft, das beendet nicht das
 Plugin im Hintergrund, aber der Record ist weg und du siehst kein Ergebnis
 mehr. Nur für Notfälle.
 

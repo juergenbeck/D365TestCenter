@@ -19,7 +19,7 @@ wichtigsten Felder kennst, verstehst du jeden Testlauf.
            jbe_teststep (1 Record pro Action im Testcase)
 ```
 
-## jbe_testcase — die Testfall-Definition
+## jbe_testcase: die Testfall-Definition
 
 Enthält die komplette Beschreibung eines Testfalls im JSON-Format. Du
 schreibst den Test einmal, und er liegt von da an dauerhaft in dieser
@@ -40,7 +40,7 @@ Entity. Gleichnamige Test-IDs pro Umgebung sind nicht erlaubt.
 Das Feld `jbe_definitionjson` ist das Herzstück. Alles was der Test tun
 soll, steht dort als JSON-Objekt.
 
-## jbe_testrun — ein konkreter Lauf
+## jbe_testrun: ein konkreter Lauf
 
 Du legst pro Testlauf einen neuen Record an. Das Anlegen selbst startet
 die Ausführung automatisch.
@@ -74,7 +74,7 @@ ausgeführt werden:
 Ausstehend` speicherst, feuert das CRUD-Trigger-Plugin `RunTestsOnStatusChange`
 und der Lauf beginnt asynchron. Du musst also einfach den Record speichern.
 
-## jbe_testrunresult — Ergebnis pro Test
+## jbe_testrunresult: Ergebnis pro Test
 
 Pro Test im Lauf wird ein Ergebnis-Record geschrieben. Wenn dein Filter
 drei Tests trifft, hast du drei `jbe_testrunresult`-Records.
@@ -91,15 +91,15 @@ drei Tests trifft, hast du drei `jbe_testrunresult`-Records.
 
 **Outcomes im Detail:**
 
-- **Passed** — alle Actions haben geklappt, alle Asserts waren erfolgreich.
-- **Failed** — alle Actions liefen durch, aber mindestens eine Assert hat
+- **Passed**: alle Actions haben geklappt, alle Asserts waren erfolgreich.
+- **Failed**: alle Actions liefen durch, aber mindestens eine Assert hat
   einen unerwarteten Wert gefunden.
-- **Error** — eine Action hat geworfen (Netzwerkfehler, ungültiger Alias,
+- **Error**: eine Action hat geworfen (Netzwerkfehler, ungültiger Alias,
   Plugin-Exception, ...). Der Test wurde abgebrochen.
-- **Skipped** — der Test wurde vor dem ersten Step abgebrochen, meist
+- **Skipped**: der Test wurde vor dem ersten Step abgebrochen, meist
   wegen einem Problem beim Parsen der JSON-Definition.
 
-## jbe_teststep — Detail pro Action
+## jbe_teststep: Detail pro Action
 
 Für jede Action im Test wird ein Step-Record geschrieben. Das ist dein
 Log zum Mitlesen.
@@ -137,7 +137,7 @@ Ausnahmen:
   Cleanup erfasst (selten gebraucht).
 
 Die Test-Records selbst (`jbe_testrun`, `jbe_testrunresult`, `jbe_teststep`)
-werden **nie** automatisch gelöscht — sie sind dein Audit-Log.
+werden **nie** automatisch gelöscht, sie sind dein Audit-Log.
 
 ---
 

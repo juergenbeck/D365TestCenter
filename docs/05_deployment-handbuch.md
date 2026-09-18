@@ -4,238 +4,47 @@ Schritt-für-Schritt-Anleitung zur Einrichtung des Integration Test Centers in e
 
 ## Voraussetzungen
 
-- **Dynamics 365 / Dataverse-Umgebung** (z.B. DEV oder TEST)
-- **Security Role** mit Lese- und Schreibrechten auf die drei ITT-Entities (siehe Schritt 5)
-- **Solution-Publisher** mit eigenem Prefix (Standard: `jbe`)
-- **Zugriff auf das Maker Portal** (make.powerapps.com) oder alternativ PowerShell mit Dataverse Web API
+- **Dynamics 365 / Dataverse-Umgebung** (z.B. DEV oder TEST) und ein Benutzer mit der Rolle System Customizer
+  oder System Administrator für den Import
+- **Power Platform CLI** (`pac`), angemeldet an der Zielumgebung (`pac auth create --environment <url>`)
 - **Browser** mit aktivem CRM-Login (für die Web Resource)
 
-## Schritt 1: Publisher und Prefix konfigurieren
+Die Einrichtung läuft ausschließlich über den Import der Solution `D365TestCenter`. Die Solution bringt alle
+Bestandteile mit: Publisher `JBE` (Prefix `jbe`), die Tabellen `jbe_testcase`, `jbe_testrun`, `jbe_testrunresult`,
+`jbe_teststep` und `jbe_testchunk`, die globalen OptionSets, Formulare, Ansichten, die App `jbe_D365TestCenter`,
+die Web Resources (`jbe_/testcenter.html`, `jbe_/handbuch.html`, Demo-Packs), das Plugin-Paket
+`jbe_D365TestCenter`, die Custom APIs und die Plugin-Steps. Tabellen, Web Resources oder Custom APIs werden
+nicht von Hand oder per Skript angelegt.
 
-Im Quellcode der HTML-Datei (`jbe_testcenter.html`) befindet sich ein `CONFIG`-Block, der den Publisher-Prefix und die Entity-Namen definiert.
+## Schritt 1: Solution bauen und importieren
 
-### CONFIG-Block anpassen
+Aus dem Quellstand `solution/src` ein Paket bauen und in die Zielumgebung importieren:
 
-```javascript
-const CONFIG = {
-    prefix: "jbe",                    // Publisher-Prefix (ohne Unterstrich)
-    optionSetBase: 105710000,         // Basis für OptionSet-Werte
-    entities: {
-        testcase: "jbe_testcase",
-        testrun: "jbe_testrun",
-        testrunresult: "jbe_testrunresult"
-    },
-    // ... (Felder und OptionSets)
-};
+```powershell
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
 ```
 
-### Anpassung bei anderem Publisher-Prefix
+`solution/out/` ist per `.gitignore` ausgenommen. Für Test- und Produktivumgebungen gilt der Weg über eine
+managed Solution aus der Entwicklungsumgebung (Export mit `pac solution export --managed true`, Import mit
+`--stage-and-upgrade`); Details im Skill `d365-test-center`, Referenz `deployment.md`.
 
-Falls ein anderer Publisher verwendet wird (z.B. `xyz` statt `jbe`):
+Änderungen an der Oberfläche entstehen in `webresource/d365testcenter.html`; vor dem Paketbau die Datei nach
+`solution/src/WebResources/jbe_/testcenter.html` übernehmen, beide Stände sind byte-gleich zu halten.
 
-1. Den Wert `prefix` auf den eigenen Prefix ändern (z.B. `"xyz"`).
-2. Alle Entity-Namen unter `entities` anpassen (z.B. `"xyz_testcase"`).
-3. Alle Feld-Schema-Namen unter `fields` anpassen (z.B. `"xyz_testid"`).
-4. Die OptionSet-Basiswerte unter `optionSets` beibehalten oder an die eigenen OptionSet-Definitionen anpassen.
-5. Den Custom-API-Namen unter `actions.runTests` anpassen (z.B. `"xyz_RunIntegrationTests"`).
+## Schritt 2: Recovery-Flow anlegen (optional)
 
-## Schritt 2: Entities anlegen
+Der zeitgesteuerte Flow, der hängengebliebene Teilläufe über die Custom API `jbe_RecoverStaleChunks` wieder
+anstößt, ist nicht Teil der Solution, weil er eine umgebungsspezifische Connection Reference braucht. Er wird je
+Umgebung angelegt:
 
-Drei Custom Entities müssen in Dataverse erstellt werden. Dies kann manuell im Maker Portal oder per PowerShell-Skript (`Create-TestingEntities.ps1`) erfolgen.
-
-### Entity 1: Testfall (`jbe_testcase`)
-
-| Eigenschaft | Wert |
-|-------------|------|
-| Anzeigename | Testfall |
-| Schema-Name | `jbe_testcase` |
-| Pluralname | Testfälle |
-| EntitySet-Name | `jbe_testcases` |
-| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `TC-{SEQNUM:8}`) |
-
-**Felder:**
-
-| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
-|-------------|-------------|-----|---------|--------------|
-| `jbe_testid` | Test ID | String (100) | Pflicht (ApplicationRequired) | Eindeutige Test-ID (z.B. TC01, BTC01) |
-| `jbe_title` | Titel | String (300) | Pflicht (ApplicationRequired) | Beschreibender Titel |
-| `jbe_category` | Kategorie | OptionSet (Picklist) | Empfohlen | Testkategorie (siehe OptionSets) |
-| `jbe_tags` | Tags | String (500) | Optional | Kommagetrennte Tags |
-| `jbe_userstories` | User Stories | String (500) | Optional | Kommagetrennte Jira-Keys |
-| `jbe_enabled` | Aktiv | Boolean | Optional | Testfall aktiv/deaktiviert (Standard: true) |
-| `jbe_definitionjson` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
-
-**Alternate Key:** `jbe_testid` (ermöglicht Upsert bei Import).
-
-### Entity 2: Testlauf (`jbe_testrun`)
-
-| Eigenschaft | Wert |
-|-------------|------|
-| Anzeigename | Testlauf |
-| Schema-Name | `jbe_testrun` |
-| Pluralname | Testläufe |
-| EntitySet-Name | `jbe_testruns` |
-| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RUN-{SEQNUM:8}`) |
-
-**Felder:**
-
-| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
-|-------------|-------------|-----|---------|--------------|
-| `jbe_teststatus` | Status | OptionSet (Picklist) | Optional | Teststatus (siehe OptionSets) |
-| `jbe_passed` | Bestanden | Integer | Optional | Anzahl bestandener Tests |
-| `jbe_failed` | Fehlgeschlagen | Integer | Optional | Anzahl fehlgeschlagener Tests |
-| `jbe_total` | Gesamt | Integer | Optional | Gesamtanzahl Tests im Lauf |
-| `jbe_startedon` | Gestartet | DateTime | Optional | Startzeitpunkt |
-| `jbe_completedon` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
-| `jbe_testcasefilter` | Testfall-Filter | String (500) | Optional | Angewendeter Filter (z.B. `"*"`, `"story:PROJ-1234"`) |
-| `jbe_testsummary` | Zusammenfassung | Memo (Multiline) | Optional | Textuelle Zusammenfassung |
-| `jbe_fulllog` | Vollständiges Log | Memo (Multiline) | Optional | Komplettes Ausführungslog |
-| `jbe_testresult_json` | Ergebnis (JSON) | Memo (Multiline) | Optional | Strukturiertes Ergebnis als JSON |
-
-### Entity 3: Testergebnis (`jbe_testrunresult`)
-
-| Eigenschaft | Wert |
-|-------------|------|
-| Anzeigename | Testergebnis |
-| Schema-Name | `jbe_testrunresult` |
-| Pluralname | Testergebnisse |
-| EntitySet-Name | `jbe_testrunresults` |
-| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RES-{SEQNUM:8}`) |
-
-**Felder:**
-
-| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
-|-------------|-------------|-----|---------|--------------|
-| `jbe_testrunid` | Testlauf | Lookup auf `jbe_testrun` | Optional | Zugehöriger Testlauf |
-| `jbe_testcaseid` | Testfall | Lookup auf `jbe_testcase` | Optional | Zugehöriger Testfall |
-| `jbe_testid` | Test ID | String (100) | Optional | Test-ID (redundant für schnelle Abfragen) |
-| `jbe_outcome` | Ergebnis | OptionSet (Picklist) | Optional | Testergebnis (siehe OptionSets) |
-| `jbe_durationms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
-| `jbe_errormessage` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
-| `jbe_assertionresults` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
-
-### OptionSets
-
-Die folgenden globalen OptionSets müssen angelegt werden (Wertebereich ab `105710000`, Quelle: `solution/src/OptionSets/*.xml`):
-
-**jbe_teststatus (Teststatus):**
-
-| Wert | Label |
-|------|-------|
-| 105710000 | Ausstehend |
-| 105710001 | Läuft |
-| 105710002 | Abgeschlossen |
-| 105710003 | Fehler |
-| 105710004 | Aufteilung läuft |
-
-**jbe_testoutcome (Testergebnis):**
-
-| Wert | Label |
-|------|-------|
-| 105710000 | Passed |
-| 105710001 | Failed |
-| 105710002 | Skipped |
-| 105710003 | Error |
-
-Die UI-Konstante `CONFIG.optionSets.outcomeNotImpl` (`105710004`) hat im OptionSet keine Entsprechung.
-
-Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
-Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
-der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
-`scripts/Deploy-Solution.ps1` legt die OptionSets ohne Solution-Import an und rechnet dafür
-`publisherOptionValuePrefix` (10571 in `scripts/deploy-config.json`) mal 10000.
-
-**jbe_testcategory (Testkategorie):**
-
-| Wert | Label |
-|------|-------|
-| 105710000 | Update Source |
-| 105710001 | Create Source |
-| 105710002 | Delete Source |
-| 105710003 | Multi-Source |
-| 105710004 | Merge |
-| 105710005 | Custom API |
-| 105710006 | Config |
-| 105710007 | End-to-End |
-| 105710008 | Error Handling |
-
-**Wichtig:** Die OptionSet-Werte müssen exakt mit den im JavaScript definierten Werten übereinstimmen. Bei abweichenden Werten zeigt die UI falsche Labels an.
-
-## Schritt 3: Web Resource hochladen
-
-### 3.1 Web Resource erstellen
-
-1. Im Maker Portal die Solution öffnen (z.B. `jbe_testing`).
-2. Neue Web Resource hinzufügen:
-   - **Anzeigename:** Integration Test Center
-   - **Name (Schema):** `jbe_testcenter` (wird zu `jbe_/jbe_testcenter.html`)
-   - **Typ:** Webseite (HTML)
-   - **Inhalt:** Die Datei `jbe_testcenter.html` hochladen.
-3. Speichern und publizieren.
-
-### 3.2 Sitemap-Eintrag erstellen (optional, aber empfohlen)
-
-Einen Sitemap-Eintrag anlegen, damit das Test Center im CRM-Navigationsmenü erscheint:
-
-- **Bereich:** z.B. "Testing" oder unter einem bestehenden Bereich
-- **Gruppe:** z.B. "Integration Tests"
-- **SubArea-Typ:** Web Resource
-- **Web Resource:** `jbe_testcenter`
-
-Alternativ kann die Web Resource direkt per URL aufgerufen werden:
-
-```
-https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
+```powershell
+pwsh ./scripts/Create-RecurrenceFlow.ps1 -OrgUrl https://<umgebung>.crm4.dynamics.com `
+    -ClientId <id> -ClientSecret <secret> -TenantId <tenant> `
+    -ConnectionReferenceLogicalName <connection-reference-der-umgebung>
 ```
 
-### 3.3 Demo-Modus
-
-Wenn die Web Resource außerhalb von Dynamics 365 geöffnet wird (oder die CRM-API nicht erreichbar ist), aktiviert sich automatisch der **Demo-Modus**:
-
-- Alle Daten werden lokal simuliert (kein API-Zugriff nötig).
-- Ein gelbes Banner "Demo-Modus: Alle Daten sind simuliert" wird angezeigt.
-- Der Pack-Selector im Header ermöglicht den Wechsel zwischen Demo-Paketen.
-- Testläufe werden mit simulierten Ergebnissen ausgeführt (ca. 90% Pass-Rate, 1.5-2.5s pro Test).
-
-## Schritt 4: Custom API registrieren (optional)
-
-Die Custom API `jbe_RunIntegrationTests` ermöglicht die serverseitige Testausführung über ein Plugin.
-
-### API-Definition
-
-| Eigenschaft | Wert |
-|-------------|------|
-| Unique Name | `jbe_RunIntegrationTests` |
-| Display Name | Run Integration Tests |
-| Binding Type | Unbound (0) |
-| Is Function | Nein (Action) |
-| Beschreibung | Startet einen Integrationstestlauf |
-
-### Eingabeparameter
-
-| Name | Typ | Pflicht | Beschreibung |
-|------|-----|---------|--------------|
-| `TestRunId` | EntityReference (jbe_testrun) | Ja | Referenz auf den zu startenden Testlauf |
-
-### Plugin-Assembly
-
-Falls die Custom API serverseitig Tests ausführen soll:
-
-1. Plugin-Assembly mit der Testausführungslogik erstellen (IPlugin-Implementierung).
-2. Plugin-Step auf `jbe_RunIntegrationTests` (PostOperation, Synchronous) registrieren.
-3. Das Plugin liest den Testlauf-Record, führt die zugeordneten Testfälle aus und schreibt Ergebnisse zurück.
-
-**Hinweis:** Die Custom API ist optional. Das Test Center funktioniert auch ohne sie, indem der Testlauf clientseitig über die MockAPI/DemoMode-Simulation ausgeführt wird.
-
-### Weitere Custom APIs
-
-| API | Typ | Beschreibung |
-|-----|-----|--------------|
-| `jbe_GovernanceApiContact` | Action | Ruft die Governance-API für einen Kontakt auf |
-| `jbe_GovernanceApiContactSource` | Action | Ruft die Governance-API für eine Quell-Entität auf |
-| `jbe_AssertEnvironment` | Function | Prüft Umgebungsvoraussetzungen für Integrationstests |
-
-## Schritt 5: Security Roles
+## Schritt 3: Security Roles
 
 ### Benötigte Rechte
 
@@ -264,20 +73,20 @@ Falls die Custom API serverseitig Tests ausführen soll:
 - Vollzugriff auf alle drei Entities.
 - Zusätzlich: Zugriff auf Custom API-Registrierungen, Web Resource Management, Solution-Export.
 
-## Schritt 6: Testen
+## Schritt 4: Testen
 
-### 6.1 URL aufrufen
+### 4.1 URL aufrufen
 
 ```
-https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
+https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
-### 6.2 Demo-Modus prüfen
+### 4.2 Demo-Modus prüfen
 
-- Falls die Entities noch nicht angelegt sind, erscheint ein Verbindungsfehler mit dem Button "Demo-Ansicht laden".
+- Ist die Solution noch nicht importiert, erscheint ein Verbindungsfehler mit dem Button "Demo-Ansicht laden".
 - Im Demo-Modus sind alle Funktionen verfügbar, Daten werden lokal simuliert.
 
-### 6.3 Ersten Testlauf starten
+### 4.3 Ersten Testlauf starten
 
 1. Navigiere zu **Testlauf**.
 2. Wähle **Alle aktiven Tests**.
@@ -285,7 +94,7 @@ https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
 4. Beobachte den Live-Fortschritt: Progress-Bar, Passed/Failed-Zähler, Log.
 5. Nach Abschluss: Pie-Chart, Einzelergebnisse, Flow-Visualisierung pro Test.
 
-### 6.4 Testfall erstellen (Verifizierung)
+### 4.4 Testfall erstellen (Verifizierung)
 
 1. Navigiere zu **Testfälle**.
 2. Klicke **+ Neuer Testfall**.
@@ -294,9 +103,139 @@ https://<umgebung>.crm4.dynamics.com/WebResources/jbe_/jbe_testcenter.html
 5. Prüfe die **Flow-Visualisierung** (Tab-Wechsel im Editor).
 6. Klicke **Speichern**.
 
-### 6.5 Metadaten-Explorer testen
+### 4.5 Metadaten-Explorer testen
 
 - Navigiere zu **Metadaten**.
 - Tabs: Tabellen, OptionSets, Custom APIs.
 - Prüfe, ob die drei ITT-Entities und deren Attribute korrekt angezeigt werden.
 - Nutze die "Snippet"-Funktion, um JSON-Vorlagen für Testfälle zu generieren.
+
+### 4.6 Demo-Modus
+
+Wenn die Web Resource außerhalb von Dynamics 365 geöffnet wird (oder die CRM-API nicht erreichbar ist), aktiviert sich automatisch der **Demo-Modus**:
+
+- Alle Daten werden lokal simuliert (kein API-Zugriff nötig).
+- Ein gelbes Banner "Demo-Modus: Alle Daten sind simuliert" wird angezeigt.
+- Der Pack-Selector im Header ermöglicht den Wechsel zwischen Demo-Paketen.
+- Testläufe werden mit simulierten Ergebnissen ausgeführt (ca. 90% Pass-Rate, 1.5-2.5s pro Test).
+
+## Anhang: Schema-Referenz
+
+Die Solution legt die Tabellen beim Import an. Die folgenden Tabellen beschreiben die drei Kern-Tabellen;
+`jbe_teststep` (ein Datensatz je Schritt) und `jbe_testchunk` (Teilläufe im Worker-Modell) kommen hinzu.
+
+### Tabelle 1: Testfall (`jbe_testcase`)
+
+| Eigenschaft | Wert |
+|-------------|------|
+| Anzeigename | Testfall |
+| Schema-Name | `jbe_testcase` |
+| Pluralname | Testfälle |
+| EntitySet-Name | `jbe_testcases` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `TC-{SEQNUM:8}`) |
+
+**Felder:**
+
+| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
+|-------------|-------------|-----|---------|--------------|
+| `jbe_testid` | Test ID | String (100) | Pflicht (ApplicationRequired) | Eindeutige Test-ID (z.B. TC01, BTC01) |
+| `jbe_title` | Titel | String (300) | Pflicht (ApplicationRequired) | Beschreibender Titel |
+| `jbe_category` | Kategorie | OptionSet (Picklist) | Empfohlen | Testkategorie (siehe OptionSets) |
+| `jbe_tags` | Tags | String (500) | Optional | Kommagetrennte Tags |
+| `jbe_userstories` | User Stories | String (500) | Optional | Kommagetrennte Jira-Keys |
+| `jbe_enabled` | Aktiv | Boolean | Optional | Testfall aktiv/deaktiviert (Standard: true) |
+| `jbe_definitionjson` | Definition (JSON) | Memo (Multiline) | Optional | JSON-Definition des Testfalls |
+
+**Alternate Key:** `jbe_testid` (ermöglicht Upsert bei Import).
+
+### Tabelle 2: Testlauf (`jbe_testrun`)
+
+| Eigenschaft | Wert |
+|-------------|------|
+| Anzeigename | Testlauf |
+| Schema-Name | `jbe_testrun` |
+| Pluralname | Testläufe |
+| EntitySet-Name | `jbe_testruns` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RUN-{SEQNUM:8}`) |
+
+**Felder:**
+
+| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
+|-------------|-------------|-----|---------|--------------|
+| `jbe_teststatus` | Status | OptionSet (Picklist) | Optional | Teststatus (siehe OptionSets) |
+| `jbe_passed` | Bestanden | Integer | Optional | Anzahl bestandener Tests |
+| `jbe_failed` | Fehlgeschlagen | Integer | Optional | Anzahl fehlgeschlagener Tests |
+| `jbe_total` | Gesamt | Integer | Optional | Gesamtanzahl Tests im Lauf |
+| `jbe_startedon` | Gestartet | DateTime | Optional | Startzeitpunkt |
+| `jbe_completedon` | Abgeschlossen | DateTime | Optional | Endzeitpunkt |
+| `jbe_testcasefilter` | Testfall-Filter | String (500) | Optional | Angewendeter Filter (z.B. `"*"`, `"story:PROJ-1234"`) |
+| `jbe_testsummary` | Zusammenfassung | Memo (Multiline) | Optional | Textuelle Zusammenfassung |
+| `jbe_fulllog` | Vollständiges Log | Memo (Multiline) | Optional | Komplettes Ausführungslog |
+| `jbe_testresult_json` | Ergebnis (JSON) | Memo (Multiline) | Optional | Strukturiertes Ergebnis als JSON |
+
+### Tabelle 3: Testergebnis (`jbe_testrunresult`)
+
+| Eigenschaft | Wert |
+|-------------|------|
+| Anzeigename | Testergebnis |
+| Schema-Name | `jbe_testrunresult` |
+| Pluralname | Testergebnisse |
+| EntitySet-Name | `jbe_testrunresults` |
+| Primäres Namensfeld | `jbe_name` (AutoNumber empfohlen: `RES-{SEQNUM:8}`) |
+
+**Felder:**
+
+| Schema-Name | Anzeigename | Typ | Pflicht | Beschreibung |
+|-------------|-------------|-----|---------|--------------|
+| `jbe_testrunid` | Testlauf | Lookup auf `jbe_testrun` | Optional | Zugehöriger Testlauf |
+| `jbe_testcaseid` | Testfall | Lookup auf `jbe_testcase` | Optional | Zugehöriger Testfall |
+| `jbe_testid` | Test ID | String (100) | Optional | Test-ID (redundant für schnelle Abfragen) |
+| `jbe_outcome` | Ergebnis | OptionSet (Picklist) | Optional | Testergebnis (siehe OptionSets) |
+| `jbe_durationms` | Dauer (ms) | Integer | Optional | Ausführungsdauer in Millisekunden |
+| `jbe_errormessage` | Fehlermeldung | Memo (Multiline) | Optional | Fehlerbeschreibung bei Failed/Error |
+| `jbe_assertionresults` | Assertion-Ergebnisse | Memo (Multiline) | Optional | JSON-Array der einzelnen Assertion-Ergebnisse |
+
+### OptionSets
+
+Die Solution bringt folgende globale OptionSets mit (Wertebereich ab `105710000`, Quelle: `solution/src/OptionSets/*.xml`):
+
+**jbe_teststatus (Teststatus):**
+
+| Wert | Label |
+|------|-------|
+| 105710000 | Ausstehend |
+| 105710001 | Läuft |
+| 105710002 | Abgeschlossen |
+| 105710003 | Fehler |
+| 105710004 | Aufteilung läuft |
+
+**jbe_testoutcome (Testergebnis):**
+
+| Wert | Label |
+|------|-------|
+| 105710000 | Passed |
+| 105710001 | Failed |
+| 105710002 | Skipped |
+| 105710003 | Error |
+
+Die UI-Konstante `CONFIG.optionSets.outcomeNotImpl` (`105710004`) hat im OptionSet keine Entsprechung.
+
+Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
+Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
+der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
+
+**jbe_testcategory (Testkategorie):**
+
+| Wert | Label |
+|------|-------|
+| 105710000 | Update Source |
+| 105710001 | Create Source |
+| 105710002 | Delete Source |
+| 105710003 | Multi-Source |
+| 105710004 | Merge |
+| 105710005 | Custom API |
+| 105710006 | Config |
+| 105710007 | End-to-End |
+| 105710008 | Error Handling |
+
+**Wichtig:** Die OptionSet-Werte müssen exakt mit den im JavaScript definierten Werten übereinstimmen. Bei abweichenden Werten zeigt die UI falsche Labels an.

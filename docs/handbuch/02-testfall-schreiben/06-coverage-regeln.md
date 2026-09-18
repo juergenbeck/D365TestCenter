@@ -1,14 +1,14 @@
 # Coverage-Regeln: Wie viele Asserts sind genug?
 
 Ein Test mit zwei Asserts ist nicht automatisch schlechter als einer mit
-zehn — aber oft übersieht man wichtige Erwartungen. Dieses Dokument
+zehn, aber oft übersieht man wichtige Erwartungen. Dieses Dokument
 beschreibt Regeln und Heuristiken, damit deine Tests das prüfen was sie
 prüfen sollen.
 
-## Regel 1: Leitfrage — was würde ich manuell prüfen?
+## Regel 1: Leitfrage, was würde ich manuell prüfen?
 
 Bevor du Asserts schreibst, frag dich: **"Wenn ich diesen Test manuell im
-Browser ausführen würde — was würde ich mir danach alles ansehen, bevor
+Browser ausführen würde, was würde ich mir danach alles ansehen, bevor
 ich ihn als bestanden abzeichne?"**
 
 Jede Sichtprüfung ist eine Assertion.
@@ -35,7 +35,7 @@ die letzten drei "wirken auch so OK" wirken. Tu das nicht.
 | Status-Change | 2: statecode + statuscode jeweils mit neuem Wert |
 | `ExecuteRequest` (Plugin-Kette) | 1 pro erwartetem Side-Effect + 1 pro nicht erwarteten |
 
-"Wichtigste Felder" heißt nicht alle Felder — nur die, die fachlich
+"Wichtigste Felder" heißt nicht alle Felder, nur die, die fachlich
 bedeutsam sind. Bei einem Contact-Create für einen Invoicing-Test würde
 ich `firstname`, `lastname`, `emailaddress1`, `parentcustomerid` prüfen,
 aber nicht `telephone2` oder `middlename`.
@@ -80,13 +80,13 @@ wirkt".
 ## Regel 4: Symmetrie bei umgekehrten Szenarien
 
 Wenn Test B die Umkehrung von Test A ist, **müssen die Asserts strukturell
-identisch sein** — nur mit vertauschten Rollen.
+identisch sein**, nur mit vertauschten Rollen.
 
 Beispiel:
 
 - **MGR-04A**: Duplikat wird Master (7 Asserts am Survivor, 4 am Subordinate)
 - **MGR-04B**: Master bleibt Master (muss auch 7 am Survivor, 4 am
-  Subordinate prüfen — mit vertauschter Perspektive)
+  Subordinate prüfen, mit vertauschter Perspektive)
 
 Asymmetrische Coverage zwischen Szenario und Umkehrung ist ein Test-
 Design-Bug. Der Grund: vertauschte Rollen könnten unterschiedliche Bugs
@@ -117,7 +117,7 @@ Dokumentation:
 - Bei Test-Failure weiß man sofort welche fachliche Erwartung verletzt
   wurde.
 
-Siehe [05-assertions.md](05-assertions.md#description--warum-sie-wichtig-ist).
+Siehe [05-assertions.md](05-assertions.md#description-warum-sie-wichtig-ist).
 
 ## Regel 7: Precondition-Vollständigkeit
 
@@ -138,7 +138,7 @@ sauber.
 
 ## Regel 8: Assertions am Ende, nicht dazwischen
 
-Streng genommen ist das optional — Asserts können überall stehen. Aber
+Streng genommen ist das optional, Asserts können überall stehen. Aber
 als Konvention und für Lesbarkeit:
 
 ```
@@ -177,7 +177,7 @@ UpdateRecord created_opp
 Assert created_opp.estimatedvalue == 50000
 ```
 
-Hier ist der Zwischen-Assert nicht nur Doku — er ist die Voraussetzung
+Hier ist der Zwischen-Assert nicht nur Doku, er ist die Voraussetzung
 dass der nächste Step funktioniert. Wenn der Lead nicht qualifiziert
 wurde, gibt es keine Opportunity, und das Update wirft einen Fehler. Der
 Zwischen-Assert macht klar wo es wirklich hängt.
@@ -199,7 +199,7 @@ Account mit falschem OwnerTeam angelegt wird? Was wenn ein Plugin die
 Name ändert? Was wenn der statecode anders ist als erwartet? Der Test
 fängt nichts davon ab.
 
-**Besser — selbst der einfachste Smoke-Test hat mindestens 2 Asserts:**
+**Besser: selbst der einfachste Smoke-Test hat mindestens 2 Asserts:**
 
 ```json
 { "testId": "STD-01", "title": "Account anlegen", "steps": [

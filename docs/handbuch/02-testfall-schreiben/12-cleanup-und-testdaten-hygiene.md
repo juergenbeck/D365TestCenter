@@ -1,6 +1,6 @@
 # Cleanup und Testdaten-Hygiene
 
-Tests laufen gegen eine **echte Umgebung** — jeder Lauf muss seine Spuren
+Tests laufen gegen eine **echte Umgebung**, jeder Lauf muss seine Spuren
 restlos entfernen, sonst akkumulieren Testdaten, verfälschen Folgeläufe und
 Auswertungen. Dieses Kapitel erklärt, wie das automatische Cleanup arbeitet,
 welche Records es von allein kennt, und mit welchen drei Werkzeugen du ihm
@@ -17,11 +17,11 @@ Records beibringst, die es nicht von allein kennt:
 Nach dem letzten Step eines Testfalls (auch nach FAILED/ERROR) läuft die
 Cleanup-Phase:
 
-1. **EnvironmentVariable-Restore zuerst** — alle per `SetEnvironmentVariable`
+1. **EnvironmentVariable-Restore zuerst**: alle per `SetEnvironmentVariable`
    veränderten Variablen werden auf ihren Vorher-Zustand zurückgesetzt, selbst
    wenn danach Record-Deletes scheitern. So kippt eine hängengebliebene
    Test-Konfiguration keine Folgetests.
-2. **Record-Löschung in LIFO-Reihenfolge** — die Löschliste wird rückwärts
+2. **Record-Löschung in LIFO-Reihenfolge**: die Löschliste wird rückwärts
    abgearbeitet: der zuletzt registrierte Record fällt zuerst. Dadurch stimmen
    Abhängigkeiten automatisch, wenn du Eltern vor Kindern anlegst (Account ->
    Contact: der Contact wird zuerst gelöscht).
@@ -35,7 +35,7 @@ dokumentiert dann, wie viele Records bewusst stehen blieben.
 
 **Der Test-Outcome bleibt vom Cleanup unberührt:** Ein fachlich grüner Test
 wird nicht rot, weil das Aufräumen scheiterte. Damit ein Datenleck trotzdem
-nie still bleibt, weist der Lauf Cleanup-Fehler aggregiert aus — als Banner
+nie still bleibt, weist der Lauf Cleanup-Fehler aggregiert aus, als Banner
 in der CLI-Summary (`CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen`),
 als `cleanupFailedCount` im Ergebnis und im Audit-Kommentar
 (sync-zephyr/sync-devops).
@@ -47,17 +47,17 @@ als `cleanupFailedCount` im Ergebnis und im Audit-Kommentar
 > jetzt als „bereits geräumt". Steht dort eine Zahl > 0, liegen wirklich
 > Daten in der Umgebung.
 
-## Was automatisch getrackt wird — und was nicht
+## Was automatisch getrackt wird: und was nicht
 
 | Quelle | In der Löschliste? | Warum |
 |---|:---:|---|
 | `CreateRecord` | **ja, immer** | Der Test hat den Record erzeugt. |
 | `FindRecord` / `WaitForRecord` (Default) | **nein** | Ein GEFUNDENER Record ist Bestand, kein erzeugter. Würde er gelöscht, träfe das geteilte Stammdaten (Stammdaten-Schutz, 2026-06-23). |
 | `ExecuteRequest`-/Custom-API-Outputs | **nein** | Die Engine weiß nicht, ob ein Output eine erzeugte Record-ID ist. |
-| Von Plugins/APIs **serverseitig** erzeugte Records | **nein** | Der Engine unbekannt — genau dafür gibt es die drei Werkzeuge unten. |
+| Von Plugins/APIs **serverseitig** erzeugte Records | **nein** | Der Engine unbekannt, genau dafür gibt es die drei Werkzeuge unten. |
 
 Die Lücke ist tückisch: serverseitig erzeugte Records bleiben nicht nur
-selbst liegen — hängen sie mit **Restrict-Delete-Verhalten** an einem
+selbst liegen, hängen sie mit **Restrict-Delete-Verhalten** an einem
 getrackten Record, blockieren sie auch noch dessen Löschung
 (`The object you tried to delete is associated with another object`,
 bei Kaskaden: `Cascade Delete failed due to cascade restrict relation`).
@@ -82,16 +82,16 @@ in die Löschliste auf:
   "description": "Von der API erzeugte Rechnung finden UND fürs Cleanup vormerken" }
 ```
 
-- Default ist **false** — setze `true` NUR, wenn der gefundene Record
+- Default ist **false**, setze `true` NUR, wenn der gefundene Record
   während DIESES Laufs von der getesteten API erzeugt wurde. Ein
   `trackForCleanup: true` auf einem Bestands-Record löscht Stammdaten.
 - Die LIFO-Reihenfolge passt automatisch: der Beleg wird nach dem Account
-  registriert, also vor ihm gelöscht — der Restrict-Blocker löst sich auf.
+  registriert, also vor ihm gelöscht, der Restrict-Blocker löst sich auf.
 
 ## Werkzeug 2: die Action `TrackRecord`
 
 Liefert die getestete API die erzeugte ID als Output-Parameter, brauchst du
-keine Query — `TrackRecord` registriert die bekannte ID direkt in Registry
+keine Query, `TrackRecord` registriert die bekannte ID direkt in Registry
 und Löschliste:
 
 ```json
@@ -107,7 +107,7 @@ und Löschliste:
 ```
 
 - `recordId` ist platzhalterauflösbar. Ein **unauflösbarer Platzhalter oder
-  eine Nicht-GUID ist ein harter Error** — kein stilles Nichts-Tracken, damit
+  eine Nicht-GUID ist ein harter Error**, kein stilles Nichts-Tracken, damit
   ein Tippfehler die Lücke nicht unbemerkt wieder öffnet.
 - **Dedup:** Zeigt `recordId` auf einen bereits getrackten Record, entsteht
   kein zweiter Löschlisten-Eintrag (und damit kein 404-Doppel-Delete).
@@ -123,13 +123,13 @@ eine ganze **Menge** von Kindern entsteht, deren Anzahl und Zusammensetzung
 du nicht statisch deklarieren kannst:
 
 - Ein Verteilungs-Plugin erzeugt je Monat des Leistungszeitraums eine
-  Monatszeile — 3, 12 oder 60 Records, je nach Testdaten.
+  Monatszeile, 3, 12 oder 60 Records, je nach Testdaten.
 - Ändert der Test den Zeitraum, werden Zeilen asynchron **gelöscht und neu
-  erzeugt** — eine beim Fund getrackte Zeile kann beim Cleanup schon nicht
+  erzeugt**, eine beim Fund getrackte Zeile kann beim Cleanup schon nicht
   mehr existieren, dafür gibt es neue, die nie getrackt wurden.
 - Hängen diese Kinder per **Restrict-Delete** am Test-Record, scheitert
   dessen Cleanup-Delete dauerhaft; hängen sie per **RemoveLink** daran,
-  geht der Delete zwar durch, nullt aber den Lookup — die Kinder bleiben
+  geht der Delete zwar durch, nullt aber den Lookup, die Kinder bleiben
   als unauffindbare Waisen zurück.
 
 ### Die Lösung: Kind-Beziehung am Parent deklarieren
@@ -160,7 +160,7 @@ du nicht statisch deklarieren kannst:
 | `entity` | ja | Kind-Entität, EntitySetName (Plural) wie überall im Test-JSON. |
 | `lookupField` | ja | Lookup-Feld der KIND-Entität, das auf den Record dieses Steps zeigt. |
 
-Gültig auf `CreateRecord` sowie — nur zusammen mit Tracking — auf
+Gültig auf `CreateRecord` sowie, nur zusammen mit Tracking, auf
 `FindRecord`/`WaitForRecord` (`trackForCleanup: true`) und `TrackRecord`.
 Ohne Tracking wird die Deklaration ignoriert (ein Record, der nicht gelöscht
 wird, braucht keine Kind-Räumung). Fehlt `entity` oder `lookupField`, wirft
@@ -172,10 +172,10 @@ der Cleanup einen klaren Fehler statt still nichts zu tun.
    Records fragt die Engine je deklarierter Beziehung alle Kinder ab
    (`lookupField` = Record-ID, in 500er-Seiten) und löscht sie VOR dem
    Record selbst. Weil die Query erst im Cleanup läuft, erfasst sie die
-   **finale** Menge — auch Kinder, die lange nach dem Step asynchron
+   **finale** Menge: auch Kinder, die lange nach dem Step asynchron
    entstanden sind oder gewandert sind.
 2. **Genau EINE Ebene, kein Metadaten-Discovery.** Die Engine löscht exakt
-   die deklarierte Beziehung — sie ermittelt NICHT selbstständig per
+   die deklarierte Beziehung, sie ermittelt NICHT selbstständig per
    Metadaten, was sonst noch blockieren könnte, und steigt nicht rekursiv in
    Kinder von Kindern. Das ist eine bewusste Design-Entscheidung
    (ADR-2026-07-23-0808): Der deterministische Cleanup-Grundsatz „gelöscht
@@ -188,15 +188,15 @@ der Cleanup einen klaren Fehler statt still nichts zu tun.
    die Registrier-Reihenfolge.
 4. **Warum Kinder eines Test-Records gefahrlos löschbar sind:** Ein
    Bestands-Record kann keinen Lookup auf einen Record tragen, der erst im
-   Test entstanden ist — Kinder eines im Lauf erzeugten Parents sind per
+   Test entstanden ist, Kinder eines im Lauf erzeugten Parents sind per
    Konstruktion Lauf-Artefakte. (Ausnahme: ein Test, der Bestands-Records
-   aktiv auf den Test-Record umhängt — dann die Deklaration schlicht
+   aktiv auf den Test-Record umhängt, dann die Deklaration schlicht
    weglassen.)
 
 ### Denormalisierte Lookups doppelt nutzen
 
 Trägt die Kind-Entität MEHRERE Lookups in deine Test-Hierarchie, kannst du
-die Deklaration auf mehreren Ebenen setzen — Redundanz ist harmlos (die
+die Deklaration auf mehreren Ebenen setzen, Redundanz ist harmlos (die
 zweite Query findet 0 Kinder oder räumt Reste, 404 ist toleriert). Beispiel
 aus einem Nutzerprojekt: `contoso_umsatzplan`-Zeilen tragen `contoso_bestellungid` (Position)
 UND denormalisiert `contoso_leistungid` (Leistung). Deklariert werden beide:
@@ -211,14 +211,14 @@ UND denormalisiert `contoso_leistungid` (Leistung). Deklariert werden beide:
   ] }
 ```
 
-Das räumt beim Leistungs-Delete ALLE Umsatzplan-Zeilen der Leistung — die
+Das räumt beim Leistungs-Delete ALLE Umsatzplan-Zeilen der Leistung, die
 Monatszeilen der Positionen (falls deren eigener Delete sie noch nicht
 erwischt hat) und die positionslosen Budget-Zeilen, die sonst beim
 RemoveLink-Delete der Leistung zu unauffindbaren Waisen würden.
 
 ### Race-Toleranzen: wenn ein Plugin parallel dieselben Kinder löscht
 
-Kind-Mengen, die ein Plugin erzeugt, baut oft auch ein Plugin wieder ab —
+Kind-Mengen, die ein Plugin erzeugt, baut oft auch ein Plugin wieder ab,
 und der Abbau-Job kann GLEICHZEITIG mit der Cleanup-Kind-Löschung laufen
 (Beispiel: der Cleanup löscht zuerst die getrackte Buchung, deren
 Delete-Plugin räumt asynchron die Budget-Zeilen ab, während der Cleanup
@@ -227,8 +227,8 @@ behandelt die beiden möglichen Kollisionen:
 
 | Kollision | Verhalten |
 |---|---|
-| Kind ist beim Delete **schon weg** (404 / ObjectDoesNotExist 0x80040217) | Zählt als geräumt — Ziel erreicht, kein Fehler. |
-| Plattform meldet `More than one concurrent Delete requests detected` (beide löschen **gerade jetzt**) | Wird NICHT blind als erledigt gewertet: die Engine wartet 1 s und fragt die Kinder erneut ab. Ist die Query leer, hat der parallele Job gewonnen — fertig. Taucht das Kind wieder auf (der parallele Delete scheiterte), wird es erneut gelöscht. Maximal 10 Runden, danach sichtbarer Fehler. |
+| Kind ist beim Delete **schon weg** (404 / ObjectDoesNotExist 0x80040217) | Zählt als geräumt, Ziel erreicht, kein Fehler. |
+| Plattform meldet `More than one concurrent Delete requests detected` (beide löschen **gerade jetzt**) | Wird NICHT blind als erledigt gewertet: die Engine wartet 1 s und fragt die Kinder erneut ab. Ist die Query leer, hat der parallele Job gewonnen, fertig. Taucht das Kind wieder auf (der parallele Delete scheiterte), wird es erneut gelöscht. Maximal 10 Runden, danach sichtbarer Fehler. |
 
 Jeder ANDERE Fehler beim Kind-Delete (Berechtigung, eigener Restrict-Blocker
 des Kindes, Plugin-Abbruch) bricht die Kind-Räumung sichtbar ab und zählt
@@ -237,7 +237,7 @@ dann typischerweise ebenfalls sichtbar). Nichts wird still geschluckt.
 
 **Amok-Schutz:** Maximal 10.000 Kinder je deklarierter Beziehung. Mehr
 deutet auf eine falsch deklarierte Beziehung (z.B. Lookup eines
-Stammdaten-Parents) — der Cleanup bricht mit klarer Meldung ab, statt
+Stammdaten-Parents), der Cleanup bricht mit klarer Meldung ab, statt
 weiterzulöschen.
 
 ### Log-Sichtbarkeit
@@ -261,24 +261,24 @@ Cleanup...
 | API liefert die erzeugte ID als Output | `TrackRecord` |
 | Plugin erzeugt N Kinder an einem getrackten Record (N dynamisch, ggf. Restrict- oder RemoveLink-Beziehung) | `cleanupChildren` am Step des Parents |
 | Kind hat selbst wieder Restrict-Kinder | zusätzliche `cleanupChildren`-Deklaration am getrackten Parent der Zwischenebene (keine automatische Rekursion) |
-| Bestands-Record wird nur GELESEN | nichts — und `trackForCleanup` ausdrücklich NICHT setzen |
+| Bestands-Record wird nur GELESEN | nichts, und `trackForCleanup` ausdrücklich NICHT setzen |
 
 ## Troubleshooting
 
-- **`CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen`** — seit
+- **`CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen`**, seit
   2026-07-23 ein echter Rest-Indikator (keine Doppel-Delete-Artefakte mehr).
   Details stehen je Testfall in der Cleanup-Zeile des Steps-Tabs und im
   `jbe_fulllog`; die erste Fehlermeldung nennt Entität und ID.
 - **`The object you tried to delete is associated with another object`**
   bzw. `Cascade Delete failed due to cascade restrict relation ...` im
-  Cleanup — an dem Record hängen nicht deklarierte Restrict-Kinder. Die
+  Cleanup, an dem Record hängen nicht deklarierte Restrict-Kinder. Die
   Fehlermeldung der Kaskade nennt die Kind-Entität; deklariere sie per
   `cleanupChildren` am passenden Parent-Step.
 - **Waisen trotz grünem Cleanup** (nur bei RemoveLink-Beziehungen möglich,
-  weil der Parent-Delete nicht blockiert) — Read-back fahren:
+  weil der Parent-Delete nicht blockiert), Read-back fahren:
   Kind-Entität nach dem Test-Namensmuster bzw. dem Lauf-Zeitfenster
   abfragen. Fix: `cleanupChildren` am Parent deklarieren.
-- **`cleanupChildren: Konkurrierende Deletes ... klingen nicht ab`** — ein
+- **`cleanupChildren: Konkurrierende Deletes ... klingen nicht ab`**, ein
   paralleler Prozess löscht dieselben Kinder dauerhaft erfolglos (z.B.
   blockt ein tieferer Restrict beide). Die Kette der Kind-Beziehungen
   prüfen; ggf. eine weitere Deklaration auf der Zwischenebene.

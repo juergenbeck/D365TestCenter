@@ -202,7 +202,7 @@ def build():
         "--embed-resources",
         "--toc",
         "--toc-depth=2",
-        "--metadata", "title=D365 Test Center — Entwickler-Handbuch",
+        "--metadata", "title=D365 Test Center: Entwickler-Handbuch",
         "--metadata", "lang=de",
         f"--css={tmp_css}",
         "-o", str(OUTPUT),

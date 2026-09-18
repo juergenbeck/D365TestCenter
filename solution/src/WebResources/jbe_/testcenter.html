@@ -4848,7 +4848,7 @@ window.renderDashboardDemo = function() {
     </div>
     <div class="card" style="text-align:center;padding:40px;color:var(--text-secondary)">
         <p>This is a demo view. The entities (jbe_testcase, jbe_testrun, jbe_testrunresult) must be created in Dataverse first.</p>
-        <p style="margin-top:8px">Skript: <code>scripts/Create-TestingEntities.ps1</code></p>
+        <p style="margin-top:8px">Setup: import the solution <code>D365TestCenter</code> (see docs/05_deployment-handbuch.md)</p>
     </div>`);
 };
 
@@ -4892,7 +4892,7 @@ async function renderTestCases() {
         $("#cases-table").innerHTML = `<div class="empty-state"><div class="empty-icon">&#x1f50d;</div>
             <p>Failed to load test cases.</p>
             <p style="margin-top:8px;color:var(--accent-red);font-size:12px">${escapeHtml(err.message)}</p>
-            <p style="margin-top:16px;color:var(--text-secondary)">Falls die Entity noch nicht existiert: <code>scripts/Create-TestingEntities.ps1</code></p></div>`;
+            <p style="margin-top:16px;color:var(--text-secondary)">Falls die Tabelle noch nicht existiert: Solution <code>D365TestCenter</code> importieren</p></div>`;
     }
 }
 
@@ -7666,14 +7666,12 @@ const HelpContent = {
         { group: "Deployment", id: "deploy-install", title: "Installation", roles: ["admin"], content: `
 <h2>Installation</h2>
 <ol>
-<li>Solution <code>jbe_testing</code> erstellen</li>
-<li>Entities anlegen (oder <code>Create-TestingEntities.ps1</code>)</li>
-<li>Web Resource: Name <code>jbe_testcenter</code>, Typ HTML, hochladen</li>
-<li>Optional: Sitemap-Eintrag</li>
-<li>Custom API <code>jbe_RunIntegrationTests</code> registrieren</li>
-<li>Sicherheitsrollen: Lese-/Schreibrechte auf alle drei Entities</li>
+<li>Paket bauen: <code>pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged</code></li>
+<li>Importieren: <code>pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins</code></li>
+<li>Optional: Recovery-Flow je Umgebung mit <code>scripts/Create-RecurrenceFlow.ps1</code></li>
+<li>Sicherheitsrollen: Lese-/Schreibrechte auf die jbe_-Tabellen</li>
 </ol>
-<div class="help-tip">Nach Upload: Publizieren. Bei Updates: Browser-Cache leeren (Ctrl+F5).</div>
+<div class="help-tip">Die Solution bringt Tabellen, OptionSets, App, Web Resources, Plugin-Paket und Custom APIs mit. Bei Updates: Browser-Cache leeren (Ctrl+F5).</div>
 ` }
     ],
     getGroups() {

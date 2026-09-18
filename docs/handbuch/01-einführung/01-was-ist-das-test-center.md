@@ -8,7 +8,7 @@ Server und erzeugt am Ende einen detaillierten Ergebnis-Bericht.
 
 ## Wofür ist es gut?
 
-**Integrations-Tests** — also Tests, die echte Records in Dataverse
+**Integrations-Tests**: also Tests, die echte Records in Dataverse
 anlegen, Plugin-Ketten aufrufen, asynchron ausgeführte Workflows abwarten
 und am Ende prüfen, ob das Gesamtsystem das erwartete Ergebnis liefert.
 
@@ -72,7 +72,7 @@ Details: [02-entity-modell.md](02-entity-modell.md).
 - **Async-ready:** Actions wie `WaitForFieldValue` warten geduldig bis
   asynchrone Plugins ihre Arbeit getan haben.
 - **Eine Sprache für alles:** Create, Update, Delete, Custom Action,
-  Assertion — alles ist eine "Action" in einer Liste. Reihenfolge im JSON
+  Assertion, alles ist eine "Action" in einer Liste. Reihenfolge im JSON
   ist Ausführungsreihenfolge.
 
 ## Typische Anwendungsfälle
@@ -87,9 +87,9 @@ Details: [02-entity-modell.md](02-entity-modell.md).
 
 ## Was du hier NICHT findest
 
-- **Wie das Test Center installiert wird** — das macht der Projekt-Owner.
-- **Wie die C#-Engine erweitert wird** — das ist Produkt-Entwicklung.
-- **CLI-Nutzung** — dieses Handbuch bleibt bei der App.
+- **Wie das Test Center installiert wird**: das macht der Projekt-Owner.
+- **Wie die C#-Engine erweitert wird**: das ist Produkt-Entwicklung.
+- **CLI-Nutzung**: dieses Handbuch bleibt bei der App.
 
 Ab ins [Entity-Modell](02-entity-modell.md) oder direkt in den
 [Quickstart](03-quickstart.md).

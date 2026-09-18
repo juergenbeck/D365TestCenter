@@ -9,7 +9,7 @@ Anwendung beweisen.
 Das Test Center kennt dafür ab Plugin v5.3 zwei optionale Felder auf
 allen Non-Assert-Steps: `expectFailure` und `expectException`.
 
-## Variante 1 — `expectFailure: true` (irgendein Fehler reicht)
+## Variante 1: `expectFailure: true` (irgendein Fehler reicht)
 
 ```json
 { "stepNumber": 9, "action": "UpdateRecord",
@@ -30,7 +30,7 @@ allen Non-Assert-Steps: `expectFailure` und `expectException`.
 laufen soll (kein impliziter Test-Abbruch). Wenn man explizit nach dem
 erwarteten Fehler abbrechen will, kombiniert man mit `"onError": "stop"`.
 
-## Variante 2 — `expectException` (mit Match auf die Fehlermeldung)
+## Variante 2: `expectException` (mit Match auf die Fehlermeldung)
 
 Wenn man die Exception genauer prüfen will (welcher Guard greift,
 welcher Error-Code, welcher HTTP-Status):
@@ -61,23 +61,23 @@ verknüpft.
 | `httpStatus` | Integer | HTTP-Status der API-Antwort |
 
 **Exklusiv:** `messageContains` und `messageMatches` dürfen nicht
-gleichzeitig gesetzt sein — beim Parsen kommt sonst ein
+gleichzeitig gesetzt sein, beim Parsen kommt sonst ein
 Validierungsfehler.
 
 ### Wann welche Match-Form?
 
-- **`messageContains`** — wenn der Message-Text stabil ist und du nur
+- **`messageContains`**: wenn der Message-Text stabil ist und du nur
   ein Stichwort prüfen willst. Häufigster Fall.
-- **`messageMatches`** — wenn der Text Variationen hat (z.B. mit
+- **`messageMatches`**: wenn der Text Variationen hat (z.B. mit
   GUID/Datum), aber das Muster gleich ist.
-- **`errorCode`** — robust gegen Textänderungen. Empfohlen für
+- **`errorCode`**: robust gegen Textänderungen. Empfohlen für
   langfristig stabile Tests.
-- **`httpStatus`** — selten nötig. Sinnvoll bei Web-API-spezifischen
+- **`httpStatus`**: selten nötig. Sinnvoll bei Web-API-spezifischen
   Tests die zwischen 400 (Validierungsfehler) und 403 (Berechtigung)
   unterscheiden müssen.
 
 **Empfehlung:** `errorCode` + `messageContains` zusammen ist die stärkste
-Kombination — Code für Stabilität, Message für Lesbarkeit.
+Kombination, Code für Stabilität, Message für Lesbarkeit.
 
 ```json
 "expectException": {
@@ -86,7 +86,7 @@ Kombination — Code für Stabilität, Message für Lesbarkeit.
 }
 ```
 
-## Vollständiges Beispiel — DSGVO-Negative-Path mit EnvVar
+## Vollständiges Beispiel: DSGVO-Negative-Path mit EnvVar
 
 Kombiniert mit `SetEnvironmentVariable` ergibt sich ein vollständiger
 Negative-Path-Test:
@@ -126,7 +126,7 @@ Negative-Path-Test:
    Auto-Restore am Testende).
 2. Contact wird angelegt und auf Pseudonymized gesetzt.
 3. Wait gibt dem Plugin Zeit zu reagieren.
-4. Reaktivierungs-Versuch: `expectException` matcht den Guard-Text →
+4. Reaktivierungs-Versuch: `expectException` matcht den Guard-Text ->
    Step Passed.
 5. Assertion: statecode ist immer noch 1 (der Guard hat geblockt).
 
@@ -148,7 +148,7 @@ Am Testende (automatisch durch `keeprecords: false`):
   implementierungsnah, bricht bei Refactorings). Stattdessen Message-
   oder ErrorCode-Match.
 
-## Pitfall: Custom-API Pattern 1 (Stage 30 MainOperation) — v5.3.9 Fix
+## Pitfall: Custom-API Pattern 1 (Stage 30 MainOperation), v5.3.9 Fix
 
 Bei `action: "ExecuteRequest"` gegen eine **Custom-API mit Pattern 1**
 (PluginType direkt am `customapi.plugintypeid` verknüpft, Stage 30
@@ -158,7 +158,7 @@ Pre/Post-Plugin-Pattern ab:
 | Plugin-Pattern | Plattform-Verhalten | Engine-Auswertung |
 |---|---|---|
 | Pre/PostOp (Stage 20/40) | Fault landet im `ExecuteMultipleResponse.Responses[0].Fault`-Slot | sauber durch `EvaluateExpectException` |
-| MainOperation Pattern 1 (Stage 30) | Fault wird als `FaultException` am Endpoint propagiert | **bis v5.3.8 Bug:** Step landet im Catch ohne Matcher-Aufruf → `Outcome=Error` |
+| MainOperation Pattern 1 (Stage 30) | Fault wird als `FaultException` am Endpoint propagiert | **bis v5.3.8 Bug:** Step landet im Catch ohne Matcher-Aufruf -> `Outcome=Error` |
 
 Bis Plugin v5.3.8 hatte `TestRunner.ExecuteSandboxSafe` keinen
 Catch-Handler für die FaultException am Endpoint. `expectException`-Tests
@@ -187,7 +187,7 @@ gewünschten Effekt erzielt und wann nicht:
 | `ExecuteRequest` (inkl. Custom-API Pattern 1+2) | zuverlässig ab v5.3.9 | wie oben |
 | `CallCustomApi`, `ExecuteAction` (Legacy-Aliasse) | zuverlässig (normaler Step-Loop-Catch) | wie oben |
 | `RetrieveRecord`, `SetEnvironmentVariable`, `RetrieveEnvironmentVariable` | zuverlässig (normaler Step-Loop-Catch) | wie oben |
-| `FindRecord`, `WaitForRecord`, `WaitForFieldValue` | **nicht empfohlen** — Polling-Semantik kollidiert mit Exception-Erwartung | **nicht empfohlen** |
+| `FindRecord`, `WaitForRecord`, `WaitForFieldValue` | **nicht empfohlen**: Polling-Semantik kollidiert mit Exception-Erwartung | **nicht empfohlen** |
 | `BrowserAction` (Playwright) | nicht im Scope von `expectException` | nicht im Scope |
 | `AssertEnvironment`, `Assert` | konzeptionell unpassend (Assert hat eigene Failure-Semantik) | konzeptionell unpassend |
 

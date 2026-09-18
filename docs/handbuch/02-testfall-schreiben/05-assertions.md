@@ -20,7 +20,7 @@ erreicht wurde. Dieses Dokument erklärt alle Varianten von
 
 ## Zwei Targets: Record vs Query
 
-**`target: "Record"`** — prüft ein Feld eines bekannten Records.
+**`target: "Record"`**, prüft ein Feld eines bekannten Records.
 
 ```json
 { "action": "Assert",
@@ -36,7 +36,7 @@ erreicht wurde. Dieses Dokument erklärt alle Varianten von
 - Braucht einen Alias oder eine GUID in `recordRef`.
 - Funktioniert nur wenn der Record existiert.
 
-**`target: "Query"`** — führt eine Query aus und prüft das Ergebnis.
+**`target: "Query"`**, führt eine Query aus und prüft das Ergebnis.
 
 ```json
 { "action": "Assert",
@@ -237,7 +237,7 @@ Die Engine übersetzt automatisch.
 "recordRef": "3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3"       // Direkt-GUID (selten)
 ```
 
-## description — warum sie wichtig ist
+## description: warum sie wichtig ist
 
 Jede Assert sollte eine `description` haben. Im Steps-Tab und im
 `jbe_errormessage` taucht sie auf, wenn die Assert fehlschlägt. Ohne
@@ -261,7 +261,7 @@ weißt du direkt: "Merge-Plugin hat die Deaktivierung nicht durchgeführt".
 "description": ""                               // leer
 ```
 
-## onError — Default ist "continue"
+## onError: Default ist "continue"
 
 Für Asserts ist `onError` automatisch `continue`: wenn eine Assert
 fehlschlägt, laufen die nächsten trotzdem. Am Ende ist der Test
@@ -330,5 +330,5 @@ Das ist selten sinnvoll. Meistens willst du alle Failures auf einen Blick.
   "onError": "continue" }
 ```
 
-Weiter mit [06-coverage-regeln.md](06-coverage-regeln.md) — wie viele
+Weiter mit [06-coverage-regeln.md](06-coverage-regeln.md), wie viele
 Asserts sind genug?

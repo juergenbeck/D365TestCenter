@@ -4,67 +4,42 @@ This guide walks you through deploying D365 Test Center to your Dynamics 365 env
 
 ## Prerequisites
 
-- A Dynamics 365 / Dataverse environment (any edition)
-- PowerShell 5.1+ (Windows) or PowerShell 7+ (cross-platform)
-- A valid Bearer token for your Dataverse environment (MSAL, Client Credentials, or interactive login)
+- A Dynamics 365 / Dataverse environment (any edition) and a user with the System Customizer or System
+  Administrator role
+- The Power Platform CLI (`pac`)
 - A modern browser (Chrome, Edge, Firefox)
 
-## Step 1: Configure your environment
-
-Edit `scripts/deploy-config.json`:
-
-```json
-{
-    "publisherPrefix": "jbe",
-    "publisherOptionValuePrefix": 10571,
-    "publisherUniqueName": "jbe",
-    "resource": "https://YOUR-ORG.crm4.dynamics.com/",
-    "solutionUniqueName": "D365TestCenter"
-}
-```
-
-Keep `publisherPrefix` and `publisherOptionValuePrefix`: the web resource and the engine expect the `jbe_`
-schema names and option set values from 105710000 upwards (`publisherOptionValuePrefix` x 10000).
-
-Replace `YOUR-ORG` with your Dataverse organization name.
-
-## Step 2: Authenticate
-
-Set the `$headers` variable with your Bearer token before running the deployment:
+## Step 1: Sign in
 
 ```powershell
-# Option A: MSAL interactive login
-$token = (Get-MsalToken -ClientId "YOUR-APP-ID" -TenantId "YOUR-TENANT" -Scopes "https://YOUR-ORG.crm4.dynamics.com/.default").AccessToken
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
-
-# Option B: Client credentials (service principal)
-$token = (Get-MsalToken -ClientId "APP-ID" -ClientSecret (ConvertTo-SecureString "SECRET" -AsPlainText -Force) -TenantId "TENANT" -Scopes "https://YOUR-ORG.crm4.dynamics.com/.default").AccessToken
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
-
-# Option C: Azure CLI (if already logged in)
-$token = (az account get-access-token --resource "https://YOUR-ORG.crm4.dynamics.com" --query accessToken -o tsv)
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
+pac auth create --environment https://YOUR-ORG.crm4.dynamics.com
 ```
 
-## Step 3: Deploy
+## Step 2: Build the solution package
 
 ```powershell
-cd scripts
-.\Deploy-Solution.ps1
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
 ```
 
-The script creates everything idempotently (safe to run multiple times):
+## Step 3: Import
 
-| Component | What gets created |
-|-----------|------------------|
+```powershell
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
+```
+
+The solution `D365TestCenter` contains everything the Test Center needs:
+
+| Component | Content |
+|-----------|---------|
 | Publisher | "JBE" with prefix `jbe` |
-| Solution | "IntegrationTestCenter" |
-| 5 OptionSets | Test status, outcome, category, step phase, step status |
-| 4 Entities | jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep |
-| All attributes | On all 4 entities |
-| 2 Relationships | testrunresult to testrun, teststep to testrunresult |
-| Web Resources | HTML app + JSON packs |
-| PublishAllXml | Makes everything visible |
+| Tables | jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep, jbe_testchunk |
+| Option sets | test status, outcome, category, step status, chunk status, lifecycle status |
+| App | model-driven app `jbe_D365TestCenter` with forms and views |
+| Web resources | `jbe_/testcenter.html`, `jbe_/handbuch.html`, demo packs |
+| Plugin package | `jbe_D365TestCenter` with the engine, plugin steps and custom APIs |
+
+The recurring recovery flow for stalled chunk runs is created per environment with
+`scripts/Create-RecurrenceFlow.ps1` (optional).
 
 ## Step 4: Open the Test Center
 
@@ -152,7 +127,7 @@ Create a JSON file with three phases:
 }
 ```
 
-3. Re-run `Deploy-Solution.ps1` (it will update the web resources)
+3. Copy the pack and the manifest to `solution/src/WebResources/jbe_/packs/`, then rebuild and re-import the solution
 
 ## Waiting for async plugins
 

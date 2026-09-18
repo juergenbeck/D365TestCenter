@@ -50,29 +50,29 @@ Fehlerbilder besser einordnen.
 **Der CRUD-Trigger-Plugin (`RunTestsOnStatusChange`):**
 
 - Registriert auf `Create` und `Update` von `jbe_testrun`
-- Filter-Attribut `jbe_teststatus` — feuert nur bei Änderung dieses
+- Filter-Attribut `jbe_teststatus`, feuert nur bei Änderung dieses
   Felds
 - Läuft Async (asynchronous plugin execution)
 - Ist die eigentliche Engine: orchestriert alles
 
 **Die Core-Engine (C# intern):**
 
-- `TestCenterOrchestrator` — liest Testcases, loopt durch Batches
-- `TestRunner` — führt einen einzelnen Testcase aus
-- `AssertionEngine` — wertet Assert-Actions aus
-- `PlaceholderEngine` — löst Platzhalter auf (`{TIMESTAMP}`, `{alias.id}`)
-- `RecordTracker` — merkt sich Create-Ergebnisse für Cleanup
+- `TestCenterOrchestrator`, liest Testcases, loopt durch Batches
+- `TestRunner`, führt einen einzelnen Testcase aus
+- `AssertionEngine`, wertet Assert-Actions aus
+- `PlaceholderEngine`, löst Platzhalter auf (`{TIMESTAMP}`, `{alias.id}`)
+- `RecordTracker`, merkt sich Create-Ergebnisse für Cleanup
 
 **Die Entities im Schreib-Betrieb:**
 
-- `jbe_testrun` — wird geupdated (Status, Counter, Summary)
-- `jbe_testrunresult` — je einer pro Testcase im Lauf
-- `jbe_teststep` — je einer pro Action pro Testcase
+- `jbe_testrun`, wird geupdated (Status, Counter, Summary)
+- `jbe_testrunresult`, je einer pro Testcase im Lauf
+- `jbe_teststep`, je einer pro Action pro Testcase
 
 **Die Custom API (`jbe_RunIntegrationTests`):**
 
 Alternativer Einstiegspunkt für synchrone Runs vom Browser aus. Als
-Entwickler-Kollege nutzt du sie nicht direkt — wird nur erwähnt damit
+Entwickler-Kollege nutzt du sie nicht direkt, wird nur erwähnt damit
 du weißt: wenn du im Plugin-Trace-Log mal `RunIntegrationTestsApi`
 siehst, ist das ein synchron-Start.
 
@@ -103,14 +103,14 @@ Jedes `CreateRecord` im Testcase wird intern registriert:
 
 Am Ende des Tests durchläuft die Engine diese Liste **rückwärts**
 und löscht jeden Record. Rückwärts, weil die später angelegten
-Records oft Lookups auf die früheren haben — in Rückwärts-Reihenfolge
+Records oft Lookups auf die früheren haben, in Rückwärts-Reihenfolge
 funktioniert das Löschen ohne Constraint-Verletzung.
 
 **Wenn `jbe_keeprecords: true`:** die Liste wird nicht gelöscht, du
 siehst alle Records nach dem Lauf im Dataverse.
 
 **Wenn ein Cleanup-Delete fehlschlägt:** wird im Steps-Tab als Cleanup-
-Step mit Ergebnis "Fehler" angezeigt — das Testergebnis (Passed/Failed)
+Step mit Ergebnis "Fehler" angezeigt, das Testergebnis (Passed/Failed)
 ist davon nicht betroffen. Cleanup-Fehler sind meistens Plugin-Seiten-
 effekte die etwas auf dem Record verändert haben.
 
@@ -129,12 +129,12 @@ kurz verschwinden.
 
 Der volle Text-Log eines Laufs steht im `jbe_testrun.jbe_fulllog`-Feld
 (Mehrzeilentext). Das ist der Plaintext-Output, den das Plugin während
-der Ausführung gesammelt hat — wertvoll für die Fehlersuche bei
+der Ausführung gesammelt hat, wertvoll für die Fehlersuche bei
 komplexen Läufen. Siehe
 [../04-auswerten/05-logs-im-detail.md](../04-auswerten/05-logs-im-detail.md).
 
 ## Wenn du mehr wissen willst
 
 Das hier ist ein **Anwender-Handbuch**. Für die Produkt-Architektur gibt
-es separate Dokumente unter `docs/` — aber die sind nicht Teil deines
+es separate Dokumente unter `docs/`, aber die sind nicht Teil deines
 Workflows als Test-Autor.

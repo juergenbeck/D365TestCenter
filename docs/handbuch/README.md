@@ -1,8 +1,8 @@
-# D365 Test Center — Entwickler-Handbuch
+# D365 Test Center: Entwickler-Handbuch
 
 Dieses Handbuch richtet sich an Entwickler, die mit dem D365 Test Center
 Integrationstests schreiben, ausführen und auswerten. Alles was du hier
-brauchst, kannst du in der Model-Driven-App in Dynamics 365 machen —
+brauchst, kannst du in der Model-Driven-App in Dynamics 365 machen,
 kein CLI, kein PowerShell, kein Deployment-Tool.
 
 ## Voraussetzungen
@@ -11,7 +11,7 @@ kein CLI, kein PowerShell, kein Deployment-Tool.
   Attribute, Lookup und OptionSet bedeuten
 - Zugang zur Model-Driven-App **D365 Test Center** mit Rechten zum Anlegen
   von `jbe_testcase`- und `jbe_testrun`-Records
-- Ein JSON-Editor ist hilfreich (VS Code, Notepad++) — man kann aber auch
+- Ein JSON-Editor ist hilfreich (VS Code, Notepad++), man kann aber auch
   direkt im Mehrzeilentext-Feld der App arbeiten
 
 ## Was das Test Center ist
@@ -27,20 +27,20 @@ als Async-Plugin im Server und protokolliert jeden Schritt als
 
 ### Neu hier? Starte hier.
 
-1. [Was ist das Test Center?](01-einführung/01-was-ist-das-test-center.md) — 5 Min Überblick
-2. [Entity-Modell](01-einführung/02-entity-modell.md) — welche Records spielen zusammen
-3. [Quickstart mit 5 Beispielen](01-einführung/03-quickstart.md) — erste 10 Minuten
+1. [Was ist das Test Center?](01-einführung/01-was-ist-das-test-center.md), 5 Min Überblick
+2. [Entity-Modell](01-einführung/02-entity-modell.md), welche Records spielen zusammen
+3. [Quickstart mit 5 Beispielen](01-einführung/03-quickstart.md), erste 10 Minuten
 
 ### Du willst einen neuen Test schreiben
 
-1. [JSON-Schema](02-testfall-schreiben/01-json-schema.md) — Grundaufbau
-2. [Actions-Referenz](02-testfall-schreiben/02-actions-referenz.md) — was man machen kann
-3. [Platzhalter](02-testfall-schreiben/03-platzhalter.md) — `{TIMESTAMP}`, `{alias.id}` und Co.
-4. [Rezepte](02-testfall-schreiben/07-rezepte.md) — Vorlagen für Standard-Szenarien
-5. [Negative-Path-Tests](02-testfall-schreiben/09-negative-path.md) — `expectFailure` für erwartete Fehler (v5.3+)
-6. [Pitfalls und Plattform-Constraints](02-testfall-schreiben/10-pitfalls.md) — state-locked Creation, Plattform-Exception, Cold-Start, Lookup-Binds
-7. [Pre-Run-Validation](02-testfall-schreiben/11-pre-run-validation.md) — statischer Lint vor jedem Run plus `validate`-Cli (v5.3.8+)
-8. [Cleanup und Testdaten-Hygiene](02-testfall-schreiben/12-cleanup-und-testdaten-hygiene.md) — `trackForCleanup`, `TrackRecord`, `cleanupChildren` für serverseitig/plugin-erzeugte Records
+1. [JSON-Schema](02-testfall-schreiben/01-json-schema.md), Grundaufbau
+2. [Actions-Referenz](02-testfall-schreiben/02-actions-referenz.md), was man machen kann
+3. [Platzhalter](02-testfall-schreiben/03-platzhalter.md), `{TIMESTAMP}`, `{alias.id}` und Co.
+4. [Rezepte](02-testfall-schreiben/07-rezepte.md), Vorlagen für Standard-Szenarien
+5. [Negative-Path-Tests](02-testfall-schreiben/09-negative-path.md), `expectFailure` für erwartete Fehler (v5.3+)
+6. [Pitfalls und Plattform-Constraints](02-testfall-schreiben/10-pitfalls.md), state-locked Creation, Plattform-Exception, Cold-Start, Lookup-Binds
+7. [Pre-Run-Validation](02-testfall-schreiben/11-pre-run-validation.md), statischer Lint vor jedem Run plus `validate`-Cli (v5.3.8+)
+8. [Cleanup und Testdaten-Hygiene](02-testfall-schreiben/12-cleanup-und-testdaten-hygiene.md), `trackForCleanup`, `TrackRecord`, `cleanupChildren` für serverseitig/plugin-erzeugte Records
 
 ### Du willst einen Test ausführen
 
@@ -49,13 +49,13 @@ als Async-Plugin im Server und protokolliert jeden Schritt als
 
 ### Dein Test scheitert
 
-1. [Entscheidungsbaum](05-troubleshooting/01-entscheidungsbaum.md) — systematisch zum Fehler
-2. [Häufige Fehler](05-troubleshooting/02-häufige-fehler.md) — Top 12 mit Fix
-3. [Fehleranalyse](04-auswerten/04-fehleranalyse.md) — FAILED vs ERROR verstehen
+1. [Entscheidungsbaum](05-troubleshooting/01-entscheidungsbaum.md), systematisch zum Fehler
+2. [Häufige Fehler](05-troubleshooting/02-häufige-fehler.md), Top 12 mit Fix
+3. [Fehleranalyse](04-auswerten/04-fehleranalyse.md), FAILED vs ERROR verstehen
 
 ### Du suchst schnell ein JSON-Snippet
 
-[Anhang A — Cheat Sheet](anhang/a-cheat-sheet.md) — 20 häufige Patterns auf einer Seite
+[Anhang A, Cheat Sheet](anhang/a-cheat-sheet.md), 20 häufige Patterns auf einer Seite
 
 ## Verzeichnisstruktur
 
@@ -83,4 +83,4 @@ docs/handbuch/
 ## Feedback und Fragen
 
 Anmerkungen an den Projekt-Owner. Fehlende Szenarien oder unklare Stellen
-sind sehr willkommen — dieses Handbuch wird iterativ ausgebaut.
+sind sehr willkommen, dieses Handbuch wird iterativ ausgebaut.

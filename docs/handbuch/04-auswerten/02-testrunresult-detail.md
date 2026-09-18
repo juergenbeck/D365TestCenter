@@ -32,7 +32,7 @@ innerhalb eines Runs. Hier sind die wichtigen Debug-Infos.
 | **Bestanden** | Alle Asserts OK, alle Actions ohne Fehler |
 | **Fehlgeschlagen** | Mindestens ein Assert hat einen unerwarteten Wert gefunden. Der Test ist trotzdem bis zum Ende durchgelaufen |
 | **Error** | Eine Non-Assert-Action hat einen Fehler geworfen (z.B. 404, Exception). Der Test wurde abgebrochen |
-| **Übersprungen** | Der Test wurde vor dem ersten Step abgebrochen — meist JSON-Parse-Fehler |
+| **Übersprungen** | Der Test wurde vor dem ersten Step abgebrochen, meist JSON-Parse-Fehler |
 
 ## Fehlermeldung (`jbe_errormessage`)
 
@@ -82,7 +82,7 @@ JSON-Parse-Fehler in jbe_definitionjson:
 ## Zugeordnete Testschritte
 
 Unten auf der Seite: **Testschritte** (Sub-Grid). Alle `jbe_teststep`-
-Records die zu diesem Ergebnis gehören — ein Schritt pro Action im
+Records die zu diesem Ergebnis gehören, ein Schritt pro Action im
 Testcase plus ggf. Cleanup-Step.
 
 ```
@@ -100,7 +100,7 @@ Testcase plus ggf. Cleanup-Step.
 +----------------------------------------------------------+
 ```
 
-Klick auf den fehlgeschlagenen Step (4) öffnet das Step-Detail — das
+Klick auf den fehlgeschlagenen Step (4) öffnet das Step-Detail, das
 ist dein eigentlicher Debug-Punkt. Siehe
 [03-steps-tab-verstehen.md](03-steps-tab-verstehen.md).
 
@@ -144,10 +144,10 @@ JSON-Parse-Fehler in jbe_definitionjson:
 
 Öffne den Testfall im Editor, validiere das JSON, speichere neu.
 
-### Muster 4: Passed — aber der Test sollte eigentlich Failed sein
+### Muster 4: Passed, aber der Test sollte eigentlich Failed sein
 
 Kommt vor wenn dein Test zu wenig prüft. Jede `Assert` die nicht
-fehlschlägt, ist "OK" — auch wenn die Umgebung gar nicht in dem Zustand
+fehlschlägt, ist "OK", auch wenn die Umgebung gar nicht in dem Zustand
 ist den du dir vorgestellt hast.
 
 **Lösung:** mehr Asserts hinzufügen. Besonders Negativ-Erwartungen
@@ -156,7 +156,7 @@ ist den du dir vorgestellt hast.
 
 ## Das Testlauf-Feld
 
-Oben rechts auf der Seite ist ein Link zurück zum `jbe_testrun` — so
+Oben rechts auf der Seite ist ein Link zurück zum `jbe_testrun`, so
 wechselst du zwischen "Detail eines Einzeltests" und "Überblick aller
 Tests des Runs".
 

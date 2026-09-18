@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>D365 Test Center — Entwickler-Handbuch</title>
+  <title>D365 Test Center: Entwickler-Handbuch</title>
   <style>
 
 span.smallcaps{font-variant: small-caps;}
@@ -90,11 +90,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">D365 Test Center — Entwickler-Handbuch</h1>
+<h1 class="title">D365 Test Center: Entwickler-Handbuch</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
-<li><a href="#kap-readme" id="toc-kap-readme">D365 Test Center —
+<li><a href="#kap-readme" id="toc-kap-readme">D365 Test Center:
 Entwickler-Handbuch</a>
 <ul>
 <li><a href="#voraussetzungen" id="toc-voraussetzungen">Voraussetzungen</a></li>
@@ -122,29 +122,29 @@ besonders?</a></li>
 </ul></li>
 <li><a href="#kap-01-einfuehrung-02-entity-modell" id="toc-kap-01-einfuehrung-02-entity-modell">Entity-Modell</a>
 <ul>
-<li><a href="#jbe_testcase--die-testfall-definition" id="toc-jbe_testcase--die-testfall-definition">jbe_testcase — die
+<li><a href="#jbe_testcase-die-testfall-definition" id="toc-jbe_testcase-die-testfall-definition">jbe_testcase: die
 Testfall-Definition</a></li>
-<li><a href="#jbe_testrun--ein-konkreter-lauf" id="toc-jbe_testrun--ein-konkreter-lauf">jbe_testrun — ein konkreter
+<li><a href="#jbe_testrun-ein-konkreter-lauf" id="toc-jbe_testrun-ein-konkreter-lauf">jbe_testrun: ein konkreter
 Lauf</a></li>
-<li><a href="#jbe_testrunresult--ergebnis-pro-test" id="toc-jbe_testrunresult--ergebnis-pro-test">jbe_testrunresult —
-Ergebnis pro Test</a></li>
-<li><a href="#jbe_teststep--detail-pro-action" id="toc-jbe_teststep--detail-pro-action">jbe_teststep — Detail pro
+<li><a href="#jbe_testrunresult-ergebnis-pro-test" id="toc-jbe_testrunresult-ergebnis-pro-test">jbe_testrunresult: Ergebnis
+pro Test</a></li>
+<li><a href="#jbe_teststep-detail-pro-action" id="toc-jbe_teststep-detail-pro-action">jbe_teststep: Detail pro
 Action</a></li>
 <li><a href="#wer-räumt-auf" id="toc-wer-räumt-auf">Wer räumt
 auf?</a></li>
 </ul></li>
-<li><a href="#kap-01-einfuehrung-03-quickstart" id="toc-kap-01-einfuehrung-03-quickstart">Quickstart — 5 Beispiele in 15
+<li><a href="#kap-01-einfuehrung-03-quickstart" id="toc-kap-01-einfuehrung-03-quickstart">Quickstart: 5 Beispiele in 15
 Minuten</a>
 <ul>
-<li><a href="#qs-01--account-anlegen-und-website-setzen" id="toc-qs-01--account-anlegen-und-website-setzen">QS-01 — Account
-anlegen und Website setzen</a></li>
-<li><a href="#qs-02--contact-an-account-lookup-binding" id="toc-qs-02--contact-an-account-lookup-binding">QS-02 — Contact an
+<li><a href="#qs-01-account-anlegen-und-website-setzen" id="toc-qs-01-account-anlegen-und-website-setzen">QS-01: Account anlegen
+und Website setzen</a></li>
+<li><a href="#qs-02-contact-an-account-lookup-binding" id="toc-qs-02-contact-an-account-lookup-binding">QS-02: Contact an
 Account, Lookup-Binding</a></li>
-<li><a href="#qs-03--lead-qualifizieren-custom-action" id="toc-qs-03--lead-qualifizieren-custom-action">QS-03 — Lead
+<li><a href="#qs-03-lead-qualifizieren-custom-action" id="toc-qs-03-lead-qualifizieren-custom-action">QS-03: Lead
 qualifizieren (Custom Action)</a></li>
-<li><a href="#qs-04--async-plugin-waitforfieldvalue" id="toc-qs-04--async-plugin-waitforfieldvalue">QS-04 — Async Plugin:
+<li><a href="#qs-04-async-plugin-waitforfieldvalue" id="toc-qs-04-async-plugin-waitforfieldvalue">QS-04: Async Plugin:
 WaitForFieldValue</a></li>
-<li><a href="#qs-05--record-löschen-und-negativ-assert" id="toc-qs-05--record-löschen-und-negativ-assert">QS-05 — Record löschen
+<li><a href="#qs-05-record-löschen-und-negativ-assert" id="toc-qs-05-record-löschen-und-negativ-assert">QS-05: Record löschen
 und Negativ-Assert</a></li>
 <li><a href="#zusammenfassung-welche-patterns-du-jetzt-kennst" id="toc-zusammenfassung-welche-patterns-du-jetzt-kennst">Zusammenfassung:
 welche Patterns du jetzt kennst</a></li>
@@ -208,8 +208,8 @@ Grundmuster</a></li>
 Schema im Detail</a></li>
 <li><a href="#typische-beispiele" id="toc-typische-beispiele">Typische
 Beispiele</a></li>
-<li><a href="#was-nicht-geht--die-häufigen-fehler" id="toc-was-nicht-geht--die-häufigen-fehler">Was NICHT geht — die
-häufigen Fehler</a></li>
+<li><a href="#was-nicht-geht-die-häufigen-fehler" id="toc-was-nicht-geht-die-häufigen-fehler">Was NICHT geht: die häufigen
+Fehler</a></li>
 <li><a href="#übersicht-lookup-in-verschiedenen-kontexten" id="toc-übersicht-lookup-in-verschiedenen-kontexten">Übersicht: Lookup
 in verschiedenen Kontexten</a></li>
 <li><a href="#partner-entity-suffix-welche-brauche-ich" id="toc-partner-entity-suffix-welche-brauche-ich">Partner-Entity-Suffix:
@@ -229,17 +229,17 @@ Query</a></li>
 <li><a href="#filter-syntax-target-query" id="toc-filter-syntax-target-query">Filter-Syntax (target:
 Query)</a></li>
 <li><a href="#recordref-varianten" id="toc-recordref-varianten">recordRef-Varianten</a></li>
-<li><a href="#description--warum-sie-wichtig-ist" id="toc-description--warum-sie-wichtig-ist">description — warum sie
+<li><a href="#description-warum-sie-wichtig-ist" id="toc-description-warum-sie-wichtig-ist">description: warum sie
 wichtig ist</a></li>
-<li><a href="#onerror--default-ist-continue" id="toc-onerror--default-ist-continue">onError — Default ist
+<li><a href="#onerror-default-ist-continue" id="toc-onerror-default-ist-continue">onError: Default ist
 &quot;continue&quot;</a></li>
 <li><a href="#beispiele-typischer-muster" id="toc-beispiele-typischer-muster">Beispiele typischer Muster</a></li>
 </ul></li>
 <li><a href="#kap-02-testfall-schreiben-06-coverage-regeln" id="toc-kap-02-testfall-schreiben-06-coverage-regeln">Coverage-Regeln:
 Wie viele Asserts sind genug?</a>
 <ul>
-<li><a href="#regel-1-leitfrage--was-würde-ich-manuell-prüfen" id="toc-regel-1-leitfrage--was-würde-ich-manuell-prüfen">Regel 1:
-Leitfrage — was würde ich manuell prüfen?</a></li>
+<li><a href="#regel-1-leitfrage-was-würde-ich-manuell-prüfen" id="toc-regel-1-leitfrage-was-würde-ich-manuell-prüfen">Regel 1:
+Leitfrage, was würde ich manuell prüfen?</a></li>
 <li><a href="#regel-2-pro-operation-mindestens-2-3-asserts" id="toc-regel-2-pro-operation-mindestens-2-3-asserts">Regel 2: Pro
 Operation mindestens 2-3 Asserts</a></li>
 <li><a href="#regel-3-positive-und-negative-erwartungen" id="toc-regel-3-positive-und-negative-erwartungen">Regel 3: Positive UND
@@ -273,8 +273,8 @@ Async Plugin-Kette (Opportunity schließen)</a></li>
 Negativ-Assert</a></li>
 <li><a href="#rezept-f-merge-mit-seiten-effekt" id="toc-rezept-f-merge-mit-seiten-effekt">Rezept F: Merge mit
 Seiten-Effekt</a></li>
-<li><a href="#rezept-g-waitforrecord--auf-von-plugin-erzeugten-record-warten" id="toc-rezept-g-waitforrecord--auf-von-plugin-erzeugten-record-warten">Rezept
-G: WaitForRecord — auf von Plugin erzeugten Record warten</a></li>
+<li><a href="#rezept-g-waitforrecord-auf-von-plugin-erzeugten-record-warten" id="toc-rezept-g-waitforrecord-auf-von-plugin-erzeugten-record-warten">Rezept
+G: WaitForRecord, auf von Plugin erzeugten Record warten</a></li>
 <li><a href="#rezept-h-test-mit-autonumber-read-via-columns" id="toc-rezept-h-test-mit-autonumber-read-via-columns">Rezept H: Test
 mit AutoNumber-Read via columns</a></li>
 </ul></li>
@@ -292,7 +292,7 @@ Test&quot;</a></li>
 wenn Konventionen verletzt werden</a></li>
 <li><a href="#für-projektspezifische-test-ids-eigene-konventionen" id="toc-für-projektspezifische-test-ids-eigene-konventionen">Für
 projektspezifische Test-IDs: eigene Konventionen</a></li>
-<li><a href="#record-cleanup--verlass-dich-aufs-framework" id="toc-record-cleanup--verlass-dich-aufs-framework">Record-Cleanup —
+<li><a href="#record-cleanup-verlass-dich-aufs-framework" id="toc-record-cleanup-verlass-dich-aufs-framework">Record-Cleanup:
 verlass dich auf&#39;s Framework</a></li>
 <li><a href="#anti-patterns" id="toc-anti-patterns">Anti-Patterns</a></li>
 <li><a href="#konventions-cheatsheet" id="toc-konventions-cheatsheet">Konventions-Cheatsheet</a></li>
@@ -300,17 +300,17 @@ verlass dich auf&#39;s Framework</a></li>
 <li><a href="#kap-02-testfall-schreiben-09-negative-path" id="toc-kap-02-testfall-schreiben-09-negative-path">Negative-Path-Tests
 mit <code>expectFailure</code></a>
 <ul>
-<li><a href="#variante-1--expectfailure-true-irgendein-fehler-reicht" id="toc-variante-1--expectfailure-true-irgendein-fehler-reicht">Variante
-1 — <code>expectFailure: true</code> (irgendein Fehler reicht)</a></li>
-<li><a href="#variante-2--expectexception-mit-match-auf-die-fehlermeldung" id="toc-variante-2--expectexception-mit-match-auf-die-fehlermeldung">Variante
-2 — <code>expectException</code> (mit Match auf die
+<li><a href="#variante-1-expectfailure-true-irgendein-fehler-reicht" id="toc-variante-1-expectfailure-true-irgendein-fehler-reicht">Variante
+1: <code>expectFailure: true</code> (irgendein Fehler reicht)</a></li>
+<li><a href="#variante-2-expectexception-mit-match-auf-die-fehlermeldung" id="toc-variante-2-expectexception-mit-match-auf-die-fehlermeldung">Variante
+2: <code>expectException</code> (mit Match auf die
 Fehlermeldung)</a></li>
-<li><a href="#vollständiges-beispiel--dsgvo-negative-path-mit-envvar" id="toc-vollständiges-beispiel--dsgvo-negative-path-mit-envvar">Vollständiges
-Beispiel — DSGVO-Negative-Path mit EnvVar</a></li>
+<li><a href="#vollständiges-beispiel-dsgvo-negative-path-mit-envvar" id="toc-vollständiges-beispiel-dsgvo-negative-path-mit-envvar">Vollständiges
+Beispiel: DSGVO-Negative-Path mit EnvVar</a></li>
 <li><a href="#was-nicht-von-expectfailure-abgedeckt-wird" id="toc-was-nicht-von-expectfailure-abgedeckt-wird">Was nicht von
 <code>expectFailure</code> abgedeckt wird</a></li>
-<li><a href="#pitfall-custom-api-pattern-1-stage-30-mainoperation--v539-fix" id="toc-pitfall-custom-api-pattern-1-stage-30-mainoperation--v539-fix">Pitfall:
-Custom-API Pattern 1 (Stage 30 MainOperation) — v5.3.9 Fix</a></li>
+<li><a href="#pitfall-custom-api-pattern-1-stage-30-mainoperation-v539-fix" id="toc-pitfall-custom-api-pattern-1-stage-30-mainoperation-v539-fix">Pitfall:
+Custom-API Pattern 1 (Stage 30 MainOperation), v5.3.9 Fix</a></li>
 <li><a href="#welche-actions-unterstützen-expectexception-zuverlässig" id="toc-welche-actions-unterstützen-expectexception-zuverlässig">Welche
 Actions unterstützen <code>expectException</code> zuverlässig?</a></li>
 <li><a href="#engine-tests-die-das-feature-absichern" id="toc-engine-tests-die-das-feature-absichern">Engine-Tests die das
@@ -346,8 +346,8 @@ funktioniert</a></li>
 und Testdaten-Hygiene</a>
 <ul>
 <li><a href="#wie-das-cleanup-abläuft" id="toc-wie-das-cleanup-abläuft">Wie das Cleanup abläuft</a></li>
-<li><a href="#was-automatisch-getrackt-wird--und-was-nicht" id="toc-was-automatisch-getrackt-wird--und-was-nicht">Was automatisch
-getrackt wird — und was nicht</a></li>
+<li><a href="#was-automatisch-getrackt-wird-und-was-nicht" id="toc-was-automatisch-getrackt-wird-und-was-nicht">Was automatisch
+getrackt wird: und was nicht</a></li>
 <li><a href="#werkzeug-1-trackforcleanup-auf-waitforrecord--findrecord" id="toc-werkzeug-1-trackforcleanup-auf-waitforrecord--findrecord">Werkzeug
 1: <code>trackForCleanup</code> auf WaitForRecord / FindRecord</a></li>
 <li><a href="#werkzeug-2-die-action-trackrecord" id="toc-werkzeug-2-die-action-trackrecord">Werkzeug 2: die Action
@@ -467,11 +467,11 @@ Stepstatus-Symbol</a></li>
 <ul>
 <li><a href="#die-erste-frage-failed-oder-error" id="toc-die-erste-frage-failed-oder-error">Die erste Frage: Failed oder
 Error?</a></li>
-<li><a href="#failed--die-asserts-stimmen-nicht" id="toc-failed--die-asserts-stimmen-nicht">Failed — die Asserts stimmen
+<li><a href="#failed-die-asserts-stimmen-nicht" id="toc-failed-die-asserts-stimmen-nicht">Failed: die Asserts stimmen
 nicht</a></li>
-<li><a href="#error--eine-action-ist-geworfen" id="toc-error--eine-action-ist-geworfen">Error — eine Action ist
+<li><a href="#error-eine-action-ist-geworfen" id="toc-error-eine-action-ist-geworfen">Error: eine Action ist
 geworfen</a></li>
-<li><a href="#skipped--der-test-konnte-nicht-mal-starten" id="toc-skipped--der-test-konnte-nicht-mal-starten">Skipped — der Test
+<li><a href="#skipped-der-test-konnte-nicht-mal-starten" id="toc-skipped-der-test-konnte-nicht-mal-starten">Skipped: der Test
 konnte nicht mal starten</a></li>
 <li><a href="#der-entscheidungsbaum-als-pseudo-flow" id="toc-der-entscheidungsbaum-als-pseudo-flow">Der Entscheidungsbaum als
 Pseudo-Flow</a></li>
@@ -482,9 +482,9 @@ Anker</a></li>
 </ul></li>
 <li><a href="#kap-04-auswerten-05-logs-im-detail" id="toc-kap-04-auswerten-05-logs-im-detail">Logs im Detail</a>
 <ul>
-<li><a href="#jbe_testsummary--die-kurzform" id="toc-jbe_testsummary--die-kurzform">jbe_testsummary — die
+<li><a href="#jbe_testsummary-die-kurzform" id="toc-jbe_testsummary-die-kurzform">jbe_testsummary: die
 Kurzform</a></li>
-<li><a href="#jbe_fulllog--das-vollprotokoll" id="toc-jbe_fulllog--das-vollprotokoll">jbe_fulllog — das
+<li><a href="#jbe_fulllog-das-vollprotokoll" id="toc-jbe_fulllog-das-vollprotokoll">jbe_fulllog: das
 Vollprotokoll</a></li>
 <li><a href="#wann-lese-ich-jbe_fulllog" id="toc-wann-lese-ich-jbe_fulllog">Wann lese ich jbe_fulllog?</a></li>
 <li><a href="#das-feld-lesen" id="toc-das-feld-lesen">Das Feld
@@ -499,7 +499,7 @@ Beispiel-Log bei einem fehlgeschlagenen Test</a></li>
 wann</a></li>
 </ul></li>
 <li><a href="#kap-05-troubleshooting-01-entscheidungsbaum" id="toc-kap-05-troubleshooting-01-entscheidungsbaum">Entscheidungsbaum:
-Mein Test scheitert — was tun?</a>
+Mein Test scheitert, was tun?</a>
 <ul>
 <li><a href="#der-baum" id="toc-der-baum">Der Baum</a></li>
 <li><a href="#bei-mindestens-einem-nicht-bestanden" id="toc-bei-mindestens-einem-nicht-bestanden">Bei mindestens einem
@@ -660,11 +660,11 @@ Ressourcen</a></li>
 </ul></li>
 </ul>
 </nav>
-<h1 id="kap-readme">D365 Test Center — Entwickler-Handbuch</h1>
+<h1 id="kap-readme">D365 Test Center: Entwickler-Handbuch</h1>
 <p>Dieses Handbuch richtet sich an Entwickler, die mit dem D365 Test
 Center Integrationstests schreiben, ausführen und auswerten. Alles was
 du hier brauchst, kannst du in der Model-Driven-App in Dynamics 365
-machen — kein CLI, kein PowerShell, kein Deployment-Tool.</p>
+machen, kein CLI, kein PowerShell, kein Deployment-Tool.</p>
 <h2 id="voraussetzungen">Voraussetzungen</h2>
 <ul>
 <li>Dynamics 365 / Dataverse-Grundkenntnisse: du weißt was Entity,
@@ -672,7 +672,7 @@ Attribute, Lookup und OptionSet bedeuten</li>
 <li>Zugang zur Model-Driven-App <strong>D365 Test Center</strong> mit
 Rechten zum Anlegen von <code>jbe_testcase</code>- und
 <code>jbe_testrun</code>-Records</li>
-<li>Ein JSON-Editor ist hilfreich (VS Code, Notepad++) — man kann aber
+<li>Ein JSON-Editor ist hilfreich (VS Code, Notepad++), man kann aber
 auch direkt im Mehrzeilentext-Feld der App arbeiten</li>
 </ul>
 <h2 id="was-das-test-center-ist">Was das Test Center ist</h2>
@@ -686,33 +686,33 @@ dazu in <a href="#kap-01-einfuehrung-01-was-ist-das-test-center">01-einführung/
 <h3 id="neu-hier-starte-hier">Neu hier? Starte hier.</h3>
 <ol type="1">
 <li><a href="#kap-01-einfuehrung-01-was-ist-das-test-center">Was ist das
-Test Center?</a> — 5 Min Überblick</li>
-<li><a href="#kap-01-einfuehrung-02-entity-modell">Entity-Modell</a> —
+Test Center?</a>, 5 Min Überblick</li>
+<li><a href="#kap-01-einfuehrung-02-entity-modell">Entity-Modell</a>,
 welche Records spielen zusammen</li>
 <li><a href="#kap-01-einfuehrung-03-quickstart">Quickstart mit 5
-Beispielen</a> — erste 10 Minuten</li>
+Beispielen</a>, erste 10 Minuten</li>
 </ol>
 <h3 id="du-willst-einen-neuen-test-schreiben">Du willst einen neuen Test
 schreiben</h3>
 <ol type="1">
-<li><a href="#kap-02-testfall-schreiben-01-json-schema">JSON-Schema</a>
-— Grundaufbau</li>
-<li><a href="#kap-02-testfall-schreiben-02-actions-referenz">Actions-Referenz</a>
-— was man machen kann</li>
-<li><a href="#kap-02-testfall-schreiben-03-platzhalter">Platzhalter</a>
-— <code>{TIMESTAMP}</code>, <code>{alias.id}</code> und Co.</li>
-<li><a href="#kap-02-testfall-schreiben-07-rezepte">Rezepte</a> —
+<li><a href="#kap-02-testfall-schreiben-01-json-schema">JSON-Schema</a>,
+Grundaufbau</li>
+<li><a href="#kap-02-testfall-schreiben-02-actions-referenz">Actions-Referenz</a>,
+was man machen kann</li>
+<li><a href="#kap-02-testfall-schreiben-03-platzhalter">Platzhalter</a>,
+<code>{TIMESTAMP}</code>, <code>{alias.id}</code> und Co.</li>
+<li><a href="#kap-02-testfall-schreiben-07-rezepte">Rezepte</a>,
 Vorlagen für Standard-Szenarien</li>
-<li><a href="#kap-02-testfall-schreiben-09-negative-path">Negative-Path-Tests</a>
-— <code>expectFailure</code> für erwartete Fehler (v5.3+)</li>
+<li><a href="#kap-02-testfall-schreiben-09-negative-path">Negative-Path-Tests</a>,
+<code>expectFailure</code> für erwartete Fehler (v5.3+)</li>
 <li><a href="#kap-02-testfall-schreiben-10-pitfalls">Pitfalls und
-Plattform-Constraints</a> — state-locked Creation, Plattform-Exception,
+Plattform-Constraints</a>, state-locked Creation, Plattform-Exception,
 Cold-Start, Lookup-Binds</li>
-<li><a href="#kap-02-testfall-schreiben-11-pre-run-validation">Pre-Run-Validation</a>
-— statischer Lint vor jedem Run plus <code>validate</code>-Cli
+<li><a href="#kap-02-testfall-schreiben-11-pre-run-validation">Pre-Run-Validation</a>,
+statischer Lint vor jedem Run plus <code>validate</code>-Cli
 (v5.3.8+)</li>
 <li><a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">Cleanup
-und Testdaten-Hygiene</a> — <code>trackForCleanup</code>,
+und Testdaten-Hygiene</a>, <code>trackForCleanup</code>,
 <code>TrackRecord</code>, <code>cleanupChildren</code> für
 serverseitig/plugin-erzeugte Records</li>
 </ol>
@@ -726,16 +726,16 @@ starten</a></li>
 </ol>
 <h3 id="dein-test-scheitert">Dein Test scheitert</h3>
 <ol type="1">
-<li><a href="#kap-05-troubleshooting-01-entscheidungsbaum">Entscheidungsbaum</a>
-— systematisch zum Fehler</li>
+<li><a href="#kap-05-troubleshooting-01-entscheidungsbaum">Entscheidungsbaum</a>,
+systematisch zum Fehler</li>
 <li><a href="#kap-05-troubleshooting-02-haeufige-fehler">Häufige
-Fehler</a> — Top 12 mit Fix</li>
-<li><a href="#kap-04-auswerten-04-fehleranalyse">Fehleranalyse</a> —
+Fehler</a>, Top 12 mit Fix</li>
+<li><a href="#kap-04-auswerten-04-fehleranalyse">Fehleranalyse</a>,
 FAILED vs ERROR verstehen</li>
 </ol>
 <h3 id="du-suchst-schnell-ein-json-snippet">Du suchst schnell ein
 JSON-Snippet</h3>
-<p><a href="#kap-anhang-a-cheat-sheet">Anhang A — Cheat Sheet</a> — 20
+<p><a href="#kap-anhang-a-cheat-sheet">Anhang A, Cheat Sheet</a>, 20
 häufige Patterns auf einer Seite</p>
 <h2 id="verzeichnisstruktur">Verzeichnisstruktur</h2>
 <pre><code>docs/handbuch/
@@ -763,7 +763,7 @@ ersetzen keinen Screenshot.</li>
 </ul>
 <h2 id="feedback-und-fragen">Feedback und Fragen</h2>
 <p>Anmerkungen an den Projekt-Owner. Fehlende Szenarien oder unklare
-Stellen sind sehr willkommen — dieses Handbuch wird iterativ
+Stellen sind sehr willkommen, dieses Handbuch wird iterativ
 ausgebaut.</p>
 <hr />
 <h1 id="kap-01-einfuehrung-01-was-ist-das-test-center">Was ist das D365
@@ -775,8 +775,8 @@ startest einen Testlauf durch ein einfaches Status-Setzen. Der Testlauf
 läuft als Async-Plugin im Server und erzeugt am Ende einen detaillierten
 Ergebnis-Bericht.</p>
 <h2 id="wofür-ist-es-gut">Wofür ist es gut?</h2>
-<p><strong>Integrations-Tests</strong> — also Tests, die echte Records
-in Dataverse anlegen, Plugin-Ketten aufrufen, asynchron ausgeführte
+<p><strong>Integrations-Tests</strong>: also Tests, die echte Records in
+Dataverse anlegen, Plugin-Ketten aufrufen, asynchron ausgeführte
 Workflows abwarten und am Ende prüfen, ob das Gesamtsystem das erwartete
 Ergebnis liefert.</p>
 <p><strong>Nicht</strong> für:</p>
@@ -860,7 +860,7 @@ Fehlschlag siehst du sofort wo&#39;s hängt.</li>
 <code>WaitForFieldValue</code> warten geduldig bis asynchrone Plugins
 ihre Arbeit getan haben.</li>
 <li><strong>Eine Sprache für alles:</strong> Create, Update, Delete,
-Custom Action, Assertion — alles ist eine &quot;Action&quot; in einer Liste.
+Custom Action, Assertion, alles ist eine &quot;Action&quot; in einer Liste.
 Reihenfolge im JSON ist Ausführungsreihenfolge.</li>
 </ul>
 <h2 id="typische-anwendungsfälle">Typische Anwendungsfälle</h2>
@@ -876,11 +876,11 @@ Master?&quot;</li>
 </ul>
 <h2 id="was-du-hier-nicht-findest">Was du hier NICHT findest</h2>
 <ul>
-<li><strong>Wie das Test Center installiert wird</strong> — das macht
-der Projekt-Owner.</li>
-<li><strong>Wie die C#-Engine erweitert wird</strong> — das ist
+<li><strong>Wie das Test Center installiert wird</strong>: das macht der
+Projekt-Owner.</li>
+<li><strong>Wie die C#-Engine erweitert wird</strong>: das ist
 Produkt-Entwicklung.</li>
-<li><strong>CLI-Nutzung</strong> — dieses Handbuch bleibt bei der
+<li><strong>CLI-Nutzung</strong>: dieses Handbuch bleibt bei der
 App.</li>
 </ul>
 <p>Ab ins <a href="#kap-01-einfuehrung-02-entity-modell">Entity-Modell</a> oder
@@ -902,7 +902,7 @@ die wichtigsten Felder kennst, verstehst du jeden Testlauf.</p>
               | 1 : N
               v
            jbe_teststep (1 Record pro Action im Testcase)</code></pre>
-<h2 id="jbe_testcase--die-testfall-definition">jbe_testcase — die
+<h2 id="jbe_testcase-die-testfall-definition">jbe_testcase: die
 Testfall-Definition</h2>
 <p>Enthält die komplette Beschreibung eines Testfalls im JSON-Format. Du
 schreibst den Test einmal, und er liegt von da an dauerhaft in dieser
@@ -958,7 +958,7 @@ Run übersprungen.</td>
 </table>
 <p>Das Feld <code>jbe_definitionjson</code> ist das Herzstück. Alles was
 der Test tun soll, steht dort als JSON-Objekt.</p>
-<h2 id="jbe_testrun--ein-konkreter-lauf">jbe_testrun — ein konkreter
+<h2 id="jbe_testrun-ein-konkreter-lauf">jbe_testrun: ein konkreter
 Lauf</h2>
 <p>Du legst pro Testlauf einen neuen Record an. Das Anlegen selbst
 startet die Ausführung automatisch.</p>
@@ -1060,8 +1060,8 @@ welche <code>jbe_testcase</code>-Records ausgeführt werden:</p>
 speicherst, feuert das CRUD-Trigger-Plugin
 <code>RunTestsOnStatusChange</code> und der Lauf beginnt asynchron. Du
 musst also einfach den Record speichern.</p>
-<h2 id="jbe_testrunresult--ergebnis-pro-test">jbe_testrunresult —
-Ergebnis pro Test</h2>
+<h2 id="jbe_testrunresult-ergebnis-pro-test">jbe_testrunresult: Ergebnis
+pro Test</h2>
 <p>Pro Test im Lauf wird ein Ergebnis-Record geschrieben. Wenn dein
 Filter drei Tests trifft, hast du drei
 <code>jbe_testrunresult</code>-Records.</p>
@@ -1105,18 +1105,18 @@ Filter drei Tests trifft, hast du drei
 </table>
 <p><strong>Outcomes im Detail:</strong></p>
 <ul>
-<li><strong>Passed</strong> — alle Actions haben geklappt, alle Asserts
+<li><strong>Passed</strong>: alle Actions haben geklappt, alle Asserts
 waren erfolgreich.</li>
-<li><strong>Failed</strong> — alle Actions liefen durch, aber mindestens
+<li><strong>Failed</strong>: alle Actions liefen durch, aber mindestens
 eine Assert hat einen unerwarteten Wert gefunden.</li>
-<li><strong>Error</strong> — eine Action hat geworfen (Netzwerkfehler,
+<li><strong>Error</strong>: eine Action hat geworfen (Netzwerkfehler,
 ungültiger Alias, Plugin-Exception, ...). Der Test wurde
 abgebrochen.</li>
-<li><strong>Skipped</strong> — der Test wurde vor dem ersten Step
+<li><strong>Skipped</strong>: der Test wurde vor dem ersten Step
 abgebrochen, meist wegen einem Problem beim Parsen der
 JSON-Definition.</li>
 </ul>
-<h2 id="jbe_teststep--detail-pro-action">jbe_teststep — Detail pro
+<h2 id="jbe_teststep-detail-pro-action">jbe_teststep: Detail pro
 Action</h2>
 <p>Für jede Action im Test wird ein Step-Record geschrieben. Das ist
 dein Log zum Mitlesen.</p>
@@ -1216,11 +1216,11 @@ gebraucht).</li>
 </ul>
 <p>Die Test-Records selbst (<code>jbe_testrun</code>,
 <code>jbe_testrunresult</code>, <code>jbe_teststep</code>) werden
-<strong>nie</strong> automatisch gelöscht — sie sind dein Audit-Log.</p>
+<strong>nie</strong> automatisch gelöscht, sie sind dein Audit-Log.</p>
 <hr />
 <p>Weiter mit dem <a href="#kap-01-einfuehrung-03-quickstart">Quickstart</a>.</p>
 <hr />
-<h1 id="kap-01-einfuehrung-03-quickstart">Quickstart — 5 Beispiele in 15
+<h1 id="kap-01-einfuehrung-03-quickstart">Quickstart: 5 Beispiele in 15
 Minuten</h1>
 <p>Fünf progressiv aufgebaute Beispiele, die dich durch die wichtigsten
 Features führen. Am Ende des Kapitels hast du fünf laufende Tests und
@@ -1229,8 +1229,8 @@ alle Kern-Patterns gesehen.</p>
 <strong>D365 Test Center</strong> in deinem Browser. Du brauchst
 Schreibrechte auf <code>jbe_testcase</code> und
 <code>jbe_testrun</code>.</p>
-<h2 id="qs-01--account-anlegen-und-website-setzen">QS-01 — Account
-anlegen und Website setzen</h2>
+<h2 id="qs-01-account-anlegen-und-website-setzen">QS-01: Account anlegen
+und Website setzen</h2>
 <p><strong>Ziel:</strong> Einen Account erzeugen, die Website setzen,
 prüfen dass sie korrekt gespeichert wurde. Drei Actions, das minimale
 Skelett.</p>
@@ -1342,9 +1342,9 @@ im Browser oder F5).</p>
 |    |              |       |             |   actual:   https... |
 |9000| Cleanup      |       | Erfolg      | 203 ms               |
 +----+--------------+-------+-------------+----------------------+</code></pre>
-<p>Gratulation — dein erster Test läuft.</p>
+<p>Gratulation, dein erster Test läuft.</p>
 <hr />
-<h2 id="qs-02--contact-an-account-lookup-binding">QS-02 — Contact an
+<h2 id="qs-02-contact-an-account-lookup-binding">QS-02: Contact an
 Account, Lookup-Binding</h2>
 <p><strong>Ziel:</strong> Account mit Child-Contact anlegen, Contact
 aktualisieren, beide Records im Dataverse-Graph verbinden.</p>
@@ -1419,7 +1419,7 @@ machst du Parent-Child)</li>
 <ul>
 <li><p><code>&quot;parentcustomerid_account@odata.bind&quot;: &quot;/accounts({acc.id})&quot;</code>
 Das ist der kanonische Weg, einen <strong>polymorphen</strong>
-Lookup-Wert beim Create zu setzen — <code>parentcustomerid</code> kann
+Lookup-Wert beim Create zu setzen, <code>parentcustomerid</code> kann
 auf Account oder Contact zeigen, deshalb das
 <code>_account</code>-Suffix für die Disambiguierung.</p>
 <p><strong>Single-Target-Lookups</strong> (Lookup mit nur einer
@@ -1448,7 +1448,7 @@ echten Daten kollidieren.</p></li>
 | 5 | Assert       |       | Erfolg  |
 +---+--------------+-------+---------+</code></pre>
 <hr />
-<h2 id="qs-03--lead-qualifizieren-custom-action">QS-03 — Lead
+<h2 id="qs-03-lead-qualifizieren-custom-action">QS-03: Lead
 qualifizieren (Custom Action)</h2>
 <p><strong>Ziel:</strong> Einen Lead anlegen, per
 <code>QualifyLead</code>-Action qualifizieren, und prüfen dass der Lead
@@ -1456,7 +1456,7 @@ deaktiviert wurde und die erwarteten Folge-Records (Contact,
 Opportunity) entstanden sind.</p>
 <p><strong>Was du lernst:</strong></p>
 <ul>
-<li><code>ExecuteRequest</code> — Microsoft-Standard-Messages wie
+<li><code>ExecuteRequest</code>, Microsoft-Standard-Messages wie
 <code>QualifyLead</code>, <code>Merge</code>, <code>SetState</code>
 aufrufen</li>
 <li>Parameter-Typen mit <code>$type</code>:
@@ -1558,7 +1558,7 @@ Boolean ist, brauchst du das <code>$type</code>-Objekt:</p>
 <code>QualifyLead</code> triggert nachgelagerte Plugins
 (Contact/Opportunity werden asynchron angelegt). Das Test Center wartet
 3 Sekunden, bevor die Asserts loslaufen. Eleganter ist
-<code>WaitForFieldValue</code> oder <code>WaitForRecord</code> — siehe
+<code>WaitForFieldValue</code> oder <code>WaitForRecord</code>, siehe
 QS-04.</p></li>
 <li><p><strong><code>Status: 3</code></strong> ist der OptionSetValue
 für &quot;Qualified&quot;. Die Werte sind entity-spezifisch; für <code>lead</code>
@@ -1575,7 +1575,7 @@ sind <code>3=Qualified</code>, <code>4=Disqualified</code>.</p></li>
 | 5 | Assert         |       | Erfolg  | Query Exists   |
 +---+----------------+-------+---------+----------------+</code></pre>
 <hr />
-<h2 id="qs-04--async-plugin-waitforfieldvalue">QS-04 — Async Plugin:
+<h2 id="qs-04-async-plugin-waitforfieldvalue">QS-04: Async Plugin:
 WaitForFieldValue</h2>
 <p><strong>Ziel:</strong> Eine Opportunity schließen
 (<code>WinOpportunity</code>), das triggert ein Folge-Plugin das
@@ -1583,7 +1583,7 @@ WaitForFieldValue</h2>
 statt blind Sekunden zu verbrennen.</p>
 <p><strong>Was du lernst:</strong></p>
 <ul>
-<li><code>WaitForFieldValue</code> — intelligenter Ersatz für
+<li><code>WaitForFieldValue</code>, intelligenter Ersatz für
 <code>waitSeconds</code></li>
 <li>Timeout-Strategie</li>
 <li>Wann <code>Wait</code> sinnvoll ist und wann nicht</li>
@@ -1700,7 +1700,7 @@ muss</td>
 Microsoft-Message einen Unter-Record braucht.</p></li>
 </ul>
 <hr />
-<h2 id="qs-05--record-löschen-und-negativ-assert">QS-05 — Record löschen
+<h2 id="qs-05-record-löschen-und-negativ-assert">QS-05: Record löschen
 und Negativ-Assert</h2>
 <p><strong>Ziel:</strong> Einen Task anlegen, löschen, prüfen dass er
 wirklich weg ist. Das zeigt: auch &quot;etwas existiert nicht mehr&quot; ist eine
@@ -1760,7 +1760,7 @@ valide Assertion.</p>
 <span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p><strong>Warum nicht einfach <code>Record</code>-Assert nach dem
-Delete?</strong> Weil der Record weg ist — ein
+Delete?</strong> Weil der Record weg ist, ein
 <code>target: &quot;Record&quot;</code> kann ihn nicht mehr laden.
 <code>target: &quot;Query&quot;</code> mit <code>NotExists</code> ist der richtige
 Weg: das Test Center macht eine Abfrage und prüfte dass sie 0 Treffer
@@ -2029,7 +2029,7 @@ Sinnvoll z.B. wenn das Update optional ist.</p>
 <h2 id="reihenfolge-und-nummerierung">Reihenfolge und Nummerierung</h2>
 <ul>
 <li><code>stepNumber</code> <strong>muss fortlaufend</strong> sein: 1,
-2, 3, ... — keine Lücken, keine Dopplungen. Die Engine sortiert aber
+2, 3, ..., keine Lücken, keine Dopplungen. Die Engine sortiert aber
 danach, nicht nach JSON-Reihenfolge.</li>
 <li>Konvention: fange mit 1 an, inkrementiere um 1.</li>
 <li>Der Cleanup-Step am Ende des Tests bekommt intern
@@ -2086,7 +2086,7 @@ folgendes Mapping:</p>
 <p>Alle Records auf den Umgebungen sind schon migriert. Neue Tests
 schreibst du direkt im neuen Schema.</p>
 <h2 id="json-validität-prüfen">JSON-Validität prüfen</h2>
-<p>Das <code>jbe_definitionjson</code>-Feld nimmt jeden Text an — auch
+<p>Das <code>jbe_definitionjson</code>-Feld nimmt jeden Text an, auch
 kaputtes JSON. Der Test läuft dann aber als <code>Skipped</code> mit
 einem Parse-Fehler.</p>
 <p>Empfehlung: <strong>JSON vor dem Einfügen in VS Code oder einem
@@ -2097,10 +2097,10 @@ Online- Validator prüfen.</strong> Typische Fehler:</p>
 <li>Kommentare <code>//</code> oder <code>/* */</code> (JSON kennt keine
 Kommentare)</li>
 <li>Umlaute ohne UTF-8 (Umlaute sind erlaubt, aber die Codierung muss
-UTF-8 sein — das macht der Browser automatisch)</li>
+UTF-8 sein, das macht der Browser automatisch)</li>
 </ul>
 <p>Als Plausibilitätscheck reicht oft: kopiere das JSON in VS Code,
-speichere als <code>.json</code> — VS Code markiert Syntaxfehler sofort
+speichere als <code>.json</code>, VS Code markiert Syntaxfehler sofort
 rot.</p>
 <hr />
 <h1 id="kap-02-testfall-schreiben-02-actions-referenz">Actions-Referenz</h1>
@@ -2181,16 +2181,16 @@ APIs)</td>
 </table>
 <p><strong>Negative-Path-Tests (v5.3+):</strong> Für Steps die als
 erwartetes Ergebnis einen Fehler werfen sollen, gibt es zwei optionale
-Felder <code>expectFailure</code> und <code>expectException</code> —
+Felder <code>expectFailure</code> und <code>expectException</code>,
 siehe <a href="#kap-02-testfall-schreiben-09-negative-path">09-negative-path.md</a>.</p>
 <p><strong>Cleanup-Steuerung:</strong> Für Records, die nicht der Test
 selbst, sondern die getestete API oder ein Plugin erzeugt, gibt es die
 optionalen Felder <code>trackForCleanup</code>
 (WaitForRecord/FindRecord), die Action <code>TrackRecord</code> und die
-Kind-Deklaration <code>cleanupChildren</code> — ausführlich in <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</p>
+Kind-Deklaration <code>cleanupChildren</code>, ausführlich in <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</p>
 <p><strong>Konditionale Steps (ADR-0011):</strong> Jeder Step kann ein
 optionales Feld <code>condition</code> tragen, das ihn überspringt, wenn
-eine Laufzeit-Bedingung nicht zutrifft — siehe Abschnitt <a href="#condition">condition</a>.</p>
+eine Laufzeit-Bedingung nicht zutrifft, siehe Abschnitt <a href="#condition">condition</a>.</p>
 <h2 id="condition">condition</h2>
 <blockquote>
 <p>Konditionale Step-Ausführung (ADR-0011). Kein eigener Action-Typ,
@@ -2300,7 +2300,7 @@ AutoNumber, Server-generierte Werte).</td>
 <td><code>cleanupChildren</code></td>
 <td style="text-align: center;">nein</td>
 <td>Kind-Beziehungen, die der Cleanup VOR diesem Record abräumt
-(plugin-erzeugte Kinder, z.B. Restrict-Delete-Monatszeilen) — siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
+(plugin-erzeugte Kinder, z.B. Restrict-Delete-Monatszeilen), siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
 </tr>
 <tr>
 <td><code>description</code></td>
@@ -2313,7 +2313,7 @@ AutoNumber, Server-generierte Werte).</td>
 <ul>
 <li>Ohne <code>alias</code> kannst du den Record später nicht mehr
 referenzieren.</li>
-<li>Lookup-Felder brauchen <code>@odata.bind</code>-Syntax — siehe <a href="#kap-02-testfall-schreiben-04-lookup-und-binding">04-lookup-und-binding.md</a>.</li>
+<li>Lookup-Felder brauchen <code>@odata.bind</code>-Syntax, siehe <a href="#kap-02-testfall-schreiben-04-lookup-und-binding">04-lookup-und-binding.md</a>.</li>
 <li><code>columns</code> ist nützlich für Felder die du nicht setzt,
 aber im Test brauchst: z.B. <code>&quot;columns&quot;: [&quot;accountnumber&quot;]</code>
 lädt die nach dem Create erzeugte AutoNumber, und du kommst per
@@ -2405,7 +2405,7 @@ modifiziert wurde und du im nächsten Step die neuen Werte brauchst.</p>
 <p><strong>Wann brauchst du das?</strong> Wenn
 <code>{alias.fields.xyz}</code> in einem späteren Step einen aktuellen
 Wert liefern muss, der sich nach dem Create geändert hat. Für reine
-Asserts ist <code>RetrieveRecord</code> nicht nötig — die
+Asserts ist <code>RetrieveRecord</code> nicht nötig, die
 Assertion-Engine liest frisch aus der DB.</p>
 <h2 id="wait">Wait</h2>
 <p>Feste Wartezeit.</p>
@@ -2433,9 +2433,9 @@ immer die bessere Wahl, weil sie nicht länger warten als nötig und bei
 Timeouts klar scheitern.</p>
 <h2 id="waitforrecord--findrecord">WaitForRecord / FindRecord</h2>
 <p>Pollt bis ein Record mit bestimmten Kriterien existiert.
-<code>FindRecord</code> ist ein Alias für denselben Step-Typ —
-semantisch passender wenn der Record sicher schon existiert (statt
-darauf zu warten).</p>
+<code>FindRecord</code> ist ein Alias für denselben Step-Typ, semantisch
+passender wenn der Record sicher schon existiert (statt darauf zu
+warten).</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;stepNumber&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;WaitForRecord&quot;</span><span class="fu">,</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;entity&quot;</span><span class="fu">:</span>         <span class="st">&quot;tasks&quot;</span><span class="fu">,</span></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;alias&quot;</span><span class="fu">:</span>          <span class="st">&quot;triggered_task&quot;</span><span class="fu">,</span></span>
@@ -2462,7 +2462,7 @@ darauf zu warten).</p>
 <tr>
 <td><code>filter</code></td>
 <td style="text-align: center;">ja</td>
-<td>Filter-Array (siehe <a href="#filter-syntax">05-assertions.md</a>).</td>
+<td>Filter-Array (siehe <a href="#filter-syntax-target-query">05-assertions.md</a>).</td>
 </tr>
 <tr>
 <td><code>alias</code></td>
@@ -2494,7 +2494,7 @@ darauf zu warten).</p>
 <td style="text-align: center;">nein</td>
 <td>Default <strong>false</strong> (gefundener Record ist Bestand).
 <code>true</code> NUR für Records, die die getestete API in DIESEM Lauf
-serverseitig erzeugt hat — dann räumt der Cleanup sie mit ab. Siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
+serverseitig erzeugt hat, dann räumt der Cleanup sie mit ab. Siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
 </tr>
 <tr>
 <td><code>cleanupChildren</code></td>
@@ -2535,7 +2535,7 @@ neuester, höchster Wert), benutze <code>orderBy</code>:</p>
 <li>Contact mit höchstem Retry-Count zur Diagnose.</li>
 </ul>
 <p><strong><code>top</code></strong> ist standardmäßig 1, kann höher
-gesetzt werden — aber der Standard-Alias-Mechanismus registriert nur den
+gesetzt werden: aber der Standard-Alias-Mechanismus registriert nur den
 ersten Treffer. Höheres <code>top</code> ohne weitere Logik liefert
 nicht mehr nutzbare Records (Stretch für zukünftige Versionen).</p>
 <h2 id="waitforfieldvalue">WaitForFieldValue</h2>
@@ -2566,7 +2566,7 @@ erwarteten Wert hat.</p>
 <td style="text-align: center;">ja</td>
 <td>Single-Key-Map. Der <strong>Key</strong> ist der zu beobachtende
 Feldname; der Wert wird ignoriert (Konvention: <code>null</code>
-setzen). Mehrere Keys werden nicht unterstützt — nur der erste wird
+setzen). Mehrere Keys werden nicht unterstützt, nur der erste wird
 ausgewertet.</td>
 </tr>
 <tr>
@@ -2595,7 +2595,7 @@ ausgewertet.</td>
 <p>Schema-Hintergrund: WaitForFieldValue ist als Single-Field-Polling
 konzipiert
 (<code>GenericRecordWaiter.WaitForFieldValue(entityName, recordId, fieldName, expectedValue, ...)</code>).
-Multi-Field-AND ist heute nicht implementiert — bei Bedarf zwei separate
+Multi-Field-AND ist heute nicht implementiert, bei Bedarf zwei separate
 WaitForFieldValue-Steps oder einen FindRecord/Assert-Schritt
 verwenden.</p>
 <h2 id="waitfornotexists">WaitForNotExists</h2>
@@ -2629,7 +2629,7 @@ soll robust auf die Löschung warten, statt mit einem fixen
 <tr>
 <td><code>filter</code></td>
 <td style="text-align: center;">ja</td>
-<td>Filter-Array (siehe <a href="#filter-syntax">05-assertions.md</a>).</td>
+<td>Filter-Array (siehe <a href="#filter-syntax-target-query">05-assertions.md</a>).</td>
 </tr>
 <tr>
 <td><code>timeoutSeconds</code></td>
@@ -2669,7 +2669,7 @@ Record innerhalb des Timeouts nicht verschwindet, ein separater
 <code>Assert NotExists</code> ist dann nicht mehr nötig.</p>
 <h2 id="trackrecord">TrackRecord</h2>
 <p>Registriert einen Record mit <strong>bereits bekannter ID</strong> in
-Registry und Cleanup-Löschliste — für Records, die die getestete API
+Registry und Cleanup-Löschliste, für Records, die die getestete API
 serverseitig erzeugt und deren ID als Output liefert (dann braucht es
 keine <code>WaitForRecord</code>-Query).</p>
 <div class="sourceCode" id="cb30"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;stepNumber&quot;</span><span class="fu">:</span> <span class="dv">6</span><span class="fu">,</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;TrackRecord&quot;</span><span class="fu">,</span></span>
@@ -2705,7 +2705,7 @@ keine <code>WaitForRecord</code>-Query).</p>
 <tr>
 <td><code>cleanupChildren</code></td>
 <td style="text-align: center;">nein</td>
-<td>Kind-Beziehungen für den Cleanup — siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
+<td>Kind-Beziehungen für den Cleanup, siehe <a href="#kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">12-cleanup-und-testdaten-hygiene.md</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -2722,7 +2722,7 @@ Record, entsteht kein zweiter Löschlisten-Eintrag.</li>
 </ul>
 <h2 id="executerequest">ExecuteRequest</h2>
 <p>Ruft eine SDK-Message auf. Seit Plugin v5.3.7 (ADR-0007) <strong>die
-einzige kanonische Aktion für alle SDK-Message-Aufrufe</strong> —
+einzige kanonische Aktion für alle SDK-Message-Aufrufe</strong>,
 Microsoft-Standard-Messages (Merge, QualifyLead, Assign, SetState, ...)
 <strong>und</strong> Custom Actions / Custom APIs. Legacy-Verben
 <code>CallCustomApi</code> und <code>ExecuteAction</code> werden als
@@ -2871,12 +2871,12 @@ auflistet.</li>
 </ul>
 <p><strong>Häufige SDK-Messages:</strong></p>
 <ul>
-<li><code>QualifyLead</code> — Lead qualifizieren</li>
-<li><code>Merge</code> — zwei Records zusammenführen</li>
-<li><code>WinOpportunity</code> / <code>LoseOpportunity</code> —
+<li><code>QualifyLead</code>, Lead qualifizieren</li>
+<li><code>Merge</code>, zwei Records zusammenführen</li>
+<li><code>WinOpportunity</code> / <code>LoseOpportunity</code>,
 Opportunity schließen</li>
-<li><code>Assign</code> — Owner ändern</li>
-<li><code>SetState</code> — statecode/statuscode ändern (einfacher als
+<li><code>Assign</code>, Owner ändern</li>
+<li><code>SetState</code>, statecode/statuscode ändern (einfacher als
 Update)</li>
 <li><code>AddPrivilegesRole</code>, <code>RetrieveUserSettings</code>,
 ...</li>
@@ -2978,14 +2978,14 @@ ADR-0007):</p>
 <tr>
 <td><code>CallCustomApi</code></td>
 <td><code>entity</code> + <code>fields</code></td>
-<td>Verb → <code>ExecuteRequest</code>; <code>entity</code> →
+<td>Verb -&gt; <code>ExecuteRequest</code>; <code>entity</code> -&gt;
 <code>requestName</code></td>
 </tr>
 <tr>
 <td><code>ExecuteAction</code></td>
 <td><code>actionName</code> + <code>parameters</code></td>
-<td>Verb → <code>ExecuteRequest</code>; <code>actionName</code> →
-<code>requestName</code>; <code>parameters</code> →
+<td>Verb -&gt; <code>ExecuteRequest</code>; <code>actionName</code>
+-&gt; <code>requestName</code>; <code>parameters</code> -&gt;
 <code>fields</code></td>
 </tr>
 <tr>
@@ -3009,7 +3009,7 @@ mindestens zwei Plugin-Major-Versionen erhalten.</p>
 (Plugin v5.3+)</h2>
 <p>Setzt eine Environment-Variable für die Dauer des Tests. Mit
 <code>alias</code> wird der Vorher-Zustand gemerkt und am Testende
-automatisch wiederhergestellt — selbst wenn der Test in der Mitte
+automatisch wiederhergestellt, selbst wenn der Test in der Mitte
 fehlschlägt.</p>
 <div class="sourceCode" id="cb37"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;SetEnvironmentVariable&quot;</span><span class="fu">,</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;schemaName&quot;</span><span class="fu">:</span> <span class="st">&quot;contoso_RetentionDays&quot;</span><span class="fu">,</span></span>
@@ -3113,7 +3113,7 @@ Record im Alias-Store ab.</p>
 </table>
 <p><strong>Source-Semantik:</strong></p>
 <ul>
-<li><code>effective</code> (Default): wie Plugins lesen — CurrentValue
+<li><code>effective</code> (Default): wie Plugins lesen, CurrentValue
 wenn da, sonst DefaultValue.</li>
 <li><code>currentValue</code>: nur aus
 <code>environmentvariablevalue</code>. Liefert <code>null</code> wenn
@@ -3256,7 +3256,7 @@ und Reporting</a>.</p>
 <hr />
 <h1 id="kap-02-testfall-schreiben-03-platzhalter">Platzhalter</h1>
 <p>Platzhalter sind die dynamischen Elemente in deinen Testdaten. Sie
-werden zur Laufzeit durch echte Werte ersetzt — Record-IDs, Zeitstempel,
+werden zur Laufzeit durch echte Werte ersetzt, Record-IDs, Zeitstempel,
 generierte Namen. Ohne Platzhalter könntest du nur statische Tests
 schreiben.</p>
 <h2 id="übersicht-1">Übersicht</h2>
@@ -3342,10 +3342,10 @@ z.B. AutoNumber-freie Felder oder E-Mail-Uniqueness-Constraints.
 <code>jbe_test_2026-04-24T11:45:32Z@example.com</code>.</p>
 <p><strong>Varianten:</strong></p>
 <ul>
-<li><code>{TIMESTAMP}</code> — jetzt</li>
-<li><code>{TIMESTAMP_MINUS_1H}</code> — vor 1 Stunde, nützlich für
+<li><code>{TIMESTAMP}</code>, jetzt</li>
+<li><code>{TIMESTAMP_MINUS_1H}</code>, vor 1 Stunde, nützlich für
 LUW-Tests wenn man &quot;ältere&quot; Quellen simuliert</li>
-<li><code>{TIMESTAMP_PLUS_1H}</code> — in 1 Stunde</li>
+<li><code>{TIMESTAMP_PLUS_1H}</code>, in 1 Stunde</li>
 </ul>
 <p>Alle liefern ISO-8601-UTC-Timestamps
 (<code>2026-04-24T11:45:32Z</code>).</p>
@@ -3432,7 +3432,7 @@ Server-generierte AutoNumber.</p>
 </tbody>
 </table>
 <p><strong>Wichtig:</strong> <code>{GENERATED:firstname}</code> hängt
-automatisch &quot;JBE Test&quot; vor. Das ist Absicht — die Konvention macht
+automatisch &quot;JBE Test&quot; vor. Das ist Absicht, die Konvention macht
 Testdaten im Dataverse sofort als Test erkennbar.</p>
 <h2 id="kombinationen">Kombinationen</h2>
 <p>Du kannst Platzhalter frei kombinieren:</p>
@@ -3457,7 +3457,7 @@ description:    &quot;Erzeugt von Test {alias_if_exists} am 2026-04-24T11:45:32Z
 <span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div>
 <h2 id="was-nicht-geht">Was NICHT geht</h2>
 <ul>
-<li><strong>Arithmetik</strong>: <code>{acc.id + 1}</code> — nicht
+<li><strong>Arithmetik</strong>: <code>{acc.id + 1}</code>, nicht
 unterstützt.</li>
 <li><strong>Fällt zurück auf alten Wert</strong>: wenn du den Record
 zwischendurch änderst, zeigt <code>{alias.fields.x}</code> den Wert zum
@@ -3465,7 +3465,7 @@ Zeitpunkt des letzten <code>CreateRecord</code> /
 <code>RetrieveRecord</code>, nicht den aktuellen DB-Stand. Für aktuelle
 Werte: <code>RetrieveRecord</code> einschieben.</li>
 <li><strong>Verschachtelte Platzhalter</strong>:
-<code>{alias.{name_var}.id}</code> — nicht unterstützt.</li>
+<code>{alias.{name_var}.id}</code>, nicht unterstützt.</li>
 <li><strong>In Zahlen-Feldern</strong>:
 <code>&quot;numberofemployees&quot;: &quot;{TIMESTAMP_SECONDS}&quot;</code> geht nicht, weil
 das Feld eine echte Zahl erwartet, und Platzhalter produzieren Strings.
@@ -3530,13 +3530,13 @@ spezielle URL-Syntax: <strong><code>@odata.bind</code></strong>.</p>
 </tr>
 <tr>
 <td><code>&lt;zielentity&gt;</code></td>
-<td>Der <strong>LogicalName</strong> der Zielentity (Singular!) —
+<td>Der <strong>LogicalName</strong> der Zielentity (Singular!),
 <code>account</code>, <code>contact</code>,
 <code>opportunity</code>.</td>
 </tr>
 <tr>
 <td><code>&lt;zielentityplural&gt;</code></td>
-<td>Der <strong>EntitySetName</strong> der Zielentity (Plural!) —
+<td>Der <strong>EntitySetName</strong> der Zielentity (Plural!),
 <code>accounts</code>, <code>contacts</code>,
 <code>opportunities</code>.</td>
 </tr>
@@ -3560,20 +3560,20 @@ Pflicht.</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;customerid_contact@odata.bind&quot;</span><span class="er">:</span> <span class="st">&quot;/contacts({con.id})&quot;</span></span></code></pre></div>
 <h3 id="task-regarding-opportunity">Task &quot;regarding&quot; Opportunity</h3>
 <div class="sourceCode" id="cb60"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;regardingobjectid_opportunity@odata.bind&quot;</span><span class="er">:</span> <span class="st">&quot;/opportunities({opp.id})&quot;</span></span></code></pre></div>
-<p><code>regardingobjectid</code> ist noch breiter polymorph — der
+<p><code>regardingobjectid</code> ist noch breiter polymorph, der
 Zielentity-Suffix entscheidet die konkrete Zielentity.</p>
 <h3 id="nicht-polymorphe-lookups-ohne-zielentity-suffix">Nicht-polymorphe
 Lookups (ohne Zielentity-Suffix)</h3>
 <p>Manche Lookups zeigen nur auf genau eine Entity. Dann kann der
-Zielentity-Teil entfallen — ist aber immer explizit erlaubt:</p>
+Zielentity-Teil entfallen, ist aber immer explizit erlaubt:</p>
 <div class="sourceCode" id="cb61"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;ownerid@odata.bind&quot;</span><span class="er">:</span> <span class="st">&quot;/systemusers({userId})&quot;</span></span></code></pre></div>
 <p>(<code>ownerid</code> kann auch auf <code>teams</code> zeigen, also
 eigentlich polymorph.)</p>
 <p><strong>Faustregel:</strong> im Zweifel <strong>immer den
 Zielentity-Suffix angeben</strong>. Das funktioniert immer und ist
 eindeutig.</p>
-<h2 id="was-nicht-geht--die-häufigen-fehler">Was NICHT geht — die
-häufigen Fehler</h2>
+<h2 id="was-nicht-geht-die-häufigen-fehler">Was NICHT geht: die häufigen
+Fehler</h2>
 <h3 id="falsch-lookup-ohne-odatabind">FALSCH: Lookup ohne
 @odata.bind</h3>
 <div class="sourceCode" id="cb62"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;parentcustomerid&quot;</span><span class="er">:</span> <span class="st">&quot;{acc.id}&quot;</span>              <span class="er">&lt;--</span> <span class="er">FEHLER</span></span>
@@ -3583,7 +3583,7 @@ häufigen Fehler</h2>
 <h3 id="falsch-ziel-ist-singular-statt-plural">FALSCH: Ziel ist Singular
 statt Plural</h3>
 <div class="sourceCode" id="cb63"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;parentcustomerid_account@odata.bind&quot;</span><span class="er">:</span> <span class="st">&quot;/account({acc.id})&quot;</span>    <span class="er">&lt;--</span> <span class="er">FEHLER</span></span></code></pre></div>
-<p>Muss <code>/accounts(...)</code> heißen — Plural/EntitySetName.</p>
+<p>Muss <code>/accounts(...)</code> heißen, Plural/EntitySetName.</p>
 <h3 id="falsch-guid-in-anführungszeichen">FALSCH: GUID in
 Anführungszeichen</h3>
 <div class="sourceCode" id="cb64"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;parentcustomerid_account@odata.bind&quot;</span><span class="er">:</span> <span class="st">&quot;/accounts(guid&#39;...&#39;))&quot;</span>   <span class="er">&lt;--</span> <span class="er">FEHLER</span></span>
@@ -3718,7 +3718,7 @@ Zustand erreicht wurde. Dieses Dokument erklärt alle Varianten von
 <span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;onError&quot;</span><span class="fu">:</span>  <span class="st">&quot;continue&quot;</span></span>
 <span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="zwei-targets-record-vs-query">Zwei Targets: Record vs Query</h2>
-<p><strong><code>target: &quot;Record&quot;</code></strong> — prüft ein Feld eines
+<p><strong><code>target: &quot;Record&quot;</code></strong>, prüft ein Feld eines
 bekannten Records.</p>
 <div class="sourceCode" id="cb69"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;Assert&quot;</span><span class="fu">,</span></span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;target&quot;</span><span class="fu">:</span>    <span class="st">&quot;Record&quot;</span><span class="fu">,</span></span>
@@ -3732,7 +3732,7 @@ bekannten Records.</p>
 <li>Braucht einen Alias oder eine GUID in <code>recordRef</code>.</li>
 <li>Funktioniert nur wenn der Record existiert.</li>
 </ul>
-<p><strong><code>target: &quot;Query&quot;</code></strong> — führt eine Query aus
+<p><strong><code>target: &quot;Query&quot;</code></strong>, führt eine Query aus
 und prüft das Ergebnis.</p>
 <div class="sourceCode" id="cb70"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;Assert&quot;</span><span class="fu">,</span></span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;target&quot;</span><span class="fu">:</span>  <span class="st">&quot;Query&quot;</span><span class="fu">,</span></span>
@@ -4022,7 +4022,7 @@ OData-Standard.</p>
 <div class="sourceCode" id="cb79"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;recordRef&quot;</span><span class="er">:</span> <span class="st">&quot;{RECORD:acc}&quot;</span>                               <span class="er">//</span> <span class="er">empfohlen,</span> <span class="er">mit</span> <span class="er">Alias</span></span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;recordRef&quot;</span><span class="er">:</span> <span class="st">&quot;{acc.id}&quot;</span>                                   <span class="er">//</span> <span class="er">gleicher</span> <span class="er">Effekt</span></span>
 <span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;recordRef&quot;</span><span class="er">:</span> <span class="st">&quot;3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3&quot;</span>       <span class="er">//</span> <span class="er">Direkt-GUID</span> <span class="er">(selten)</span></span></code></pre></div>
-<h2 id="description--warum-sie-wichtig-ist">description — warum sie
+<h2 id="description-warum-sie-wichtig-ist">description: warum sie
 wichtig ist</h2>
 <p>Jede Assert sollte eine <code>description</code> haben. Im Steps-Tab
 und im <code>jbe_errormessage</code> taucht sie auf, wenn die Assert
@@ -4038,7 +4038,7 @@ bekommen habe ich <code>0</code>&quot;. Mit description weißt du direkt:
 <div class="sourceCode" id="cb81"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;description&quot;</span><span class="er">:</span> <span class="st">&quot;statecode Equals 1&quot;</span>             <span class="er">//</span> <span class="er">sagt</span> <span class="er">nur</span> <span class="er">was</span> <span class="er">im</span> <span class="er">Feld</span> <span class="er">steht,</span> <span class="er">nicht</span> <span class="er">warum</span></span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;description&quot;</span><span class="er">:</span> <span class="st">&quot;Check&quot;</span>                          <span class="er">//</span> <span class="er">nichtssagend</span></span>
 <span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;description&quot;</span><span class="er">:</span> <span class="st">&quot;&quot;</span>                               <span class="er">//</span> <span class="er">leer</span></span></code></pre></div>
-<h2 id="onerror--default-ist-continue">onError — Default ist
+<h2 id="onerror-default-ist-continue">onError: Default ist
 &quot;continue&quot;</h2>
 <p>Für Asserts ist <code>onError</code> automatisch
 <code>continue</code>: wenn eine Assert fehlschlägt, laufen die nächsten
@@ -4094,19 +4094,19 @@ eine Action negative Seiteneffekte hat</h3>
 <span id="cb85-14"><a href="#cb85-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;statecode&quot;</span><span class="fu">,</span> <span class="dt">&quot;operator&quot;</span><span class="fu">:</span> <span class="st">&quot;Equals&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="st">&quot;0&quot;</span><span class="fu">,</span></span>
 <span id="cb85-15"><a href="#cb85-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Master bleibt aktiv&quot;</span><span class="fu">,</span></span>
 <span id="cb85-16"><a href="#cb85-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;onError&quot;</span><span class="fu">:</span> <span class="st">&quot;continue&quot;</span> <span class="fu">}</span></span></code></pre></div>
-<p>Weiter mit <a href="#kap-02-testfall-schreiben-06-coverage-regeln">06-coverage-regeln.md</a>
-— wie viele Asserts sind genug?</p>
+<p>Weiter mit <a href="#kap-02-testfall-schreiben-06-coverage-regeln">06-coverage-regeln.md</a>,
+wie viele Asserts sind genug?</p>
 <hr />
 <h1 id="kap-02-testfall-schreiben-06-coverage-regeln">Coverage-Regeln:
 Wie viele Asserts sind genug?</h1>
 <p>Ein Test mit zwei Asserts ist nicht automatisch schlechter als einer
-mit zehn — aber oft übersieht man wichtige Erwartungen. Dieses Dokument
+mit zehn, aber oft übersieht man wichtige Erwartungen. Dieses Dokument
 beschreibt Regeln und Heuristiken, damit deine Tests das prüfen was sie
 prüfen sollen.</p>
-<h2 id="regel-1-leitfrage--was-würde-ich-manuell-prüfen">Regel 1:
-Leitfrage — was würde ich manuell prüfen?</h2>
+<h2 id="regel-1-leitfrage-was-würde-ich-manuell-prüfen">Regel 1:
+Leitfrage, was würde ich manuell prüfen?</h2>
 <p>Bevor du Asserts schreibst, frag dich: <strong>&quot;Wenn ich diesen Test
-manuell im Browser ausführen würde — was würde ich mir danach alles
+manuell im Browser ausführen würde, was würde ich mir danach alles
 ansehen, bevor ich ihn als bestanden abzeichne?&quot;</strong></p>
 <p>Jede Sichtprüfung ist eine Assertion.</p>
 <p>Beispiel für &quot;Lead qualifizieren&quot;:</p>
@@ -4154,7 +4154,7 @@ sollen</td>
 </tr>
 </tbody>
 </table>
-<p>&quot;Wichtigste Felder&quot; heißt nicht alle Felder — nur die, die fachlich
+<p>&quot;Wichtigste Felder&quot; heißt nicht alle Felder, nur die, die fachlich
 bedeutsam sind. Bei einem Contact-Create für einen Invoicing-Test würde
 ich <code>firstname</code>, <code>lastname</code>,
 <code>emailaddress1</code>, <code>parentcustomerid</code> prüfen, aber
@@ -4189,13 +4189,13 @@ sondern nur &quot;so wirkt&quot;.</p>
 <h2 id="regel-4-symmetrie-bei-umgekehrten-szenarien">Regel 4: Symmetrie
 bei umgekehrten Szenarien</h2>
 <p>Wenn Test B die Umkehrung von Test A ist, <strong>müssen die Asserts
-strukturell identisch sein</strong> — nur mit vertauschten Rollen.</p>
+strukturell identisch sein</strong>, nur mit vertauschten Rollen.</p>
 <p>Beispiel:</p>
 <ul>
 <li><strong>MGR-04A</strong>: Duplikat wird Master (7 Asserts am
 Survivor, 4 am Subordinate)</li>
 <li><strong>MGR-04B</strong>: Master bleibt Master (muss auch 7 am
-Survivor, 4 am Subordinate prüfen — mit vertauschter Perspektive)</li>
+Survivor, 4 am Subordinate prüfen, mit vertauschter Perspektive)</li>
 </ul>
 <p>Asymmetrische Coverage zwischen Szenario und Umkehrung ist ein Test-
 Design-Bug. Der Grund: vertauschte Rollen könnten unterschiedliche Bugs
@@ -4228,7 +4228,7 @@ Assertion existiert.</li>
 <li>Bei Test-Failure weiß man sofort welche fachliche Erwartung verletzt
 wurde.</li>
 </ul>
-<p>Siehe <a href="#description--warum-sie-wichtig-ist">05-assertions.md</a>.</p>
+<p>Siehe <a href="#description-warum-sie-wichtig-ist">05-assertions.md</a>.</p>
 <h2 id="regel-7-precondition-vollständigkeit">Regel 7:
 Precondition-Vollständigkeit</h2>
 <p>Ein Test muss <strong>alle notwendigen Vorbedingungen
@@ -4249,8 +4249,8 @@ auf. Wenn du einen Test jeden Tag 5x laufen lassen kannst ohne dass er
 Datenmüll hinterlässt, ist er sauber.</p>
 <h2 id="regel-8-assertions-am-ende-nicht-dazwischen">Regel 8: Assertions
 am Ende, nicht dazwischen</h2>
-<p>Streng genommen ist das optional — Asserts können überall stehen.
-Aber als Konvention und für Lesbarkeit:</p>
+<p>Streng genommen ist das optional, Asserts können überall stehen. Aber
+als Konvention und für Lesbarkeit:</p>
 <pre><code>CreateRecord acc
 CreateRecord con
 CreateRecord cs
@@ -4276,10 +4276,10 @@ ExecuteRequest QualifyLead
 Assert lead.statecode == 1           // Zwischen-Assert: qualified
 UpdateRecord created_opp
 Assert created_opp.estimatedvalue == 50000</code></pre>
-<p>Hier ist der Zwischen-Assert nicht nur Doku — er ist die
-Voraussetzung dass der nächste Step funktioniert. Wenn der Lead nicht
-qualifiziert wurde, gibt es keine Opportunity, und das Update wirft
-einen Fehler. Der Zwischen-Assert macht klar wo es wirklich hängt.</p>
+<p>Hier ist der Zwischen-Assert nicht nur Doku, er ist die Voraussetzung
+dass der nächste Step funktioniert. Wenn der Lead nicht qualifiziert
+wurde, gibt es keine Opportunity, und das Update wirft einen Fehler. Der
+Zwischen-Assert macht klar wo es wirklich hängt.</p>
 <h2 id="anti-pattern-der-smoke-test-der-nichts-prüfe">Anti-Pattern: Der
 &quot;Smoke-Test&quot; der nichts prüfe</h2>
 <div class="sourceCode" id="cb91"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;testId&quot;</span><span class="fu">:</span> <span class="st">&quot;STD-01&quot;</span><span class="fu">,</span></span>
@@ -4293,7 +4293,7 @@ einen Fehler. Der Zwischen-Assert macht klar wo es wirklich hängt.</p>
 Account mit falschem OwnerTeam angelegt wird? Was wenn ein Plugin die
 Name ändert? Was wenn der statecode anders ist als erwartet? Der Test
 fängt nichts davon ab.</p>
-<p><strong>Besser — selbst der einfachste Smoke-Test hat mindestens 2
+<p><strong>Besser: selbst der einfachste Smoke-Test hat mindestens 2
 Asserts:</strong></p>
 <div class="sourceCode" id="cb92"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;testId&quot;</span><span class="fu">:</span> <span class="st">&quot;STD-01&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Account anlegen&quot;</span><span class="fu">,</span> <span class="dt">&quot;steps&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;CreateRecord&quot;</span><span class="fu">,</span> <span class="dt">&quot;entity&quot;</span><span class="fu">:</span> <span class="st">&quot;accounts&quot;</span><span class="fu">,</span> <span class="dt">&quot;alias&quot;</span><span class="fu">:</span> <span class="st">&quot;acc&quot;</span><span class="fu">,</span></span>
@@ -4588,8 +4588,8 @@ Survivor als auch Subordinate prüfen.</p>
 <span id="cb98-44"><a href="#cb98-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Survivor behält seine E-Mail&quot;</span><span class="fu">,</span> <span class="dt">&quot;onError&quot;</span><span class="fu">:</span> <span class="st">&quot;continue&quot;</span> <span class="fu">}</span></span>
 <span id="cb98-45"><a href="#cb98-45" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb98-46"><a href="#cb98-46" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h2 id="rezept-g-waitforrecord--auf-von-plugin-erzeugten-record-warten">Rezept
-G: WaitForRecord — auf von Plugin erzeugten Record warten</h2>
+<h2 id="rezept-g-waitforrecord-auf-von-plugin-erzeugten-record-warten">Rezept
+G: WaitForRecord, auf von Plugin erzeugten Record warten</h2>
 <p><strong>Wofür:</strong> Ein Plugin erzeugt einen Folgerecord, du
 weißt nicht die GUID, musst aber darauf zugreifen.</p>
 <div class="sourceCode" id="cb99"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
@@ -4669,7 +4669,7 @@ oder <a href="#kap-02-testfall-schreiben-05-assertions">Assertions-Dokumentation
 <h1 id="kap-02-testfall-schreiben-08-testdaten-konventionen">Testdaten-Konventionen</h1>
 <p>Testdaten sollen sofort als Testdaten erkennbar sein, nicht mit
 echten Daten kollidieren und beim Cleanup eindeutig gefunden werden
-können. Diese Konventionen machen das möglich — und sie sind nicht
+können. Diese Konventionen machen das möglich, und sie sind nicht
 verhandelbar, sondern durch <code>{GENERATED:*}</code>-Platzhalter
 bereits vorgegeben.</p>
 <h2 id="die-4-grundregeln">Die 4 Grundregeln</h2>
@@ -4817,7 +4817,7 @@ Präfixe:</p>
 </table>
 <p>Die Präfixe helfen beim Filtern (<code>category:STD*</code> oder
 <code>STD*</code> als Filter-Value im Testrun).</p>
-<h2 id="record-cleanup--verlass-dich-aufs-framework">Record-Cleanup —
+<h2 id="record-cleanup-verlass-dich-aufs-framework">Record-Cleanup:
 verlass dich auf&#39;s Framework</h2>
 <p>Das Test Center räumt nach jedem Lauf automatisch auf (Record-Tracker
 sammelt alle <code>CreateRecord</code>-Ergebnisse, löscht sie am Ende in
@@ -4872,8 +4872,8 @@ der Anwendung beweisen.</p>
 <p>Das Test Center kennt dafür ab Plugin v5.3 zwei optionale Felder auf
 allen Non-Assert-Steps: <code>expectFailure</code> und
 <code>expectException</code>.</p>
-<h2 id="variante-1--expectfailure-true-irgendein-fehler-reicht">Variante
-1 — <code>expectFailure: true</code> (irgendein Fehler reicht)</h2>
+<h2 id="variante-1-expectfailure-true-irgendein-fehler-reicht">Variante
+1: <code>expectFailure: true</code> (irgendein Fehler reicht)</h2>
 <div class="sourceCode" id="cb109"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;stepNumber&quot;</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;UpdateRecord&quot;</span><span class="fu">,</span></span>
 <span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;alias&quot;</span><span class="fu">:</span> <span class="st">&quot;testContact&quot;</span><span class="fu">,</span></span>
 <span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;statecode&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;statuscode&quot;</span><span class="fu">:</span> <span class="dv">1</span> <span class="fu">},</span></span>
@@ -4906,8 +4906,8 @@ succeeded&quot;</td>
 <strong>nach</strong> diesem Step weiter laufen soll (kein impliziter
 Test-Abbruch). Wenn man explizit nach dem erwarteten Fehler abbrechen
 will, kombiniert man mit <code>&quot;onError&quot;: &quot;stop&quot;</code>.</p>
-<h2 id="variante-2--expectexception-mit-match-auf-die-fehlermeldung">Variante
-2 — <code>expectException</code> (mit Match auf die Fehlermeldung)</h2>
+<h2 id="variante-2-expectexception-mit-match-auf-die-fehlermeldung">Variante
+2: <code>expectException</code> (mit Match auf die Fehlermeldung)</h2>
 <p>Wenn man die Exception genauer prüfen will (welcher Guard greift,
 welcher Error-Code, welcher HTTP-Status):</p>
 <div class="sourceCode" id="cb110"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;stepNumber&quot;</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;UpdateRecord&quot;</span><span class="fu">,</span></span>
@@ -4955,30 +4955,29 @@ welcher Error-Code, welcher HTTP-Status):</p>
 </tbody>
 </table>
 <p><strong>Exklusiv:</strong> <code>messageContains</code> und
-<code>messageMatches</code> dürfen nicht gleichzeitig gesetzt sein —
-beim Parsen kommt sonst ein Validierungsfehler.</p>
+<code>messageMatches</code> dürfen nicht gleichzeitig gesetzt sein, beim
+Parsen kommt sonst ein Validierungsfehler.</p>
 <h3 id="wann-welche-match-form">Wann welche Match-Form?</h3>
 <ul>
-<li><strong><code>messageContains</code></strong> — wenn der
-Message-Text stabil ist und du nur ein Stichwort prüfen willst.
-Häufigster Fall.</li>
-<li><strong><code>messageMatches</code></strong> — wenn der Text
+<li><strong><code>messageContains</code></strong>: wenn der Message-Text
+stabil ist und du nur ein Stichwort prüfen willst. Häufigster Fall.</li>
+<li><strong><code>messageMatches</code></strong>: wenn der Text
 Variationen hat (z.B. mit GUID/Datum), aber das Muster gleich ist.</li>
-<li><strong><code>errorCode</code></strong> — robust gegen
+<li><strong><code>errorCode</code></strong>: robust gegen
 Textänderungen. Empfohlen für langfristig stabile Tests.</li>
-<li><strong><code>httpStatus</code></strong> — selten nötig. Sinnvoll
-bei Web-API-spezifischen Tests die zwischen 400 (Validierungsfehler) und
-403 (Berechtigung) unterscheiden müssen.</li>
+<li><strong><code>httpStatus</code></strong>: selten nötig. Sinnvoll bei
+Web-API-spezifischen Tests die zwischen 400 (Validierungsfehler) und 403
+(Berechtigung) unterscheiden müssen.</li>
 </ul>
 <p><strong>Empfehlung:</strong> <code>errorCode</code> +
-<code>messageContains</code> zusammen ist die stärkste Kombination —
-Code für Stabilität, Message für Lesbarkeit.</p>
+<code>messageContains</code> zusammen ist die stärkste Kombination, Code
+für Stabilität, Message für Lesbarkeit.</p>
 <div class="sourceCode" id="cb111"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;expectException&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errorCode&quot;</span><span class="fu">:</span> <span class="st">&quot;0x80040227&quot;</span><span class="fu">,</span></span>
 <span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;messageContains&quot;</span><span class="fu">:</span> <span class="st">&quot;GDPR admin&quot;</span></span>
 <span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h2 id="vollständiges-beispiel--dsgvo-negative-path-mit-envvar">Vollständiges
-Beispiel — DSGVO-Negative-Path mit EnvVar</h2>
+<h2 id="vollständiges-beispiel-dsgvo-negative-path-mit-envvar">Vollständiges
+Beispiel: DSGVO-Negative-Path mit EnvVar</h2>
 <p>Kombiniert mit <code>SetEnvironmentVariable</code> ergibt sich ein
 vollständiger Negative-Path-Test:</p>
 <div class="sourceCode" id="cb112"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
@@ -5014,7 +5013,7 @@ Auto-Restore am Testende).</li>
 <li>Contact wird angelegt und auf Pseudonymized gesetzt.</li>
 <li>Wait gibt dem Plugin Zeit zu reagieren.</li>
 <li>Reaktivierungs-Versuch: <code>expectException</code> matcht den
-Guard-Text → Step Passed.</li>
+Guard-Text -&gt; Step Passed.</li>
 <li>Assertion: statecode ist immer noch 1 (der Guard hat geblockt).</li>
 </ol>
 <p>Am Testende (automatisch durch <code>keeprecords: false</code>):</p>
@@ -5038,8 +5037,8 @@ den Test trotz <code>expectFailure</code> als <code>Error</code>.</li>
 (zu implementierungsnah, bricht bei Refactorings). Stattdessen Message-
 oder ErrorCode-Match.</li>
 </ul>
-<h2 id="pitfall-custom-api-pattern-1-stage-30-mainoperation--v539-fix">Pitfall:
-Custom-API Pattern 1 (Stage 30 MainOperation) — v5.3.9 Fix</h2>
+<h2 id="pitfall-custom-api-pattern-1-stage-30-mainoperation-v539-fix">Pitfall:
+Custom-API Pattern 1 (Stage 30 MainOperation), v5.3.9 Fix</h2>
 <p>Bei <code>action: &quot;ExecuteRequest&quot;</code> gegen eine
 <strong>Custom-API mit Pattern 1</strong> (PluginType direkt am
 <code>customapi.plugintypeid</code> verknüpft, Stage 30 MainOperation)
@@ -5065,7 +5064,7 @@ Pre/Post-Plugin-Pattern ab:</p>
 <td>Fault wird als <code>FaultException</code> am Endpoint
 propagiert</td>
 <td><strong>bis v5.3.8 Bug:</strong> Step landet im Catch ohne
-Matcher-Aufruf → <code>Outcome=Error</code></td>
+Matcher-Aufruf -&gt; <code>Outcome=Error</code></td>
 </tr>
 </tbody>
 </table>
@@ -5125,7 +5124,7 @@ Effekt erzielt und wann nicht:</p>
 <tr>
 <td><code>FindRecord</code>, <code>WaitForRecord</code>,
 <code>WaitForFieldValue</code></td>
-<td><strong>nicht empfohlen</strong> — Polling-Semantik kollidiert mit
+<td><strong>nicht empfohlen</strong>: Polling-Semantik kollidiert mit
 Exception-Erwartung</td>
 <td><strong>nicht empfohlen</strong></td>
 </tr>
@@ -5282,7 +5281,7 @@ State-Lock.</p>
 <h2 id="plattform-exception-vs-plugin-exception">Plattform-Exception vs
 Plugin-Exception</h2>
 <p><code>expectException</code> matched <strong>alles</strong> was an
-Exception kommt — auch Plattform-Fehler die nicht von deinem Plugin
+Exception kommt, auch Plattform-Fehler die nicht von deinem Plugin
 stammen.</p>
 <h3 id="symptom-1">Symptom</h3>
 <p>Du hast einen Test mit
@@ -5297,7 +5296,7 @@ kam.</p>
 (Plugin v5.3.1) nur die Match-Fehlschlag-Information, nicht den Text der
 tatsächlich geworfenen Exception. Workaround: temporär das
 <code>expectException</code> entfernen und den Test als reines
-<code>Step-Error</code> laufen lassen — dann zeigt
+<code>Step-Error</code> laufen lassen, dann zeigt
 <code>jbe_errormessage</code> die echte Exception.</p>
 <p>Geplant für nächste Version: <code>actualException</code>-Detail wird
 auch im FAILED-Fall mitgeliefert.</p>
@@ -5552,9 +5551,8 @@ Nützlich für CI.</p>
 <p>Beim normalen Run via Cli, Custom-API
 (<code>jbe_RunIntegrationTests</code>) oder CRUD-Trigger-Plugin
 (<code>RunTestsOnStatusChange</code>) läuft derselbe Validator
-automatisch — die Logik lebt in <code>D365TestCenter.Core</code>, also
-im Engine-Pfad, der alle drei Aufrufer nutzen (ADR-0003
-Single-Engine).</p>
+automatisch, die Logik lebt in <code>D365TestCenter.Core</code>, also im
+Engine-Pfad, der alle drei Aufrufer nutzen (ADR-0003 Single-Engine).</p>
 <p>Bei einem Error-Finding sieht der Tester einen kurzen
 Test-Run-Eintrag:</p>
 <pre><code>[Test] PLG-UMSATZPLAN-01 -&gt; FEHLER: Pre-Run-Validation hat 1 Error-Befund(e).
@@ -5595,7 +5593,7 @@ Cli-only-Code.</li>
 <hr />
 <h1 id="kap-02-testfall-schreiben-12-cleanup-und-testdaten-hygiene">Cleanup
 und Testdaten-Hygiene</h1>
-<p>Tests laufen gegen eine <strong>echte Umgebung</strong> — jeder Lauf
+<p>Tests laufen gegen eine <strong>echte Umgebung</strong>, jeder Lauf
 muss seine Spuren restlos entfernen, sonst akkumulieren Testdaten,
 verfälschen Folgeläufe und Auswertungen. Dieses Kapitel erklärt, wie das
 automatische Cleanup arbeitet, welche Records es von allein kennt, und
@@ -5632,15 +5630,15 @@ allein kennt:</p>
 <p>Nach dem letzten Step eines Testfalls (auch nach FAILED/ERROR) läuft
 die Cleanup-Phase:</p>
 <ol type="1">
-<li><strong>EnvironmentVariable-Restore zuerst</strong> — alle per
+<li><strong>EnvironmentVariable-Restore zuerst</strong>: alle per
 <code>SetEnvironmentVariable</code> veränderten Variablen werden auf
 ihren Vorher-Zustand zurückgesetzt, selbst wenn danach Record-Deletes
 scheitern. So kippt eine hängengebliebene Test-Konfiguration keine
 Folgetests.</li>
-<li><strong>Record-Löschung in LIFO-Reihenfolge</strong> — die
-Löschliste wird rückwärts abgearbeitet: der zuletzt registrierte Record
-fällt zuerst. Dadurch stimmen Abhängigkeiten automatisch, wenn du Eltern
-vor Kindern anlegst (Account -&gt; Contact: der Contact wird zuerst
+<li><strong>Record-Löschung in LIFO-Reihenfolge</strong>: die Löschliste
+wird rückwärts abgearbeitet: der zuletzt registrierte Record fällt
+zuerst. Dadurch stimmen Abhängigkeiten automatisch, wenn du Eltern vor
+Kindern anlegst (Account -&gt; Contact: der Contact wird zuerst
 gelöscht).</li>
 <li>Für Records mit deklarierten <a href="#werkzeug-3-cleanupchildren-für-plugin-erzeugte-kind-mengen"><code>cleanupChildren</code></a>
 werden VOR dem Record selbst dessen Kinder abgeräumt (Details
@@ -5655,7 +5653,7 @@ blieben.</p>
 <p><strong>Der Test-Outcome bleibt vom Cleanup unberührt:</strong> Ein
 fachlich grüner Test wird nicht rot, weil das Aufräumen scheiterte.
 Damit ein Datenleck trotzdem nie still bleibt, weist der Lauf
-Cleanup-Fehler aggregiert aus — als Banner in der CLI-Summary
+Cleanup-Fehler aggregiert aus, als Banner in der CLI-Summary
 (<code>CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen</code>),
 als <code>cleanupFailedCount</code> im Ergebnis und im Audit-Kommentar
 (sync-zephyr/sync-devops).</p>
@@ -5667,8 +5665,8 @@ Eltern-Records bereits per Cascade mitgenommen hatte, warf beim eigenen
 Delete 404). Solche Fälle zählen jetzt als „bereits geräumt&quot;. Steht dort
 eine Zahl &gt; 0, liegen wirklich Daten in der Umgebung.</p>
 </blockquote>
-<h2 id="was-automatisch-getrackt-wird--und-was-nicht">Was automatisch
-getrackt wird — und was nicht</h2>
+<h2 id="was-automatisch-getrackt-wird-und-was-nicht">Was automatisch
+getrackt wird: und was nicht</h2>
 <table>
 <thead>
 <tr>
@@ -5699,13 +5697,13 @@ ist.</td>
 <tr>
 <td>Von Plugins/APIs <strong>serverseitig</strong> erzeugte Records</td>
 <td style="text-align: center;"><strong>nein</strong></td>
-<td>Der Engine unbekannt — genau dafür gibt es die drei Werkzeuge
+<td>Der Engine unbekannt, genau dafür gibt es die drei Werkzeuge
 unten.</td>
 </tr>
 </tbody>
 </table>
 <p>Die Lücke ist tückisch: serverseitig erzeugte Records bleiben nicht
-nur selbst liegen — hängen sie mit
+nur selbst liegen, hängen sie mit
 <strong>Restrict-Delete-Verhalten</strong> an einem getrackten Record,
 blockieren sie auch noch dessen Löschung
 (<code>The object you tried to delete is associated with another object</code>,
@@ -5729,18 +5727,18 @@ Löschliste auf:</p>
 <span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timeoutSeconds&quot;</span><span class="fu">:</span> <span class="dv">60</span><span class="fu">,</span></span>
 <span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Von der API erzeugte Rechnung finden UND fürs Cleanup vormerken&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <ul>
-<li>Default ist <strong>false</strong> — setze <code>true</code> NUR,
+<li>Default ist <strong>false</strong>, setze <code>true</code> NUR,
 wenn der gefundene Record während DIESES Laufs von der getesteten API
 erzeugt wurde. Ein <code>trackForCleanup: true</code> auf einem
 Bestands-Record löscht Stammdaten.</li>
 <li>Die LIFO-Reihenfolge passt automatisch: der Beleg wird nach dem
-Account registriert, also vor ihm gelöscht — der Restrict-Blocker löst
+Account registriert, also vor ihm gelöscht, der Restrict-Blocker löst
 sich auf.</li>
 </ul>
 <h2 id="werkzeug-2-die-action-trackrecord">Werkzeug 2: die Action
 <code>TrackRecord</code></h2>
 <p>Liefert die getestete API die erzeugte ID als Output-Parameter,
-brauchst du keine Query — <code>TrackRecord</code> registriert die
+brauchst du keine Query, <code>TrackRecord</code> registriert die
 bekannte ID direkt in Registry und Löschliste:</p>
 <div class="sourceCode" id="cb124"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;stepNumber&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;ExecuteRequest&quot;</span><span class="fu">,</span></span>
 <span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;requestName&quot;</span><span class="fu">:</span> <span class="st">&quot;contoso_CancelInvoice&quot;</span><span class="fu">,</span></span>
@@ -5754,7 +5752,7 @@ bekannte ID direkt in Registry und Löschliste:</p>
 <ul>
 <li><code>recordId</code> ist platzhalterauflösbar. Ein
 <strong>unauflösbarer Platzhalter oder eine Nicht-GUID ist ein harter
-Error</strong> — kein stilles Nichts-Tracken, damit ein Tippfehler die
+Error</strong>, kein stilles Nichts-Tracken, damit ein Tippfehler die
 Lücke nicht unbemerkt wieder öffnet.</li>
 <li><strong>Dedup:</strong> Zeigt <code>recordId</code> auf einen
 bereits getrackten Record, entsteht kein zweiter Löschlisten-Eintrag
@@ -5773,15 +5771,15 @@ Server-Seiteneffekte, bei denen an einem Test-Record eine ganze
 Zusammensetzung du nicht statisch deklarieren kannst:</p>
 <ul>
 <li>Ein Verteilungs-Plugin erzeugt je Monat des Leistungszeitraums eine
-Monatszeile — 3, 12 oder 60 Records, je nach Testdaten.</li>
+Monatszeile, 3, 12 oder 60 Records, je nach Testdaten.</li>
 <li>Ändert der Test den Zeitraum, werden Zeilen asynchron
-<strong>gelöscht und neu erzeugt</strong> — eine beim Fund getrackte
+<strong>gelöscht und neu erzeugt</strong>, eine beim Fund getrackte
 Zeile kann beim Cleanup schon nicht mehr existieren, dafür gibt es neue,
 die nie getrackt wurden.</li>
 <li>Hängen diese Kinder per <strong>Restrict-Delete</strong> am
 Test-Record, scheitert dessen Cleanup-Delete dauerhaft; hängen sie per
 <strong>RemoveLink</strong> daran, geht der Delete zwar durch, nullt
-aber den Lookup — die Kinder bleiben als unauffindbare Waisen
+aber den Lookup, die Kinder bleiben als unauffindbare Waisen
 zurück.</li>
 </ul>
 <h3 id="die-lösung-kind-beziehung-am-parent-deklarieren">Die Lösung:
@@ -5826,8 +5824,8 @@ zeigt.</td>
 </tr>
 </tbody>
 </table>
-<p>Gültig auf <code>CreateRecord</code> sowie — nur zusammen mit
-Tracking — auf <code>FindRecord</code>/<code>WaitForRecord</code>
+<p>Gültig auf <code>CreateRecord</code> sowie, nur zusammen mit
+Tracking, auf <code>FindRecord</code>/<code>WaitForRecord</code>
 (<code>trackForCleanup: true</code>) und <code>TrackRecord</code>. Ohne
 Tracking wird die Deklaration ignoriert (ein Record, der nicht gelöscht
 wird, braucht keine Kind-Räumung). Fehlt <code>entity</code> oder
@@ -5839,10 +5837,10 @@ still nichts zu tun.</p>
 Cleanup-Delete des Records fragt die Engine je deklarierter Beziehung
 alle Kinder ab (<code>lookupField</code> = Record-ID, in 500er-Seiten)
 und löscht sie VOR dem Record selbst. Weil die Query erst im Cleanup
-läuft, erfasst sie die <strong>finale</strong> Menge — auch Kinder, die
+läuft, erfasst sie die <strong>finale</strong> Menge: auch Kinder, die
 lange nach dem Step asynchron entstanden sind oder gewandert sind.</li>
 <li><strong>Genau EINE Ebene, kein Metadaten-Discovery.</strong> Die
-Engine löscht exakt die deklarierte Beziehung — sie ermittelt NICHT
+Engine löscht exakt die deklarierte Beziehung, sie ermittelt NICHT
 selbstständig per Metadaten, was sonst noch blockieren könnte, und
 steigt nicht rekursiv in Kinder von Kindern. Das ist eine bewusste
 Design-Entscheidung (ADR-2026-07-23-0808): Der deterministische
@@ -5856,15 +5854,15 @@ jeweiligen Parent-Delete; die Reihenfolge der Parents untereinander
 bestimmt weiter die Registrier-Reihenfolge.</li>
 <li><strong>Warum Kinder eines Test-Records gefahrlos löschbar
 sind:</strong> Ein Bestands-Record kann keinen Lookup auf einen Record
-tragen, der erst im Test entstanden ist — Kinder eines im Lauf erzeugten
+tragen, der erst im Test entstanden ist, Kinder eines im Lauf erzeugten
 Parents sind per Konstruktion Lauf-Artefakte. (Ausnahme: ein Test, der
-Bestands-Records aktiv auf den Test-Record umhängt — dann die
-Deklaration schlicht weglassen.)</li>
+Bestands-Records aktiv auf den Test-Record umhängt, dann die Deklaration
+schlicht weglassen.)</li>
 </ol>
 <h3 id="denormalisierte-lookups-doppelt-nutzen">Denormalisierte Lookups
 doppelt nutzen</h3>
 <p>Trägt die Kind-Entität MEHRERE Lookups in deine Test-Hierarchie,
-kannst du die Deklaration auf mehreren Ebenen setzen — Redundanz ist
+kannst du die Deklaration auf mehreren Ebenen setzen, Redundanz ist
 harmlos (die zweite Query findet 0 Kinder oder räumt Reste, 404 ist
 toleriert). Beispiel aus einem Nutzerprojekt:
 <code>contoso_umsatzplan</code>-Zeilen tragen
@@ -5877,14 +5875,14 @@ toleriert). Beispiel aus einem Nutzerprojekt:
 <span id="cb126-5"><a href="#cb126-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cleanupChildren&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb126-6"><a href="#cb126-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;entity&quot;</span><span class="fu">:</span> <span class="st">&quot;contoso_umsatzplans&quot;</span><span class="fu">,</span> <span class="dt">&quot;lookupField&quot;</span><span class="fu">:</span> <span class="st">&quot;contoso_leistungid&quot;</span> <span class="fu">}</span></span>
 <span id="cb126-7"><a href="#cb126-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<p>Das räumt beim Leistungs-Delete ALLE Umsatzplan-Zeilen der Leistung —
+<p>Das räumt beim Leistungs-Delete ALLE Umsatzplan-Zeilen der Leistung,
 die Monatszeilen der Positionen (falls deren eigener Delete sie noch
 nicht erwischt hat) und die positionslosen Budget-Zeilen, die sonst beim
 RemoveLink-Delete der Leistung zu unauffindbaren Waisen würden.</p>
 <h3 id="race-toleranzen-wenn-ein-plugin-parallel-dieselben-kinder-löscht">Race-Toleranzen:
 wenn ein Plugin parallel dieselben Kinder löscht</h3>
 <p>Kind-Mengen, die ein Plugin erzeugt, baut oft auch ein Plugin wieder
-ab — und der Abbau-Job kann GLEICHZEITIG mit der Cleanup-Kind-Löschung
+ab, und der Abbau-Job kann GLEICHZEITIG mit der Cleanup-Kind-Löschung
 laufen (Beispiel: der Cleanup löscht zuerst die getrackte Buchung, deren
 Delete-Plugin räumt asynchron die Budget-Zeilen ab, während der Cleanup
 dieselben Zeilen über die Deklaration der Leistung löscht). Die Engine
@@ -5900,7 +5898,7 @@ behandelt die beiden möglichen Kollisionen:</p>
 <tr>
 <td>Kind ist beim Delete <strong>schon weg</strong> (404 /
 ObjectDoesNotExist 0x80040217)</td>
-<td>Zählt als geräumt — Ziel erreicht, kein Fehler.</td>
+<td>Zählt als geräumt, Ziel erreicht, kein Fehler.</td>
 </tr>
 <tr>
 <td>Plattform meldet
@@ -5908,7 +5906,7 @@ ObjectDoesNotExist 0x80040217)</td>
 löschen <strong>gerade jetzt</strong>)</td>
 <td>Wird NICHT blind als erledigt gewertet: die Engine wartet 1 s und
 fragt die Kinder erneut ab. Ist die Query leer, hat der parallele Job
-gewonnen — fertig. Taucht das Kind wieder auf (der parallele Delete
+gewonnen, fertig. Taucht das Kind wieder auf (der parallele Delete
 scheiterte), wird es erneut gelöscht. Maximal 10 Runden, danach
 sichtbarer Fehler.</td>
 </tr>
@@ -5921,7 +5919,7 @@ trotzdem versucht (und scheitert dann typischerweise ebenfalls
 sichtbar). Nichts wird still geschluckt.</p>
 <p><strong>Amok-Schutz:</strong> Maximal 10.000 Kinder je deklarierter
 Beziehung. Mehr deutet auf eine falsch deklarierte Beziehung (z.B.
-Lookup eines Stammdaten-Parents) — der Cleanup bricht mit klarer Meldung
+Lookup eines Stammdaten-Parents), der Cleanup bricht mit klarer Meldung
 ab, statt weiterzulöschen.</p>
 <h3 id="log-sichtbarkeit">Log-Sichtbarkeit</h3>
 <p>Jede Räumung erscheint im Step-Log (<code>jbe_fulllog</code> bzw.
@@ -5965,34 +5963,33 @@ Parent der Zwischenebene (keine automatische Rekursion)</td>
 </tr>
 <tr>
 <td>Bestands-Record wird nur GELESEN</td>
-<td>nichts — und <code>trackForCleanup</code> ausdrücklich NICHT
+<td>nichts, und <code>trackForCleanup</code> ausdrücklich NICHT
 setzen</td>
 </tr>
 </tbody>
 </table>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>
-<li><strong><code>CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen</code></strong>
-— seit 2026-07-23 ein echter Rest-Indikator (keine
-Doppel-Delete-Artefakte mehr). Details stehen je Testfall in der
-Cleanup-Zeile des Steps-Tabs und im <code>jbe_fulllog</code>; die erste
-Fehlermeldung nennt Entität und ID.</li>
+<li><strong><code>CLEANUP-WARNUNG: N Aufräum-Operation(en) fehlgeschlagen</code></strong>,
+seit 2026-07-23 ein echter Rest-Indikator (keine Doppel-Delete-Artefakte
+mehr). Details stehen je Testfall in der Cleanup-Zeile des Steps-Tabs
+und im <code>jbe_fulllog</code>; die erste Fehlermeldung nennt Entität
+und ID.</li>
 <li><strong><code>The object you tried to delete is associated with another object</code></strong>
 bzw.
 <code>Cascade Delete failed due to cascade restrict relation ...</code>
-im Cleanup — an dem Record hängen nicht deklarierte Restrict-Kinder. Die
+im Cleanup, an dem Record hängen nicht deklarierte Restrict-Kinder. Die
 Fehlermeldung der Kaskade nennt die Kind-Entität; deklariere sie per
 <code>cleanupChildren</code> am passenden Parent-Step.</li>
 <li><strong>Waisen trotz grünem Cleanup</strong> (nur bei
-RemoveLink-Beziehungen möglich, weil der Parent-Delete nicht blockiert)
-— Read-back fahren: Kind-Entität nach dem Test-Namensmuster bzw. dem
+RemoveLink-Beziehungen möglich, weil der Parent-Delete nicht blockiert),
+Read-back fahren: Kind-Entität nach dem Test-Namensmuster bzw. dem
 Lauf-Zeitfenster abfragen. Fix: <code>cleanupChildren</code> am Parent
 deklarieren.</li>
-<li><strong><code>cleanupChildren: Konkurrierende Deletes ... klingen nicht ab</code></strong>
-— ein paralleler Prozess löscht dieselben Kinder dauerhaft erfolglos
-(z.B. blockt ein tieferer Restrict beide). Die Kette der
-Kind-Beziehungen prüfen; ggf. eine weitere Deklaration auf der
-Zwischenebene.</li>
+<li><strong><code>cleanupChildren: Konkurrierende Deletes ... klingen nicht ab</code></strong>,
+ein paralleler Prozess löscht dieselben Kinder dauerhaft erfolglos (z.B.
+blockt ein tieferer Restrict beide). Die Kette der Kind-Beziehungen
+prüfen; ggf. eine weitere Deklaration auf der Zwischenebene.</li>
 <li><strong>Pre-Run-Validator:</strong> <code>cleanupChildren</code> ist
 ein bekannter Step-Key (kein <code>STEP_KEY_UNKNOWN</code>); ein
 Tippfehler wie <code>cleanupChilds</code> wird dagegen als unbekannter
@@ -6086,7 +6083,7 @@ JSON. Bei Abweichung nimmt die Engine den Wert aus dem JSON.</li>
 <li><strong>Titel:</strong> Anzeigename, wird auch als Primary Name
 verwendet.</li>
 <li><strong>Definition:</strong> das komplette JSON. <strong>Paste mit
-Strg+V</strong> — die Textbox akzeptiert beliebige Mehrzeilentexte.</li>
+Strg+V</strong>, die Textbox akzeptiert beliebige Mehrzeilentexte.</li>
 </ul>
 <p><strong>Optional aber empfohlen:</strong></p>
 <ul>
@@ -6176,14 +6173,14 @@ anlegen</h2>
 |  [Speichern]  [Speichern &amp; Schließen]                   |
 +----------------------------------------------------------+</code></pre>
 <h3 id="die-felder-im-detail">Die Felder im Detail</h3>
-<p><strong>Name</strong> — frei wählbar. Gute Beispiele:</p>
+<p><strong>Name</strong>: frei wählbar. Gute Beispiele:</p>
 <ul>
 <li><code>Regression vor Release</code></li>
 <li><code>Sprint 63 Testlauf</code></li>
 <li><code>Smoke Test 24.04 nachmittags</code></li>
 <li><code>MGR01 nach Plugin-Fix</code></li>
 </ul>
-<p><strong>Testcase-Filter</strong> — steuert WELCHE Tests laufen:</p>
+<p><strong>Testcase-Filter</strong>: steuert WELCHE Tests laufen:</p>
 <table>
 <thead>
 <tr>
@@ -6224,7 +6221,7 @@ stehen. Das ist der Trigger.</p>
 <ul>
 <li><strong>Nicht angehakt</strong> (Default): Testdaten werden nach dem
 Lauf gelöscht.</li>
-<li><strong>Angehakt</strong>: Testdaten bleiben — nützlich wenn du nach
+<li><strong>Angehakt</strong>: Testdaten bleiben, nützlich wenn du nach
 dem Lauf manuell im Browser verifizieren willst was passiert ist.</li>
 </ul>
 <h2 id="schritt-3-speichern--start">Schritt 3: Speichern = Start</h2>
@@ -6236,7 +6233,7 @@ Lauf im Hintergrund ab.</p>
 ist der Start.</p>
 <h2 id="schritt-4-zuschauen">Schritt 4: Zuschauen</h2>
 <p>Auf derselben Seite siehst du live die Aktualisierungen (durch den
-Browser- Cache kann es 2-3 Sekunden brauchen — notfalls
+Browser- Cache kann es 2-3 Sekunden brauchen, notfalls
 <strong>F5</strong> drücken):</p>
 <pre><code>+-- Testlauf: Regression 24.04 ---------------------------+
 |                                                         |
@@ -6286,10 +6283,10 @@ länger.</li>
 <p><strong>Sandbox-Timeout:</strong> D365 Plugins haben eine
 2-Minuten-Grenze pro Sync- Aufruf. Das Test-Center arbeitet asynchron in
 Batches zu je ~12 Tests; jeder Batch hat 2 Minuten. Bei &gt;96 Tests
-kann es mehrere Runde brauchen — die Engine macht das automatisch.</p>
+kann es mehrere Runde brauchen, die Engine macht das automatisch.</p>
 <h2 id="run-abbrechen">Run abbrechen?</h2>
 <p>Gibt es <strong>nicht</strong>. Einmal gestartet läuft der Lauf
-durch. Du kannst aber den Testrun-Record löschen, während er läuft — das
+durch. Du kannst aber den Testrun-Record löschen, während er läuft, das
 beendet nicht das Plugin im Hintergrund, aber der Record ist weg und du
 siehst kein Ergebnis mehr. Nur für Notfälle.</p>
 <h2 id="mehrere-testläufe-gleichzeitig">Mehrere Testläufe
@@ -6360,33 +6357,33 @@ Schritt</h2>
 <ul>
 <li>Registriert auf <code>Create</code> und <code>Update</code> von
 <code>jbe_testrun</code></li>
-<li>Filter-Attribut <code>jbe_teststatus</code> — feuert nur bei
-Änderung dieses Felds</li>
+<li>Filter-Attribut <code>jbe_teststatus</code>, feuert nur bei Änderung
+dieses Felds</li>
 <li>Läuft Async (asynchronous plugin execution)</li>
 <li>Ist die eigentliche Engine: orchestriert alles</li>
 </ul>
 <p><strong>Die Core-Engine (C# intern):</strong></p>
 <ul>
-<li><code>TestCenterOrchestrator</code> — liest Testcases, loopt durch
+<li><code>TestCenterOrchestrator</code>, liest Testcases, loopt durch
 Batches</li>
-<li><code>TestRunner</code> — führt einen einzelnen Testcase aus</li>
-<li><code>AssertionEngine</code> — wertet Assert-Actions aus</li>
-<li><code>PlaceholderEngine</code> — löst Platzhalter auf
+<li><code>TestRunner</code>, führt einen einzelnen Testcase aus</li>
+<li><code>AssertionEngine</code>, wertet Assert-Actions aus</li>
+<li><code>PlaceholderEngine</code>, löst Platzhalter auf
 (<code>{TIMESTAMP}</code>, <code>{alias.id}</code>)</li>
-<li><code>RecordTracker</code> — merkt sich Create-Ergebnisse für
+<li><code>RecordTracker</code>, merkt sich Create-Ergebnisse für
 Cleanup</li>
 </ul>
 <p><strong>Die Entities im Schreib-Betrieb:</strong></p>
 <ul>
-<li><code>jbe_testrun</code> — wird geupdated (Status, Counter,
+<li><code>jbe_testrun</code>, wird geupdated (Status, Counter,
 Summary)</li>
-<li><code>jbe_testrunresult</code> — je einer pro Testcase im Lauf</li>
-<li><code>jbe_teststep</code> — je einer pro Action pro Testcase</li>
+<li><code>jbe_testrunresult</code>, je einer pro Testcase im Lauf</li>
+<li><code>jbe_teststep</code>, je einer pro Action pro Testcase</li>
 </ul>
 <p><strong>Die Custom API
 (<code>jbe_RunIntegrationTests</code>):</strong></p>
 <p>Alternativer Einstiegspunkt für synchrone Runs vom Browser aus. Als
-Entwickler-Kollege nutzt du sie nicht direkt — wird nur erwähnt damit du
+Entwickler-Kollege nutzt du sie nicht direkt, wird nur erwähnt damit du
 weißt: wenn du im Plugin-Trace-Log mal
 <code>RunIntegrationTestsApi</code> siehst, ist das ein
 synchron-Start.</p>
@@ -6413,14 +6410,14 @@ registriert:</p>
 ]</code></pre>
 <p>Am Ende des Tests durchläuft die Engine diese Liste
 <strong>rückwärts</strong> und löscht jeden Record. Rückwärts, weil die
-später angelegten Records oft Lookups auf die früheren haben — in
+später angelegten Records oft Lookups auf die früheren haben, in
 Rückwärts-Reihenfolge funktioniert das Löschen ohne
 Constraint-Verletzung.</p>
 <p><strong>Wenn <code>jbe_keeprecords: true</code>:</strong> die Liste
 wird nicht gelöscht, du siehst alle Records nach dem Lauf im
 Dataverse.</p>
 <p><strong>Wenn ein Cleanup-Delete fehlschlägt:</strong> wird im
-Steps-Tab als Cleanup- Step mit Ergebnis &quot;Fehler&quot; angezeigt — das
+Steps-Tab als Cleanup- Step mit Ergebnis &quot;Fehler&quot; angezeigt, das
 Testergebnis (Passed/Failed) ist davon nicht betroffen. Cleanup-Fehler
 sind meistens Plugin-Seiten- effekte die etwas auf dem Record verändert
 haben.</p>
@@ -6435,12 +6432,12 @@ kurz aus. Nicht schlimm, aber dein Wohlfühl-Moment &quot;jetzt bin ich bei
 <h2 id="wo-logge-ich-mit">Wo logge ich mit?</h2>
 <p>Der volle Text-Log eines Laufs steht im
 <code>jbe_testrun.jbe_fulllog</code>-Feld (Mehrzeilentext). Das ist der
-Plaintext-Output, den das Plugin während der Ausführung gesammelt hat —
+Plaintext-Output, den das Plugin während der Ausführung gesammelt hat,
 wertvoll für die Fehlersuche bei komplexen Läufen. Siehe <a href="#kap-04-auswerten-05-logs-im-detail">../04-auswerten/05-logs-im-detail.md</a>.</p>
 <h2 id="wenn-du-mehr-wissen-willst">Wenn du mehr wissen willst</h2>
 <p>Das hier ist ein <strong>Anwender-Handbuch</strong>. Für die
-Produkt-Architektur gibt es separate Dokumente unter <code>docs/</code>
-— aber die sind nicht Teil deines Workflows als Test-Autor.</p>
+Produkt-Architektur gibt es separate Dokumente unter <code>docs/</code>,
+aber die sind nicht Teil deines Workflows als Test-Autor.</p>
 <hr />
 <h1 id="kap-04-auswerten-01-testrun-lesen">TestRun lesen</h1>
 <p>Der <code>jbe_testrun</code>-Record ist dein Überblick: wurde der
@@ -6480,11 +6477,11 @@ sind fehlgeschlagen.</p>
 <h2 id="das-erste-was-du-sehen-willst">Das erste was du sehen
 willst</h2>
 <ol type="1">
-<li><strong>Test-Status = Abgeschlossen?</strong> — wenn nein, lauf ist
+<li><strong>Test-Status = Abgeschlossen?</strong> wenn nein, lauf ist
 noch aktiv oder technisch fehlgeschlagen.</li>
-<li><strong>Fehlgeschlagen &gt; 0?</strong> — wenn ja, hast du
+<li><strong>Fehlgeschlagen &gt; 0?</strong> wenn ja, hast du
 Probleme.</li>
-<li><strong>Welche Tests genau?</strong> — siehe
+<li><strong>Welche Tests genau?</strong> siehe
 Test-Zusammenfassung.</li>
 </ol>
 <h2 id="test-status">Test-Status</h2>
@@ -6527,7 +6524,7 @@ Sandbox-Timeout, Parser-Fehler</td>
 </table>
 <p><strong>Wichtig:</strong> <code>Abgeschlossen</code> mit
 <code>Fehlgeschlagen=3</code> bedeutet &quot;Lauf ist normal durchgelaufen,
-aber 3 Tests waren inhaltlich nicht OK&quot;. Das ist ein gesunder Zustand —
+aber 3 Tests waren inhaltlich nicht OK&quot;. Das ist ein gesunder Zustand,
 keine technische Panne.</p>
 <p><code>Test-Status = Fehler</code> dagegen bedeutet &quot;der Lauf selbst
 ist abgebrochen, ich weiß nicht einmal wie viele Tests geschafft haben&quot;.
@@ -6567,7 +6564,7 @@ Batch 1-5 von 5:
 <li>Test-ID, Doppelpunkt, Titel</li>
 <li>Laufzeit in Klammern</li>
 </ul>
-<p>Bei größeren Runs steht hier auch der Batching-Status mit drin —
+<p>Bei größeren Runs steht hier auch der Batching-Status mit drin,
 welche Batches sind abgearbeitet, welcher läuft gerade.</p>
 <h2 id="full-log-feld-jbe_fulllog">Full-Log (Feld
 <code>jbe_fulllog</code>)</h2>
@@ -6578,7 +6575,7 @@ fehlgeschlagen ist, oder wenn das Parsen eines JSONs gehakt hat. Siehe
 <h2 id="zugeordnete-testergebnisse">Zugeordnete Testergebnisse</h2>
 <p>Unten auf der Seite findest du die <strong>zugeordneten
 Testergebnisse</strong>. Das ist die Liste aller
-<code>jbe_testrunresult</code>-Records — einer pro Testcase im Lauf:</p>
+<code>jbe_testrunresult</code>-Records, einer pro Testcase im Lauf:</p>
 <pre><code>+-- Zugeordnete Testergebnisse (5) ---------------------+
 |                                                       |
 |  +----------+-----------+-------------------+-------+ |
@@ -6593,7 +6590,7 @@ Testergebnisse</strong>. Das ist die Liste aller
 |                                                       |
 +-------------------------------------------------------+</code></pre>
 <p><strong>Klick auf eine fehlgeschlagene Zeile</strong> öffnet den
-Detail-Record mit Step-Tab und Fehlermeldung — das ist dein nächster
+Detail-Record mit Step-Tab und Fehlermeldung, das ist dein nächster
 Anlaufpunkt. Siehe <a href="#kap-04-auswerten-02-testrunresult-detail">02-testrunresult-detail.md</a>.</p>
 <h2 id="tipps-zur-tabellen-ansicht">Tipps zur Tabellen-Ansicht</h2>
 <p>Die Zugeordnete-Liste ist eine ganz normale Dynamics-Sub-Grid. Du
@@ -6656,7 +6653,7 @@ Exception). Der Test wurde abgebrochen</td>
 </tr>
 <tr>
 <td><strong>Übersprungen</strong></td>
-<td>Der Test wurde vor dem ersten Step abgebrochen — meist
+<td>Der Test wurde vor dem ersten Step abgebrochen, meist
 JSON-Parse-Fehler</td>
 </tr>
 </tbody>
@@ -6687,7 +6684,7 @@ Tatsächlich: &lt;Wert&gt;</code></pre>
   Line 12, Col 5: missing &#39;,&#39; after property</code></pre>
 <h2 id="zugeordnete-testschritte">Zugeordnete Testschritte</h2>
 <p>Unten auf der Seite: <strong>Testschritte</strong> (Sub-Grid). Alle
-<code>jbe_teststep</code>- Records die zu diesem Ergebnis gehören — ein
+<code>jbe_teststep</code>- Records die zu diesem Ergebnis gehören, ein
 Schritt pro Action im Testcase plus ggf. Cleanup-Step.</p>
 <pre><code>+-- Testschritte (5) --------------------------------------+
 |                                                          |
@@ -6701,7 +6698,7 @@ Schritt pro Action im Testcase plus ggf. Cleanup-Step.</p>
 |  +---+--------------+-------+---------------+----------+ |
 |                                                          |
 +----------------------------------------------------------+</code></pre>
-<p>Klick auf den fehlgeschlagenen Step (4) öffnet das Step-Detail — das
+<p>Klick auf den fehlgeschlagenen Step (4) öffnet das Step-Detail, das
 ist dein eigentlicher Debug-Punkt. Siehe <a href="#kap-04-auswerten-03-steps-tab-verstehen">03-steps-tab-verstehen.md</a>.</p>
 <h2 id="die-4-typischen-analyse-muster">Die 4 typischen
 Analyse-Muster</h2>
@@ -6737,17 +6734,17 @@ Beispiel:</p>
 <pre><code>JSON-Parse-Fehler in jbe_definitionjson:
   Line 15, Col 3: unexpected token &#39;steps&#39;</code></pre>
 <p>Öffne den Testfall im Editor, validiere das JSON, speichere neu.</p>
-<h3 id="muster-4-passed--aber-der-test-sollte-eigentlich-failed-sein">Muster
-4: Passed — aber der Test sollte eigentlich Failed sein</h3>
+<h3 id="muster-4-passed-aber-der-test-sollte-eigentlich-failed-sein">Muster
+4: Passed, aber der Test sollte eigentlich Failed sein</h3>
 <p>Kommt vor wenn dein Test zu wenig prüft. Jede <code>Assert</code> die
-nicht fehlschlägt, ist &quot;OK&quot; — auch wenn die Umgebung gar nicht in dem
+nicht fehlschlägt, ist &quot;OK&quot;, auch wenn die Umgebung gar nicht in dem
 Zustand ist den du dir vorgestellt hast.</p>
 <p><strong>Lösung:</strong> mehr Asserts hinzufügen. Besonders
 Negativ-Erwartungen (<code>IsNull</code>, <code>NotExists</code>,
 <code>!= alter Wert</code>). Siehe <a href="#kap-02-testfall-schreiben-06-coverage-regeln">../02-testfall-schreiben/06-coverage-regeln.md</a>.</p>
 <h2 id="das-testlauf-feld">Das Testlauf-Feld</h2>
 <p>Oben rechts auf der Seite ist ein Link zurück zum
-<code>jbe_testrun</code> — so wechselst du zwischen &quot;Detail eines
+<code>jbe_testrun</code>, so wechselst du zwischen &quot;Detail eines
 Einzeltests&quot; und &quot;Überblick aller Tests des Runs&quot;.</p>
 <h2 id="kann-ich-einen-fehlgeschlagenen-test-nochmal-laufen-lassen">Kann
 ich einen fehlgeschlagenen Test nochmal laufen lassen?</h2>
@@ -6873,13 +6870,13 @@ Cleanup steht mit <code>9000</code> deswegen am Ende.</p>
 <h2 id="die-assertion-details">Die Assertion-Details</h2>
 <p>Nur bei <code>Assert</code>-Steps gefüllt:</p>
 <ul>
-<li><strong>Feld</strong> (<code>jbe_assertionfield</code>) — was wurde
+<li><strong>Feld</strong> (<code>jbe_assertionfield</code>): was wurde
 geprüft</li>
-<li><strong>Operator</strong> (<code>jbe_assertionoperator</code>) —
+<li><strong>Operator</strong> (<code>jbe_assertionoperator</code>):
 welche Vergleichslogik</li>
-<li><strong>Erwartet</strong> (<code>jbe_expectedvalue</code>) — was
+<li><strong>Erwartet</strong> (<code>jbe_expectedvalue</code>): was
 sollte drinstehen</li>
-<li><strong>Tatsächlich</strong> (<code>jbe_actualvalue</code>) — was
+<li><strong>Tatsächlich</strong> (<code>jbe_actualvalue</code>): was
 war&#39;s wirklich</li>
 </ul>
 <p>Die Differenz zwischen <strong>Erwartet</strong> und
@@ -6894,10 +6891,10 @@ tatsächlichen Record springen, den der Test erzeugt hat, und ihn dir
 anschauen.</p>
 <h2 id="input--und-output-daten">Input- und Output-Daten</h2>
 <ul>
-<li><strong>Input-Daten</strong> (<code>jbe_inputdata</code>) — das
+<li><strong>Input-Daten</strong> (<code>jbe_inputdata</code>): das
 Roh-JSON das diese Action ausgelöst hat (mit aufgelösten
 Platzhaltern).</li>
-<li><strong>Output-Daten</strong> (<code>jbe_outputdata</code>) — die
+<li><strong>Output-Daten</strong> (<code>jbe_outputdata</code>): die
 Antwort vom Server (bei Bedarf gekürzt).</li>
 </ul>
 <p>Die meisten Tests brauchen diese Felder nie. Bei tief verschachtelten
@@ -6934,11 +6931,11 @@ bestanden</td>
 <p>Ein erfahrener Leser überfliegt den Step-Tab so:</p>
 <ol type="1">
 <li><strong>Alle Steps auf Erfolg?</strong> Super, Test ist sauber.</li>
-<li><strong>Welcher Step hat gekippt?</strong> — oft gibt es nur einen
+<li><strong>Welcher Step hat gekippt?</strong> oft gibt es nur einen
 Assert-Fehler, alle anderen sind OK.</li>
-<li><strong>Was war Erwartet vs Tatsächlich?</strong> — hier kommt die
+<li><strong>Was war Erwartet vs Tatsächlich?</strong> hier kommt die
 Diagnose her.</li>
-<li><strong>Dauerte der Step ungewöhnlich lange?</strong> — Hinweis auf
+<li><strong>Dauerte der Step ungewöhnlich lange?</strong> Hinweis auf
 Timing- Probleme.</li>
 </ol>
 <h2 id="dauern-pro-action-typ-erfahrungswerte">Dauern pro Action-Typ
@@ -7041,18 +7038,18 @@ Error?</h2>
 </tbody>
 </table>
 <p>Diese drei sind sehr unterschiedliche Bugs. Verwechsle sie nicht.</p>
-<h2 id="failed--die-asserts-stimmen-nicht">Failed — die Asserts stimmen
+<h2 id="failed-die-asserts-stimmen-nicht">Failed: die Asserts stimmen
 nicht</h2>
 <h3 id="schritt-1-welcher-assert">Schritt 1: Welcher Assert?</h3>
 <p>Öffne den Steps-Tab, sortiere oder filtere auf
 <code>jbe_stepstatus = Fehler</code>. Pro rote Zeile:</p>
 <ul>
-<li>Lies die <code>description</code> — was war die Erwartung
+<li>Lies die <code>description</code>, was war die Erwartung
 fachlich?</li>
 <li>Lies <code>Erwartet</code> und <code>Tatsächlich</code>.</li>
 </ul>
-<h3 id="schritt-2-erwartet-vs-tatsächlich--vier-typische-muster">Schritt
-2: Erwartet vs Tatsächlich — vier typische Muster</h3>
+<h3 id="schritt-2-erwartet-vs-tatsächlich-vier-typische-muster">Schritt
+2: Erwartet vs Tatsächlich, vier typische Muster</h3>
 <p><strong>Muster A: Timing</strong></p>
 <pre><code>Erwartet:     1
 Tatsächlich: null (oder 0, oder der Default-Wert)</code></pre>
@@ -7067,7 +7064,7 @@ Code wurde etwas geändert, der Test wurde nicht nachgezogen.</p>
 <pre><code>Erwartet:     5000
 Tatsächlich: 5000.0000</code></pre>
 <p>Money-Felder kommen als Decimal-Strings zurück. Im Test:
-<code>&quot;value&quot;: &quot;5000.0000&quot;</code> oder <code>&quot;value&quot;: &quot;5000.00&quot;</code> —
+<code>&quot;value&quot;: &quot;5000.0000&quot;</code> oder <code>&quot;value&quot;: &quot;5000.00&quot;</code>,
 je nachdem was Dataverse gerade zurückgibt. Tipp: erst manuell ohne
 Assert laufen lassen, <code>Tatsächlich</code> auslesen, im Test
 nachtragen.</p>
@@ -7084,7 +7081,7 @@ den Test mit <code>jbe_keeprecords: true</code> nochmal laufen. Danach
 kannst du die Records direkt im Browser anschauen und vergleichen.</p>
 <p>Shortcut: Im Steps-Tab beim CreateRecord-Step ist die GUID mit einem
 Klick-Link verfügbar. Öffnen, nachschauen.</p>
-<h2 id="error--eine-action-ist-geworfen">Error — eine Action ist
+<h2 id="error-eine-action-ist-geworfen">Error: eine Action ist
 geworfen</h2>
 <h3 id="schritt-1-welche-action-wars">Schritt 1: Welche Action
 war&#39;s?</h3>
@@ -7122,8 +7119,8 @@ Entweder: Timeout erhöhen, oder Plugin ist gerade kaputt.</p>
 <h3 id="schritt-3-fix-einspielen-und-erneut-laufen-lassen">Schritt 3:
 Fix einspielen und erneut laufen lassen</h3>
 <p>Einen neuen Testrun anlegen mit dem gleichen Filter. Nicht am alten
-Testrun herumbiegen — ein neuer Run ist ein neuer Audit-Eintrag.</p>
-<h2 id="skipped--der-test-konnte-nicht-mal-starten">Skipped — der Test
+Testrun herumbiegen, ein neuer Run ist ein neuer Audit-Eintrag.</p>
+<h2 id="skipped-der-test-konnte-nicht-mal-starten">Skipped: der Test
 konnte nicht mal starten</h2>
 <h3 id="ursache-1-json-syntax">Ursache 1: JSON-Syntax</h3>
 <pre><code>JSON-Parse-Fehler: line 15, col 3: unexpected token</code></pre>
@@ -7139,7 +7136,7 @@ Sünder:</p>
 <p>Wenn der Testfall-Record <code>jbe_enabled = nein</code> hat, wird er
 vom Run übersprungen. Bei Filter <code>*</code> ohne Hit auf einen Test
 mit <code>jbe_enabled</code>= <code>ja</code> landet
-<code>Gesamt = 0</code> — dann existiert gar kein Result-Record.</p>
+<code>Gesamt = 0</code>, dann existiert gar kein Result-Record.</p>
 <h3 id="ursache-3-pflichtfelder-fehlen">Ursache 3: Pflichtfelder
 fehlen</h3>
 <p>Wenn dein JSON z.B. <code>testId</code> nicht enthält, parsed der
@@ -7197,8 +7194,7 @@ der rot ist, liegt es nicht an deinem Code.</p>
 Analysen gibt es zwei Langtext-Felder mit Vollprotokoll:
 <code>jbe_fulllog</code> und <code>jbe_testsummary</code> am
 <code>jbe_testrun</code>.</p>
-<h2 id="jbe_testsummary--die-kurzform">jbe_testsummary — die
-Kurzform</h2>
+<h2 id="jbe_testsummary-die-kurzform">jbe_testsummary: die Kurzform</h2>
 <p>Schon am <code>jbe_testrun</code>-Formular direkt sichtbar.
 Plaintext, Zeile für Zeile, Kurzüberblick:</p>
 <pre><code>5/5 bestanden, 0 fehlgeschlagen
@@ -7220,7 +7216,7 @@ Batch &lt;from&gt;-&lt;to&gt; von &lt;total-batches&gt;:
 &lt;[OK] | [FAIL] | [ERR] | [SKIP]&gt;  &lt;testId&gt;: &lt;title&gt;  (&lt;duration&gt;ms)
 ...</code></pre>
 <p>Für einen Überblick reicht das oft.</p>
-<h2 id="jbe_fulllog--das-vollprotokoll">jbe_fulllog — das
+<h2 id="jbe_fulllog-das-vollprotokoll">jbe_fulllog: das
 Vollprotokoll</h2>
 <p>Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 (Auszug):</p>
@@ -7242,11 +7238,11 @@ Vollprotokoll</h2>
 ...</code></pre>
 <p><strong>Levels:</strong></p>
 <ul>
-<li><code>INFO</code> — wichtige Meilensteine (Testcase-Start,
+<li><code>INFO</code>, wichtige Meilensteine (Testcase-Start,
 Batch-Ende)</li>
-<li><code>DEBUG</code> — jeder einzelne Step</li>
-<li><code>WARN</code> — ungewöhnliche Lage, Test läuft aber weiter</li>
-<li><code>ERROR</code> — fataler Fehler, Testcase abgebrochen</li>
+<li><code>DEBUG</code>, jeder einzelne Step</li>
+<li><code>WARN</code>, ungewöhnliche Lage, Test läuft aber weiter</li>
+<li><code>ERROR</code>, fataler Fehler, Testcase abgebrochen</li>
 </ul>
 <h2 id="wann-lese-ich-jbe_fulllog">Wann lese ich jbe_fulllog?</h2>
 <ol type="1">
@@ -7256,7 +7252,7 @@ Response-Body, interne Exception-Stacks.</p></li>
 <li><p><strong>Der Run hängt.</strong> Im Full-Log steht der letzte
 Eintrag. Daraus siehst du wo die Engine steht.</p></li>
 <li><p><strong>Reproduktion eines alten Fehlers.</strong> Der Full-Log
-ist dein Archiv — auch Wochen später kannst du nachvollziehen was
+ist dein Archiv, auch Wochen später kannst du nachvollziehen was
 passiert ist.</p></li>
 <li><p><strong>Plugin-Reihenfolge verstehen.</strong> Wenn mehrere
 Plugins kaskadieren, stehen ihre Outputs im Full-Log in der Reihenfolge
@@ -7265,9 +7261,9 @@ der Ausführung.</p></li>
 <h2 id="das-feld-lesen">Das Feld lesen</h2>
 <p>In der App ist <code>jbe_fulllog</code> ein &quot;Mehrzeilentext&quot;-Feld. Es
 kann einige Kilobyte groß werden. Die Standard-Textbox in Dynamics ist
-nicht ideal — einige Optionen:</p>
+nicht ideal, einige Optionen:</p>
 <ul>
-<li><strong>Klick ins Feld, Strg+A, Strg+C</strong> — rüber in VS Code /
+<li><strong>Klick ins Feld, Strg+A, Strg+C</strong>: rüber in VS Code /
 Notepad. Dort ist es lesbar.</li>
 <li><strong>Bearbeiten-Button oben rechts am Feld</strong> öffnet einen
 Vollbild- Dialog.</li>
@@ -7279,11 +7275,11 @@ Stellen springst.</li>
 <p>Der <code>jbe_testsummary</code> und <code>jbe_fulllog</code> sind am
 <strong>Testrun</strong> angesiedelt. Pro Step gibt es separat:</p>
 <ul>
-<li><code>jbe_teststep.jbe_errormessage</code> — nur gefüllt bei
+<li><code>jbe_teststep.jbe_errormessage</code>, nur gefüllt bei
 <code>Fehler</code>-Steps</li>
-<li><code>jbe_teststep.jbe_inputdata</code> — das JSON mit dem der Step
+<li><code>jbe_teststep.jbe_inputdata</code>, das JSON mit dem der Step
 gestartet wurde (mit aufgelösten Platzhaltern)</li>
-<li><code>jbe_teststep.jbe_outputdata</code> — die Server-Antwort in
+<li><code>jbe_teststep.jbe_outputdata</code>, die Server-Antwort in
 Auszügen</li>
 </ul>
 <h2 id="browser-devtools">Browser DevTools</h2>
@@ -7291,7 +7287,7 @@ Auszügen</li>
 speichern, laden), ist manchmal die <strong>Browser-Konsole</strong>
 nützlich:</p>
 <pre><code>F12 -&gt; Console</code></pre>
-<p>Dynamics-Client-API-Aufrufe, Network-Requests, Errors — alles da.
+<p>Dynamics-Client-API-Aufrufe, Network-Requests, Errors, alles da.
 Aber: <strong>Das hat mit der Test-Ausführung nichts zu tun</strong>
 (die läuft am Server). Nur für App-Bedienungs-Probleme.</p>
 <h2 id="ein-beispiel-log-bei-einem-fehlgeschlagenen-test">Ein
@@ -7347,7 +7343,7 @@ wann</h2>
 </table>
 <hr />
 <h1 id="kap-05-troubleshooting-01-entscheidungsbaum">Entscheidungsbaum:
-Mein Test scheitert — was tun?</h1>
+Mein Test scheitert, was tun?</h1>
 <p>Systematischer Ablauf um ein Testproblem einzugrenzen. Starte oben,
 folge den Verzweigungen.</p>
 <h2 id="der-baum">Der Baum</h2>
@@ -7549,7 +7545,7 @@ cp1252-Tool).</li>
 <li>Oder: aus VS Code (UTF-8 default) kopieren.</li>
 <li>Prüfe <code>$PSVersionTable.PSVersion</code>: wenn PowerShell &lt;
 7.4, lässt sich das Problem durch explizites
-<code>-ContentType &quot;application/json; charset=utf-8&quot;</code> lösen —
+<code>-ContentType &quot;application/json; charset=utf-8&quot;</code> lösen,
 betrifft dich aber nur wenn du PS-Skripte für das Anlegen
 verwendest.</li>
 </ul>
@@ -7563,7 +7559,7 @@ erfolgreich registriert.</code></pre>
 ist vorher selbst gescheitert (oft sichtbar als Error in einer früheren
 Step).</p>
 <p><strong>Fix:</strong> Alias-Schreibweisen im JSON überall vergleichen
-(case- sensitive!). Die früheren Steps auf rotes Ergebnis prüfen — bei
+(case- sensitive!). Die früheren Steps auf rotes Ergebnis prüfen, bei
 Error ist <code>con</code> nie angelegt worden.</p>
 <h2 id="5-assert-mit-target-record-liefert-null-obwohl-feld-gesetzt-ist">5.
 <code>Assert</code> mit <code>target: Record</code> liefert
@@ -7580,7 +7576,7 @@ Record-Assert den alten Cache.</p>
 <ul>
 <li>Option A: <code>RetrieveRecord</code> vor dem Assert einschieben,
 <code>columns</code> mit dem Feld setzen.</li>
-<li>Option B: auf <code>target: Query</code> umstellen — Query liest
+<li>Option B: auf <code>target: Query</code> umstellen, Query liest
 immer frisch.</li>
 </ul>
 <div class="sourceCode" id="cb179"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;RetrieveRecord&quot;</span><span class="fu">,</span> <span class="dt">&quot;alias&quot;</span><span class="fu">:</span> <span class="st">&quot;con&quot;</span><span class="fu">,</span> <span class="dt">&quot;columns&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;firstname&quot;</span><span class="ot">]</span> <span class="fu">}</span><span class="er">,</span></span>
@@ -7682,9 +7678,9 @@ beeinträchtigt dein Test-Ergebnis nicht. Wenn dich die Record-Leichen
 stören: einzeln im Browser löschen, oder den Projekt-Owner bitten die
 Cleanup-Logik anzupassen.</p>
 <h2 id="für-infrastruktur-probleme">Für Infrastruktur-Probleme</h2>
-<p>Wenn du hier nichts findest und der Fehler mysteriös ist —
+<p>Wenn du hier nichts findest und der Fehler mysteriös ist,
 insbesondere bei wiederholten Sandbox-Timeouts oder &quot;Plugin nicht
-gefunden&quot; — Projekt-Owner kontaktieren. Diese Klasse von Fehlern ist
+gefunden&quot;, Projekt-Owner kontaktieren. Diese Klasse von Fehlern ist
 nichts was Test-Autoren reparieren können.</p>
 <hr />
 <h1 id="kap-05-troubleshooting-03-sandbox-und-timing">Sandbox-Limits und
@@ -7723,7 +7719,7 @@ großzügigem Timeout. Wartet so lange wie nötig, aber nicht länger.</p>
 Sekunden umsonst. Bei 8 solchen Tests im Batch -&gt; Timeout
 garantiert.</p>
 <p><strong>Besser:</strong> Timeout realistisch setzen. Wenn dein Plugin
-typisch 5s braucht, reichen 15-20s Timeout — mit Puffer.</p>
+typisch 5s braucht, reichen 15-20s Timeout, mit Puffer.</p>
 <h3 id="3-sehr-viele-records-in-einem-test">3. Sehr viele Records in
 einem Test</h3>
 <p>Wenn ein Test 50 <code>CreateRecord</code>-Steps hat, dauert er
@@ -7783,7 +7779,7 @@ braucht, bleiben 40 Sekunden für 11 andere Tests.</p>
 mit vielen anderen. Wenn du weißt dass ein Test 60 Sekunden braucht:</p>
 <ul>
 <li>Tagge ihn <code>slow</code></li>
-<li>Starte separaten Run für <code>tag:slow</code> — dann ist er alleine
+<li>Starte separaten Run für <code>tag:slow</code>, dann ist er alleine
 im Batch</li>
 <li>Oder markiere einen eigenen Filter-Präfix z.B.
 <code>SLOW-*</code></li>
@@ -7848,19 +7844,18 @@ sind nicht eindeutig</strong>.</p>
 <p>Dataverse hat Constraints die Eindeutigkeit erzwingen:</p>
 <ul>
 <li><strong>Alternate Keys</strong> (z.B. <code>emailaddress1</code> auf
-<code>contact</code> kann alternate key sein) — zwei Records mit
+<code>contact</code> kann alternate key sein), zwei Records mit
 demselben Wert gehen nicht.</li>
 <li><strong>Business-Plugins</strong> die aktiv Duplicate-Detection
-machen (DQS, Merge-Plugins, etc.) — blockieren einen Create wenn ein
+machen (DQS, Merge-Plugins, etc.), blockieren einen Create wenn ein
 Ähnlicher existiert.</li>
 <li><strong>Eindeutige AutoNumber-Felder</strong> die nicht explizit
-gesetzt werden — kein Kollisionsproblem, aber
-nicht-deterministisch.</li>
+gesetzt werden, kein Kollisionsproblem, aber nicht-deterministisch.</li>
 </ul>
 <h2 id="der-standard-fix-timestamp">Der Standard-Fix:
 <code>{TIMESTAMP}</code></h2>
 <p>In jeder <code>CreateRecord</code>-Action mindestens ein Feld mit
-<code>{TIMESTAMP}</code> einbauen — am besten das Primary-Name-Feld:</p>
+<code>{TIMESTAMP}</code> einbauen, am besten das Primary-Name-Feld:</p>
 <div class="sourceCode" id="cb187"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb187-1"><a href="#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;fields&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
 <span id="cb187-2"><a href="#cb187-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;firstname&quot;</span><span class="fu">:</span> <span class="st">&quot;{GENERATED:firstname}&quot;</span><span class="fu">,</span></span>
 <span id="cb187-3"><a href="#cb187-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;lastname&quot;</span><span class="fu">:</span>  <span class="st">&quot;Meier_{TIMESTAMP}&quot;</span><span class="fu">,</span></span>
@@ -7900,7 +7895,7 @@ Testläufe</strong> gerade haben. Filter enger machen:</p>
 blockt sich selbst beim Cleanup</h3>
 <p>Wenn <code>{TIMESTAMP}</code> nicht eindeutig genug ist und mehrere
 parallele Runs den gleichen Wert treffen, versucht der Cleanup den
-gleichen Record zweimal zu löschen — was manchmal in 404 endet.</p>
+gleichen Record zweimal zu löschen, was manchmal in 404 endet.</p>
 <p>-&gt; Aktuelle <code>{TIMESTAMP}</code> ist nicht das Problem; sie
 enthält die Sekunde. Solange Tests nicht exakt im selben Sekundenbereich
 starten, ist alles gut.</p>
@@ -7908,8 +7903,7 @@ starten, ist alles gut.</p>
 <p>Mehrere Runs gleichzeitig starten:</p>
 <ul>
 <li>Jeder Run bekommt eine eigene Engine-Instanz</li>
-<li><code>{TIMESTAMP}</code> wird pro Step berechnet — nicht pro
-Run</li>
+<li><code>{TIMESTAMP}</code> wird pro Step berechnet, nicht pro Run</li>
 <li>Tests kollidieren <strong>nicht</strong> solange sie
 <code>{TIMESTAMP}</code> in ihren Daten haben</li>
 </ul>
@@ -7920,7 +7914,7 @@ Run</li>
 hintereinander</h2>
 <p>Fall 1: <strong>Der erste Run hat
 <code>keeprecords: true</code>.</strong> Dann sind die Testdaten noch
-da. Der zweite Run legt neue an mit anderer <code>{TIMESTAMP}</code> —
+da. Der zweite Run legt neue an mit anderer <code>{TIMESTAMP}</code>,
 kein Problem.</p>
 <p>Fall 2: <strong>Erster Run Cleanup fehlgeschlagen.</strong> Records
 hinterlassen. Nächster Run läuft mit neuer <code>{TIMESTAMP}</code>
@@ -8299,25 +8293,25 @@ Trigger-Plugin des Test Centers reagiert auf Änderungen am
 <hr />
 <h1 id="kap-anhang-c-links">Links und weitere Ressourcen</h1>
 <h2 id="im-produkt-repo">Im Produkt-Repo</h2>
-<p><strong>Architektur und Interna</strong> (optional zum Lesen — du
+<p><strong>Architektur und Interna</strong> (optional zum Lesen, du
 brauchst sie als Test-Autor nicht):</p>
 <ul>
-<li><a href="../../00_architektur-übersicht.md"><code>docs/00_architektur-übersicht.md</code></a>
-— Überblick der Komponenten</li>
-<li><a href="../../01_architektur-spezifikation.md"><code>docs/01_architektur-spezifikation.md</code></a>
-— Tiefe Architektur-Spec</li>
-<li><a href="../../02_datenmodell.md"><code>docs/02_datenmodell.md</code></a> —
+<li><a href="../../00_architektur-übersicht.md"><code>docs/00_architektur-übersicht.md</code></a>,
+Überblick der Komponenten</li>
+<li><a href="../../01_architektur-spezifikation.md"><code>docs/01_architektur-spezifikation.md</code></a>,
+Tiefe Architektur-Spec</li>
+<li><a href="../../02_datenmodell.md"><code>docs/02_datenmodell.md</code></a>,
 Entities im Detail</li>
-<li><a href="../../03_api-referenz.md"><code>docs/03_api-referenz.md</code></a>
-— API-Referenz der Core-Engine</li>
-<li><a href="../../04_testfall-spezifikation.md"><code>docs/04_testfall-spezifikation.md</code></a>
-— JSON-Spec formal</li>
-<li><a href="../../05_deployment-handbuch.md"><code>docs/05_deployment-handbuch.md</code></a>
-— Deployment (Owner-Thema)</li>
-<li><a href="../../06_demo-pakete.md"><code>docs/06_demo-pakete.md</code></a> —
+<li><a href="../../03_api-referenz.md"><code>docs/03_api-referenz.md</code></a>,
+API-Referenz der Core-Engine</li>
+<li><a href="../../04_testfall-spezifikation.md"><code>docs/04_testfall-spezifikation.md</code></a>,
+JSON-Spec formal</li>
+<li><a href="../../05_deployment-handbuch.md"><code>docs/05_deployment-handbuch.md</code></a>,
+Deployment (Owner-Thema)</li>
+<li><a href="../../06_demo-pakete.md"><code>docs/06_demo-pakete.md</code></a>,
 Demo-Packs</li>
-<li><a href="../../07_customization.md"><code>docs/07_customization.md</code></a>
-— Anpassungs-Optionen</li>
+<li><a href="../../07_customization.md"><code>docs/07_customization.md</code></a>,
+Anpassungs-Optionen</li>
 </ul>
 <h2 id="in-diesem-handbuch">In diesem Handbuch</h2>
 <p>Siehe das <a href="#kap-readme">README</a> für die vollständige
@@ -8337,15 +8331,15 @@ Navigation.</p>
 </ul>
 <h3 id="json-validierung">JSON-Validierung</h3>
 <ul>
-<li><strong>JSONLint</strong> — <a href="https://jsonlint.com">https://jsonlint.com</a></li>
-<li><strong>VS Code</strong> — eingebauter JSON-Validator</li>
-<li><strong>VS Code Plugin &quot;JSON Tools&quot;</strong> — Pretty-Print,
+<li><strong>JSONLint</strong>: <a href="https://jsonlint.com">https://jsonlint.com</a></li>
+<li><strong>VS Code</strong>: eingebauter JSON-Validator</li>
+<li><strong>VS Code Plugin &quot;JSON Tools&quot;</strong>: Pretty-Print,
 Jump-to-Line</li>
 </ul>
 <h2 id="support">Support</h2>
 <p>Fragen, unklare Stellen, fehlende Rezepte:
 <strong>Projekt-Owner</strong> ist der Ansprechpartner. Das Handbuch
-wird iterativ ausgebaut — Feedback mit konkreten Anwendungsfällen hilft
+wird iterativ ausgebaut, Feedback mit konkreten Anwendungsfällen hilft
 am meisten.</p>
 <hr />
 </body>

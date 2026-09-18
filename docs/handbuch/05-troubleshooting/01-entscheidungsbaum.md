@@ -1,4 +1,4 @@
-# Entscheidungsbaum: Mein Test scheitert — was tun?
+# Entscheidungsbaum: Mein Test scheitert, was tun?
 
 Systematischer Ablauf um ein Testproblem einzugrenzen. Starte oben,
 folge den Verzweigungen.

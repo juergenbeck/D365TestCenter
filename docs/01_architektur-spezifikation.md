@@ -863,8 +863,6 @@ Entsprechung. Die Werte in `CONFIG` müssen exakt mit den in Dataverse definiert
 Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
 Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
 der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
-`scripts/Deploy-Solution.ps1` legt die OptionSets ohne Solution-Import an und rechnet dafür
-`publisherOptionValuePrefix` (10571 in `scripts/deploy-config.json`) mal 10000.
 
 Ausnahme Demo-Packs: `webresource/packs/*.json` tragen generische Werte ab `100000000`.
 `PackLoader._remapOptionSets` bildet `jbe_category`, `jbe_teststatus` und `jbe_outcome` beim Laden per Offset

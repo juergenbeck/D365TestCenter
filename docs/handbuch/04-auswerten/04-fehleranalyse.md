@@ -17,17 +17,17 @@ Testergebnis-Records:
 
 Diese drei sind sehr unterschiedliche Bugs. Verwechsle sie nicht.
 
-## Failed — die Asserts stimmen nicht
+## Failed: die Asserts stimmen nicht
 
 ### Schritt 1: Welcher Assert?
 
 Öffne den Steps-Tab, sortiere oder filtere auf `jbe_stepstatus = Fehler`.
 Pro rote Zeile:
 
-- Lies die `description` — was war die Erwartung fachlich?
+- Lies die `description`, was war die Erwartung fachlich?
 - Lies `Erwartet` und `Tatsächlich`.
 
-### Schritt 2: Erwartet vs Tatsächlich — vier typische Muster
+### Schritt 2: Erwartet vs Tatsächlich, vier typische Muster
 
 **Muster A: Timing**
 
@@ -57,7 +57,7 @@ Tatsächlich: 5000.0000
 ```
 
 Money-Felder kommen als Decimal-Strings zurück. Im Test:
-`"value": "5000.0000"` oder `"value": "5000.00"` — je nachdem was
+`"value": "5000.0000"` oder `"value": "5000.00"`, je nachdem was
 Dataverse gerade zurückgibt. Tipp: erst manuell ohne Assert laufen
 lassen, `Tatsächlich` auslesen, im Test nachtragen.
 
@@ -81,7 +81,7 @@ die Records direkt im Browser anschauen und vergleichen.
 Shortcut: Im Steps-Tab beim CreateRecord-Step ist die GUID mit einem
 Klick-Link verfügbar. Öffnen, nachschauen.
 
-## Error — eine Action ist geworfen
+## Error: eine Action ist geworfen
 
 ### Schritt 1: Welche Action war's?
 
@@ -150,9 +150,9 @@ Timeout erhöhen, oder Plugin ist gerade kaputt.
 ### Schritt 3: Fix einspielen und erneut laufen lassen
 
 Einen neuen Testrun anlegen mit dem gleichen Filter. Nicht am alten
-Testrun herumbiegen — ein neuer Run ist ein neuer Audit-Eintrag.
+Testrun herumbiegen, ein neuer Run ist ein neuer Audit-Eintrag.
 
-## Skipped — der Test konnte nicht mal starten
+## Skipped: der Test konnte nicht mal starten
 
 ### Ursache 1: JSON-Syntax
 
@@ -172,7 +172,7 @@ Sünder:
 
 Wenn der Testfall-Record `jbe_enabled = nein` hat, wird er vom Run
 übersprungen. Bei Filter `*` ohne Hit auf einen Test mit `jbe_enabled`=
-`ja` landet `Gesamt = 0` — dann existiert gar kein Result-Record.
+`ja` landet `Gesamt = 0`, dann existiert gar kein Result-Record.
 
 ### Ursache 3: Pflichtfelder fehlen
 

@@ -9,7 +9,7 @@ namespace D365TestCenter.Core;
 /// deploy-fertigen Schema-Spezifikation zu ADR-0009 (Worker-Modell, Phase 0);
 /// Drift hier bricht die Plugins gegen das angelegte Schema.
 ///
-/// Prefix durchgängig 105710xxx (NICHT die in Create-TestingEntities.ps1 veralteten 595300xxx,
+/// Prefix durchgängig 105710xxx (NICHT die im früheren Einrichtungsskript veralteten 595300xxx,
 /// Goldene Regel 10). Die bereits bestehenden jbe_testrun-/jbe_testrunresult-Felder und die
 /// jbe_teststatus/Outcome-OptionSet-Werte sind hier mit aufgenommen, damit Orchestrator und
 /// Result-Writer eine einzige Konstantenquelle haben.

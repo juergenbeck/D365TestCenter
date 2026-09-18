@@ -54,11 +54,13 @@ Test cases are organized in JSON pack files. Each pack contains an array of test
 ### 1. Deploy to your Dynamics 365 environment
 
 ```powershell
-# Adjust deploy-config.json with your environment URL
-.\scripts\Deploy-Solution.ps1
+pac auth create --environment https://your-org.crm4.dynamics.com
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
 ```
 
-The script creates the publisher, solution, entities, option sets, web resources and the plugin package idempotently.
+The solution brings the publisher, tables, option sets, app, web resources, plugin package, custom APIs and
+plugin steps. Details: `docs/05_deployment-handbuch.md`.
 
 ### 2. Import test cases
 

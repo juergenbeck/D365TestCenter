@@ -391,8 +391,7 @@ jbe_testcase                    jbe_testrun                     jbe_testrunresul
 | `jbe_lifecyclestatus` | 0: Entwurf, 1: Aktiv, 2: Instabil, 3: Historisch, 4: Archiviert |
 
 Alle Werte sind Offsets auf 105710000 (Quelle: `solution/src/OptionSets/*.xml`). Das frühere OptionSet
-`jbe_stepphase` gehört nicht mehr zur Solution (ADR-0004: eine Step-Liste statt Phasen);
-`scripts/Deploy-Solution.ps1` legt es noch an.
+`jbe_stepphase` gehört nicht mehr zur Solution (ADR-0004: eine Step-Liste statt Phasen).
 
 ### 3.3 Relationships
 
@@ -630,36 +629,22 @@ User: #metadata -> Tabellen-Tab
 ### 5.2 Deployment-Ablauf
 
 ```
-scripts/Deploy-Solution.ps1 (Werte aus scripts/deploy-config.json)
+pac solution pack   (solution/src -> solution/out/D365TestCenter.zip)
         |
         v
-  Auth: $headers mit Bearer-Token (vom Aufrufer gesetzt)
+pac solution import --publish-changes --activate-plugins
         |
         v
-  1. Publisher "jbe" anlegen (oder skip)
-  2. Solution "D365TestCenter" anlegen (oder skip)
-  3. Globale OptionSets (5x) anlegen (oder skip)
-  4. Entity jbe_testcase + 7 Attribute
-  5. Entity jbe_testrun + 10 Attribute (inkl. jbe_keeprecords)
-  6. Entity jbe_testrunresult + 5 Attribute
-  7. Entity jbe_teststep + 14 Attribute
-  8. Relationship jbe_testrunresult_testrun
-  9. Relationship jbe_teststep_testrunresult (Cascade Delete)
-  10. Web Resources (10 Dateien) hochladen
-  11. Import-Skript für Testfälle (optional)
-  12. PublishAllXml
+  optional: scripts/Create-RecurrenceFlow.ps1 (Recovery-Flow je Umgebung)
         |
         v
   URL: https://{env}.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
-Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already exists"-Fehler werden als Skip behandelt.
-
-Der empfohlene Weg ist der Import der Solution aus `solution/src`. Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
+Die Einrichtung läuft ausschließlich über den Solution-Import; die früheren Skripte, die Tabellen und
+OptionSets einzeln per Web API anlegten, sind stillgelegt (ADR-2026-09-18-1258). Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
 Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
 der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
-`scripts/Deploy-Solution.ps1` legt die OptionSets ohne Solution-Import an und rechnet dafür
-`publisherOptionValuePrefix` (10571 in `scripts/deploy-config.json`) mal 10000.
 
 ---
 

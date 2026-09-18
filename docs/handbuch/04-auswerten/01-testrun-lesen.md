@@ -42,10 +42,10 @@ Nach Abschluss eines Runs öffnest du den Record:
 
 ## Das erste was du sehen willst
 
-1. **Test-Status = Abgeschlossen?** — wenn nein, lauf ist noch aktiv oder
+1. **Test-Status = Abgeschlossen?** wenn nein, lauf ist noch aktiv oder
    technisch fehlgeschlagen.
-2. **Fehlgeschlagen > 0?** — wenn ja, hast du Probleme.
-3. **Welche Tests genau?** — siehe Test-Zusammenfassung.
+2. **Fehlgeschlagen > 0?** wenn ja, hast du Probleme.
+3. **Welche Tests genau?** siehe Test-Zusammenfassung.
 
 ## Test-Status
 
@@ -59,7 +59,7 @@ Nach Abschluss eines Runs öffnest du den Record:
 
 **Wichtig:** `Abgeschlossen` mit `Fehlgeschlagen=3` bedeutet "Lauf ist
 normal durchgelaufen, aber 3 Tests waren inhaltlich nicht OK". Das ist
-ein gesunder Zustand — keine technische Panne.
+ein gesunder Zustand, keine technische Panne.
 
 `Test-Status = Fehler` dagegen bedeutet "der Lauf selbst ist
 abgebrochen, ich weiß nicht einmal wie viele Tests geschafft haben".
@@ -105,7 +105,7 @@ Jede Zeile:
 - Test-ID, Doppelpunkt, Titel
 - Laufzeit in Klammern
 
-Bei größeren Runs steht hier auch der Batching-Status mit drin — welche
+Bei größeren Runs steht hier auch der Batching-Status mit drin, welche
 Batches sind abgearbeitet, welcher läuft gerade.
 
 ## Full-Log (Feld `jbe_fulllog`)
@@ -118,7 +118,7 @@ fehlgeschlagen ist, oder wenn das Parsen eines JSONs gehakt hat. Siehe
 ## Zugeordnete Testergebnisse
 
 Unten auf der Seite findest du die **zugeordneten Testergebnisse**. Das
-ist die Liste aller `jbe_testrunresult`-Records — einer pro Testcase im
+ist die Liste aller `jbe_testrunresult`-Records, einer pro Testcase im
 Lauf:
 
 ```
@@ -138,7 +138,7 @@ Lauf:
 ```
 
 **Klick auf eine fehlgeschlagene Zeile** öffnet den Detail-Record mit
-Step-Tab und Fehlermeldung — das ist dein nächster Anlaufpunkt. Siehe
+Step-Tab und Fehlermeldung, das ist dein nächster Anlaufpunkt. Siehe
 [02-testrunresult-detail.md](02-testrunresult-detail.md).
 
 ## Tipps zur Tabellen-Ansicht
