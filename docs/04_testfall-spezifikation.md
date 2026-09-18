@@ -175,7 +175,7 @@ Ruft die Governance-API für den aktuellen Contact auf. Löst die Field-Governan
 
 ### ExecuteRequest (Custom API / Custom Action / SDK-Message)
 
-Ruft eine SDK-Message in Dataverse auf — Standard-Messages (Merge, QualifyLead, ...)
+Ruft eine SDK-Message in Dataverse auf: Standard-Messages (Merge, QualifyLead, ...)
 und Custom Actions / Custom APIs gleichermaßen. Kanonisch seit Plugin v5.3.7
 (ADR-0007).
 
@@ -195,7 +195,7 @@ und Custom Actions / Custom APIs gleichermaßen. Kanonisch seit Plugin v5.3.7
 
 **Legacy-Aliasse (ADR-0007):** Die Verben `ExecuteAction` und `CallCustomApi`
 bleiben als Aliasse erhalten, ebenso die Schema-Aliasse `actionName`/`apiName`
-(→ `requestName`) und `parameters` (→ `fields`). Bestehende Tests laufen
+(-> `requestName`) und `parameters` (-> `fields`). Bestehende Tests laufen
 unverändert. Neue Tests sollen das kanonische Schema verwenden.
 
 ### Wait

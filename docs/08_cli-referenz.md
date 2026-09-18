@@ -47,7 +47,7 @@ In CI/CD setzt ein Wrapper-Skript die Secrets aus seiner Quelle und reicht sie d
 
 ## Ausführung
 
-### `run` — Testfälle ausführen
+### `run`: Testfälle ausführen
 
 Führt Testfälle gegen eine Dataverse-Umgebung aus (liest `jbe_testcase`, legt `jbe_testrun` an, schreibt
 `jbe_testrunresult` + `jbe_teststep`).
@@ -76,7 +76,7 @@ dotnet D365TestCenter.Cli.dll run --org https://contoso.crm4.dynamics.com \
     --filter "tag:smoke"
 ```
 
-### `status` — letzte Läufe anzeigen
+### `status`: letzte Läufe anzeigen
 
 Zeigt die jüngsten `jbe_testrun`-Records mit KPI-Bilanz.
 
@@ -92,7 +92,7 @@ status --org <url> <auth> [--top <n>] [--config <profil>]
 
 ## Validierung
 
-### `validate` — Pack statisch prüfen
+### `validate`: Pack statisch prüfen
 
 Statische Validierung eines Pack-JSON gegen Schema- und Muster-Fehler (OE-6 PackValidator), ohne Dataverse-Aufruf.
 Mit optionalem `--org` werden zusätzlich metadata-aware Regeln aktiv (Entity-/Feld-Existenz gegen die Ziel-Umgebung).
@@ -118,7 +118,7 @@ Statische Regeln (Auswahl): `ACTION_UNKNOWN`, `FILTER_FIELD_NOT_LOGICAL`, `FILTE
 Diese Commands schließen den Kreis zwischen der Markdown-Definition (Single Source of Truth), Dataverse und
 den Berichten. Überblick: [09_doku-und-reporting.md](09_doku-und-reporting.md).
 
-### `build-pack` — Suite-Pack aus Definitionen bauen (offline)
+### `build-pack`: Suite-Pack aus Definitionen bauen (offline)
 
 Erzeugt aus den Markdown-Test-Definitionen ein importierbares Suite-Pack, Dokumentation inklusive (B5).
 Archivierte und Entwurf-Definitionen werden übersprungen.
@@ -137,7 +137,7 @@ build-pack --defs <dir> --out <datei> [--name <name>] [--strict]
 Das Pack hat die Form `{ name, testCases: [ { testId, title, category, tags, userStories, documentation, steps } ] }`.
 Die `documentation` stammt aus den fachlichen Pflicht-Sektionen der Definition (mit integriertem Lint).
 
-### `import-pack` — Pack nach Dataverse importieren
+### `import-pack`: Pack nach Dataverse importieren
 
 Schreibt ein Suite-Pack idempotent nach `jbe_testcase` (CREATE+UPDATE per `jbe_testid`), inklusive
 `jbe_documentation` (B5).
@@ -150,7 +150,7 @@ import-pack --org <url> <auth> --pack <datei> [--config <profil>]
 |---|---|---|
 | `--pack` | (Pflicht) | Pfad zum Pack-JSON (von `build-pack` erzeugt) |
 
-### `sync-docs` — Doku durchreichen
+### `sync-docs`: Doku durchreichen
 
 Schreibt die fachliche Doku aus den Markdown-Definitionen nach `jbe_testcase.jbe_documentation`
 (Matching `testId == frontmatter.id`), damit der HTML-Client sie im Doku-Tab rendert (E1).
@@ -159,7 +159,7 @@ Schreibt die fachliche Doku aus den Markdown-Definitionen nach `jbe_testcase.jbe
 sync-docs --org <url> <auth> --defs <dir> [--config <profil>]
 ```
 
-### `sync-results` — Ergebnisse zurückschreiben (Round-Trip)
+### `sync-results`: Ergebnisse zurückschreiben (Round-Trip)
 
 Schreibt die Ergebnisse eines abgeschlossenen Laufs zurück in die Markdown-Definitionen
 (`ergebnis_historie` im Frontmatter ist SSOT; Body-Tabelle und README werden daraus gerendert) (E2).
@@ -174,7 +174,7 @@ sync-results --org <url> <auth> --run <guid> --defs <dir> [--env <label>] [--con
 | `--defs` | (Pflicht) | Verzeichnis mit den zu aktualisierenden Definitionen |
 | `--env` | aus `--org`-Host abgeleitet | Env-Label für den Historien-Eintrag |
 
-### `report` — Durchführungsbericht erzeugen
+### `report`: Durchführungsbericht erzeugen
 
 Erzeugt aus genau einem Lauf und den lokalen Definitionen einen Suite-Durchführungsbericht (E3/E4).
 Rein lesend gegen Dataverse.
@@ -192,7 +192,7 @@ report --org <url> <auth> --run <guid> --defs <dir> [--out <datei>]
 | `--detail` | `full` | `compact` (eine Tabelle) oder `full` (pro Test ein Abschnitt mit allen Pflicht-Sektionen) |
 | `--format` | `md` | `md`, `html` oder `pdf`. `pdf` braucht `--out` und Chromium (`playwright install chromium`) |
 
-### `sync-zephyr` — Ergebnisse nach Zephyr Scale hochladen
+### `sync-zephyr`: Ergebnisse nach Zephyr Scale hochladen
 
 Lädt die Ergebnisse eines Laufs nach **Zephyr Scale Data Center (ATM 1.0)** hoch: legt pro Lauf einen neuen
 Test-Run (Cycle) an und lädt die Ergebnisse als Bulk hoch (E5). **Schreibt in ein externes Test-Management-System.**
@@ -232,7 +232,7 @@ sync-zephyr --org <url> <auth> --run <guid> --defs <dir>
 
 ## Inventar
 
-### `inventory` — Management-Inventar erzeugen (offline)
+### `inventory`: Management-Inventar erzeugen (offline)
 
 Erzeugt aus einem Definitions-Baum eine Management-Übersicht: Status- und Domänen-Rollup plus eine Tabelle
 pro Domäne, angereichert um Lauf-Trend aus der `ergebnis_historie` (E6). Rein lesend, kein Dataverse.
@@ -254,7 +254,7 @@ Quelle, letzter Lauf, Trend, Datei-Link. Spalten, für die eine Definition kein 
 
 ## UI-Tests
 
-### `ui-setup` — Playwright-Storage-State anlegen
+### `ui-setup`: Playwright-Storage-State anlegen
 
 Erzeugt per interaktivem Login einen Playwright-Storage-State für UI-Tests (`BrowserAction` im `run`-Pfad,
 ADR-0006). Harter Umgebungs-Guard: Angenommen werden Hosts mit `-dev.` oder `-test.` (z.B.

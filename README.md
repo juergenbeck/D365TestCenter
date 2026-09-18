@@ -14,7 +14,7 @@ A single C# core engine (`D365TestCenter.Core`) is invoked from three callers (S
 - **Async plugin polling** waits for plugin chains to complete before assertions
 - **Negative-path tests** with `expectFailure` / `expectException` and sandbox-safe error capture (ADR-0005)
 - **UI tests via Microsoft.Playwright** as `BrowserAction` steps in the CLI flow (ADR-0006)
-- **Documentation & reporting lifecycle** (ADR-0008): documentation pass-through into the test center, result round-trip back into the Markdown SSOT, run reports (Markdown / HTML / PDF), result upload to Zephyr Scale, pack build/import, and a management inventory — all driven by the CLI
+- **Documentation & reporting lifecycle** (ADR-0008): documentation pass-through into the test center, result round-trip back into the Markdown SSOT, run reports (Markdown / HTML / PDF), result upload to Zephyr Scale, pack build/import, and a management inventory, all driven by the CLI
 - **Visual test editor** with drag-drop, templates, alias autocomplete
 - **Dashboard** with trend sparklines, regression detection, flaky test detection
 - **Demo mode** works outside Dynamics 365 with generated mock data

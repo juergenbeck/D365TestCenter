@@ -44,19 +44,19 @@ Ein Testfall wird als Markdown-Datei gepflegt: Frontmatter mit Metadaten, fachli
 (Zweck, Datenkonstellation, Vorbedingungen, Ablauf, Erwartetes Ergebnis) und ein eingebetteter D365TC-JSON-Block
 (`steps`). Das JSON-Schema beschreibt [04_testfall-spezifikation.md](04_testfall-spezifikation.md).
 
-### 2. `build-pack` — Pack erzeugen
+### 2. `build-pack`: Pack erzeugen
 
 `build-pack` extrahiert aus den Definitionen ein importierbares Suite-Pack und übernimmt die fachliche Doku aus
 den Pflicht-Sektionen (`documentation`). Archivierte und Entwurf-Definitionen werden übersprungen. Ein
 integrierter Lint prüft Pflichtfelder, JSON-Parsbarkeit und `testId == id`.
 
-### 3. `import-pack` (oder `sync-docs`) — nach Dataverse
+### 3. `import-pack` (oder `sync-docs`): nach Dataverse
 
 `import-pack` schreibt das Pack idempotent nach `jbe_testcase` (CREATE+UPDATE), inklusive `jbe_documentation`.
 Damit landet die fachliche Doku im Test Center und der HTML-Client zeigt sie im Doku-Tab. `sync-docs` ist der
 schlanke Alt-Weg, der nur die Doku durchreicht (ohne die Testfälle neu zu schreiben).
 
-### 4. `run` — ausführen
+### 4. `run`: ausführen
 
 `run` führt die Testfälle aus und schreibt `jbe_testrun` / `-result` / `-step`. Mit `--sync-defs` kann der
 Round-Trip (Etappe 5) direkt im Anschluss erfolgen.
@@ -87,13 +87,13 @@ es wird nichts angeklickt und nichts am Datensatz verändert. Felder und Optione
 `evidence-report --evidence-dir <dir>` erzeugt beide Dokumente erneut aus der `evidence.json`.
 Das Anhängen an Jira, Zephyr oder DevOps ist bewusst kein Teil des Laufs.
 
-### 5. `sync-results` — Ergebnis zurück (Round-Trip)
+### 5. `sync-results`: Ergebnis zurück (Round-Trip)
 
 `sync-results` liest die Lauf-Ergebnisse und schreibt sie in die `ergebnis_historie` im Frontmatter der
 passenden Definition (Matching `testId == id`). Das Frontmatter ist SSOT; Body-Tabelle und README-Aggregat
 werden daraus zwischen Markern gerendert. Damit endet die manuelle Historien-Pflege.
 
-### 6. `report` — Durchführungsbericht (drei Formate)
+### 6. `report`: Durchführungsbericht (drei Formate)
 
 `report` verheiratet die fachliche Doku (aus den Definitionen) mit den Ergebnissen (aus Dataverse) zu einem
 Suite-Durchführungsbericht. Zwei Detailstufen (`--detail compact|full`) und drei Ausgabeformen:
@@ -103,13 +103,13 @@ Suite-Durchführungsbericht. Zwei Detailstufen (`--detail compact|full`) und dre
 | **Markdown** (`--format md`) | versioniert, reviewbar, intern |
 | **HTML / PDF** (`--format html|pdf`) | präsentierbarer Stakeholder-Bericht (PDF via Playwright) |
 
-### 7. `sync-zephyr` — nach Zephyr Scale
+### 7. `sync-zephyr`: nach Zephyr Scale
 
 `sync-zephyr` spielt die Ergebnisse ins Test-Management (Zephyr Scale Data Center, ATM 1.0): pro Lauf ein neuer
 Cycle, dann Bulk-Upload. Matching über `zephyr_key` im Frontmatter. Optional per-Step `scriptResults`
 (siehe CLI-Referenz, Stolperfalle Index-Matching). Schreibt in ein externes System.
 
-### 8. `inventory` — Management-Sicht
+### 8. `inventory`: Management-Sicht
 
 `inventory` erzeugt aus allen Definitionen eine Übersicht (Status-/Domänen-Rollup + Tabelle pro Domäne mit
 Lauf-Trend aus der `ergebnis_historie`). Rein lesend, ohne Dataverse - der Management-Blick auf die ganze

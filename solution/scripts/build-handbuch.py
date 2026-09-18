@@ -8,7 +8,9 @@ The script:
  1. collects all .md files under docs/handbuch/ in readable order
     (README first, then the chapter subfolders in sorted order)
  2. gives every H1 heading an explicit ID for internal navigation
- 3. rewrites all [text](../chapter/file.md) links to #<slug> anchors
+ 3. rewrites all [text](../chapter/file.md) links to #<slug> anchors; links to
+    other repository files (outside docs/handbuch/) become absolute URLs on the
+    public repository, because the web resource cannot resolve relative paths
  4. calls pandoc with inline CSS for clean rendering
  5. writes the HTML to solution/src/WebResources/jbe_/handbuch.html
 
@@ -19,10 +21,13 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 HANDBUCH_DIR = REPO_ROOT / "docs" / "handbuch"
 OUTPUT = REPO_ROOT / "solution" / "src" / "WebResources" / "jbe_" / "handbuch.html"
+# Target for links to repository files outside the handbook.
+REPO_WEB_URL = "https://github.com/juergenbeck/D365TestCenter/blob/master/"
 
 # Inline CSS for the HTML output (minimal, readable, D365-like look)
 CSS = r"""
@@ -134,8 +139,20 @@ def inject_h1_id(content: str, slug: str) -> str:
     return re.sub(r"^#\s+.+$", repl, content, count=1, flags=re.MULTILINE)
 
 
+def repo_web_link(target: Path, anchor_part):
+    """Absolute URL on the public repository for a file outside the handbook,
+    or None if the target lies outside the repository."""
+    try:
+        rel = target.relative_to(REPO_ROOT.resolve())
+    except ValueError:
+        return None
+    url = REPO_WEB_URL + quote(str(rel).replace("\\", "/"))
+    return f"{url}#{anchor_part}" if anchor_part else url
+
+
 def rewrite_links(content: str, current_file: Path, slug_map: dict) -> str:
-    """Rewrite [text](path.md) and [text](path.md#anchor) to internal anchors."""
+    """Rewrite [text](path.md) and [text](path.md#anchor) to internal anchors,
+    and links to other repository files to absolute repository URLs."""
     def repl(m):
         text = m.group(1)
         link = m.group(2).strip()
@@ -147,9 +164,15 @@ def rewrite_links(content: str, current_file: Path, slug_map: dict) -> str:
             return m.group(0)
         try:
             target = (current_file.parent / path_part).resolve()
-            rel = target.relative_to(HANDBUCH_DIR.resolve())
-        except (ValueError, OSError):
+        except OSError:
             return m.group(0)
+        if not target.exists():
+            print(f"WARN: broken link in {current_file.name}: {link}", file=sys.stderr)
+        try:
+            rel = target.relative_to(HANDBUCH_DIR.resolve())
+        except ValueError:
+            url = repo_web_link(target, anchor_part)
+            return f"[{text}]({url})" if url else m.group(0)
         key = str(rel).replace("\\", "/")
         slug = slug_map.get(key)
         if not slug:
