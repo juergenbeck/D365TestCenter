@@ -1,7 +1,7 @@
 # Testlauf starten
 
 Einen Testlauf starten heißt: einen `jbe_testrun`-Record anlegen mit
-Status "Geplant". Das Speichern triggert das Plugin, der Lauf beginnt
+Status "Ausstehend". Das Speichern triggert das Plugin, der Lauf beginnt
 automatisch.
 
 ## Schritt 1: Zu den Testläufen navigieren
@@ -31,7 +31,7 @@ Klick auf **+ Neu**.
 |                                                          |
 |  Name              * [ Regression 24.04              ]   |
 |  Testcase-Filter   * [ QS-*                          ]   |
-|  Test-Status         [ Geplant                     v ]   |
+|  Test-Status         [ Ausstehend                  v ]   |
 |  Records behalten    [ ] nein                            |
 |                                                          |
 |  Bestanden           (wird automatisch gesetzt)          |
@@ -61,7 +61,7 @@ Klick auf **+ Neu**.
 | `tag:smoke` | Alle mit Tag `smoke` |
 | `category:Integration` | Alle mit Category `Integration` |
 
-**Test-Status** — muss auf **Geplant** stehen. Das ist der Trigger.
+**Test-Status**: muss auf **Ausstehend** stehen. Das ist der Trigger.
 
 **Records behalten** (`jbe_keeprecords`):
 
@@ -87,7 +87,7 @@ Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
 |                                                         |
 |  Name           Regression 24.04                        |
 |  Testcase-Filter QS-*                                   |
-|  Test-Status    [ Wird ausgeführt           v ]        |
+|  Test-Status    [ Läuft                     v ]        |
 |  Records behalten [ ] nein                              |
 |                                                         |
 |  Bestanden      2                                       |
@@ -106,14 +106,17 @@ Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
 
 Der Status durchläuft:
 
-1. **Geplant** — Trigger wurde aufgenommen, aber das Plugin hat noch
+1. **Ausstehend**: Trigger wurde aufgenommen, aber das Plugin hat noch
    nicht gestartet (wenige Sekunden).
-2. **Wird ausgeführt** — Tests laufen aktiv ab.
-3. **Abgeschlossen** — alle Tests haben durchlaufen (egal ob passed oder
+2. **Läuft**: Tests laufen aktiv ab.
+3. **Abgeschlossen**: alle Tests haben durchlaufen (egal ob passed oder
    failed).
-4. **Fehlgeschlagen** — ein **technischer** Fehler hat den ganzen Run
+4. **Fehler**: ein **technischer** Fehler hat den ganzen Run
    abgebrochen (z.B. Serverfehler, Sandbox-Timeout). Nicht "einige Tests
-   sind failed" — das ist normal Abgeschlossen mit `failed > 0`.
+   sind failed", das ist normal Abgeschlossen mit `failed > 0`.
+
+Bei großen Läufen, die ein Koordinator auf Teilläufe verteilt, steht der Status
+zwischendurch auf **Aufteilung läuft**; der Lauf ist dann noch nicht fertig.
 
 ## Schritt 5: Wie lange dauert ein Lauf?
 

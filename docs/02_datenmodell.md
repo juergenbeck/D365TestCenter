@@ -111,10 +111,11 @@ Status eines Testlaufs.
 
 | Code       | Label           | CONFIG-Konstante       |
 |------------|-----------------|------------------------|
-| 105710000  | Geplant         | `statusPlanned`        |
+| 105710000  | Ausstehend      | `statusPlanned`        |
 | 105710001  | Läuft           | `statusRunning`        |
 | 105710002  | Abgeschlossen   | `statusCompleted`      |
 | 105710003  | Fehler          | `statusError`          |
+| 105710004  | Aufteilung läuft | `statusSplitting`     |
 
 ### jbe_testoutcome (Testergebnis)
 
@@ -126,7 +127,7 @@ Ergebnis eines einzelnen Testfalls innerhalb eines Testlaufs.
 | 105710001  | Failed          | `outcomeFailed`        |
 | 105710002  | Skipped         | `outcomeSkipped`       |
 | 105710003  | Error           | `outcomeError`         |
-| 105710004  | Not Implemented | `outcomeNotImpl`       |
+| 105710004  | (nur UI-Konstante, nicht im OptionSet) | `outcomeNotImpl` |
 
 ### jbe_testcategory (Testkategorie)
 

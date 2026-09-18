@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Creates:
-    - Publisher "JBE" (prefix: itt, OptionValuePrefix: 100571)
+    - Publisher from deploy-config.json (default "jbe", prefix jbe, OptionValuePrefix 10571)
     - Solution "D365TestCenter"
     - 5 global OptionSets (jbe_teststatus, jbe_testoutcome, jbe_testcategory, jbe_stepphase, jbe_stepstatus)
     - 4 custom tables (jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep)

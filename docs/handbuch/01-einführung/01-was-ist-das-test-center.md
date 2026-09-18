@@ -30,7 +30,7 @@ und am Ende prüfen, ob das Gesamtsystem das erwartete Ergebnis liefert.
    +------------------------+              |                         |
    | jbe_testrun anlegen    |              |                         |
    | Filter: "QS-01"        |              |                         |
-   | Status: "Geplant"      |------------->| Plugin-Trigger feuert   |
+   | Status: "Ausstehend"   |------------->| Plugin-Trigger feuert   |
    +------------------------+              |   |                     |
                                            |   v                     |
                                            | Async-Plugin läuft:    |

@@ -83,8 +83,7 @@ entfernen und den Test als reines `Step-Error` laufen lassen — dann
 zeigt `jbe_errormessage` die echte Exception.
 
 Geplant für nächste Version: `actualException`-Detail wird auch im
-FAILED-Fall mitgeliefert. Siehe Plan
-`03_implementation/testcenter-erweiterungen-plan.md` (A13).
+FAILED-Fall mitgeliefert.
 
 ### Pattern
 

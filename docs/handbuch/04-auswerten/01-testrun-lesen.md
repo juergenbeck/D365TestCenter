@@ -51,16 +51,17 @@ Nach Abschluss eines Runs öffnest du den Record:
 
 | Status | Bedeutung | Was jetzt? |
 |---|---|---|
-| Geplant | Trigger gesetzt, Plugin noch nicht angelaufen | 1 Minute warten, F5 |
-| Wird ausgeführt | Plugin läuft gerade | F5 drücken, zuschauen |
+| Ausstehend | Trigger gesetzt, Plugin noch nicht angelaufen | 1 Minute warten, F5 |
+| Läuft | Plugin läuft gerade | F5 drücken, zuschauen |
+| Aufteilung läuft | Großer Lauf wird vom Koordinator auf Teilläufe verteilt | warten, F5 |
 | Abgeschlossen | Lauf ist fertig (Passed oder Failed Tests inklusive) | Ergebnisse auswerten |
-| Fehlgeschlagen | **Technischer** Abbruch: Plugin-Exception, Sandbox-Timeout, Parser-Fehler | Full-Log lesen, Projekt-Owner fragen |
+| Fehler | **Technischer** Abbruch: Plugin-Exception, Sandbox-Timeout, Parser-Fehler | Full-Log lesen, Projekt-Owner fragen |
 
 **Wichtig:** `Abgeschlossen` mit `Fehlgeschlagen=3` bedeutet "Lauf ist
 normal durchgelaufen, aber 3 Tests waren inhaltlich nicht OK". Das ist
 ein gesunder Zustand — keine technische Panne.
 
-`Test-Status = Fehlgeschlagen` dagegen bedeutet "der Lauf selbst ist
+`Test-Status = Fehler` dagegen bedeutet "der Lauf selbst ist
 abgebrochen, ich weiß nicht einmal wie viele Tests geschafft haben".
 Das sollte nicht passieren und deutet auf Infrastruktur-Probleme.
 

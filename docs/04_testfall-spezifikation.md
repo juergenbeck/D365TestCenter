@@ -373,7 +373,7 @@ Beim Starten eines Testlaufs kann ein globaler Timeout pro Testfall eingestellt 
 ### 3. Ausführen
 
 - Der Testlauf wird über die UI gestartet (Filteroptionen: alle, Kategorie, Tag, User Story, einzelne IDs).
-- Ein `jbe_testrun`-Datensatz wird erstellt (Status: `Geplant`, dann `Läuft`).
+- Ein `jbe_testrun`-Datensatz wird erstellt (Status: `Ausstehend`, dann `Läuft`).
 - Optional wird die Custom API `jbe_RunIntegrationTests` aufgerufen.
 - Jeder Testfall wird sequentiell verarbeitet:
   1. Preconditions werden aufgebaut (Account, Contact, ContactSources).

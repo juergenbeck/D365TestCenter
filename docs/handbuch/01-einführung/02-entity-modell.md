@@ -51,7 +51,7 @@ die Ausführung automatisch.
 |---|---|---|
 | `jbe_name` | String (Primary) | Beschreibung, z.B. `"Regression 24.04 nachmittags"`. |
 | `jbe_testcasefilter` | String | Welche Tests laufen sollen. Siehe unten. |
-| `jbe_teststatus` | OptionSet | `Geplant` (105710000), `Wird ausgeführt` (105710001), `Abgeschlossen` (105710002), `Fehlgeschlagen` (105710003). |
+| `jbe_teststatus` | OptionSet | `Ausstehend` (105710000), `Läuft` (105710001), `Abgeschlossen` (105710002), `Fehler` (105710003), `Aufteilung läuft` (105710004, Koordinator verteilt die Tests auf Teilläufe). |
 | `jbe_keeprecords` | Two Options | `Ja` behält Testdaten, `Nein` räumt am Ende auf. |
 | `jbe_passed` / `jbe_failed` / `jbe_total` | Integer | Werden vom Plugin gesetzt. |
 | `jbe_testsummary` | Mehrzeilentext | Kurzer Ergebnis-Text. |
@@ -71,7 +71,7 @@ ausgeführt werden:
 | `category:Integration` | Alle Tests der Kategorie `Integration` |
 
 **Der Start-Trigger:** Sobald du den `jbe_testrun` mit `jbe_teststatus =
-Geplant` speicherst, feuert das CRUD-Trigger-Plugin `RunTestsOnStatusChange`
+Ausstehend` speicherst, feuert das CRUD-Trigger-Plugin `RunTestsOnStatusChange`
 und der Lauf beginnt asynchron. Du musst also einfach den Record speichern.
 
 ## jbe_testrunresult — Ergebnis pro Test
@@ -85,7 +85,7 @@ drei Tests trifft, hast du drei `jbe_testrunresult`-Records.
 |---|---|---|
 | `jbe_testid` | String | Welcher Test war das. |
 | `jbe_name` | String (Primary) | AutoNumber, Anzeige wie `RR-001671`. |
-| `jbe_outcome` | OptionSet | `Passed`, `Failed`, `Error`, `Skipped`. |
+| `jbe_outcome` | OptionSet | `Passed`, `Failed`, `Skipped`, `Error`. |
 | `jbe_errormessage` | Mehrzeilentext | Wenn Error/Failed: Grund. |
 | `jbe_testrunid` | Lookup | Rückverweis auf den `jbe_testrun`. |
 

@@ -6,7 +6,7 @@ namespace D365TestCenter.Core;
 /// Single Source of Truth für alle Entity-/Feld-/OptionSet-Namen und EnvVar-Defaults, die
 /// <see cref="CoordinatorOrchestrator"/>, <see cref="ChunkWorkerOrchestrator"/> und die dünnen
 /// IPlugin-Wrapper (RunCoordinator/RunChunkWorker) verdrahten. Die Werte sind exakt die aus der
-/// deploy-fertigen Schema-Spezifikation (Workspace 03_implementation/schema-adr0009-phase0.md);
+/// deploy-fertigen Schema-Spezifikation zu ADR-0009 (Worker-Modell, Phase 0);
 /// Drift hier bricht die Plugins gegen das angelegte Schema.
 ///
 /// Prefix durchgängig 105710xxx (NICHT die in Create-TestingEntities.ps1 veralteten 595300xxx,

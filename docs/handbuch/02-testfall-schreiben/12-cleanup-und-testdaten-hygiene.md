@@ -289,11 +289,9 @@ Cleanup...
 
 ## Verfügbarkeit
 
-Engine-Feature im geteilten Core (Commit `9b1b984` für FB-54, `297f760` für
-`cleanupChildren` + Toleranzen): Der **CLI-Pfad** nutzt es sofort mit einer
+Engine-Feature im geteilten Core (Tracking serverseitig erzeugter Records sowie
+`cleanupChildren` mit Toleranzen): Der **CLI-Pfad** nutzt es sofort mit einer
 neu publizierten CLI; der **Plugin-/Worker-Pfad** übernimmt es mit dem
-jeweils nächsten Plugin-Deploy. Referenzen:
-[ADR 2026-07-17 1801](https://github.com/juergenbeck/D365TestCenter-Workspace/blob/master/02_decisions/adr/ADR-2026-07-17-1801-cleanup-serverseitig-erzeugte-records.md)
-(Tracking serverseitig erzeugter Records, Cleanup-Sichtbarkeit) und
-[ADR 2026-07-23 0808](https://github.com/juergenbeck/D365TestCenter-Workspace/blob/master/02_decisions/adr/ADR-2026-07-23-0808-cleanup-kind-deklaration.md)
+jeweils nächsten Plugin-Deploy. Herkunft: ADR-2026-07-17-1801 (Tracking
+serverseitig erzeugter Records, Cleanup-Sichtbarkeit) und ADR-2026-07-23-0808
 (Kind-Deklaration, 404-/Konflikt-Toleranz).

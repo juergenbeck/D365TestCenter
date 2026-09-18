@@ -15,13 +15,16 @@ Edit `scripts/deploy-config.json`:
 
 ```json
 {
+    "publisherPrefix": "jbe",
+    "publisherOptionValuePrefix": 10571,
+    "publisherUniqueName": "jbe",
     "resource": "https://YOUR-ORG.crm4.dynamics.com/",
-    "solutionUniqueName": "IntegrationTestCenter",
-    "publisherUniqueName": "itt",
-    "publisherPrefix": "itt",
-    "publisherOptionValuePrefix": 10571
+    "solutionUniqueName": "D365TestCenter"
 }
 ```
+
+Keep `publisherPrefix` and `publisherOptionValuePrefix`: the web resource and the engine expect the `jbe_`
+schema names and option set values from 105710000 upwards (`publisherOptionValuePrefix` x 10000).
 
 Replace `YOUR-ORG` with your Dataverse organization name.
 

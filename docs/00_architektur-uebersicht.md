@@ -383,11 +383,16 @@ jbe_testcase                    jbe_testrun                     jbe_testrunresul
 
 | OptionSet | Werte |
 |-----------|-------|
-| `jbe_teststatus` | 0: Geplant, 1: Läuft, 2: Abgeschlossen, 3: Fehler |
-| `jbe_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen |
+| `jbe_teststatus` | 0: Ausstehend, 1: Läuft, 2: Abgeschlossen, 3: Fehler, 4: Aufteilung läuft (Offset auf 105710000) |
+| `jbe_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen, 3: Fehler |
 | `jbe_testcategory` | 0: Update Source, 1: Create Source, 2: Delete Source, 3: Multi-Source, 4: Merge, 5: Custom API, 6: Config, 7: End-to-End, 8: Error Handling |
-| `jbe_stepphase` | 0: Precondition, 1: Step, 2: Assertion, 3: Cleanup |
 | `jbe_stepstatus` | 0: Success, 1: Failed, 2: Skipped |
+| `jbe_chunkstatus` | 0: Neu, 1: Läuft, 2: Fortsetzen, 3: Verarbeitet, 4: Fehler |
+| `jbe_lifecyclestatus` | 0: Entwurf, 1: Aktiv, 2: Instabil, 3: Historisch, 4: Archiviert |
+
+Alle Werte sind Offsets auf 105710000 (Quelle: `solution/src/OptionSets/*.xml`). Das frühere OptionSet
+`jbe_stepphase` gehört nicht mehr zur Solution (ADR-0004: eine Step-Liste statt Phasen);
+`scripts/Deploy-Solution.ps1` legt es noch an.
 
 ### 3.3 Relationships
 
@@ -442,7 +447,7 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
   _startRunWithFilter(filter, keepRecords)
         |
         v
-  API.create("jbe_testruns", { status: Geplant, filter, keeprecords })
+  API.create("jbe_testruns", { status: Ausstehend, filter, keeprecords })
         |
         v
   TestRunner.execute(runId)    [fire-and-forget]
@@ -603,8 +608,8 @@ User: #metadata -> Tabellen-Tab
 
 | Komponente | Typ | Dataverse-Name |
 |---|---|---|
-| Publisher | Publisher | `itt` (Prefix: `itt`, OptionValue: 10571) |
-| Solution | Solution | `IntegrationTestCenter` |
+| Publisher | Publisher | `JBE` (Prefix: `jbe`; OptionSet-Werte 10571xxxx, siehe unten) |
+| Solution | Solution | `D365TestCenter` |
 | Entity | Entity | `jbe_testcase` |
 | Entity | Entity | `jbe_testrun` |
 | Entity | Entity | `jbe_testrunresult` |
@@ -612,8 +617,9 @@ User: #metadata -> Tabellen-Tab
 | OptionSet | Global OptionSet | `jbe_teststatus` |
 | OptionSet | Global OptionSet | `jbe_testoutcome` |
 | OptionSet | Global OptionSet | `jbe_testcategory` |
-| OptionSet | Global OptionSet | `jbe_stepphase` |
 | OptionSet | Global OptionSet | `jbe_stepstatus` |
+| OptionSet | Global OptionSet | `jbe_chunkstatus` |
+| OptionSet | Global OptionSet | `jbe_lifecyclestatus` |
 | Relationship | N:1 | `jbe_testrunresult_testrun` |
 | Relationship | N:1 (Cascade Delete) | `jbe_teststep_testrunresult` |
 | Web Resource | HTML | `jbe_/testcenter.html` |
@@ -624,14 +630,14 @@ User: #metadata -> Tabellen-Tab
 ### 5.2 Deployment-Ablauf
 
 ```
-deploy-itt-solution.ps1
+scripts/Deploy-Solution.ps1 (Werte aus scripts/deploy-config.json)
         |
         v
-  TokenVault: Get-VaultHeaders -System 'dataverse_dev'
+  Auth: $headers mit Bearer-Token (vom Aufrufer gesetzt)
         |
         v
-  1. Publisher "itt" anlegen (oder skip)
-  2. Solution "IntegrationTestCenter" anlegen (oder skip)
+  1. Publisher "jbe" anlegen (oder skip)
+  2. Solution "D365TestCenter" anlegen (oder skip)
   3. Globale OptionSets (5x) anlegen (oder skip)
   4. Entity jbe_testcase + 7 Attribute
   5. Entity jbe_testrun + 10 Attribute (inkl. jbe_keeprecords)
@@ -648,6 +654,12 @@ deploy-itt-solution.ps1
 ```
 
 Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already exists"-Fehler werden als Skip behandelt.
+
+Der empfohlene Weg ist der Import der Solution aus `solution/src`. Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
+Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
+der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
+`scripts/Deploy-Solution.ps1` legt die OptionSets ohne Solution-Import an und rechnet dafür
+`publisherOptionValuePrefix` (10571 in `scripts/deploy-config.json`) mal 10000.
 
 ---
 
@@ -678,13 +690,6 @@ Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already e
 
 ## 8. Projektorganisation
 
-Die Projektdokumentation folgt der XrmForge-Struktur mit 6 Sektoren im `projekt/`-Ordner (parallel zu `webresource/`):
-
-| Sektor | Inhalt |
-|--------|--------|
-| `00_start-here/` | Einstieg, 10 Goldene Regeln für die Arbeit am ITT |
-| `01_architecture/` | Verweis auf diese Architekturübersicht und Detail-Dokumente unter `webresource/docs/` |
-| `02_decisions/` | ADRs (Architecture Decision Records), offene Entscheidungen |
-| `03_implementation/` | Roadmap mit 6 Phasen |
-| `04_quality/` | Review-Checkliste mit 4 Dimensionen |
-| `05_traceability/` | Session-State, Changelog |
+Dieses Repo enthält das Produkt: Code, Solution, Skripte und die Dokumentation unter `docs/`.
+Entscheidungsprotokolle (ADRs), Umsetzungspläne und Arbeitsstände werden außerhalb dieses Repos geführt;
+wo die Doku eine ADR-Kennung nennt, dient sie nur als Herkunftsangabe.

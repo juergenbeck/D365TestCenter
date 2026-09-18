@@ -139,6 +139,12 @@ Die folgenden globalen OptionSets müssen angelegt werden (Wertebereich ab `1057
 
 Die UI-Konstante `CONFIG.optionSets.outcomeNotImpl` (`105710004`) hat im OptionSet keine Entsprechung.
 
+Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
+Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
+der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
+`scripts/Deploy-Solution.ps1` legt die OptionSets ohne Solution-Import an und rechnet dafür
+`publisherOptionValuePrefix` (10571 in `scripts/deploy-config.json`) mal 10000.
+
 **jbe_testcategory (Testkategorie):**
 
 | Wert | Label |

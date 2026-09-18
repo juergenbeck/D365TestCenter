@@ -134,7 +134,7 @@ inventory --defs <dir> [--out <datei>] [--name <titel>]    # offline, kein Datav
   **Verantw.**/**Min**/**Quelle**/**Letzter Lauf**/**Trend**/**Datei** (Markdown-Link auf den relativen Def-Pfad).
 - **Build-Inventar.ps1-Parität (S35):** `Stufe`/`Verantwortlich`/`geschaetzt_min`/`Quelle`/Datei-Link additiv
   ergänzt (leer wo Frontmatter-Feld fehlt, generisch optionale Metadaten nach ADR-0002). Damit ist `inventory`
-  ein vollwertiger Ersatz für das projektseitige `Build-Inventar.ps1` (ADR-0007-Diff S35, ps-tooling-cli-deprecation-diff.md (`03_implementation/ps-tooling-cli-deprecation-diff.md` im Repo D365TestCenter-Workspace)).
+  ein vollwertiger Ersatz für das projektseitige `Build-Inventar.ps1` (ADR-0007-Diff S35).
 - **Trend** aus `ergebnis_historie` (wiederverwendet `MarkdownResultSync.ParseHistory`): "Nx PASS" (stabil) /
   "N Läufe, Xx nicht-PASS" (instabil) / "-" (keine Historie). "Letzter Lauf" = neuester Eintrag nach Datum
   (Ergebnis-Teil längen-gekappt gegen Freitext-Historie-Notizen).
@@ -207,14 +207,14 @@ sync-zephyr --run <guid> --defs <dir> --org <url> <dataverse-auth> \
   (1500-Zeichen-Cap). **Die Primary-Namen werden nur im CLI-`run`-Pfad erfasst** (Flag `CaptureRecordNames`,
   sandbox-sicher; der CRUD-Trigger-/Plugin-Pfad lässt sie leer, Sandbox-Wächter-Regel), die **Asserts** kommen
   in jedem Pfad. Für aussagekräftige Belege den Run über CLI `run` erzeugen, nicht über den jbe_testrun-Trigger.
-- **Beleg trägt ID UND Name; Zephyr-Lauf behält die Datensätze (OE 2026-06-23 (`02_decisions/OE-2026-06-23-2049-produkt-default-keeprecords.md` im Repo D365TestCenter-Workspace)):**
+- **Beleg trägt ID UND Name; Zephyr-Lauf behält die Datensätze (OE 2026-06-23):**
   Der Audit-Kommentar rendert pro Record `<entity> "<Name>" [<alias>] (<id>)` -- die GUID-`id` ist Teil des
   Belegs (`ZephyrResultBuilder.BuildAuditComment`), damit der Zephyr-Eintrag eindeutig auf den Dataverse-Record
   verweist. Der Produkt-Default ist Cleanup (`keeprecords=false`); ein Zephyr-Lauf muss aber **mit Behalten**
   laufen (`run --keep-records`, ein projektseitiger Lauf-Wrapper kann das per Default setzen), sonst zeigt der Beleg auf einen
   gelöschten Record und ist wertlos. **Marker bewusst als Workflow-Konvention** (Lauf mit Behalten, dann
   `sync-zephyr`), keine Auto-Erkennung -- `zephyr_key`-getriebenes Auto-Behalten bleibt optionaler Backlog-Komfort.
-  420 Unit-Tests grün, kein Deploy. Detail OE-10 (`02_decisions/OE-10_zephyr-ergebnis-audit-kommentar.md` im Repo D365TestCenter-Workspace).
+  420 Unit-Tests grün, kein Deploy. Detail OE-10.
 
 **Falle (alle Doku/Reporting-Commands):** Laufen über die published DLL (`backend/publish/cli`).
 Nach Core/CLI-Änderung erst `dotnet publish D365TestCenter.Cli -c Release -o
@@ -226,7 +226,7 @@ Wo ein Projekt per Test-Lizenz nach Zephyr Scale synct (E5), kann ein Projekt mi
 Test-Lizenz** die Testausführung in einen **Work-Item-Kommentar** schreiben. Gleiches Muster wie E5:
 Run-Ergebnis aus Dataverse -> Beleg -> externe Senke.
 
-**Status: GEBAUT + live-verifiziert (2026-06-25, ADR 2026-06-24 2347 (`02_decisions/adr/ADR-2026-06-24-2347-sync-devops-e5-pendant.md` im Repo D365TestCenter-Workspace), Produkt-Commit `0fa312c`).**
+**Status: GEBAUT + live-verifiziert (2026-06-25, ADR 2026-06-24 2347).**
 Der generische CLI-Befehl `sync-devops` postet einen `jbe_testrun` als Azure-DevOps-Work-Item-Kommentar
 (HTML-Audit-Fragment). End-to-End belegt an einem Run mit 4 Tests (3 PASS/1 ERROR): KPIs +
 Angelegt/Geprüft/Fehler + Umlaute per GET-Roundtrip geprüft.

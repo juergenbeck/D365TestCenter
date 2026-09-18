@@ -47,7 +47,7 @@ Vor v5.3.6 waren beide Felder bekannt-leer (FB-34).
 
 ### Wichtige OptionSets
 
-**jbe_testoutcome:** Passed (105710000), Failed (105710001), **Skipped (105710002), Error (105710003)** (per OptionSet verifiziert, Goldene Regel 10). Die frühere hier dokumentierte Vertauschung (Error=...002, Skipped=...003) war FB-50 (`06_referenzkataloge/fehlerbildkatalog.md` im Repo D365TestCenter-Workspace): code-seitig in Plugin v5.3.21 gefixt und die Alt-Records migriert.
+**jbe_testoutcome:** Passed (105710000), Failed (105710001), **Skipped (105710002), Error (105710003)** (per OptionSet verifiziert, Goldene Regel 10). Die frühere hier dokumentierte Vertauschung (Error=...002, Skipped=...003) war FB-50: code-seitig in Plugin v5.3.21 gefixt und die Alt-Records migriert.
 
 **jbe_teststatus:** Planned (105710000), Running (105710001), Completed (105710002), Error (105710003)
 

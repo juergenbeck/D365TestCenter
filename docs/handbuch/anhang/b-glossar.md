@@ -50,7 +50,7 @@ Reihenfolge. Ausgeschaltet per `jbe_keeprecords: true` am Testrun.
 
 Das Plugin `RunTestsOnStatusChange`, das auf Create/Update von
 `jbe_testrun` registriert ist. Wenn das Feld `jbe_teststatus` auf
-`Geplant` steht, feuert das Plugin und startet die Testausführung.
+`Ausstehend` steht, feuert das Plugin und startet die Testausführung.
 
 ## Custom Action
 
@@ -157,7 +157,7 @@ gespeichert. JSON-Definition im Feld `jbe_definitionjson`.
 ## Testrun
 
 Ein konkreter Testlauf. `jbe_testrun`-Record. Enthält Filter, Status,
-Zusammenfassung. Wird durch Status-Setzen auf "Geplant" gestartet.
+Zusammenfassung. Wird durch Status-Setzen auf "Ausstehend" gestartet.
 
 ## Testrunresult
 

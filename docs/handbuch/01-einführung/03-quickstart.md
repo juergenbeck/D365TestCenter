@@ -83,7 +83,7 @@ Navigiere zu **Testläufe** und klick auf **+ Neu**:
 |                                                                   |
 |  Name               [ QS-01 erster Versuch                    ]   |
 |  Testcase-Filter    [ QS-01                                   ]   |
-|  Test-Status        [ Geplant                v ]                  |
+|  Test-Status        [ Ausstehend             v ]                  |
 |  Records behalten   [ ] nein                                      |
 |                                                                   |
 |  [Speichern]  [Speichern & Schließen]                            |

@@ -1746,7 +1746,7 @@ public sealed class TestRunner
 
     // ================================================================
     //  EnvironmentVariable-Actions (Set / Retrieve)
-    //  Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md
+    //  Nutzung: docs/handbuch/02-testfall-schreiben/09-negative-path.md
     // ================================================================
 
     private void StepSetEnvironmentVariable(TestStep step, TestContext ctx)
@@ -1912,7 +1912,7 @@ public sealed class TestRunner
 
     // ================================================================
     //  expectFailure / expectException Helpers (1b)
-    //  Siehe D365TestCenter-Workspace/03_implementation/expectfailure-feature.md
+    //  Nutzung: docs/handbuch/02-testfall-schreiben/09-negative-path.md
     // ================================================================
 
     /// <summary>
@@ -2655,7 +2655,6 @@ public sealed class TestRunner
 
     /// <summary>
     /// Stellt den Vor-Set-Zustand einer EnvironmentVariable wieder her.
-    /// Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md Abschnitt 6.1.
     /// </summary>
     private void RestoreEnvVarSnapshot(EnvVarSnapshot snap)
     {

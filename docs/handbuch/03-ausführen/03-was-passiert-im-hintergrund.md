@@ -11,7 +11,7 @@ Fehlerbilder besser einordnen.
    +------------------------+                        +-------------------+
    |                        |                        |                   |
    | 1. jbe_testrun anlegen |                        |                   |
-   |    Status = Geplant    |                        |                   |
+   |  Status = Ausstehend   |                        |                   |
    |    [Speichern]         |----- Web API Create -->|                   |
    |                        |                        | 2. Record in DB   |
    |                        |                        | 3. CRUD-Trigger-  |

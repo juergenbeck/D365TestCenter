@@ -8,7 +8,6 @@ namespace D365TestCenter.Tests;
 
 /// <summary>
 /// Tests für expectFailure / expectException (1b).
-/// Siehe D365TestCenter-Workspace/03_implementation/expectfailure-feature.md.
 /// </summary>
 public class ExpectFailureTests
 {

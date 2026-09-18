@@ -224,6 +224,10 @@ if __name__ == "__main__":
     # The pandoc generator diverges by ~1791 lines (different handbook) and is
     # NO LONGER run in the idempotency pass, to avoid overwriting the DEV state.
     # Reactivate manually if needed: call build() directly.
+    # Measured 2026-09-18: the divergence was the markdown being AHEAD of the
+    # HTML (chapter 12 missing, five chapters partly), the HTML held no text of
+    # its own. handbuch.html was regenerated once via build(); a word-level
+    # comparison per chapter showed no remaining difference.
     print("build-handbuch.py is DISABLED - DEV handbuch.html is the SoT. No run.")
     import sys
     sys.exit(0)

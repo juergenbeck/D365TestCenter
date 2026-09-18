@@ -27,7 +27,7 @@ namespace D365TestCenter.Core;
 /// extra round-trip layer in the pipeline. Measured overhead per operation
 /// is approximately 1-2 ms in practice.
 ///
-/// Architecture: ADR-0005 + FB-31b (D365TestCenter-Workspace).
+/// Architecture: ADR-0005 (sandbox-safe step execution).
 /// </summary>
 public sealed class SandboxSafeOrganizationService : IOrganizationService
 {

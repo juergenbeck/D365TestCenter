@@ -1778,7 +1778,7 @@ const LANG = {
     common_no: "No",                         // DE: Nein
     common_loading: "Loading...",             // DE: Laden...
     common_error: "Error",                   // DE: Fehler
-    common_planned: "Planned",               // DE: Geplant
+    common_planned: "Pending",               // DE: Ausstehend
     common_completed: "Completed",           // DE: Abgeschlossen
     common_demo_banner: "Demo Mode: All data is simulated", // DE: Demo-Modus: Alle Daten sind simuliert
 
@@ -1999,29 +1999,31 @@ const _sharedIttMeta = {
             { LogicalName: "jbe_assertionresults", DisplayName: { UserLocalizedLabel: { Label: "Assertion-Results" } }, AttributeType: "MemoType", RequiredLevel: { Value: "None" }, IsCustomAttribute: true, SchemaName: "jbe_AssertionResults" }
         ]
     },
+    // Werte wie in solution/src/OptionSets/*.xml (CONFIG.optionSetBase + Offset)
     optionsets: [
         { Name: "jbe_teststatus", DisplayName: { UserLocalizedLabel: { Label: "Teststatus" } }, OptionSetType: "Picklist", Options: [
-            { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Geplant" } } },
-            { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Running" } } },
-            { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Abgeschlossen" } } },
-            { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Fehler" } } }
+            { Value: CONFIG.optionSetBase + 0, Label: { UserLocalizedLabel: { Label: "Ausstehend" } } },
+            { Value: CONFIG.optionSetBase + 1, Label: { UserLocalizedLabel: { Label: "Läuft" } } },
+            { Value: CONFIG.optionSetBase + 2, Label: { UserLocalizedLabel: { Label: "Abgeschlossen" } } },
+            { Value: CONFIG.optionSetBase + 3, Label: { UserLocalizedLabel: { Label: "Fehler" } } },
+            { Value: CONFIG.optionSetBase + 4, Label: { UserLocalizedLabel: { Label: "Aufteilung läuft" } } }
         ]},
         { Name: "jbe_testoutcome", DisplayName: { UserLocalizedLabel: { Label: "Test Result" } }, OptionSetType: "Picklist", Options: [
-            { Value: 100000000, Label: { UserLocalizedLabel: { Label: "Passed" } } },
-            { Value: 100000001, Label: { UserLocalizedLabel: { Label: "Failed" } } },
-            { Value: 100000002, Label: { UserLocalizedLabel: { Label: "Error" } } },
-            { Value: 100000003, Label: { UserLocalizedLabel: { Label: "Skipped" } } }
+            { Value: CONFIG.optionSetBase + 0, Label: { UserLocalizedLabel: { Label: "Passed" } } },
+            { Value: CONFIG.optionSetBase + 1, Label: { UserLocalizedLabel: { Label: "Failed" } } },
+            { Value: CONFIG.optionSetBase + 2, Label: { UserLocalizedLabel: { Label: "Skipped" } } },
+            { Value: CONFIG.optionSetBase + 3, Label: { UserLocalizedLabel: { Label: "Error" } } }
         ]},
         { Name: "jbe_testcategory", DisplayName: { UserLocalizedLabel: { Label: "Testkategorie" } }, OptionSetType: "Picklist", Options: [
-            { Value: 100000000, Label: { UserLocalizedLabel: { Label: "UpdateSource" } } },
-            { Value: 100000001, Label: { UserLocalizedLabel: { Label: "CreateSource" } } },
-            { Value: 100000002, Label: { UserLocalizedLabel: { Label: "DeleteSource" } } },
-            { Value: 100000003, Label: { UserLocalizedLabel: { Label: "MultiSource" } } },
-            { Value: 100000004, Label: { UserLocalizedLabel: { Label: "Merge" } } },
-            { Value: 100000005, Label: { UserLocalizedLabel: { Label: "CustomApi" } } },
-            { Value: 100000006, Label: { UserLocalizedLabel: { Label: "Config" } } },
-            { Value: 100000007, Label: { UserLocalizedLabel: { Label: "EndToEnd" } } },
-            { Value: 100000008, Label: { UserLocalizedLabel: { Label: "ErrorHandling" } } }
+            { Value: CONFIG.optionSetBase + 0, Label: { UserLocalizedLabel: { Label: "UpdateSource" } } },
+            { Value: CONFIG.optionSetBase + 1, Label: { UserLocalizedLabel: { Label: "CreateSource" } } },
+            { Value: CONFIG.optionSetBase + 2, Label: { UserLocalizedLabel: { Label: "DeleteSource" } } },
+            { Value: CONFIG.optionSetBase + 3, Label: { UserLocalizedLabel: { Label: "MultiSource" } } },
+            { Value: CONFIG.optionSetBase + 4, Label: { UserLocalizedLabel: { Label: "Merge" } } },
+            { Value: CONFIG.optionSetBase + 5, Label: { UserLocalizedLabel: { Label: "CustomApi" } } },
+            { Value: CONFIG.optionSetBase + 6, Label: { UserLocalizedLabel: { Label: "Config" } } },
+            { Value: CONFIG.optionSetBase + 7, Label: { UserLocalizedLabel: { Label: "EndToEnd" } } },
+            { Value: CONFIG.optionSetBase + 8, Label: { UserLocalizedLabel: { Label: "ErrorHandling" } } }
         ]}
     ],
     customapis: [
@@ -5019,7 +5021,7 @@ window.runSingleCase = async function(testId) {
 
 async function _startRunWithFilter(filter, keepRecords, concurrency) {
     // Seit ADR-0003 (Single-Engine-Architektur, v5.3): Der Browser legt nur noch
-    // einen jbe_testrun-Record mit Status "Geplant" an. Das CRUD-Trigger-Plugin
+    // einen jbe_testrun-Record mit Status "Ausstehend" an. Das CRUD-Trigger-Plugin
     // (RunTestsOnStatusChange) übernimmt die Ausführung asynchron per Batch-
     // Cascade (BatchSize=12, max ~96 Tests). Die Core-Engine (TestRunner.cs)
     // führt die Tests aus, schreibt jbe_testrunresult + jbe_teststep Records.
@@ -5031,7 +5033,7 @@ async function _startRunWithFilter(filter, keepRecords, concurrency) {
     const keep = keepRecords === true; // Default: false (Cleanup-Grundsatz, OE 2026-06-23); Behalten nur per Opt-in (Formular-Checkbox) oder CLI/Zephyr-Workflow
     JBELog.info("TestRunner", `Starting test run via CRUD-Trigger: Filter="${filter}", keepRecords=${keep}`);
     try {
-        // TestRun-Record anlegen mit Status "Geplant" - das Plugin übernimmt
+        // TestRun-Record anlegen mit Status "Ausstehend" - das Plugin übernimmt
         const run = await API.create("jbe_testruns", {
             jbe_teststatus: CONFIG.optionSets.statusPlanned,
             jbe_testcasefilter: filter,
@@ -6859,10 +6861,11 @@ window._exportRunsCsv = function() {
         const passed = r.jbe_passed || 0;
         const rate = total > 0 ? Math.round(passed / total * 100) : 0;
         const statusMap = {};
-        statusMap[CONFIG.optionSets.statusPlanned] = "Geplant";
-        statusMap[CONFIG.optionSets.statusRunning] = "Running";
+        statusMap[CONFIG.optionSets.statusPlanned] = "Ausstehend";
+        statusMap[CONFIG.optionSets.statusRunning] = "Läuft";
         statusMap[CONFIG.optionSets.statusCompleted] = "Abgeschlossen";
         statusMap[CONFIG.optionSets.statusError] = "Fehler";
+        statusMap[CONFIG.optionSets.statusSplitting] = "Aufteilung läuft";
         const statusText = statusMap[r.jbe_teststatus] || "?";
         return [
             r.jbe_startedon ? new Date(r.jbe_startedon).toLocaleString("de-DE") : "",
@@ -7589,7 +7592,7 @@ const HelpContent = {
 <h3>Filter History</h3>
 <ul>
 <li>Freitext (z.B. PROJ-1234)</li>
-<li>Status (Geplant, Läuft, Abgeschlossen, Fehler)</li>
+<li>Status (Ausstehend, Läuft, Abgeschlossen, Fehler, Aufteilung läuft)</li>
 <li>Result (pass / with errors)</li>
 </ul>
 <div class="help-tip">Plötzlich längere Duration deutet auf Async-Timeout hin.</div>
@@ -7651,11 +7654,11 @@ const HelpContent = {
 <tr><td>Test Run</td><td><code>jbe_testrun</code></td></tr>
 <tr><td>Test Result</td><td><code>jbe_testrunresult</code></td></tr>
 </table>
-<h3>OptionSets (100000xxx)</h3>
+<h3>OptionSets (105710000 + Offset)</h3>
 <table class="help-table">
 <tr><th>OptionSet</th><th>Werte</th></tr>
-<tr><td>teststatus</td><td>0=Geplant, 1=Läuft, 2=Abgeschlossen, 3=Fehler</td></tr>
-<tr><td>testoutcome</td><td>0=Passed, 1=Failed, 2=Error, 3=Skipped</td></tr>
+<tr><td>teststatus</td><td>0=Ausstehend, 1=Läuft, 2=Abgeschlossen, 3=Fehler, 4=Aufteilung läuft</td></tr>
+<tr><td>testoutcome</td><td>0=Passed, 1=Failed, 2=Skipped, 3=Error</td></tr>
 <tr><td>testcategory</td><td>0=Update Source bis 8=Error Handling</td></tr>
 </table>
 <div class="help-warning">OptionSet-Werte müssen exakt mit dem JavaScript übereinstimmen.</div>

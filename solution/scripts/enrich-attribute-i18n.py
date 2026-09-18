@@ -283,10 +283,10 @@ def process_entity(entity_dir):
     def replace_attr(m):
         header, physname, body, footer = m.group(1), m.group(2), m.group(3), m.group(4)
         # LogicalName from body (always lowercase)
-        lm = re.search(r'<LogicalName>(jbe_\w+)</LogicalName>', body)
-        if not lm:
+        logical_match = re.search(r'<LogicalName>(jbe_\w+)</LogicalName>', body)
+        if not logical_match:
             return m.group(0)
-        logical = lm.group(1)
+        logical = logical_match.group(1)
 
         # Get mapping: per-entity override first, then global
         entry = None
