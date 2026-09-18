@@ -185,7 +185,7 @@ public static class Program
         syncZephyrCommand.AddOption(new Option<string>("--server",
             "Zephyr/Jira server base URL, e.g. https://jira.contoso.com (ATM 1.0 paths are appended).") { IsRequired = true });
         syncZephyrCommand.AddOption(new Option<string>("--project",
-            "Zephyr/Jira project key, e.g. DYN.") { IsRequired = true });
+            "Zephyr/Jira project key, e.g. PROJ.") { IsRequired = true });
         syncZephyrCommand.AddOption(new Option<string>("--zephyr-pat",
             "Jira Personal Access Token (Bearer). Pass from a TokenVault wrapper; the CLI stays secret-agnostic.") { IsRequired = true });
         syncZephyrCommand.AddOption(new Option<string?>("--env",

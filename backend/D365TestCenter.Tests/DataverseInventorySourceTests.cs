@@ -34,18 +34,18 @@ public class DataverseInventorySourceTests
     [Fact]
     public void MapEntry_MapsFieldsAndPicklistLabels()
     {
-        var e = TestCase("DYN-TC8", "Achter", domain: "DSGVO", statusLabel: "Aktiv",
-            tags: "smoke, tier-1", tickets: "DYN-1, DYN-2", level: 2, owner: "Jane", estMin: 5);
+        var e = TestCase("PROJ-TC8", "Achter", domain: "DSGVO", statusLabel: "Aktiv",
+            tags: "smoke, tier-1", tickets: "PROJ-1, PROJ-2", level: 2, owner: "Jane", estMin: 5);
 
         var entry = DataverseInventorySource.MapEntry(e);
 
         Assert.NotNull(entry);
-        Assert.Equal("DYN-TC8", entry!.Id);
+        Assert.Equal("PROJ-TC8", entry!.Id);
         Assert.Equal("Achter", entry.Titel);
         Assert.Equal("DSGVO", entry.Domaene);                 // free-text field
         Assert.Equal("Aktiv", entry.Status);                  // picklist label from FormattedValues
         Assert.Equal(new[] { "smoke", "tier-1" }, entry.SuiteTags);
-        Assert.Equal("DYN-1, DYN-2", entry.Ticket);
+        Assert.Equal("PROJ-1, PROJ-2", entry.Ticket);
         Assert.Equal("2", entry.Stufe);
         Assert.Equal("Jane", entry.Verantwortlich);
         Assert.Equal("5", entry.GeschaetztMin);
@@ -75,8 +75,8 @@ public class DataverseInventorySourceTests
     [InlineData("*", true)]
     [InlineData("", true)]
     [InlineData(null, true)]
-    [InlineData("DYN-TC8", true)]
-    [InlineData("DYN-*", true)]
+    [InlineData("PROJ-TC8", true)]
+    [InlineData("PROJ-*", true)]
     [InlineData("OTHER-*", false)]
     [InlineData("tag:smoke", true)]
     [InlineData("tag:nope", false)]
@@ -86,7 +86,7 @@ public class DataverseInventorySourceTests
     public void MatchesFilter_Vocabulary(string? filter, bool expected)
     {
         var entry = DataverseInventorySource.MapEntry(
-            TestCase("DYN-TC8", "Achter", domain: "DSGVO", tags: "smoke, tier-1"))!;
+            TestCase("PROJ-TC8", "Achter", domain: "DSGVO", tags: "smoke, tier-1"))!;
         Assert.Equal(expected, DataverseInventorySource.MatchesFilter(entry, filter));
     }
 
@@ -94,15 +94,15 @@ public class DataverseInventorySourceTests
     public void Load_FiltersAndMaps_OverFake()
     {
         var fake = new FakeDataverse();
-        fake.Seed(TestCase("DYN-TC8", "Achter", tags: "smoke"));
-        fake.Seed(TestCase("DYN-TC1", "Erster", tags: "regression"));
+        fake.Seed(TestCase("PROJ-TC8", "Achter", tags: "smoke"));
+        fake.Seed(TestCase("PROJ-TC1", "Erster", tags: "regression"));
         fake.Seed(TestCase("ZP-TC1", "Zett", tags: "smoke"));
 
         Assert.Equal(3, DataverseInventorySource.Load(fake, "*").Entries.Count);
 
-        var dyn = DataverseInventorySource.Load(fake, "DYN-*");
+        var dyn = DataverseInventorySource.Load(fake, "PROJ-*");
         Assert.Equal(2, dyn.Entries.Count);
-        Assert.All(dyn.Entries, x => Assert.StartsWith("DYN-", x.Id));
+        Assert.All(dyn.Entries, x => Assert.StartsWith("PROJ-", x.Id));
 
         Assert.Equal(2, DataverseInventorySource.Load(fake, "tag:smoke").Entries.Count);
     }

@@ -21,10 +21,10 @@ public class DefinitionMdWriterTests
         Domaene = "DSGVO",
         Stufe = "2",
         Verantwortlich = "Jürgen",
-        Tickets = "DYN-9149,DYN-9558",
+        Tickets = "PROJ-9149,PROJ-9558",
         EnvScope = "dev,test",
         GeschaetztMin = "15",
-        ZephyrKey = "DYN-T994",
+        ZephyrKey = "PROJ-T994",
         SuiteTags = "bridge,regression",
         Documentation = "## Zweck\n\nMapping prüfen.",
         DefinitionJson = "{\"id\":\"META-01\",\"title\":\"T\",\"steps\":[{\"stepNumber\":1,\"action\":\"CreateRecord\"}]}"
@@ -39,8 +39,8 @@ public class DefinitionMdWriterTests
         Assert.Contains("status: aktiv", md);
         Assert.Contains("domaene: DSGVO", md);
         Assert.Contains("stufe: 2", md);
-        Assert.Contains("ticket: DYN-9149", md);              // first ticket
-        Assert.Contains("weitere_tickets: [DYN-9558]", md);   // remainder as array
+        Assert.Contains("ticket: PROJ-9149", md);              // first ticket
+        Assert.Contains("weitere_tickets: [PROJ-9558]", md);   // remainder as array
         Assert.Contains("env_scope: [dev, test]", md);        // inline array (round-trips via ReadArray)
         Assert.Contains("suite_tags: [bridge, regression]", md);
         Assert.Contains("titel: \"ContactSource: Mapping\"", md);   // quoted (contains ':')
@@ -73,9 +73,9 @@ public class DefinitionMdWriterTests
         Assert.Equal("2", tc.Value<string>("stufe"));
         Assert.Equal("Jürgen", tc.Value<string>("verantwortlich"));
         Assert.Equal("15", tc.Value<string>("geschaetzt_min"));
-        Assert.Equal("DYN-T994", tc.Value<string>("zephyr_key"));
+        Assert.Equal("PROJ-T994", tc.Value<string>("zephyr_key"));
         Assert.Equal("dev,test", tc.Value<string>("env_scope"));           // array -> CSV again
-        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("tickets"));    // ticket + weitere_tickets rejoined
+        Assert.Equal("PROJ-9149,PROJ-9558", tc.Value<string>("tickets"));    // ticket + weitere_tickets rejoined
         Assert.NotNull(tc["steps"]);
     }
 
@@ -88,7 +88,7 @@ public class DefinitionMdWriterTests
         var m = new DefinitionMirror
         {
             Id = "X",
-            DefinitionJson = "{\"id\":\"X\",\"userStories\":[\"DYN-1\"],\"documentation\":\"d\",\"status\":\"aktiv\",\"steps\":[]}"
+            DefinitionJson = "{\"id\":\"X\",\"userStories\":[\"PROJ-1\"],\"documentation\":\"d\",\"status\":\"aktiv\",\"steps\":[]}"
         };
 
         var md = DefinitionMdWriter.Render(m);

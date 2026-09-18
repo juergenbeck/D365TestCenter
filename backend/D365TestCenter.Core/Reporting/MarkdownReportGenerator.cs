@@ -85,7 +85,7 @@ public static class MarkdownReportGenerator
 
     /// <summary>
     /// The doc sections carried into <c>jbe_documentation</c> (E1 sync-docs / B5 build-pack),
-    /// in order. Superset of <see cref="FullSections"/> plus "Beschreibung": the DSGVO/DYN
+    /// in order. Superset of <see cref="FullSections"/> plus "Beschreibung": the DSGVO/PROJ
     /// definitions document under the rich vocabulary (Zweck/Datenkonstellation/...), the
     /// Bridge (fg-testtool) definitions carry their purpose under "Beschreibung" (their
     /// Vorbereitung/Schritte/Erwartung sections are placeholders and stay out). Additive and
@@ -274,7 +274,7 @@ public static class MarkdownReportGenerator
         sb.Append("|---|---|---|---|---|");
         foreach (var it in m.Items)
         {
-            // Purpose excerpt: "Zweck" (DSGVO/DYN vocabulary), falling back to "Beschreibung"
+            // Purpose excerpt: "Zweck" (DSGVO/PROJ vocabulary), falling back to "Beschreibung"
             // (Bridge fg-testtool vocabulary) so the compact column is filled for both. (Decision 22)
             it.Sections.TryGetValue("Zweck", out var zweck);
             if (string.IsNullOrWhiteSpace(zweck)) it.Sections.TryGetValue("Beschreibung", out zweck);

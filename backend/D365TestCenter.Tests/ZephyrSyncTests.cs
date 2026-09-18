@@ -28,28 +28,28 @@ public class ZephyrSyncTests
     {
         var results = new List<TestCaseResult>
         {
-            Tc("DYN10000-TC1", TestOutcome.Passed, 5000),
-            Tc("DYN10000-TC2", TestOutcome.Failed, 1000, "Assert fehlgeschlagen"),
-            Tc("DYN10000-TC9", TestOutcome.Passed),     // no zephyr_key -> skipped
+            Tc("PROJ10000-TC1", TestOutcome.Passed, 5000),
+            Tc("PROJ10000-TC2", TestOutcome.Failed, 1000, "Assert fehlgeschlagen"),
+            Tc("PROJ10000-TC9", TestOutcome.Passed),     // no zephyr_key -> skipped
             Tc("", TestOutcome.Passed)                   // blank testId -> ignored
         };
         var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["DYN10000-TC1"] = "DYN-T1",
-            ["DYN10000-TC2"] = "DYN-T2"
+            ["PROJ10000-TC1"] = "PROJ-T1",
+            ["PROJ10000-TC2"] = "PROJ-T2"
         };
 
         var plan = ZephyrSync.BuildPlan(results, keys);
 
         Assert.Equal(2, plan.Inputs.Count);
-        Assert.Equal("DYN-T1", plan.Inputs[0].ZephyrKey);
+        Assert.Equal("PROJ-T1", plan.Inputs[0].ZephyrKey);
         Assert.Equal(5000, plan.Inputs[0].DurationMs);
         Assert.Null(plan.Inputs[0].Comment);
-        Assert.Equal("DYN-T2", plan.Inputs[1].ZephyrKey);
+        Assert.Equal("PROJ-T2", plan.Inputs[1].ZephyrKey);
         // OE-10: errormessage now rides in the audit comment under a "Fehler:" line
         Assert.Equal("Fehler: Assert fehlgeschlagen", plan.Inputs[1].Comment);
         Assert.Single(plan.SkippedNoKey);
-        Assert.Equal("DYN10000-TC9", plan.SkippedNoKey[0]);
+        Assert.Equal("PROJ10000-TC9", plan.SkippedNoKey[0]);
     }
 
     [Fact]
@@ -60,16 +60,16 @@ public class ZephyrSyncTests
         try
         {
             File.WriteAllText(Path.Combine(dir, "sub", "tc1.md"),
-                "---\nid: DYN10000-TC1\nzephyr_key: DYN-T1\ntitel: \"A\"\n---\n\n## Zweck\n\nx\n");
+                "---\nid: PROJ10000-TC1\nzephyr_key: PROJ-T1\ntitel: \"A\"\n---\n\n## Zweck\n\nx\n");
             // No zephyr_key -> absent from the map.
             File.WriteAllText(Path.Combine(dir, "sub", "tc2.md"),
-                "---\nid: DYN10000-TC2\ntitel: \"B\"\n---\n\n## Zweck\n\ny\n");
+                "---\nid: PROJ10000-TC2\ntitel: \"B\"\n---\n\n## Zweck\n\ny\n");
 
             var map = ZephyrSync.LoadZephyrKeys(dir);
 
             Assert.Single(map);
-            Assert.Equal("DYN-T1", map["DYN10000-TC1"]);
-            Assert.False(map.ContainsKey("DYN10000-TC2"));
+            Assert.Equal("PROJ-T1", map["PROJ10000-TC1"]);
+            Assert.False(map.ContainsKey("PROJ10000-TC2"));
         }
         finally { Directory.Delete(dir, true); }
     }
@@ -95,10 +95,10 @@ public class ZephyrSyncTests
     [Fact]
     public void BuildPlan_WithoutSteps_LeavesScriptResultsNull()
     {
-        var results = new List<TestCaseResult> { Tc("DYN10000-TC1", TestOutcome.Passed) };
+        var results = new List<TestCaseResult> { Tc("PROJ10000-TC1", TestOutcome.Passed) };
         var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["DYN10000-TC1"] = "DYN-T1"
+            ["PROJ10000-TC1"] = "PROJ-T1"
         };
 
         var plan = ZephyrSync.BuildPlan(results, keys);   // no stepsByTestId
@@ -112,18 +112,18 @@ public class ZephyrSyncTests
     {
         var results = new List<TestCaseResult>
         {
-            Tc("DYN10000-TC1", TestOutcome.Failed, 2000, "boom"),
-            Tc("DYN10000-TC2", TestOutcome.Passed)       // no steps for this one
+            Tc("PROJ10000-TC1", TestOutcome.Failed, 2000, "boom"),
+            Tc("PROJ10000-TC2", TestOutcome.Passed)       // no steps for this one
         };
         var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["DYN10000-TC1"] = "DYN-T1",
-            ["DYN10000-TC2"] = "DYN-T2"
+            ["PROJ10000-TC1"] = "PROJ-T1",
+            ["PROJ10000-TC2"] = "PROJ-T2"
         };
         var steps = new Dictionary<string, IReadOnlyList<ZephyrResultBuilder.ScriptResultInput>>(
             StringComparer.OrdinalIgnoreCase)
         {
-            ["DYN10000-TC1"] = new List<ZephyrResultBuilder.ScriptResultInput>
+            ["PROJ10000-TC1"] = new List<ZephyrResultBuilder.ScriptResultInput>
             {
                 new() { Index = 0, Outcome = TestOutcome.Passed },
                 new() { Index = 1, Outcome = TestOutcome.Failed, Comment = "boom" }
@@ -133,13 +133,13 @@ public class ZephyrSyncTests
         var plan = ZephyrSync.BuildPlan(results, keys, steps);
 
         Assert.Equal(2, plan.Inputs.Count);
-        var tc1 = plan.Inputs.Single(i => i.ZephyrKey == "DYN-T1");
+        var tc1 = plan.Inputs.Single(i => i.ZephyrKey == "PROJ-T1");
         Assert.NotNull(tc1.ScriptResults);
         Assert.Equal(2, tc1.ScriptResults!.Count);
         Assert.Equal(1, tc1.ScriptResults[1].Index);
         Assert.Equal(TestOutcome.Failed, tc1.ScriptResults[1].Outcome);
         // testId without step data keeps ScriptResults null (not an empty array)
-        var tc2 = plan.Inputs.Single(i => i.ZephyrKey == "DYN-T2");
+        var tc2 = plan.Inputs.Single(i => i.ZephyrKey == "PROJ-T2");
         Assert.Null(tc2.ScriptResults);
     }
 
@@ -150,16 +150,16 @@ public class ZephyrSyncTests
         // Two tests, steps deliberately out of order to exercise the OrderBy.
         var svc = new StepFakeService(cfg, new[]
         {
-            Step("DYN10000-TC1", 3, passed: true,  err: null),
-            Step("DYN10000-TC1", 1, passed: true,  err: null),
-            Step("DYN10000-TC1", 2, passed: false, err: "assert failed"),
-            Step("DYN10000-TC2", 1, passed: true,  err: null)
+            Step("PROJ10000-TC1", 3, passed: true,  err: null),
+            Step("PROJ10000-TC1", 1, passed: true,  err: null),
+            Step("PROJ10000-TC1", 2, passed: false, err: "assert failed"),
+            Step("PROJ10000-TC2", 1, passed: true,  err: null)
         });
 
         var map = ZephyrSync.LoadStepResultsByTestId(svc, cfg, Guid.NewGuid());
 
         Assert.Equal(2, map.Count);
-        var tc1 = map["DYN10000-TC1"];
+        var tc1 = map["PROJ10000-TC1"];
         Assert.Equal(3, tc1.Count);
         // contiguous 0-based index in step-number order
         Assert.Equal(new[] { 0, 1, 2 }, tc1.Select(s => s.Index));
@@ -168,8 +168,8 @@ public class ZephyrSyncTests
         Assert.Equal("assert failed", tc1[1].Comment);
         Assert.Null(tc1[0].Comment);                        // blank error -> no comment
         Assert.Equal(TestOutcome.Passed, tc1[2].Outcome);   // step 3
-        Assert.Single(map["DYN10000-TC2"]);
-        Assert.Equal(0, map["DYN10000-TC2"][0].Index);
+        Assert.Single(map["PROJ10000-TC2"]);
+        Assert.Equal(0, map["PROJ10000-TC2"][0].Index);
     }
 
     [Fact]

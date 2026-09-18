@@ -43,7 +43,7 @@ public static class ZephyrSync
         public int SkippedNoKey { get; set; }
         /// <summary>Results actually uploaded.</summary>
         public int Uploaded { get; set; }
-        /// <summary>Key of the created Zephyr Test-Run (cycle), e.g. DYN-R123.</summary>
+        /// <summary>Key of the created Zephyr Test-Run (cycle), e.g. PROJ-R123.</summary>
         public string? RunKey { get; set; }
         public List<string> SkippedIds { get; } = new();
     }

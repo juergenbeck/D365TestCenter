@@ -32,7 +32,7 @@ public class DataverseDefinitionSourceTests
             x["jbe_domain"] = "DSGVO";
             x["jbe_testlevel"] = 2;
             x["jbe_owner"] = "JB";
-            x["jbe_tickets"] = "DYN-1,DYN-2";
+            x["jbe_tickets"] = "PROJ-1,PROJ-2";
             x["jbe_envscope"] = "dev,test";
             x["jbe_estimatedminutes"] = 15;
             x["jbe_zephyrkey"] = "Z9";
@@ -48,7 +48,7 @@ public class DataverseDefinitionSourceTests
         Assert.Equal("DSGVO", m.Domaene);
         Assert.Equal("2", m.Stufe);
         Assert.Equal("JB", m.Verantwortlich);
-        Assert.Equal("DYN-1,DYN-2", m.Tickets);
+        Assert.Equal("PROJ-1,PROJ-2", m.Tickets);
         Assert.Equal("dev,test", m.EnvScope);
         Assert.Equal("15", m.GeschaetztMin);
         Assert.Equal("Z9", m.ZephyrKey);

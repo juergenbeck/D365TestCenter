@@ -28,15 +28,15 @@ public class ZephyrResultBuilderTests
     public void BuildTestRunPayload_HasProjectNameAndDistinctItems()
     {
         var p = ZephyrResultBuilder.BuildTestRunPayload(
-            "DYN", "Cycle X", new[] { "DYN-T1", "DYN-T2", "dyn-t1", "  " });
+            "PROJ", "Cycle X", new[] { "PROJ-T1", "PROJ-T2", "proj-t1", "  " });
 
-        Assert.Equal("DYN", (string?)p["projectKey"]);
+        Assert.Equal("PROJ", (string?)p["projectKey"]);
         Assert.Equal("Cycle X", (string?)p["name"]);
         var items = (JArray)p["items"]!;
-        // dyn-t1 deduped case-insensitively, blank dropped -> 2 distinct keys
+        // proj-t1 deduped case-insensitively, blank dropped -> 2 distinct keys
         Assert.Equal(2, items.Count);
-        Assert.Equal("DYN-T1", (string?)items[0]["testCaseKey"]);
-        Assert.Equal("DYN-T2", (string?)items[1]["testCaseKey"]);
+        Assert.Equal("PROJ-T1", (string?)items[0]["testCaseKey"]);
+        Assert.Equal("PROJ-T2", (string?)items[1]["testCaseKey"]);
     }
 
     [Theory]
@@ -45,9 +45,9 @@ public class ZephyrResultBuilderTests
     public void BuildTestRunPayload_MissingProjectOrName_Throws(string bad)
     {
         Assert.Throws<System.ArgumentException>(() =>
-            ZephyrResultBuilder.BuildTestRunPayload(bad, "name", new[] { "DYN-T1" }));
+            ZephyrResultBuilder.BuildTestRunPayload(bad, "name", new[] { "PROJ-T1" }));
         Assert.Throws<System.ArgumentException>(() =>
-            ZephyrResultBuilder.BuildTestRunPayload("DYN", bad, new[] { "DYN-T1" }));
+            ZephyrResultBuilder.BuildTestRunPayload("PROJ", bad, new[] { "PROJ-T1" }));
     }
 
     [Fact]
@@ -56,13 +56,13 @@ public class ZephyrResultBuilderTests
         var o = ZephyrResultBuilder.BuildResult(
             new ZephyrResultBuilder.ResultInput
             {
-                ZephyrKey = "DYN-T123",
+                ZephyrKey = "PROJ-T123",
                 Outcome = TestOutcome.Passed,
                 DurationMs = 180000
             },
             "DEV");
 
-        Assert.Equal("DYN-T123", (string?)o["testCaseKey"]);
+        Assert.Equal("PROJ-T123", (string?)o["testCaseKey"]);
         Assert.Equal("Pass", (string?)o["status"]);
         Assert.Equal("DEV", (string?)o["environment"]);
         Assert.Equal(180000L, (long)o["executionTime"]!);
@@ -76,7 +76,7 @@ public class ZephyrResultBuilderTests
         var o = ZephyrResultBuilder.BuildResult(
             new ZephyrResultBuilder.ResultInput
             {
-                ZephyrKey = "DYN-T9",
+                ZephyrKey = "PROJ-T9",
                 Outcome = TestOutcome.Failed,
                 DurationMs = 0,
                 Comment = "Assert websiteurl fehlgeschlagen"
@@ -95,7 +95,7 @@ public class ZephyrResultBuilderTests
         var o = ZephyrResultBuilder.BuildResult(
             new ZephyrResultBuilder.ResultInput
             {
-                ZephyrKey = "DYN-T5",
+                ZephyrKey = "PROJ-T5",
                 Outcome = TestOutcome.Failed,
                 ScriptResults = new List<ZephyrResultBuilder.ScriptResultInput>
                 {
@@ -127,13 +127,13 @@ public class ZephyrResultBuilderTests
     {
         var inputs = new[]
         {
-            new ZephyrResultBuilder.ResultInput { ZephyrKey = "DYN-T1", Outcome = TestOutcome.Passed },
-            new ZephyrResultBuilder.ResultInput { ZephyrKey = "DYN-T2", Outcome = TestOutcome.Skipped }
+            new ZephyrResultBuilder.ResultInput { ZephyrKey = "PROJ-T1", Outcome = TestOutcome.Passed },
+            new ZephyrResultBuilder.ResultInput { ZephyrKey = "PROJ-T2", Outcome = TestOutcome.Skipped }
         };
         var arr = ZephyrResultBuilder.BuildResultsPayload(inputs, "TEST");
 
         Assert.Equal(2, arr.Count);
-        Assert.Equal("DYN-T1", (string?)arr[0]["testCaseKey"]);
+        Assert.Equal("PROJ-T1", (string?)arr[0]["testCaseKey"]);
         Assert.Equal("Not Executed", (string?)arr[1]["status"]);
         Assert.True(arr.All(x => (string?)x["environment"] == "TEST"));
     }

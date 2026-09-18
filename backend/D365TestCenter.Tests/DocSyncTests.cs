@@ -14,7 +14,7 @@ namespace D365TestCenter.Tests;
 public class DocSyncTests
 {
     const string Md =
-        "---\nid: DYN10000-TC8\ntitel: \"Adresse\"\n---\n\n" +
+        "---\nid: PROJ10000-TC8\ntitel: \"Adresse\"\n---\n\n" +
         "## Zweck\n\nKontakt erbt Adresse.\n\n" +
         "## Datenkonstellation\n\n- 1 account\n\n" +
         "## Erwartetes Ergebnis\n\ncontoso_adresse gesetzt.\n\n" +
@@ -84,7 +84,7 @@ public class DocSyncTests
             var collected = DocSync.CollectDocumentation(dir);
 
             Assert.Single(collected);
-            Assert.Equal("DYN10000-TC8", collected[0].Id);
+            Assert.Equal("PROJ10000-TC8", collected[0].Id);
             Assert.Contains("## Zweck", collected[0].Documentation);
             Assert.Contains("## Erwartetes Ergebnis", collected[0].Documentation);
         }

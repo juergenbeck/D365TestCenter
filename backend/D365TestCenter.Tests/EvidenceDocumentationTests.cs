@@ -69,7 +69,7 @@ public class EvidenceDocumentationTests
             Id = "UI-1",
             Title = "Lead erhält Kontakt",
             Description = "Beschreibung <mit> Sonderzeichen & Co.",
-            Tags = new List<string> { "DYN-1", "ui" },
+            Tags = new List<string> { "PROJ-1", "ui" },
             DocSteps = new List<DocStepDefinition>
             {
                 new() { Number = 1, Action = "Firma anlegen", Expected = "Firma ist gespeichert" },

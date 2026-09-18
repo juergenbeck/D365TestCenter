@@ -79,20 +79,20 @@ public class HtmlReportRendererTests
     {
         var m = new ReportModel
         {
-            SuiteTitle = "DYN-10000 Test",
+            SuiteTitle = "PROJ-10000 Test",
             SuiteIntro = "Worum es geht.\n\nZweiter Absatz.",
             SuiteCarrier = "| M | T |\n|---|---|\n| skript | x |",
             RunDate = "2026-06-18",
             Env = "dev",
             RunId = Guid.Parse("787a059e-8c6a-f111-a826-7c1e528427dd"),
-            Filter = "DYN10000-*",
+            Filter = "PROJ10000-*",
             Total = 1,
             Passed = 1,
             DurationSeconds = 16
         };
         var it = new ReportItem
         {
-            TestId = "DYN10000-TC8",
+            TestId = "PROJ10000-TC8",
             Titel = "Adresse beim Anlegen",
             Outcome = TestOutcome.Passed,
             DurationMs = 15861
@@ -109,7 +109,7 @@ public class HtmlReportRendererTests
         var html = HtmlReportRenderer.Render(Sample(), ReportDetail.Full);
         Assert.StartsWith("<!DOCTYPE html>", html);
         Assert.Contains("<style>", html);
-        Assert.Contains("<title>Durchführungsbericht: DYN-10000 Test</title>", html);
+        Assert.Contains("<title>Durchführungsbericht: PROJ-10000 Test</title>", html);
         Assert.DoesNotContain("http://", html);   // no external assets
         Assert.DoesNotContain("https://", html);
     }
@@ -119,7 +119,7 @@ public class HtmlReportRendererTests
     {
         var html = HtmlReportRenderer.Render(Sample(), ReportDetail.Compact);
         Assert.Contains("<table>", html);
-        Assert.Contains("DYN10000-TC8", html);
+        Assert.Contains("PROJ10000-TC8", html);
         Assert.Contains("class=\"badge pass\"", html);
         Assert.Contains("Kontakt erbt Adresse.", html);
         Assert.DoesNotContain("Zweiter Satz hier", html);          // first sentence only

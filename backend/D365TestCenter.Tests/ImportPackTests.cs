@@ -70,18 +70,18 @@ public class ImportPackTests
         var svc = new RecordingService();
         ImportPack.Import(svc, new StandardCrmConfig(), One(
             "{ \"testId\": \"M-1\", \"title\": \"M\", \"status\": \"aktiv\", \"domaene\": \"DSGVO\", " +
-            "\"stufe\": \"2\", \"verantwortlich\": \"JB\", \"tickets\": \"DYN-1,DYN-2\", " +
-            "\"env_scope\": \"dev,test\", \"geschaetzt_min\": \"15\", \"zephyr_key\": \"DYN-T9\", \"steps\": [] }"));
+            "\"stufe\": \"2\", \"verantwortlich\": \"JB\", \"tickets\": \"PROJ-1,PROJ-2\", " +
+            "\"env_scope\": \"dev,test\", \"geschaetzt_min\": \"15\", \"zephyr_key\": \"PROJ-T9\", \"steps\": [] }"));
 
         var e = Assert.Single(svc.Created);
         Assert.Equal(105710001, ((OptionSetValue)e["jbe_lifecyclestatus"]).Value);   // aktiv
         Assert.Equal("DSGVO", e["jbe_domain"]);
         Assert.Equal(2, (int)e["jbe_testlevel"]);                                     // int parsed
         Assert.Equal("JB", e["jbe_owner"]);
-        Assert.Equal("DYN-1,DYN-2", e["jbe_tickets"]);
+        Assert.Equal("PROJ-1,PROJ-2", e["jbe_tickets"]);
         Assert.Equal("dev,test", e["jbe_envscope"]);
         Assert.Equal(15, (int)e["jbe_estimatedminutes"]);
-        Assert.Equal("DYN-T9", e["jbe_zephyrkey"]);
+        Assert.Equal("PROJ-T9", e["jbe_zephyrkey"]);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class ImportPackTests
     {
         var tc = JObject.Parse(
             "{ \"testId\": \"M-6\", \"status\": \"aktiv\", \"domaene\": \"D\", \"stufe\": \"1\", " +
-            "\"tickets\": \"DYN-1\", \"env_scope\": \"dev\", \"zephyr_key\": \"Z\", " +
+            "\"tickets\": \"PROJ-1\", \"env_scope\": \"dev\", \"zephyr_key\": \"Z\", " +
             "\"verantwortlich\": \"V\", \"geschaetzt_min\": \"5\", \"steps\": [ { \"stepNumber\": 1 } ] }");
 
         var def = JObject.Parse(ImportPack.BuildDefinitionJson(tc));

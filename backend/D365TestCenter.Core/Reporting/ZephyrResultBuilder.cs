@@ -24,11 +24,11 @@ public static class ZephyrResultBuilder
 {
     /// <summary>
     /// One test result destined for Zephyr: a jbe_testrunresult paired with the
-    /// <c>zephyr_key</c> (DYN-T####) read from the Markdown front-matter.
+    /// <c>zephyr_key</c> (PROJ-T####) read from the Markdown front-matter.
     /// </summary>
     public sealed class ResultInput
     {
-        /// <summary>Zephyr test-case key, e.g. <c>DYN-T123</c>.</summary>
+        /// <summary>Zephyr test-case key, e.g. <c>PROJ-T123</c>.</summary>
         public string ZephyrKey { get; set; } = "";
         public TestOutcome Outcome { get; set; }
         /// <summary>Execution time in milliseconds (Zephyr <c>executionTime</c>).</summary>

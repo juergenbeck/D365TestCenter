@@ -119,7 +119,7 @@ public class TestCenterOrchestratorTests
     public void ApplyFilter_TagPrefix_FiltersByTag()
     {
         var cases = MakeCases("MGR01", "MGR02", "STD01");
-        cases[0].Tags = new List<string> { "merge", "DYN-8113" };
+        cases[0].Tags = new List<string> { "merge", "PROJ-8113" };
         cases[1].Tags = new List<string> { "merge" };
         cases[2].Tags = new List<string> { "crud" };
         var result = TestCenterOrchestrator.ApplyFilter(cases, "tag:merge");

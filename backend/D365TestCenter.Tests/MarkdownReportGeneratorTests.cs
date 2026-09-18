@@ -14,7 +14,7 @@ public class MarkdownReportGeneratorTests
 {
     const string DefMd =
         "---\n" +
-        "id: DYN10000-TC8\n" +
+        "id: PROJ10000-TC8\n" +
         "titel: \"Account-Adressvererbung beim Anlegen\"\n" +
         "status: aktiv\n" +
         "---\n\n" +
@@ -26,7 +26,7 @@ public class MarkdownReportGeneratorTests
         "## Ergebnis-Historie\n\n| x | y |\n";
 
     const string ReadmeMd =
-        "# DYN-10000 Integrationstests: Adressvererbung\n\n" +
+        "# PROJ-10000 Integrationstests: Adressvererbung\n\n" +
         "> Quelle: konzeptionell\n\n" +
         "## Worum es geht\n\nErster Absatz erklärt das Thema.\n\nZweiter Absatz mit Details.\n\n" +
         "## Träger-Modell\n\n| Modus | Träger |\n|---|---|\n| skript | Smoke |\n";
@@ -62,7 +62,7 @@ public class MarkdownReportGeneratorTests
     public void ParseDefinition_ReadsIdTitelAndSections()
     {
         var doc = MarkdownReportGenerator.ParseDefinition(DefMd);
-        Assert.Equal("DYN10000-TC8", doc.Id);
+        Assert.Equal("PROJ10000-TC8", doc.Id);
         Assert.Equal("Account-Adressvererbung beim Anlegen", doc.Titel);
         Assert.Contains("erbt", doc.Sections["Zweck"]);
         Assert.Contains("1 account", doc.Sections["Datenkonstellation"]);
@@ -73,7 +73,7 @@ public class MarkdownReportGeneratorTests
     public void ParseReadme_ReadsTitleIntroCarrier()
     {
         var s = MarkdownReportGenerator.ParseReadme(ReadmeMd);
-        Assert.Equal("DYN-10000 Integrationstests: Adressvererbung", s.Titel);
+        Assert.Equal("PROJ-10000 Integrationstests: Adressvererbung", s.Titel);
         Assert.Contains("Erster Absatz", s.Intro);
         Assert.Contains("Zweiter Absatz", s.Intro);
         Assert.Contains("skript", s.Carrier);
@@ -93,7 +93,7 @@ public class MarkdownReportGeneratorTests
             RunDate = "2026-06-18",
             Env = "dev",
             RunId = Guid.Parse("787a059e-8c6a-f111-a826-7c1e528427dd"),
-            Filter = "DYN10000-*",
+            Filter = "PROJ10000-*",
             Total = 1,
             Passed = 1,
             DurationSeconds = 16,
@@ -115,10 +115,10 @@ public class MarkdownReportGeneratorTests
     public void Render_Compact_TableWithPurposeExcerpt()
     {
         var md = MarkdownReportGenerator.Render(SampleModel(), ReportDetail.Compact);
-        Assert.Contains("# Durchführungsbericht: DYN-10000 Integrationstests: Adressvererbung", md);
+        Assert.Contains("# Durchführungsbericht: PROJ-10000 Integrationstests: Adressvererbung", md);
         Assert.Contains("1/1 PASS (16s)", md);
         Assert.Contains("| ID | Titel | Zweck | Ergebnis | Dauer |", md);
-        Assert.Contains("DYN10000-TC8", md);
+        Assert.Contains("PROJ10000-TC8", md);
         Assert.Contains("Beleg, dass der Kontakt die Adresse erbt.", md);
         Assert.DoesNotContain("Zweiter Satz hier", md);          // only first sentence in the cell
         Assert.Contains("Erster Absatz erklärt das Thema.", md); // first paragraph only
@@ -132,7 +132,7 @@ public class MarkdownReportGeneratorTests
     {
         var md = MarkdownReportGenerator.Render(SampleModel(), ReportDetail.Full);
         Assert.Contains("## Ergebnisse im Detail", md);
-        Assert.Contains("### DYN10000-TC8 - PASS (16s)", md);
+        Assert.Contains("### PROJ10000-TC8 - PASS (16s)", md);
         Assert.Contains("**Account-Adressvererbung beim Anlegen**", md);
         Assert.Contains("**Zweck**", md);
         Assert.Contains("Zweiter Satz hier", md);                 // full content, not excerpt
@@ -153,7 +153,7 @@ public class MarkdownReportGeneratorTests
         m.Items[0].Outcome = TestOutcome.Failed;
         m.Items[0].ErrorMessage = "Assert contoso_adresse fehlgeschlagen";
         var md = MarkdownReportGenerator.Render(m, ReportDetail.Full);
-        Assert.Contains("### DYN10000-TC8 - FAIL", md);
+        Assert.Contains("### PROJ10000-TC8 - FAIL", md);
         Assert.Contains("**Fehler:** Assert contoso_adresse fehlgeschlagen", md);
         Assert.Contains("0/1 FAIL", md);
     }

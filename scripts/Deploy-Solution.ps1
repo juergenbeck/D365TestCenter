@@ -512,7 +512,7 @@ New-Attribute "jbe_testcase" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
     SchemaName    = "jbe_UserStories"
     DisplayName   = New-Label "User Stories" "User Stories"
-    Description   = New-Label "Kommagetrennte Story-Keys (z.B. DYN-8621,DYN-8768)" "Comma-separated story keys"
+    Description   = New-Label "Kommagetrennte Story-Keys (z.B. PROJ-8621,PROJ-8768)" "Comma-separated story keys"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 2000
     FormatName    = @{ Value = "Text" }
@@ -655,7 +655,7 @@ New-Attribute "jbe_testrun" @{
     "@odata.type" = "Microsoft.Dynamics.CRM.StringAttributeMetadata"
     SchemaName    = "jbe_TestCaseFilter"
     DisplayName   = New-Label "Filter" "Filter"
-    Description   = New-Label "Testfall-Filter (z.B. *, tag:LUW, story:DYN-8621)" "Test case filter"
+    Description   = New-Label "Testfall-Filter (z.B. *, tag:LUW, story:PROJ-8621)" "Test case filter"
     RequiredLevel = @{ Value = "None" }
     MaxLength     = 500
     FormatName    = @{ Value = "Text" }
