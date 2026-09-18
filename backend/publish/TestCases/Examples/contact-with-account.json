@@ -1,0 +1,48 @@
+{
+  "name": "Contact with Parent Account",
+  "description": "Creates an account, then a contact linked to it, and verifies the lookup relationship.",
+  "category": "Examples",
+  "preconditions": [
+    {
+      "entity": "accounts",
+      "alias": "parentAccount",
+      "fields": {
+        "name": "ITT Test Parent {TIMESTAMP}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "CreateRecord",
+      "entity": "contacts",
+      "alias": "newContact",
+      "fields": {
+        "firstname": "{GENERATED:firstname}",
+        "lastname": "{GENERATED:lastname}",
+        "emailaddress1": "{GENERATED:email}",
+        "parentcustomerid_account@odata.bind": "/accounts({parentAccount.id})"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "target": "Query",
+      "entity": "contacts",
+      "filter": {
+        "contactid": "{newContact.id}"
+      },
+      "field": "firstname",
+      "operator": "IsNotNull"
+    },
+    {
+      "target": "Query",
+      "entity": "contacts",
+      "filter": {
+        "contactid": "{newContact.id}"
+      },
+      "field": "parentcustomerid",
+      "operator": "Equals",
+      "value": "{parentAccount.id}"
+    }
+  ]
+}

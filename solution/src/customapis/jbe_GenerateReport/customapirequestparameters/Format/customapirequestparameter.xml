@@ -1,0 +1,9 @@
+<customapirequestparameter uniquename="Format">
+  <displayname default="Format">
+    <label description="Format" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isoptional>1</isoptional>
+  <name>Format</name>
+  <type>10</type>
+</customapirequestparameter>

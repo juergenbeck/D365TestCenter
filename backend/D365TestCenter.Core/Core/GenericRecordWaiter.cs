@@ -1,0 +1,505 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Query;
+
+namespace D365TestCenter.Core;
+
+/// <summary>
+/// Generic polling-based waiter: waits until a record matching given filter criteria
+/// appears in any Dataverse table, or until a known record reaches a specific field value.
+/// </summary>
+public sealed class GenericRecordWaiter
+{
+    /// <summary>
+    /// Polls until a record in the specified entity matches all filter conditions.
+    /// Returns the found entity or null on timeout.
+    /// </summary>
+    /// <param name="orderBy">Optional comma-separated ordering, e.g. "modifiedon asc, createdon desc". Default asc if direction omitted.</param>
+    /// <param name="top">Optional max result count. Default 1.</param>
+    /// <param name="metadataCache">Optional metadata cache. When provided, BuildQuery checks the
+    /// filter field's attribute type before auto-converting GUID-shaped strings to Guid (FB-32).
+    /// Without cache, behavior is the legacy path (always Guid.TryParse first).</param>
+    public Entity? WaitForRecord(
+        IOrganizationService service,
+        string entityName,
+        List<FilterCondition> filters,
+        string[]? columns,
+        int timeoutSeconds = 120,
+        int pollingIntervalMs = 2000,
+        Action<string>? log = null,
+        string? orderBy = null,
+        int? top = null,
+        EntityMetadataCache? metadataCache = null)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        // Initial delay to give async plugins time to fire
+        Thread.Sleep(Math.Min(pollingIntervalMs, 1500));
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var query = BuildQuery(entityName, filters, columns, orderBy, top ?? 1, metadataCache);
+
+            var results = service.RetrieveMultiple(query);
+            if (results.Entities.Count > 0)
+            {
+                log?.Invoke($"WaitForRecord: Record in '{entityName}' gefunden nach " +
+                    $"{(DateTime.UtcNow.AddSeconds(-timeoutSeconds) - deadline.AddSeconds(-timeoutSeconds)).TotalSeconds:F1}s");
+                return results.Entities[0];
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForRecord: Timeout ({timeoutSeconds}s) für '{entityName}' erreicht");
+        return null;
+    }
+
+    /// <summary>
+    /// Polls until a known record has a specific field value.
+    /// Returns true when the value matches, false on timeout.
+    /// </summary>
+    public bool WaitForFieldValue(
+        IOrganizationService service,
+        string entityName,
+        Guid recordId,
+        string fieldName,
+        object expectedValue,
+        int timeoutSeconds = 120,
+        int pollingIntervalMs = 2000,
+        Action<string>? log = null)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        Thread.Sleep(Math.Min(pollingIntervalMs, 1500));
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var record = service.Retrieve(entityName, recordId, new ColumnSet(fieldName));
+            var actual = record.Contains(fieldName) ? record[fieldName] : null;
+
+            if (ValuesMatch(actual, expectedValue))
+            {
+                log?.Invoke($"WaitForFieldValue: '{fieldName}' hat den erwarteten Wert erreicht");
+                return true;
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForFieldValue: Timeout ({timeoutSeconds}s) für '{fieldName}' auf '{entityName}' erreicht");
+        return false;
+    }
+
+    /// <summary>
+    /// Polls until NO record in the specified entity matches the filter conditions.
+    /// Mirror of <see cref="WaitForRecord"/> for asynchronous deletions: returns
+    /// true once the query yields zero matches, false on timeout. Returns bool
+    /// (not an Entity) because there is no record to hand back, symmetric to
+    /// <see cref="WaitForFieldValue"/>.
+    /// </summary>
+    /// <param name="metadataCache">Optional metadata cache for FB-32 type-aware
+    /// filter conversion, same semantics as WaitForRecord.</param>
+    public bool WaitForRecordAbsence(
+        IOrganizationService service,
+        string entityName,
+        List<FilterCondition> filters,
+        int timeoutSeconds = 120,
+        int pollingIntervalMs = 2000,
+        Action<string>? log = null,
+        EntityMetadataCache? metadataCache = null)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        // Initial delay to give the async delete job time to start, matching
+        // the WaitForRecord cadence.
+        Thread.Sleep(Math.Min(pollingIntervalMs, 1500));
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var query = BuildQuery(entityName, filters, columns: null, topCount: 1, metadataCache: metadataCache);
+            // Count-only check: the primary key alone is enough, no column fetch.
+            query.ColumnSet = new ColumnSet();
+
+            var results = service.RetrieveMultiple(query);
+            if (results.Entities.Count == 0)
+            {
+                log?.Invoke($"WaitForNotExists: Record in '{entityName}' verschwunden");
+                return true;
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForNotExists: Timeout ({timeoutSeconds}s), Record in '{entityName}' noch vorhanden");
+        return false;
+    }
+
+    /// <summary>
+    /// Async-Job-Quiescence-Wait (ADR 2026-06-28, WaitForAsyncCompletion). Polls the
+    /// asyncoperation queue until NO open/running job (statecode 0/1/2) created since
+    /// <paramref name="windowStartUtc"/> remains — across <paramref name="stableChecks"/>
+    /// consecutive polls (stability window that bridges the inter-wave gap of non-atomic
+    /// chains, guarding against a premature "done").
+    ///
+    /// Correlation is primarily a TIME WINDOW (createdon >= windowStartUtc), not a fixed
+    /// regardingobjectid set: a chain continues on records the plugin CREATES (distribution lines,
+    /// rollup/actioncard follow-ups) whose ids the test cannot know up front, so a fixed regobj
+    /// set can miss a later wave and report a false quiescence (verified on a DEV org 2026-06-28). In the serial CLI run no other test triggers
+    /// jobs concurrently, so createdon>=windowStart captures exactly this test's jobs; queued
+    /// jobs of prior tests have createdon<windowStart and are ignored. statecode IN (0,1,2)
+    /// because successful jobs are retained only briefly while open ones stay visible.
+    /// </summary>
+    /// <param name="windowStartUtc">Only jobs created at or after this UTC instant count. The
+    /// step sets it to (now - lookback) right before polling, spanning the just-triggered chain.</param>
+    /// <param name="regardingIds">Optional extra narrowing: if non-empty, only jobs whose
+    /// regardingobjectid is in this set count. Null/empty -> pure time window.</param>
+    /// <param name="timeoutSeconds">GENEROUS safety ceiling against hangs, NOT a rate value.
+    /// Exceeded -> false (step error).</param>
+    /// <param name="stableChecks">Consecutive empty polls required for quiescence. Default 3.</param>
+    /// <param name="initialWaitMs">Run-up before the window starts counting, so jobs can appear
+    /// in the queue first. Default 2000.</param>
+    /// <returns>true once quiescent, false on timeout.</returns>
+    public bool WaitForAsyncQuiescence(
+        IOrganizationService service,
+        DateTime windowStartUtc,
+        ICollection<Guid>? regardingIds = null,
+        int timeoutSeconds = 240,
+        int pollingIntervalMs = 2000,
+        int stableChecks = 3,
+        int initialWaitMs = 2000,
+        Action<string>? log = null)
+    {
+        if (stableChecks < 1) stableChecks = 1;
+
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        // Run-up: give the triggered jobs time to appear as statecode=0 (Ready) in the queue
+        // before the stability window counts. Otherwise a too-early empty poll reports a
+        // false quiescence.
+        if (initialWaitMs > 0) Thread.Sleep(initialWaitMs);
+
+        var consecutiveEmpty = 0;
+        while (DateTime.UtcNow < deadline)
+        {
+            var open = CountOpenAsyncOperations(service, windowStartUtc, regardingIds);
+            if (open == 0)
+            {
+                consecutiveEmpty++;
+                if (consecutiveEmpty >= stableChecks)
+                {
+                    log?.Invoke($"WaitForAsyncCompletion: Quiescence erreicht ({stableChecks} stabile Polls ohne offenen Job).");
+                    return true;
+                }
+            }
+            else
+            {
+                if (consecutiveEmpty > 0)
+                    log?.Invoke($"WaitForAsyncCompletion: {open} offene(r) async-Job(s), Stabilitätsfenster zurückgesetzt.");
+                consecutiveEmpty = 0;
+            }
+
+            Thread.Sleep(pollingIntervalMs);
+        }
+
+        log?.Invoke($"WaitForAsyncCompletion: Timeout ({timeoutSeconds}s) — async-Jobs nicht zur Ruhe gekommen.");
+        return false;
+    }
+
+    /// <summary>
+    /// Counts open asyncoperation jobs (statecode 0/1/2) created since windowStartUtc, optionally
+    /// narrowed to a regardingobjectid set. Count-only (no column fetch); TopCount=1 suffices
+    /// because the quiescence decision only needs "are there open jobs" (0 or >0).
+    /// </summary>
+    private static int CountOpenAsyncOperations(
+        IOrganizationService service, DateTime windowStartUtc, ICollection<Guid>? regardingIds)
+    {
+        var query = BuildOpenAsyncOperationsQuery(windowStartUtc, regardingIds);
+        var results = service.RetrieveMultiple(query);
+        return results.Entities.Count;
+    }
+
+    /// <summary>
+    /// Builds the QueryExpression for open async jobs: asyncoperation, statecode IN (0,1,2)
+    /// (open/running), createdon >= windowStartUtc (this test's wave in a serial run), optionally
+    /// regardingobjectid IN {ids}. Count-only ColumnSet, TopCount=1. Static + public for unit testing.
+    /// </summary>
+    public static QueryExpression BuildOpenAsyncOperationsQuery(
+        DateTime windowStartUtc, ICollection<Guid>? regardingIds = null)
+    {
+        var query = new QueryExpression("asyncoperation")
+        {
+            ColumnSet = new ColumnSet(),   // count-only: primary key only
+            TopCount = 1                    // existence is enough for the quiescence decision
+        };
+
+        // statecode 0 Ready / 1 Suspended / 2 Locked = open/running (3 Completed = done).
+        query.Criteria.AddCondition("statecode", ConditionOperator.In, 0, 1, 2);
+
+        // Time window: only this test's jobs (serial run). Queued jobs of prior tests have
+        // createdon < windowStartUtc and are correctly ignored.
+        query.Criteria.AddCondition("createdon", ConditionOperator.OnOrAfter, windowStartUtc);
+
+        // Optional narrowing to specific trigger/context records.
+        if (regardingIds != null && regardingIds.Count > 0)
+        {
+            var ids = new object[regardingIds.Count];
+            var i = 0;
+            foreach (var id in regardingIds) ids[i++] = id;
+            query.Criteria.AddCondition("regardingobjectid", ConditionOperator.In, ids);
+        }
+
+        return query;
+    }
+
+    /// <summary>
+    /// Builds a QueryExpression from a list of FilterConditions.
+    /// </summary>
+    /// <param name="orderBy">Optional comma-separated order expression, OData style
+    /// ("modifiedon asc, createdon desc"). Default sort direction is ascending
+    /// if only a field name is given.</param>
+    /// <param name="topCount">Optional TopCount override. If null, TopCount stays
+    /// at default (QueryExpression default = unbounded). WaitForRecord passes 1.</param>
+    /// <param name="metadataCache">Optional metadata cache. Used to type-aware-convert
+    /// filter values: GUID-shaped strings on String/Memo fields stay as strings
+    /// instead of being auto-converted to Guid (FB-32). Without cache, legacy
+    /// auto-conversion is used.</param>
+    public static QueryExpression BuildQuery(
+        string entityName,
+        List<FilterCondition> filters,
+        string[]? columns,
+        string? orderBy = null,
+        int? topCount = null,
+        EntityMetadataCache? metadataCache = null)
+    {
+        var query = new QueryExpression(entityName)
+        {
+            ColumnSet = columns != null && columns.Length > 0
+                ? new ColumnSet(columns)
+                : new ColumnSet(true)
+        };
+
+        foreach (var filter in filters)
+        {
+            var op = ResolveOperator(filter.Operator);
+            var value = ConvertFilterValue(filter.Value, entityName, filter.Field, metadataCache);
+
+            if (op == ConditionOperator.Null || op == ConditionOperator.NotNull)
+            {
+                query.Criteria.AddCondition(filter.Field, op);
+            }
+            else if (op == ConditionOperator.In || op == ConditionOperator.NotIn)
+            {
+                // Value should be a comma-separated string or array
+                var values = ParseInValues(value);
+                query.Criteria.AddCondition(filter.Field, op, values);
+            }
+            else
+            {
+                query.Criteria.AddCondition(filter.Field, op, value);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(orderBy))
+        {
+            foreach (var rawToken in orderBy!.Split(','))
+            {
+                var token = rawToken.Trim();
+                if (string.IsNullOrEmpty(token)) continue;
+                var parts = token.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
+                    throw new InvalidOperationException($"Ungültiger orderBy-Token: '{token}'");
+                var field = parts[0];
+                var desc = parts.Length > 1 && parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
+                if (parts.Length > 1 && !desc && !parts[1].Equals("asc", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException(
+                        $"Ungültige Sortierrichtung '{parts[1]}' in orderBy-Token '{token}'. Erlaubt: asc, desc.");
+                query.AddOrder(field, desc ? OrderType.Descending : OrderType.Ascending);
+            }
+        }
+
+        if (topCount.HasValue) query.TopCount = topCount.Value;
+
+        return query;
+    }
+
+    private static ConditionOperator ResolveOperator(string op)
+    {
+        switch ((op ?? "eq").ToLowerInvariant())
+        {
+            case "eq":
+            case "equals":
+                return ConditionOperator.Equal;
+            case "ne":
+            case "notequals":
+                return ConditionOperator.NotEqual;
+            case "gt":
+            case "greaterthan":
+                return ConditionOperator.GreaterThan;
+            case "ge":
+            case "greaterorequal":
+                return ConditionOperator.GreaterEqual;
+            case "lt":
+            case "lessthan":
+                return ConditionOperator.LessThan;
+            case "le":
+            case "lessorequal":
+                return ConditionOperator.LessEqual;
+            case "like":
+                return ConditionOperator.Like;
+            case "contains":
+                return ConditionOperator.Contains;
+            case "beginswith":
+            case "startswith":
+                return ConditionOperator.BeginsWith;
+            case "endswith":
+                return ConditionOperator.EndsWith;
+            case "null":
+            case "isnull":
+                return ConditionOperator.Null;
+            case "notnull":
+            case "isnotnull":
+                return ConditionOperator.NotNull;
+            case "in":
+                return ConditionOperator.In;
+            case "notin":
+                return ConditionOperator.NotIn;
+            default:
+                throw new InvalidOperationException($"Unbekannter Filter-Operator: '{op}'");
+        }
+    }
+
+    private static object ConvertFilterValue(
+        object? value, string entityName, string fieldName, EntityMetadataCache? cache)
+    {
+        if (value == null) return DBNull.Value;
+        if (value is Newtonsoft.Json.Linq.JToken jt)
+        {
+            switch (jt.Type)
+            {
+                case Newtonsoft.Json.Linq.JTokenType.Integer: return (int)(long)jt;
+                case Newtonsoft.Json.Linq.JTokenType.Float: return (decimal)(double)jt;
+                case Newtonsoft.Json.Linq.JTokenType.Boolean: return (bool)jt;
+                case Newtonsoft.Json.Linq.JTokenType.String: return ConvertString((string)jt!, entityName, fieldName, cache);
+                case Newtonsoft.Json.Linq.JTokenType.Null: return DBNull.Value;
+                default: return jt.ToString();
+            }
+        }
+        if (value is string s) return ConvertString(s, entityName, fieldName, cache);
+        return value;
+    }
+
+    /// <summary>
+    /// Tries to convert string values to their native types (Guid, int, decimal, bool).
+    /// FB-32 fix: when a metadata cache is provided, the conversion respects the target
+    /// field's attribute type — GUID-shaped strings on String/Memo fields stay as strings
+    /// instead of being auto-converted to Guid (which would never match in Dataverse).
+    /// </summary>
+    private static object ConvertString(
+        string s, string entityName, string fieldName, EntityMetadataCache? cache)
+    {
+        // Metadata-aware path (FB-32): determine target field type before conversion.
+        if (cache != null && !string.IsNullOrEmpty(fieldName))
+        {
+            var attrType = cache.GetAttributeType(entityName, fieldName);
+            if (attrType.HasValue)
+            {
+                switch (attrType.Value)
+                {
+                    case AttributeTypeCode.Lookup:
+                    case AttributeTypeCode.Customer:
+                    case AttributeTypeCode.Owner:
+                    case AttributeTypeCode.Uniqueidentifier:
+                        // Guid-typed fields: convert if parseable
+                        if (Guid.TryParse(s, out var guidLk)) return guidLk;
+                        return s;
+
+                    case AttributeTypeCode.String:
+                    case AttributeTypeCode.Memo:
+                        // String fields: never auto-convert. Even if the value looks like
+                        // a GUID, Dataverse stores it as string and Guid-comparison fails.
+                        return s;
+
+                    case AttributeTypeCode.Integer:
+                    case AttributeTypeCode.BigInt:
+                    case AttributeTypeCode.Picklist:
+                    case AttributeTypeCode.State:
+                    case AttributeTypeCode.Status:
+                        if (int.TryParse(s, out var intLk)) return intLk;
+                        return s;
+
+                    case AttributeTypeCode.Decimal:
+                    case AttributeTypeCode.Double:
+                    case AttributeTypeCode.Money:
+                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var decLk))
+                            return decLk;
+                        return s;
+
+                    case AttributeTypeCode.Boolean:
+                        if (bool.TryParse(s, out var boolLk)) return boolLk;
+                        return s;
+
+                    case AttributeTypeCode.DateTime:
+                        if (DateTime.TryParse(s, System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtLk))
+                            return dtLk;
+                        return s;
+
+                    // Other types: fall through to legacy auto-detection
+                }
+            }
+        }
+
+        // Legacy fallback (no cache, unknown field, or unhandled type):
+        // try Guid first (most specific), then numeric, then bool.
+        if (Guid.TryParse(s, out var guid)) return guid;
+        if (int.TryParse(s, out var intVal)) return intVal;
+        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var decVal)) return decVal;
+        if (bool.TryParse(s, out var boolVal)) return boolVal;
+        return s;
+    }
+
+    private static object[] ParseInValues(object value)
+    {
+        var str = value?.ToString() ?? "";
+        return str.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private static bool ValuesMatch(object? actual, object expectedRaw)
+    {
+        // ValuesMatch ist der WaitForFieldValue-Pfad, kein Filter-Query — wir
+        // haben hier kein Entity/Field/Cache. Ohne Cache nutzt ConvertFilterValue
+        // den Legacy-Pfad (Guid.TryParse zuerst). Das ist backward-compatibel
+        // und FB-32-orthogonal (FB-32 betrifft nur Filter auf Server-Seite).
+        var expected = ConvertFilterValue(expectedRaw, string.Empty, string.Empty, null);
+        if (actual == null && (expected == null || expected == DBNull.Value)) return true;
+        if (actual == null || expected == null) return false;
+
+        // OptionSetValue comparison
+        if (actual is OptionSetValue osv)
+        {
+            if (expected is int i) return osv.Value == i;
+            if (expected is long l) return osv.Value == (int)l;
+            if (int.TryParse(expected.ToString(), out var parsed)) return osv.Value == parsed;
+            return false;
+        }
+
+        // EntityReference comparison
+        if (actual is EntityReference er)
+        {
+            if (expected is Guid g) return er.Id == g;
+            if (Guid.TryParse(expected.ToString(), out var parsedGuid)) return er.Id == parsedGuid;
+            return false;
+        }
+
+        // String comparison (case-insensitive, trimmed)
+        var actualStr = actual.ToString()?.Trim();
+        var expectedStr = expected.ToString()?.Trim();
+        return string.Equals(actualStr, expectedStr, StringComparison.OrdinalIgnoreCase);
+    }
+}

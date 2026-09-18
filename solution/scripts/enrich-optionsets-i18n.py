@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""
+Idempotently enriches all jbe_* OptionSet XML files with i18n labels
+and fixes umlaut violations. Run after every `pac solution unpack`.
+"""
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+OPTIONSETS = REPO_ROOT / "solution" / "src" / "OptionSets"
+
+# Complete target definitions (no diffs, but a full rewrite).
+# This guarantees the result is exactly as intended and idempotent.
+
+TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="{name}" localizedName="{localized}" description="{desc_en}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>{introduced}</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="{dn_de}" languagecode="1031" />
+    <displayname description="{dn_en}" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="{desc_de}" languagecode="1031" />
+    <Description description="{desc_en}" languagecode="1033" />
+  </Descriptions>
+  <options>
+{options}
+  </options>
+</optionset>"""
+
+OPT_TEMPLATE = """    <option value="{value}" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="{de}" languagecode="1031" />
+        <label description="{en}" languagecode="1033" />
+      </labels>
+    </option>"""
+
+DEFINITIONS = {
+    "jbe_teststatus": {
+        "localized": "Test Status",
+        "dn_de": "Teststatus", "dn_en": "Test Status",
+        "desc_de": "Status eines Testlaufs.", "desc_en": "Status of a test run.",
+        "options": [
+            (105710000, "Ausstehend", "Pending"),
+            (105710004, "Aufteilung läuft", "Splitting"),
+            (105710001, "Läuft", "Running"),
+            (105710002, "Abgeschlossen", "Completed"),
+            (105710003, "Fehler", "Error"),
+        ],
+    },
+    "jbe_testoutcome": {
+        "localized": "Test Outcome",
+        "dn_de": "Testergebnis", "dn_en": "Test Outcome",
+        "desc_de": "Ergebnis einer einzelnen Testfall-Ausführung.",
+        "desc_en": "Outcome of a single test case execution.",
+        "options": [
+            (105710000, "Bestanden", "Passed"),
+            (105710001, "Fehlgeschlagen", "Failed"),
+            (105710002, "Übersprungen", "Skipped"),
+            (105710003, "Fehler", "Error"),   # New in v5.4
+        ],
+    },
+    "jbe_stepstatus": {
+        "localized": "Step Status",
+        "dn_de": "Schrittstatus", "dn_en": "Step Status",
+        "desc_de": "Status eines Testschritts.", "desc_en": "Status of a test step.",
+        "options": [
+            (105710000, "Erfolgreich", "Success"),
+            (105710001, "Fehlgeschlagen", "Failed"),
+            (105710002, "Übersprungen", "Skipped"),
+        ],
+    },
+    "jbe_chunkstatus": {
+        "localized": "Chunk Status", "introduced": "1.0.0.27",
+        "dn_de": "Chunk-Status", "dn_en": "Chunk Status",
+        "desc_de": "Status eines Test-Chunks im Worker-Modell.", "desc_en": "Status of a test chunk in the worker model.",
+        "options": [
+            (105710000, "Neu", "New"),
+            (105710001, "Läuft", "Running"),
+            (105710002, "Fortsetzen", "Resume"),
+            (105710003, "Verarbeitet", "Processed"),
+            (105710004, "Fehler", "Error"),
+        ],
+    },
+    "jbe_lifecyclestatus": {
+        "localized": "Lifecycle Status", "introduced": "1.0.0.27",
+        "dn_de": "Lebenszyklus-Status", "dn_en": "Lifecycle Status",
+        "desc_de": "Lebenszyklus-Status eines Testfalls.", "desc_en": "Lifecycle status of a test case.",
+        "options": [
+            (105710000, "Entwurf", "Draft"),
+            (105710001, "Aktiv", "Active"),
+            (105710002, "Instabil", "Unstable"),
+            (105710003, "Historisch", "Historical"),
+            (105710004, "Archiviert", "Archived"),
+        ],
+    },
+    "jbe_testcategory": {
+        "localized": "Test Category",
+        "dn_de": "Testkategorie", "dn_en": "Test Category",
+        "desc_de": "Kategorie eines Testfalls.", "desc_en": "Category of a test case.",
+        "options": [
+            (105710000, "Quelle aktualisieren", "Update Source"),
+            (105710001, "Quelle erstellen", "Create Source"),
+            (105710002, "Quelle löschen", "Delete Source"),
+            (105710003, "Multi-Quelle", "Multi-Source"),
+            (105710004, "Merge", "Merge"),
+            (105710005, "Custom API", "Custom API"),
+            (105710006, "Konfiguration", "Config"),
+            (105710007, "End-to-End", "End-to-End"),
+            (105710008, "Fehlerbehandlung", "Error Handling"),
+        ],
+    },
+}
+
+for name, cfg in DEFINITIONS.items():
+    opts_xml = "\n".join(
+        OPT_TEMPLATE.format(value=v, de=de, en=en) for v, de, en in cfg["options"]
+    )
+    xml = TEMPLATE.format(
+        name=name, localized=cfg["localized"],
+        dn_de=cfg["dn_de"], dn_en=cfg["dn_en"],
+        desc_de=cfg["desc_de"], desc_en=cfg["desc_en"],
+        introduced=cfg.get("introduced", "1.0.0.0"),
+        options=opts_xml,
+    )
+    target = OPTIONSETS / f"{name}.xml"
+    target.write_text(xml, encoding="utf-8-sig")
+    print(f"  {name}.xml: {len(cfg['options'])} options")
+print("OptionSets enriched.")

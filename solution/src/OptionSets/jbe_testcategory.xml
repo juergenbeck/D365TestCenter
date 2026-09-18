@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jbe_testcategory" localizedName="Test Category" description="Category of a test case." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Testkategorie" languagecode="1031" />
+    <displayname description="Test Category" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Kategorie eines Testfalls." languagecode="1031" />
+    <Description description="Category of a test case." languagecode="1033" />
+  </Descriptions>
+  <options>
+    <option value="105710000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Quelle aktualisieren" languagecode="1031" />
+        <label description="Update Source" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Quelle erstellen" languagecode="1031" />
+        <label description="Create Source" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Quelle löschen" languagecode="1031" />
+        <label description="Delete Source" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710003" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Multi-Quelle" languagecode="1031" />
+        <label description="Multi-Source" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710004" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Merge" languagecode="1031" />
+        <label description="Merge" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710005" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Custom API" languagecode="1031" />
+        <label description="Custom API" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710006" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Konfiguration" languagecode="1031" />
+        <label description="Config" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710007" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="End-to-End" languagecode="1031" />
+        <label description="End-to-End" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710008" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Fehlerbehandlung" languagecode="1031" />
+        <label description="Error Handling" languagecode="1033" />
+      </labels>
+    </option>
+  </options>
+</optionset>

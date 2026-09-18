@@ -1,0 +1,18 @@
+<customapi uniquename="jbe_GenerateReport">
+  <allowedcustomprocessingsteptype>0</allowedcustomprocessingsteptype>
+  <bindingtype>0</bindingtype>
+  <description default="ADR-0009 Phase 4: erzeugt den Durchfuehrungsbericht eines Laufs (Markdown/HTML) aus Dataverse.">
+    <label description="ADR-0009 Phase 4: erzeugt den Durchfuehrungsbericht eines Laufs (Markdown/HTML) aus Dataverse." languagecode="1033" />
+  </description>
+  <displayname default="Generate Report">
+    <label description="Generate Report" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <isfunction>0</isfunction>
+  <isprivate>0</isprivate>
+  <name>GenerateReport</name>
+  <plugintypeid>
+    <plugintypeexportkey>C30F6C69EC43CBC783BB013428477A1389C168023BB8A872D3D9C5FF6F46A822</plugintypeexportkey>
+  </plugintypeid>
+  <workflowsdkstepenabled>0</workflowsdkstepenabled>
+</customapi>

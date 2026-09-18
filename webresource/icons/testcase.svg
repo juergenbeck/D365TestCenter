@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="Testfall">
+  <title>Testfall</title>
+  <!-- Dokument mit Eselsohr -->
+  <path d="M9 4 h9 l5 5 v17 a2 2 0 0 1 -2 2 H9 a2 2 0 0 1 -2 -2 V6 a2 2 0 0 1 2 -2 Z" fill="#eaf1fd" stroke="#1a63d6" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M18 4 v5 h5" stroke="#1a63d6" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- geprueft -->
+  <path d="M11 20 l2.4 2.4 l4.6 -5" stroke="#20b58f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

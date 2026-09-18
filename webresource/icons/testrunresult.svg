@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="Testergebnis">
+  <title>Testergebnis</title>
+  <!-- Ergebnisbalken -->
+  <path d="M6 26 V16"  stroke="#1a63d6" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M12 26 V11" stroke="#1a63d6" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M18 26 V19" stroke="#1a63d6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- bestanden: Erfolgs-Badge -->
+  <circle cx="23" cy="10" r="6.5" fill="#20b58f"/>
+  <path d="M20 10 l2 2 l4 -4.3" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

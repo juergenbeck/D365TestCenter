@@ -1,0 +1,58 @@
+# Build output
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.nupkg
+# Exception: the nupkg in solution/src/pluginpackages/ is a versioned solution
+# artifact (see FB-26 in Workspace). It is auto-synced from backend/bin by the
+# CrmPlugin.csproj post-build target.
+!solution/src/pluginpackages/**/*.nupkg
+
+# IDE
+.vs/
+.vscode/settings.json
+.idea/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# NuGet
+packages/
+
+# Logs
+*.log
+
+# Temporary
+*.tmp
+*.bak
+publish/
+
+# Solution export/working artifacts (regenerierbar via pac solution export/unpack)
+solution/out/
+
+# Claude-interne Wegwerf-Artefakte nicht versionieren (Auto-Sync-Schutz).
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.claude/settings.local.json
+.claude/handover-drafts/
+
+# Claude-interne Wegwerf-Artefakte nicht versionieren (Auto-Sync-Schutz).
+__pycache__/
+
+# Local agent tooling (rolled out centrally, not part of the product; ADR-2026-09-18-1258 in the workspace)
+.claude/
+.codex/
+CLAUDE.md
+AGENTS.md
+iphone-hook-smoke*.md
+.githooks/*
+!.githooks/pre-commit-local.py

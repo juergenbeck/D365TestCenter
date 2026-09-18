@@ -1,0 +1,8 @@
+<customapiresponseproperty uniquename="Inventory">
+  <displayname default="Inventory">
+    <label description="Inventory" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>Inventory</name>
+  <type>10</type>
+</customapiresponseproperty>

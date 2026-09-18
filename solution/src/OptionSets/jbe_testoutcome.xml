@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jbe_testoutcome" localizedName="Test Outcome" description="Outcome of a single test case execution." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Testergebnis" languagecode="1031" />
+    <displayname description="Test Outcome" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Ergebnis einer einzelnen Testfall-Ausführung." languagecode="1031" />
+    <Description description="Outcome of a single test case execution." languagecode="1033" />
+  </Descriptions>
+  <options>
+    <option value="105710000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Bestanden" languagecode="1031" />
+        <label description="Passed" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Fehlgeschlagen" languagecode="1031" />
+        <label description="Failed" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Übersprungen" languagecode="1031" />
+        <label description="Skipped" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710003" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Fehler" languagecode="1031" />
+        <label description="Error" languagecode="1033" />
+      </labels>
+    </option>
+  </options>
+</optionset>

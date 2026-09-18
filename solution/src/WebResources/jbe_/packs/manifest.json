@@ -1,0 +1,15 @@
+{
+  "$schema": "JBE Pack Manifest v1.0",
+  "description": "Available demo packs for the Integration Test Center. Register new packs here.",
+  "packs": [
+    {
+      "packId": "standard",
+      "file": "standard.json",
+      "default": true
+    },
+    {
+      "packId": "empty",
+      "file": "empty.json"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Simple Account CRUD",
+  "description": "Creates an account, updates it, and verifies the change. A minimal example showing preconditions, steps, and assertions.",
+  "category": "Examples",
+  "preconditions": [
+    {
+      "entity": "accounts",
+      "alias": "testAccount",
+      "fields": {
+        "name": "ITT Test Company {TIMESTAMP}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "UpdateRecord",
+      "entity": "accounts",
+      "alias": "testAccount",
+      "fields": {
+        "name": "ITT Test Company Updated",
+        "websiteurl": "https://example.com"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "target": "Query",
+      "entity": "accounts",
+      "filter": {
+        "accountid": "{testAccount.id}"
+      },
+      "field": "name",
+      "operator": "Equals",
+      "value": "ITT Test Company Updated"
+    },
+    {
+      "target": "Query",
+      "entity": "accounts",
+      "filter": {
+        "accountid": "{testAccount.id}"
+      },
+      "field": "websiteurl",
+      "operator": "Equals",
+      "value": "https://example.com"
+    }
+  ]
+}

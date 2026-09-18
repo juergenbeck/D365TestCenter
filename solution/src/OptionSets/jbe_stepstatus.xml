@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<optionset Name="jbe_stepstatus" localizedName="Step Status" description="Status of a test step." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OptionSetType>picklist</OptionSetType>
+  <IsGlobal>1</IsGlobal>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <displaynames>
+    <displayname description="Schrittstatus" languagecode="1031" />
+    <displayname description="Step Status" languagecode="1033" />
+  </displaynames>
+  <Descriptions>
+    <Description description="Status eines Testschritts." languagecode="1031" />
+    <Description description="Status of a test step." languagecode="1033" />
+  </Descriptions>
+  <options>
+    <option value="105710000" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Erfolgreich" languagecode="1031" />
+        <label description="Success" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710001" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Fehlgeschlagen" languagecode="1031" />
+        <label description="Failed" languagecode="1033" />
+      </labels>
+    </option>
+    <option value="105710002" ExternalValue="" IsHidden="0">
+      <labels>
+        <label description="Übersprungen" languagecode="1031" />
+        <label description="Skipped" languagecode="1033" />
+      </labels>
+    </option>
+  </options>
+</optionset>

@@ -1,0 +1,821 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.ServiceModel;
+using D365TestCenter.Core.Config;
+using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Sdk.Query;
+using Newtonsoft.Json;
+
+namespace D365TestCenter.Core;
+
+/// <summary>
+/// Zentraler Orchestrator für Test-Läufe. Kapselt die drei Phasen:
+///
+///   1. Load:    TestCases aus Dataverse (jbe_testcase-Records) laden und filtern.
+///   2. Run:     TestRunner.RunAll() auf der Core-Engine ausführen.
+///   3. Persist: jbe_testrun-Record aktualisieren und jbe_testrunresult + jbe_teststep
+///               Records schreiben.
+///
+/// Wird von der CLI (D365TestCenter.Cli) und der Custom API (RunIntegrationTestsApi)
+/// identisch genutzt. Garantiert konsistentes Verhalten zwischen Browser-Aufruf und
+/// Headless-Aufruf (Single-Engine-Architektur, siehe ADR-0003).
+///
+/// Das CRUD-Trigger-Plugin (RunTestsOnStatusChange) nutzt den Orchestrator NICHT,
+/// weil es eine Batch-Cascade-Architektur hat (BatchSize=5, Self-Trigger). Das ist
+/// eine Optimierung für das 2-Minuten-Sandbox-Timeout und läuft auf demselben
+/// TestRunner-Core.
+/// </summary>
+public sealed class TestCenterOrchestrator
+{
+    private readonly IOrganizationService _service;
+    private readonly ITestCenterConfig _config;
+    private readonly Action<string>? _log;
+
+    /// <summary>
+    /// Spiegel-Buffer: jede Log-Zeile landet zusätzlich hier, damit sie am
+    /// Sessionende mit dem Engine-Log in `jbe_fulllog` gemerged werden kann.
+    /// Vor Block 1 L (Befund 2026-05-18) blieb `jbe_fulllog`
+    /// auf die TestRunner-Step-Logs beschränkt; Orchestrator-Header (Filter,
+    /// KeepRecords, Lade-Phase, Ergebnis-Banner, Cold-Start-Hint) gingen
+    /// ausschließlich an den externen Console-Hook und waren in Dataverse
+    /// nicht sichtbar.
+    /// </summary>
+    private readonly StringBuilder _logBuffer = new StringBuilder();
+
+    // Felder des jbe_testrun-Records
+    private const string FldStatus = "jbe_teststatus";
+    private const string FldSummary = "jbe_testsummary";
+    private const string FldFilter = "jbe_testcasefilter";
+    private const string FldKeepRecords = "jbe_keeprecords";
+    private const string FldStartedOn = "jbe_startedon";
+    private const string FldCompletedOn = "jbe_completedon";
+    private const string FldTotal = "jbe_total";
+    private const string FldPassed = "jbe_passed";
+    private const string FldFailed = "jbe_failed";
+
+    // Felder des jbe_testcase-Records
+    private const string FldCaseTestId = "jbe_testid";
+    private const string FldCaseTitle = "jbe_title";
+    private const string FldCaseDefinition = "jbe_definitionjson";
+    private const string FldCaseEnabled = "jbe_enabled";
+    private const string FldCaseTags = "jbe_tags";
+    private const string FldCaseCategory = "jbe_category";
+
+    // Felder des jbe_testrun-Records
+    private const string FldFullLog = "jbe_fulllog";
+
+    // Felder des jbe_testrunresult-Records
+    private const string FldResultTestId = "jbe_testid";
+    private const string FldResultOutcome = "jbe_outcome";
+    private const string FldResultDuration = "jbe_durationms";
+    private const string FldResultError = "jbe_errormessage";
+    private const string FldResultAssertions = "jbe_assertionresults";
+    private const string FldResultTestRun = "jbe_testrunid";
+    private const string FldResultTrackedRecords = "jbe_trackedrecords";
+
+    // Felder des jbe_teststep-Records (ADR-0004: kein Phase-Feld mehr,
+    // der Action-Typ steht im String-Feld jbe_action).
+    private const string FldStepNumber = "jbe_stepnumber";
+    private const string FldStepAction = "jbe_action";
+    private const string FldStepDuration = "jbe_durationms";
+    private const string FldStepError = "jbe_errormessage";
+    private const string FldStepAssertionField = "jbe_assertionfield";
+    private const string FldStepExpected = "jbe_expectedvalue";
+    private const string FldStepActual = "jbe_actualvalue";
+    private const string FldStepStatus = "jbe_stepstatus";
+    private const string FldStepRunResult = "jbe_testrunresultid";
+    private const string FldStepAlias = "jbe_alias";
+    private const string FldStepEntity = "jbe_entity";
+    private const string FldStepRecordId = "jbe_recordid";
+    private const string FldStepInputData = "jbe_inputdata";
+    private const string FldStepOutputData = "jbe_outputdata";
+
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        Formatting = Formatting.None,
+        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+    };
+
+    /// <summary>
+    /// KRITISCH: MetadataPropertyHandling.Ignore verhindert, dass Newtonsoft.Json
+    /// das $type-Feld als TypeNameHandling-Metadata interpretiert und aus dem
+    /// JObject entfernt. Ohne diesen Fix verlieren ExecuteRequest-Parameter
+    /// (z.B. Merge mit $type=EntityReference) ihre Typ-Information.
+    /// Siehe Changelog 2026-04-14_pluginpackage-migration.md.
+    /// </summary>
+    private static readonly JsonSerializerSettings JsonReadSettings = new()
+    {
+        MetadataPropertyHandling = MetadataPropertyHandling.Ignore
+    };
+
+    /// <summary>
+    /// Optional browser-action executor for UI tests (ADR-0006). Null in the
+    /// Plugin-Sandbox path. Set in the CLI when --browser-state is provided.
+    /// </summary>
+    private readonly IBrowserActionExecutor? _browser;
+
+    /// <summary>
+    /// Erstellt einen neuen Orchestrator.
+    /// </summary>
+    /// <param name="service">Dataverse-Service (IOrganizationService)</param>
+    /// <param name="config">Config mit Entity-Namen und Status-Codes</param>
+    /// <param name="log">Optionaler Logger (z.B. Console.WriteLine)</param>
+    /// <param name="browser">Optional: BrowserActionExecutor for UI tests (ADR-0006). CLI-only.</param>
+    public TestCenterOrchestrator(
+        IOrganizationService service,
+        ITestCenterConfig config,
+        Action<string>? log = null,
+        IBrowserActionExecutor? browser = null)
+    {
+        _service = service ?? throw new ArgumentNullException(nameof(service));
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _log = log;
+        _browser = browser;
+    }
+
+    /// <summary>
+    /// OE-10: an den TestRunner durchgereicht. Nur der CLI-run-Pfad setzt das auf true
+    /// (Primary-Namen der angelegten Records für den sync-zephyr-Audit erfassen); die
+    /// Plugin-Pfade lassen es false (Sandbox-Wächter). Default false.
+    /// </summary>
+    public bool CaptureRecordNames { get; set; }
+
+    /// <summary>
+    /// ADR 2026-06-28: an den TestRunner durchgereicht. Nur der headless CLI-run-Pfad setzt das
+    /// auf true (erlaubt den async-Job-Quiescence-Wait WaitForAsyncCompletion). Die
+    /// Sandbox-Pfade lassen es false -> der Step wird dort geskippt (2-min-Limit). Default false.
+    /// </summary>
+    public bool AllowAsyncOperationPolling { get; set; }
+
+    /// <summary>
+    /// Führt einen kompletten Testlauf aus: Legt einen TestRun-Record an,
+    /// lädt Tests, führt sie aus, schreibt Ergebnisse.
+    ///
+    /// Wird von der CLI genutzt (neuer TestRun pro Aufruf).
+    /// </summary>
+    /// <param name="filter">Testfall-Filter (z.B. "*", "MGR*", "tag:merge", "category:Bridge")</param>
+    /// <param name="keepRecords">Testdaten nach Lauf behalten?</param>
+    /// <returns>TestRunResult mit allen Details</returns>
+    public TestRunResult RunNewTestRun(string filter, bool keepRecords)
+    {
+        Log("===================================================");
+        Log($"  TestCenter Run");
+        Log($"  Filter: {filter}");
+        Log($"  KeepRecords: {keepRecords}");
+        Log("===================================================");
+
+        // 1. Load: TestCases aus Dataverse laden und filtern
+        var cases = LoadTestCases(filter);
+        Log($"  {cases.Count} Testfälle geladen (Filter: {filter})");
+
+        // 2. TestRun-Record anlegen
+        var testRunId = _service.Create(new Entity(_config.TestRunEntity)
+        {
+            [FldStatus] = new OptionSetValue(_config.StatusRunning),
+            [FldFilter] = filter,
+            [FldKeepRecords] = keepRecords,
+            [FldStartedOn] = DateTime.UtcNow,
+            [FldTotal] = cases.Count,
+            [FldPassed] = 0,
+            [FldFailed] = 0,
+            [FldSummary] = "Testausführung gestartet..."
+        });
+        Log($"  TestRun erstellt: {testRunId}");
+
+        // 3. Run + Persist
+        return ExecuteAndPersist(testRunId, cases, keepRecords);
+    }
+
+    /// <summary>
+    /// Führt Tests für einen existierenden TestRun-Record aus (Browser-Flow).
+    /// Der Browser legt zuerst einen TestRun-Record an (Status "Geplant"), dann
+    /// ruft er die Custom API auf, die diese Methode aufruft.
+    /// </summary>
+    /// <param name="testRunId">ID des jbe_testrun-Records</param>
+    /// <returns>TestRunResult mit allen Details</returns>
+    public TestRunResult RunExistingTestRun(Guid testRunId)
+    {
+        if (testRunId == Guid.Empty)
+            throw new ArgumentException("testRunId darf nicht leer sein", nameof(testRunId));
+
+        // TestRun-Record lesen (Filter + KeepRecords)
+        var testRun = _service.Retrieve(
+            _config.TestRunEntity, testRunId,
+            new ColumnSet(FldFilter, FldKeepRecords));
+
+        var filter = testRun.GetAttributeValue<string>(FldFilter) ?? "*";
+        var keepRecords = testRun.GetAttributeValue<bool>(FldKeepRecords);
+
+        Log("===================================================");
+        Log($"  TestCenter Run (existierender TestRun)");
+        Log($"  TestRunId: {testRunId}");
+        Log($"  Filter: {filter}");
+        Log($"  KeepRecords: {keepRecords}");
+        Log("===================================================");
+
+        // Status auf "Wird ausgeführt" setzen
+        _service.Update(new Entity(_config.TestRunEntity, testRunId)
+        {
+            [FldStatus] = new OptionSetValue(_config.StatusRunning),
+            [FldStartedOn] = DateTime.UtcNow,
+            [FldSummary] = "Testausführung gestartet..."
+        });
+
+        var cases = LoadTestCases(filter);
+        Log($"  {cases.Count} Testfälle geladen (Filter: {filter})");
+
+        // Total-Count aktualisieren
+        _service.Update(new Entity(_config.TestRunEntity, testRunId)
+        {
+            [FldTotal] = cases.Count
+        });
+
+        return ExecuteAndPersist(testRunId, cases, keepRecords);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Kern: TestRunner aufrufen, Ergebnisse schreiben
+    // ════════════════════════════════════════════════════════════════════
+
+    private TestRunResult ExecuteAndPersist(
+        Guid testRunId,
+        List<TestCase> cases,
+        bool keepRecords)
+    {
+        // 3a. Leere Tests: sofort abschließen
+        if (cases.Count == 0)
+        {
+            Log("Keine Testfälle gefunden.");
+            _service.Update(new Entity(_config.TestRunEntity, testRunId)
+            {
+                [FldStatus] = new OptionSetValue(_config.StatusCompleted),
+                [FldCompletedOn] = DateTime.UtcNow,
+                [FldSummary] = "Keine Testfälle gefunden.",
+                [FldFullLog] = Truncate(BuildMergedFullLog(null), 100000)
+            });
+            return new TestRunResult
+            {
+                StartedAt = DateTime.UtcNow,
+                CompletedAt = DateTime.UtcNow,
+                TotalCount = 0
+            };
+        }
+
+        // 3b. TestRunner ausführen mit Live-Progress-Updates.
+        // Fataler Fehler (RV-01): Wenn die Engine selbst eine Exception wirft,
+        // MUSS der TestRun auf StatusFailed gesetzt werden, sonst bleibt der
+        // Run für die Browser-Live-View unbegrenzt auf "Wird ausgeführt" hängen.
+        try
+        {
+            return ExecuteAndPersistInternal(testRunId, cases, keepRecords);
+        }
+        catch (Exception ex)
+        {
+            Log("");
+            Log($"  FATALER FEHLER: {ex.Message}");
+            try
+            {
+                _service.Update(new Entity(_config.TestRunEntity, testRunId)
+                {
+                    [FldStatus] = new OptionSetValue(_config.StatusFailed),
+                    [FldCompletedOn] = DateTime.UtcNow,
+                    [FldSummary] = Truncate($"Fataler Fehler: {ex.Message}", 4000),
+                    [FldFullLog] = Truncate(BuildMergedFullLog(null), 100000)
+                });
+            }
+            catch { /* Status-Update selbst darf nicht blocken */ }
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// The test cases executed by the most recent run of this orchestrator instance
+    /// (ADR 2026-09-16-1957: the CLI evidence documentation needs their definitions,
+    /// e.g. docSteps, without a second Dataverse read).
+    /// </summary>
+    public IReadOnlyList<TestCase> LastRunTestCases { get; private set; } = Array.Empty<TestCase>();
+
+    private TestRunResult ExecuteAndPersistInternal(Guid testRunId, List<TestCase> cases, bool keepRecords)
+    {
+        LastRunTestCases = cases;
+        var runner = new TestRunner(_service, _browser)
+        {
+            KeepRecords = keepRecords,
+            CaptureRecordNames = CaptureRecordNames,
+            AllowAsyncOperationPolling = AllowAsyncOperationPolling
+        };
+
+        // Live-Progress pro Testfall: Konsolen-/fulllog-Zeile plus leichtgewichtiges
+        // Fortschritts-Update auf jbe_testrun. Das Schreiben der Result-Records
+        // passiert bewusst NICHT hier im Event, sondern deterministisch nach RunAll
+        // (Backlog I, siehe unten).
+        runner.OnTestCompleted += (index, total, tcResult) =>
+        {
+            // Log zum Konsolen-Output
+            var icon = tcResult.Outcome switch
+            {
+                TestOutcome.Passed => "[OK]",
+                TestOutcome.Failed => "[FAIL]",
+                TestOutcome.Error => "[ERR]",
+                TestOutcome.Skipped => "[SKIP]",
+                _ => "[?]"
+            };
+            Log($"  [{index}/{total}] {icon} {tcResult.TestId}: {tcResult.Title} ({tcResult.DurationMs}ms)");
+
+            // Fortschritts-Update auf jbe_testrun (non-critical)
+            try
+            {
+                UpdateTestRunProgress(testRunId, index, total, tcResult);
+            }
+            catch
+            {
+                // Progress-Update ist nicht kritisch
+            }
+        };
+
+        var result = runner.RunAll(cases);
+
+        // Backlog I (v5.3.14): Result-Records deterministisch nach RunAll schreiben,
+        // nicht mehr per-Test im OnTestCompleted-Event. result.Results enthält genau
+        // die Ergebnisse, die das Event emittiert hat (der TestRunner fügt jeden
+        // Result vor dem Invoke zu result.Results hinzu), in derselben Reihenfolge.
+        // Das macht den Orchestrator-Pfad konsistent mit dem Plugin (WriteResultRecords)
+        // und schließt die in Befund 1 (2026-05-18) vermutete
+        // Race-Condition strukturell aus. Die Live-View verliert nichts: der synchrone
+        // Custom-API-/CLI-Aufruf ist für den Aufrufer ohnehin erst nach Rückkehr sichtbar.
+        foreach (var tcResult in result.Results)
+        {
+            try
+            {
+                WriteSingleResultRecord(testRunId, tcResult);
+            }
+            catch (Exception ex)
+            {
+                Log($"      Result-Write fehlgeschlagen ({tcResult.TestId}): {ex.Message}");
+            }
+        }
+
+        // C5: Cold-Start-Hint vor dem Final-Update emittieren, damit der Hint
+        // im Orchestrator-Buffer und damit auch in jbe_fulllog landet.
+        EmitColdStartHint(result, Log);
+
+        Log("");
+        Log($"  ============================================================");
+        Log($"  ERGEBNIS: {result.PassedCount} PASSED | {result.FailedCount} FAILED | {result.ErrorCount} ERROR | {result.TotalCount} TOTAL");
+        if (result.CleanupFailedCount > 0)
+            Log($"  CLEANUP-WARNUNG: {result.CleanupFailedCount} Aufräum-Operation(en) fehlgeschlagen, " +
+                "Testdaten verblieben in der Umgebung (Details in den Step-Logs)");
+        Log($"  ============================================================");
+
+        // 3c. Final-Update: Status + Summary + Counts + FullLog (B4 + Block 1 L)
+        var summary = BuildSummary(result);
+        _service.Update(new Entity(_config.TestRunEntity, testRunId)
+        {
+            [FldStatus] = new OptionSetValue(_config.StatusCompleted),
+            [FldSummary] = Truncate(summary, 4000),
+            [FldCompletedOn] = DateTime.UtcNow,
+            [FldTotal] = result.TotalCount,
+            [FldPassed] = result.PassedCount,
+            [FldFailed] = result.FailedCount + result.ErrorCount,
+            // B4-Fix: jbe_fulllog wurde bisher nie geschrieben, obwohl die
+            // Engine das gesamte Log inkl. Plugin-Trace-Logs (A7) sammelt.
+            // Block 1 L (v5.3.11): Orchestrator-Buffer + Engine-Log mergen,
+            // damit Header, Lade-Phase, Cold-Start-Hint und Ergebnis-Banner
+            // ebenfalls in Dataverse sichtbar werden.
+            [FldFullLog] = Truncate(BuildMergedFullLog(result.FullLog), 100000)
+        });
+
+        result.TestRunId = testRunId;
+        return result;
+    }
+
+    /// <summary>
+    /// C5 Cold-Start-Hint: bei mindestens 4 ausgeführten Tests den ersten
+    /// gegen den Median der Folge-Tests prüfen. Schwelle 3x, weil bei echtem
+    /// Cold-Start (JIT, Class-Load, Metadata-Cache) der Faktor deutlich darüber
+    /// liegt. Skipped/Errored-Tests ohne DurationMs (0) gehen nicht in den Median.
+    /// </summary>
+    private static void EmitColdStartHint(TestRunResult result, Action<string> log)
+    {
+        var (line1, line2) = BuildColdStartHint(result);
+        if (line1 == null) return;
+        log("");
+        log(line1);
+        if (line2 != null) log(line2);
+    }
+
+    /// <summary>
+    /// Reine Funktion für C5: liefert die zwei Hint-Zeilen oder (null, null)
+    /// wenn kein Hint angebracht ist. Testbar ohne Konsolen-Hook.
+    /// Heuristik: erste Test-Dauer > 3x Median der Folge-Tests, mindestens 3
+    /// Folge-Tests mit nicht-null Dauer.
+    /// </summary>
+    public static (string? Line1, string? Line2) BuildColdStartHint(TestRunResult result)
+    {
+        if (result.Results.Count < 4) return (null, null);
+
+        var first = result.Results[0];
+        if (first.DurationMs <= 0) return (null, null);
+
+        var rest = result.Results
+            .Skip(1)
+            .Where(r => r.DurationMs > 0)
+            .Select(r => r.DurationMs)
+            .OrderBy(d => d)
+            .ToList();
+        if (rest.Count < 3) return (null, null);
+
+        var median = rest[rest.Count / 2];
+        if (median <= 0) return (null, null);
+
+        if (first.DurationMs <= 3 * median) return (null, null);
+
+        var line1 = $"  Hinweis: Test 1 ('{first.TestId}') dauerte {first.DurationMs}ms, " +
+                    $"Median der {rest.Count} Folge-Tests {median}ms (Faktor {first.DurationMs / (double)median:F1}x).";
+        var line2 = "           Wahrscheinlich Cold-Start (JIT, Plugin-Class-Load, Metadata-Cache-Warmup). " +
+                    "Bei Auswertung berücksichtigen.";
+        return (line1, line2);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Load: TestCases aus Dataverse
+    // ════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Lädt aktivierte TestCases aus der jbe_testcase-Entity und wendet den
+    /// Filter an. Unterstützte Filter-Formate (identisch zum Custom-API-Filter):
+    ///
+    ///   "*" oder leer     -> alle aktivierten Tests
+    ///   "TC01"            -> exakt diese ID
+    ///   "TC*"             -> Wildcard-Prefix (MGR*, STD*)
+    ///   "TC01,TC02,TC03"  -> Liste
+    ///   "tag:merge"       -> alle mit Tag
+    ///   "category:Bridge" -> alle in Kategorie
+    /// </summary>
+    public List<TestCase> LoadTestCases(string filter)
+    {
+        var q = new QueryExpression(_config.TestCaseEntity)
+        {
+            ColumnSet = new ColumnSet(
+                FldCaseTestId, FldCaseTitle, FldCaseDefinition,
+                FldCaseEnabled, FldCaseTags, FldCaseCategory),
+            Criteria = {
+                Conditions = {
+                    new ConditionExpression(FldCaseEnabled, ConditionOperator.Equal, true)
+                }
+            },
+            Orders = { new OrderExpression(FldCaseTestId, OrderType.Ascending) },
+            TopCount = 2000
+        };
+
+        var entities = _service.RetrieveMultiple(q).Entities.ToList();
+
+        // JSON-Definitionen parsen in TestCase-Objekte
+        var testCases = new List<TestCase>();
+        foreach (var e in entities)
+        {
+            var defJson = e.GetAttributeValue<string>(FldCaseDefinition);
+            if (string.IsNullOrWhiteSpace(defJson)) continue;
+
+            try
+            {
+                TestCase? tc;
+                var trimmed = defJson.TrimStart();
+                if (trimmed.StartsWith("{"))
+                {
+                    // Mit MetadataPropertyHandling.Ignore (siehe JsonReadSettings)
+                    // bleibt das $type-Feld in JObjects erhalten für ExecuteRequest.
+                    tc = JsonConvert.DeserializeObject<TestCase>(defJson, JsonReadSettings);
+                }
+                else
+                {
+                    // Fallback: kein valides JSON-Objekt
+                    Log($"      JSON fehlerhaft für {e.GetAttributeValue<string>(FldCaseTestId)}");
+                    continue;
+                }
+
+                if (tc == null) continue;
+
+                // Metadaten aus Record übernehmen falls im JSON fehlend.
+                // Robust gegen Typ-Varianten (jbe_category kann String ODER OptionSet sein).
+                if (string.IsNullOrWhiteSpace(tc.Id))
+                    tc.Id = SafeGetString(e, FldCaseTestId) ?? "?";
+                if (string.IsNullOrWhiteSpace(tc.Title))
+                    tc.Title = SafeGetString(e, FldCaseTitle) ?? "";
+                if (tc.Tags.Count == 0)
+                {
+                    var tags = SafeGetString(e, FldCaseTags);
+                    if (!string.IsNullOrWhiteSpace(tags))
+                        tc.Tags = tags.Split(',').Select(t => t.Trim()).Where(t => t.Length > 0).ToList();
+                }
+                if (string.IsNullOrWhiteSpace(tc.Category))
+                    tc.Category = SafeGetString(e, FldCaseCategory);
+
+                testCases.Add(tc);
+            }
+            catch (Exception ex)
+            {
+                Log($"      JSON-Parse-Fehler für {e.GetAttributeValue<string>(FldCaseTestId)}: {ex.Message}");
+            }
+        }
+
+        return ApplyFilter(testCases, filter);
+    }
+
+    /// <summary>
+    /// Filtert TestCases (identisch zum Custom-API-Filter).
+    /// </summary>
+    public static List<TestCase> ApplyFilter(List<TestCase> testCases, string? filter)
+    {
+        // Delegation an die zentrale Filter-Logik (ADR 2026-06-30 1432): Negation
+        // (Exclude per !-Präfix) + geteilte Wildcard-/tag:/category:-Semantik.
+        return TestCaseFilter.Apply(testCases, filter);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Persist: Result-Records schreiben
+    // ════════════════════════════════════════════════════════════════════
+
+    private void UpdateTestRunProgress(Guid testRunId, int index, int total, TestCaseResult tcResult)
+    {
+        var text = $"Läuft... [{index}/{total}] {tcResult.TestId}: {tcResult.Outcome}";
+
+        // Counter incremental aktualisieren (leichtgewichtig)
+        var progressUpdate = new Entity(_config.TestRunEntity, testRunId)
+        {
+            [FldSummary] = Truncate(text, 4000)
+        };
+        _service.Update(progressUpdate);
+    }
+
+    private void WriteSingleResultRecord(Guid testRunId, TestCaseResult tcResult)
+    {
+        var testRunRef = new EntityReference(_config.TestRunEntity, testRunId);
+
+        var resultRecord = new Entity(_config.TestRunResultEntity)
+        {
+            [FldResultTestId] = tcResult.TestId,
+            [FldResultOutcome] = new OptionSetValue(MapOutcome(tcResult.Outcome)),
+            [FldResultDuration] = (int)tcResult.DurationMs,
+            [FldResultError] = Truncate(tcResult.ErrorMessage ?? "", 4000),
+            [FldResultTestRun] = testRunRef
+        };
+
+        // AssertionResults als JSON (geteilter Helper; Assert-Steps plus
+        // fehlgeschlagene Cleanup-Steps, Kompat für UI-Code der jbe_assertionresults parst).
+        resultRecord[FldResultAssertions] = Truncate(AssertionResultsJson.Build(tcResult), 100000);
+
+        // B5-Fix: TrackedRecords als JSON in jbe_trackedrecords. Wurde bisher
+        // nie geschrieben — Test-Autoren konnten nicht sehen welche Records
+        // ein Test angelegt hatte, insbesondere bei keepRecords=true.
+        try
+        {
+            if (tcResult.TrackedRecords.Count > 0)
+            {
+                resultRecord[FldResultTrackedRecords] = Truncate(
+                    JsonConvert.SerializeObject(tcResult.TrackedRecords, JsonSettings), 100000);
+            }
+        }
+        catch { /* Feld existiert vielleicht nicht auf allen Umgebungen */ }
+
+        var resultId = _service.Create(resultRecord);
+        var resultRef = new EntityReference(_config.TestRunResultEntity, resultId);
+
+        // ADR-0006 Phase 1d: Diagnostic artefacts (PNG screenshot, trace.zip)
+        // from failed BrowserAction steps. Uploaded only on the most recent
+        // failure of the test case — earlier step failures are overwritten by
+        // the orchestrator iteration (one File per result record).
+        var lastDiag = tcResult.StepResults
+            .Where(s => s.Diagnostics != null)
+            .Select(s => s.Diagnostics!)
+            .LastOrDefault();
+        if (lastDiag != null)
+        {
+            try
+            {
+                if (lastDiag.ScreenshotPng != null && lastDiag.ScreenshotPng.Length > 0)
+                {
+                    UploadFileToFileField(resultId, "jbe_screenshot",
+                        lastDiag.ScreenshotPng, $"screenshot-{tcResult.TestId}.png", "image/png");
+                    Log($"      Screenshot hochgeladen ({lastDiag.ScreenshotPng.Length} bytes)");
+                }
+                if (lastDiag.TraceZip != null && lastDiag.TraceZip.Length > 0)
+                {
+                    UploadFileToFileField(resultId, "jbe_uitrace",
+                        lastDiag.TraceZip, $"trace-{tcResult.TestId}.zip", "application/zip");
+                    Log($"      Trace hochgeladen ({lastDiag.TraceZip.Length} bytes)");
+                }
+            }
+            catch (Exception ex)
+            {
+                var detail = ex.Message;
+                if (ex is FaultException<OrganizationServiceFault> faultEx)
+                {
+                    detail = $"{faultEx.Detail.ErrorCode:X} {faultEx.Detail.Message}";
+                }
+                else if (ex.InnerException != null)
+                {
+                    detail = $"{ex.GetType().Name}: {ex.Message} | Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}";
+                }
+                Log($"      Diagnostics-Upload fehlgeschlagen (nicht fatal): {detail}");
+            }
+        }
+
+        // ADR-0004: eine einheitliche Persistenz-Schleife. Jeder StepResult
+        // wird zu genau einem jbe_teststep-Record. Action-Typ im String-Feld
+        // jbe_action, keine Phase-OptionSet mehr.
+        foreach (var stepResult in tcResult.StepResults)
+        {
+            try
+            {
+                var step = new Entity(_config.TestStepEntity)
+                {
+                    [FldStepNumber] = stepResult.StepNumber,
+                    [FldStepAction] = Truncate(stepResult.Action ?? "", 100),
+                    [FldStepDuration] = (int)stepResult.DurationMs,
+                    [FldStepError] = Truncate(stepResult.Message ?? "", 4000),
+                    // jbe_stepstatus ist global (105710xxx), unabhängig vom publisher-
+                    // spezifischen Outcome-Config -> zentraler Helper statt _config.Outcome*
+                    // (FB-50: die alte Nutzung war numerisch ok für 0/1, aber semantisch
+                    // falsch und hätte Skipped nie korrekt geschrieben).
+                    [FldStepStatus] = new OptionSetValue(WorkerSchema.MapStepStatus(stepResult)),
+                    [FldStepRunResult] = resultRef
+                };
+                if (!string.IsNullOrEmpty(stepResult.Alias))
+                    step[FldStepAlias] = Truncate(stepResult.Alias, 100);
+                if (!string.IsNullOrEmpty(stepResult.Entity))
+                    step[FldStepEntity] = Truncate(stepResult.Entity, 100);
+                if (stepResult.RecordId.HasValue)
+                    step[FldStepRecordId] = stepResult.RecordId.Value.ToString();
+                if (!string.IsNullOrEmpty(stepResult.AssertField))
+                    step[FldStepAssertionField] = Truncate(stepResult.AssertField, 500);
+                if (!string.IsNullOrEmpty(stepResult.ExpectedDisplay))
+                    step[FldStepExpected] = Truncate(stepResult.ExpectedDisplay, 4000);
+                if (!string.IsNullOrEmpty(stepResult.ActualDisplay))
+                    step[FldStepActual] = Truncate(stepResult.ActualDisplay, 4000);
+                if (!string.IsNullOrEmpty(stepResult.InputData))
+                    step[FldStepInputData] = Truncate(stepResult.InputData, 100000);
+                if (!string.IsNullOrEmpty(stepResult.OutputData))
+                    step[FldStepOutputData] = Truncate(stepResult.OutputData, 100000);
+                _service.Create(step);
+            }
+            catch { /* non-critical */ }
+        }
+    }
+
+    private int MapOutcome(TestOutcome outcome) => outcome switch
+    {
+        TestOutcome.Passed => _config.OutcomePassed,
+        TestOutcome.Failed => _config.OutcomeFailed,
+        TestOutcome.Error => _config.OutcomeError,
+        TestOutcome.Skipped => _config.OutcomeSkipped,
+        _ => _config.OutcomeError
+    };
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Helpers
+    // ════════════════════════════════════════════════════════════════════
+
+    private static string BuildSummary(TestRunResult result)
+    {
+        var duration = (result.CompletedAt - result.StartedAt).TotalSeconds;
+        var sb = new StringBuilder();
+
+        sb.AppendLine(
+            $"{result.PassedCount}/{result.TotalCount} bestanden, " +
+            $"{result.FailedCount} fehlgeschlagen, " +
+            $"{result.ErrorCount} Fehler ({duration:F1}s)");
+        if (result.CleanupFailedCount > 0)
+            sb.AppendLine($"CLEANUP-WARNUNG: {result.CleanupFailedCount} Aufräum-Operation(en) " +
+                "fehlgeschlagen, Testdaten verblieben (Details in den Step-Logs).");
+        sb.AppendLine();
+
+        foreach (var tc in result.Results.Take(50))  // max 50 im Summary (4000 chars Limit)
+        {
+            var icon = tc.Outcome switch
+            {
+                TestOutcome.Passed => "[OK]",
+                TestOutcome.Failed => "[FAIL]",
+                TestOutcome.Error => "[ERR]",
+                TestOutcome.Skipped => "[SKIP]",
+                _ => "[?]"
+            };
+            sb.AppendLine($"{icon} {tc.TestId}: {tc.Title} ({tc.DurationMs}ms)");
+            if (tc.Outcome != TestOutcome.Passed && !string.IsNullOrEmpty(tc.ErrorMessage))
+                sb.AppendLine($"  -> {Truncate(tc.ErrorMessage ?? "", 200)}");
+        }
+        if (result.Results.Count > 50)
+            sb.AppendLine($"... und {result.Results.Count - 50} weitere (siehe jbe_testrunresults)");
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Liest ein Attribute als String unabhängig vom tatsächlichen Typ
+    /// (String, OptionSetValue, Number, ...). Verhindert InvalidCastExceptions
+    /// bei heterogenen Feld-Typen zwischen Umgebungen.
+    /// </summary>
+    private static string? SafeGetString(Entity e, string attr)
+    {
+        if (!e.Contains(attr)) return null;
+        var val = e[attr];
+        return val switch
+        {
+            null => null,
+            string s => s,
+            OptionSetValue osv => osv.Value.ToString(),
+            EntityReference er => er.Id.ToString(),
+            bool b => b.ToString(),
+            int i => i.ToString(),
+            _ => val.ToString()
+        };
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+    }
+
+    private void Log(string msg)
+    {
+        _log?.Invoke(msg);
+        _logBuffer.AppendLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {msg}");
+    }
+
+    /// <summary>
+    /// Mergt Orchestrator-Log-Buffer und Engine-Log (TestRunner) zu einem
+    /// einzigen FullLog-Memo. Orchestrator-Logs (Header, Lade-Phase, Final-Block)
+    /// kommen zuerst, danach der Engine-Block als getrennt markierte Sektion.
+    /// </summary>
+    private string BuildMergedFullLog(string? engineLog)
+    {
+        var orchestrator = _logBuffer.ToString();
+        if (string.IsNullOrEmpty(engineLog))
+            return orchestrator;
+        if (string.IsNullOrEmpty(orchestrator))
+            return engineLog;
+        return orchestrator + "--- Engine-Log ---" + Environment.NewLine + engineLog;
+    }
+
+    /// <summary>
+    /// ADR-0006 Phase 1d: Uploads a binary blob to a Dataverse File-field
+    /// (e.g. jbe_testrunresult.jbe_screenshot or jbe_uitrace).
+    ///
+    /// Uses the SDK 3-step File upload pattern:
+    ///   1. InitializeFileBlocksUploadRequest -> FileContinuationToken
+    ///   2. UploadBlockRequest per chunk (max 4 MB per block)
+    ///   3. CommitFileBlocksUploadRequest with the BlockId list
+    ///
+    /// Block IDs are GUID-based for uniqueness (Dataverse requires base64-
+    /// encoded strings of identical length within a request).
+    /// </summary>
+    private void UploadFileToFileField(
+        Guid recordId, string fieldName, byte[] content, string fileName, string mimeType)
+    {
+        var entityRef = new EntityReference(_config.TestRunResultEntity, recordId);
+
+        var initResponse = (InitializeFileBlocksUploadResponse)_service.Execute(
+            new InitializeFileBlocksUploadRequest
+            {
+                Target = entityRef,
+                FileAttributeName = fieldName,
+                FileName = fileName
+            });
+        var token = initResponse.FileContinuationToken;
+
+        const int blockSize = 4 * 1024 * 1024; // 4 MB per Dataverse limit
+        var blockIds = new List<string>();
+
+        for (int offset = 0; offset < content.Length; offset += blockSize)
+        {
+            var size = Math.Min(blockSize, content.Length - offset);
+            var block = new byte[size];
+            Array.Copy(content, offset, block, 0, size);
+
+            // Block IDs must be base64 strings of identical length within a request.
+            // GUID -> 16 bytes -> 24 chars base64 satisfies that.
+            var blockId = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+
+            _service.Execute(new UploadBlockRequest
+            {
+                FileContinuationToken = token,
+                BlockId = blockId,
+                BlockData = block
+            });
+            blockIds.Add(blockId);
+        }
+
+        _service.Execute(new CommitFileBlocksUploadRequest
+        {
+            FileContinuationToken = token,
+            FileName = fileName,
+            MimeType = mimeType,
+            BlockList = blockIds.ToArray()
+        });
+    }
+}
