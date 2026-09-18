@@ -13,13 +13,42 @@
       "jbe_userstories": "PROJ-2001",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createAccount": true },
+        "preconditions": {
+          "createAccount": true
+        },
         "steps": [
-          { "action": "CreateRecord", "entity": "lead", "alias": "lead1", "fields": { "firstname": "{GENERATED:firstname}", "lastname": "{GENERATED:lastname}", "emailaddress1": "{GENERATED:email}", "companyname": "Firma Alpha GmbH", "leadqualitycode": 1 } },
-          { "action": "UpdateRecord", "alias": "lead1", "fields": { "statuscode": 3 }, "waitForAsync": true }
+          {
+            "action": "CreateRecord",
+            "entity": "lead",
+            "alias": "lead1",
+            "fields": {
+              "firstname": "{GENERATED:firstname}",
+              "lastname": "{GENERATED:lastname}",
+              "emailaddress1": "{GENERATED:email}",
+              "companyname": "Firma Alpha GmbH",
+              "leadqualitycode": 1
+            }
+          },
+          {
+            "action": "UpdateRecord",
+            "alias": "lead1",
+            "fields": {
+              "statuscode": 3
+            },
+            "waitForAsync": true
+          }
         ],
         "assertions": [
-          { "target": "Query", "entity": "opportunity", "filter": { "originatingleadid": "{lead1.id}" }, "field": "name", "operator": "Contains", "value": "{lead1.lastname}" }
+          {
+            "target": "Query",
+            "entity": "opportunity",
+            "filter": {
+              "originatingleadid": "{lead1.id}"
+            },
+            "field": "name",
+            "operator": "Contains",
+            "value": "{lead1.lastname}"
+          }
         ]
       }
     },
@@ -32,12 +61,29 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createAccount": true, "createOpportunity": true },
+        "preconditions": {
+          "createAccount": true,
+          "createOpportunity": true
+        },
         "steps": [
-          { "action": "UpdateRecord", "alias": "opp1", "fields": { "statuscode": 3, "actualvalue": 50000, "actualclosedate": "{TIMESTAMP}" }, "waitForAsync": true }
+          {
+            "action": "UpdateRecord",
+            "alias": "opp1",
+            "fields": {
+              "statuscode": 3,
+              "actualvalue": 50000,
+              "actualclosedate": "{TIMESTAMP}"
+            },
+            "waitForAsync": true
+          }
         ],
         "assertions": [
-          { "target": "Record:account1", "field": "revenue", "operator": "GreaterThan", "value": "0" }
+          {
+            "target": "Record:account1",
+            "field": "revenue",
+            "operator": "GreaterThan",
+            "value": "0"
+          }
         ]
       }
     },
@@ -51,10 +97,28 @@
       "jbe_enabled": true,
       "jbe_definitionjson": {
         "steps": [
-          { "action": "CreateRecord", "entity": "incident", "alias": "case1", "fields": { "title": "Dringend: {GENERATED:text}", "prioritycode": 1, "caseorigincode": 1, "customerid_account": "{ACCOUNT_ID}" }, "waitForAsync": true }
-        ],
-        "assertions": [
-          { "target": "Record:case1", "field": "ownerid", "operator": "NotEquals", "value": "{CURRENT_USER}" }
+          {
+            "action": "CreateRecord",
+            "entity": "incident",
+            "alias": "case1",
+            "fields": {
+              "title": "Dringend: {GENERATED:text}",
+              "prioritycode": 1,
+              "caseorigincode": 1,
+              "customerid_account": "{ACCOUNT_ID}"
+            },
+            "waitForAsync": true,
+            "stepNumber": 1
+          },
+          {
+            "action": "Assert",
+            "target": "Record:case1",
+            "field": "ownerid",
+            "operator": "NotEquals",
+            "value": "{CURRENT_USER}",
+            "onError": "continue",
+            "stepNumber": 2
+          }
         ]
       }
     },
@@ -67,12 +131,32 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createContact": true, "createCase": true },
+        "preconditions": {
+          "createContact": true,
+          "createCase": true
+        },
         "steps": [
-          { "action": "UpdateRecord", "alias": "contact1", "fields": { "address1_city": "Berlin", "address1_postalcode": "10115" }, "waitForAsync": true }
+          {
+            "action": "UpdateRecord",
+            "alias": "contact1",
+            "fields": {
+              "address1_city": "Berlin",
+              "address1_postalcode": "10115"
+            },
+            "waitForAsync": true
+          }
         ],
         "assertions": [
-          { "target": "Query", "entity": "incident", "filter": { "primarycontactid": "{contact1.id}" }, "field": "customeraddress_city", "operator": "Equals", "value": "Berlin" }
+          {
+            "target": "Query",
+            "entity": "incident",
+            "filter": {
+              "primarycontactid": "{contact1.id}"
+            },
+            "field": "customeraddress_city",
+            "operator": "Equals",
+            "value": "Berlin"
+          }
         ]
       }
     },
@@ -86,10 +170,32 @@
       "jbe_enabled": true,
       "jbe_definitionjson": {
         "steps": [
-          { "action": "CreateRecord", "entity": "task", "alias": "task1", "fields": { "subject": "Rückruf {GENERATED:lastname}", "scheduledend": "{TIMESTAMP_PLUS_1H}", "prioritycode": 2, "regardingobjectid_contact": "{CONTACT_ID}" }, "waitForAsync": true }
-        ],
-        "assertions": [
-          { "target": "Query", "entity": "activitypointer", "filter": { "regardingobjectid": "{task1.regardingobjectid}" }, "field": "statuscode", "operator": "NotEquals", "value": "5" }
+          {
+            "action": "CreateRecord",
+            "entity": "task",
+            "alias": "task1",
+            "fields": {
+              "subject": "Rückruf {GENERATED:lastname}",
+              "scheduledend": "{TIMESTAMP_PLUS_1H}",
+              "prioritycode": 2,
+              "regardingobjectid_contact": "{CONTACT_ID}"
+            },
+            "waitForAsync": true,
+            "stepNumber": 1
+          },
+          {
+            "action": "Assert",
+            "target": "Query",
+            "field": "statuscode",
+            "entity": "activitypointer",
+            "filter": {
+              "regardingobjectid": "{task1.regardingobjectid}"
+            },
+            "operator": "NotEquals",
+            "value": "5",
+            "onError": "continue",
+            "stepNumber": 2
+          }
         ]
       }
     },
@@ -102,12 +208,30 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createAccount": true },
+        "preconditions": {
+          "createAccount": true
+        },
         "steps": [
-          { "action": "CreateRecord", "entity": "account", "alias": "acc_dup", "fields": { "name": "{account1.name}", "emailaddress1": "{account1.emailaddress1}" } }
+          {
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "acc_dup",
+            "fields": {
+              "name": "{account1.name}",
+              "emailaddress1": "{account1.emailaddress1}"
+            }
+          }
         ],
         "assertions": [
-          { "target": "Query", "entity": "duplicaterecord", "filter": { "baserecordid": "{acc_dup.id}" }, "field": "duplicaterecordid", "operator": "IsNotNull" }
+          {
+            "target": "Query",
+            "entity": "duplicaterecord",
+            "filter": {
+              "baserecordid": "{acc_dup.id}"
+            },
+            "field": "duplicaterecordid",
+            "operator": "IsNotNull"
+          }
         ]
       }
     },
@@ -120,13 +244,33 @@
       "jbe_userstories": "PROJ-2001",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": { "createOpportunity": true },
+        "preconditions": {
+          "createOpportunity": true
+        },
         "steps": [
-          { "action": "UpdateRecord", "alias": "opp1", "fields": { "stepname": "Propose", "salesstage": 2 }, "waitForAsync": true }
+          {
+            "action": "UpdateRecord",
+            "alias": "opp1",
+            "fields": {
+              "stepname": "Propose",
+              "salesstage": 2
+            },
+            "waitForAsync": true
+          }
         ],
         "assertions": [
-          { "target": "Record:opp1", "field": "salesstage", "operator": "Equals", "value": "2" },
-          { "target": "Record:opp1", "field": "stepname", "operator": "Equals", "value": "Propose" }
+          {
+            "target": "Record:opp1",
+            "field": "salesstage",
+            "operator": "Equals",
+            "value": "2"
+          },
+          {
+            "target": "Record:opp1",
+            "field": "stepname",
+            "operator": "Equals",
+            "value": "Propose"
+          }
         ]
       }
     },
@@ -140,10 +284,27 @@
       "jbe_enabled": true,
       "jbe_definitionjson": {
         "steps": [
-          { "action": "CreateRecord", "entity": "incident", "alias": "sla_case", "fields": { "title": "SLA-Test {GENERATED:text}", "prioritycode": 2, "customerid_account": "{ACCOUNT_ID}" }, "waitForAsync": true, "maxDurationMs": 10000 }
-        ],
-        "assertions": [
-          { "target": "Record:sla_case", "field": "slainvokedid", "operator": "IsNotNull" }
+          {
+            "action": "CreateRecord",
+            "entity": "incident",
+            "alias": "sla_case",
+            "fields": {
+              "title": "SLA-Test {GENERATED:text}",
+              "prioritycode": 2,
+              "customerid_account": "{ACCOUNT_ID}"
+            },
+            "waitForAsync": true,
+            "maxDurationMs": 10000,
+            "stepNumber": 1
+          },
+          {
+            "action": "Assert",
+            "target": "Record:sla_case",
+            "field": "slainvokedid",
+            "operator": "IsNotNull",
+            "onError": "continue",
+            "stepNumber": 2
+          }
         ]
       }
     }
@@ -187,87 +348,623 @@
     }
   ],
   "testRunResults": [
-    { "jbe_testrunresultid": "f1f2f3f4-2001-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC01", "jbe_outcome": 100000000, "jbe_durationms": 1800, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2002-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC02", "jbe_outcome": 100000000, "jbe_durationms": 2100, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2003-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC03", "jbe_outcome": 100000000, "jbe_durationms": 1500, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2004-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC04", "jbe_outcome": 100000000, "jbe_durationms": 1300, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2005-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC05", "jbe_outcome": 100000000, "jbe_durationms": 1100, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2006-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC06", "jbe_outcome": 100000001, "jbe_durationms": 900, "jbe_errormessage": "Keine Duplikat-Erkennungsregel für Account aktiv", "jbe_assertionresults": [{ "passed": false, "actual": null }], "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2007-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC07", "jbe_outcome": 100000000, "jbe_durationms": 1400, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" },
-    { "jbe_testrunresultid": "f1f2f3f4-2008-4000-8000-100000002001", "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001", "jbe_testid": "STD-TC08", "jbe_outcome": 100000000, "jbe_durationms": 2300, "jbe_errormessage": "", "jbe_assertionresults": null, "createdon": "$date:0,10,0" }
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2001-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC01",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 1800,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2002-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC02",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 2100,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2003-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC03",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 1500,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2004-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC04",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 1300,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2005-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC05",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 1100,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2006-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC06",
+      "jbe_outcome": 100000001,
+      "jbe_durationms": 900,
+      "jbe_errormessage": "Keine Duplikat-Erkennungsregel für Account aktiv",
+      "jbe_assertionresults": [
+        {
+          "passed": false,
+          "actual": null
+        }
+      ],
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2007-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC07",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 1400,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    },
+    {
+      "jbe_testrunresultid": "f1f2f3f4-2008-4000-8000-100000002001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testid": "STD-TC08",
+      "jbe_outcome": 100000000,
+      "jbe_durationms": 2300,
+      "jbe_errormessage": "",
+      "jbe_assertionresults": null,
+      "createdon": "$date:0,10,0"
+    }
   ],
   "userStories": [
-    { "key": "PROJ-2001", "title": "Sales Pipeline Automatisierung" },
-    { "key": "PROJ-2002", "title": "Service Eskalation und SLA" }
+    {
+      "key": "PROJ-2001",
+      "title": "Sales Pipeline Automatisierung"
+    },
+    {
+      "key": "PROJ-2002",
+      "title": "Service Eskalation und SLA"
+    }
   ],
   "metadata": {
     "entities": [],
     "attributes": {
       "account": [
-        { "LogicalName": "accountid", "DisplayName": { "UserLocalizedLabel": { "Label": "Account ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "AccountId" },
-        { "LogicalName": "name", "DisplayName": { "UserLocalizedLabel": { "Label": "Firmenname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Name" },
-        { "LogicalName": "emailaddress1", "DisplayName": { "UserLocalizedLabel": { "Label": "E-Mail" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "EMailAddress1" },
-        { "LogicalName": "revenue", "DisplayName": { "UserLocalizedLabel": { "Label": "Jahresumsatz" } }, "AttributeType": "MoneyType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Revenue" },
-        { "LogicalName": "statecode", "DisplayName": { "UserLocalizedLabel": { "Label": "Status" } }, "AttributeType": "StateType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "StateCode" }
+        {
+          "LogicalName": "accountid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Account ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "AccountId"
+        },
+        {
+          "LogicalName": "name",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Firmenname"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Name"
+        },
+        {
+          "LogicalName": "emailaddress1",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "E-Mail"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "EMailAddress1"
+        },
+        {
+          "LogicalName": "revenue",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Jahresumsatz"
+            }
+          },
+          "AttributeType": "MoneyType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Revenue"
+        },
+        {
+          "LogicalName": "statecode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Status"
+            }
+          },
+          "AttributeType": "StateType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "StateCode"
+        }
       ],
       "contact": [
-        { "LogicalName": "contactid", "DisplayName": { "UserLocalizedLabel": { "Label": "Contact ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ContactId" },
-        { "LogicalName": "firstname", "DisplayName": { "UserLocalizedLabel": { "Label": "Vorname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "Recommended" }, "IsCustomAttribute": false, "SchemaName": "FirstName" },
-        { "LogicalName": "lastname", "DisplayName": { "UserLocalizedLabel": { "Label": "Nachname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "LastName" },
-        { "LogicalName": "emailaddress1", "DisplayName": { "UserLocalizedLabel": { "Label": "E-Mail" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "EMailAddress1" },
-        { "LogicalName": "address1_city", "DisplayName": { "UserLocalizedLabel": { "Label": "Stadt" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Address1_City" },
-        { "LogicalName": "address1_postalcode", "DisplayName": { "UserLocalizedLabel": { "Label": "PLZ" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Address1_PostalCode" }
+        {
+          "LogicalName": "contactid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Contact ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "ContactId"
+        },
+        {
+          "LogicalName": "firstname",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Vorname"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "Recommended"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "FirstName"
+        },
+        {
+          "LogicalName": "lastname",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Nachname"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "LastName"
+        },
+        {
+          "LogicalName": "emailaddress1",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "E-Mail"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "EMailAddress1"
+        },
+        {
+          "LogicalName": "address1_city",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Stadt"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Address1_City"
+        },
+        {
+          "LogicalName": "address1_postalcode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "PLZ"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Address1_PostalCode"
+        }
       ],
       "opportunity": [
-        { "LogicalName": "opportunityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Opportunity ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "OpportunityId" },
-        { "LogicalName": "name", "DisplayName": { "UserLocalizedLabel": { "Label": "Thema" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Name" },
-        { "LogicalName": "salesstage", "DisplayName": { "UserLocalizedLabel": { "Label": "Vertriebsphase" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "SalesStage" },
-        { "LogicalName": "stepname", "DisplayName": { "UserLocalizedLabel": { "Label": "Pipeline-Phase" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "StepName" },
-        { "LogicalName": "actualvalue", "DisplayName": { "UserLocalizedLabel": { "Label": "Tatsächlicher Umsatz" } }, "AttributeType": "MoneyType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "ActualValue" }
+        {
+          "LogicalName": "opportunityid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Opportunity ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "OpportunityId"
+        },
+        {
+          "LogicalName": "name",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Thema"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Name"
+        },
+        {
+          "LogicalName": "salesstage",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Vertriebsphase"
+            }
+          },
+          "AttributeType": "PicklistType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "SalesStage"
+        },
+        {
+          "LogicalName": "stepname",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Pipeline-Phase"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "StepName"
+        },
+        {
+          "LogicalName": "actualvalue",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Tatsächlicher Umsatz"
+            }
+          },
+          "AttributeType": "MoneyType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "ActualValue"
+        }
       ],
       "lead": [
-        { "LogicalName": "leadid", "DisplayName": { "UserLocalizedLabel": { "Label": "Lead ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "LeadId" },
-        { "LogicalName": "firstname", "DisplayName": { "UserLocalizedLabel": { "Label": "Vorname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "Recommended" }, "IsCustomAttribute": false, "SchemaName": "FirstName" },
-        { "LogicalName": "lastname", "DisplayName": { "UserLocalizedLabel": { "Label": "Nachname" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "LastName" },
-        { "LogicalName": "leadqualitycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Bewertung" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "LeadQualityCode" }
+        {
+          "LogicalName": "leadid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Lead ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "LeadId"
+        },
+        {
+          "LogicalName": "firstname",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Vorname"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "Recommended"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "FirstName"
+        },
+        {
+          "LogicalName": "lastname",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Nachname"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "LastName"
+        },
+        {
+          "LogicalName": "leadqualitycode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Bewertung"
+            }
+          },
+          "AttributeType": "PicklistType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "LeadQualityCode"
+        }
       ],
       "incident": [
-        { "LogicalName": "incidentid", "DisplayName": { "UserLocalizedLabel": { "Label": "Case ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "IncidentId" },
-        { "LogicalName": "title", "DisplayName": { "UserLocalizedLabel": { "Label": "Titel" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Title" },
-        { "LogicalName": "prioritycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "PriorityCode" },
-        { "LogicalName": "slainvokedid", "DisplayName": { "UserLocalizedLabel": { "Label": "SLA" } }, "AttributeType": "LookupType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "SLAInvokedId" }
+        {
+          "LogicalName": "incidentid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Case ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "IncidentId"
+        },
+        {
+          "LogicalName": "title",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Titel"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Title"
+        },
+        {
+          "LogicalName": "prioritycode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Priorität"
+            }
+          },
+          "AttributeType": "PicklistType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "PriorityCode"
+        },
+        {
+          "LogicalName": "slainvokedid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "SLA"
+            }
+          },
+          "AttributeType": "LookupType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "SLAInvokedId"
+        }
       ],
       "task": [
-        { "LogicalName": "activityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Aktivitäts-ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ActivityId" },
-        { "LogicalName": "subject", "DisplayName": { "UserLocalizedLabel": { "Label": "Betreff" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "ApplicationRequired" }, "IsCustomAttribute": false, "SchemaName": "Subject" },
-        { "LogicalName": "scheduledend", "DisplayName": { "UserLocalizedLabel": { "Label": "Fällig am" } }, "AttributeType": "DateTimeType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "ScheduledEnd" },
-        { "LogicalName": "prioritycode", "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } }, "AttributeType": "PicklistType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "PriorityCode" }
+        {
+          "LogicalName": "activityid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Aktivitäts-ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "ActivityId"
+        },
+        {
+          "LogicalName": "subject",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Betreff"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "ApplicationRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Subject"
+        },
+        {
+          "LogicalName": "scheduledend",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Fällig am"
+            }
+          },
+          "AttributeType": "DateTimeType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "ScheduledEnd"
+        },
+        {
+          "LogicalName": "prioritycode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Priorität"
+            }
+          },
+          "AttributeType": "PicklistType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "PriorityCode"
+        }
       ],
       "activitypointer": [
-        { "LogicalName": "activityid", "DisplayName": { "UserLocalizedLabel": { "Label": "Aktivitäts-ID" } }, "AttributeType": "UniqueidentifierType", "RequiredLevel": { "Value": "SystemRequired" }, "IsCustomAttribute": false, "SchemaName": "ActivityId" },
-        { "LogicalName": "subject", "DisplayName": { "UserLocalizedLabel": { "Label": "Betreff" } }, "AttributeType": "StringType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "Subject" },
-        { "LogicalName": "statuscode", "DisplayName": { "UserLocalizedLabel": { "Label": "Statusgrund" } }, "AttributeType": "StatusType", "RequiredLevel": { "Value": "None" }, "IsCustomAttribute": false, "SchemaName": "StatusCode" }
+        {
+          "LogicalName": "activityid",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Aktivitäts-ID"
+            }
+          },
+          "AttributeType": "UniqueidentifierType",
+          "RequiredLevel": {
+            "Value": "SystemRequired"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "ActivityId"
+        },
+        {
+          "LogicalName": "subject",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Betreff"
+            }
+          },
+          "AttributeType": "StringType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "Subject"
+        },
+        {
+          "LogicalName": "statuscode",
+          "DisplayName": {
+            "UserLocalizedLabel": {
+              "Label": "Statusgrund"
+            }
+          },
+          "AttributeType": "StatusType",
+          "RequiredLevel": {
+            "Value": "None"
+          },
+          "IsCustomAttribute": false,
+          "SchemaName": "StatusCode"
+        }
       ]
     },
     "optionsets": [
       {
         "Name": "lead_leadqualitycode",
-        "DisplayName": { "UserLocalizedLabel": { "Label": "Lead-Bewertung" } },
+        "DisplayName": {
+          "UserLocalizedLabel": {
+            "Label": "Lead-Bewertung"
+          }
+        },
         "OptionSetType": "Picklist",
         "Options": [
-          { "Value": 1, "Label": { "UserLocalizedLabel": { "Label": "Heiß" } } },
-          { "Value": 2, "Label": { "UserLocalizedLabel": { "Label": "Warm" } } },
-          { "Value": 3, "Label": { "UserLocalizedLabel": { "Label": "Kalt" } } }
+          {
+            "Value": 1,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Heiß"
+              }
+            }
+          },
+          {
+            "Value": 2,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Warm"
+              }
+            }
+          },
+          {
+            "Value": 3,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Kalt"
+              }
+            }
+          }
         ]
       },
       {
         "Name": "incident_prioritycode",
-        "DisplayName": { "UserLocalizedLabel": { "Label": "Priorität" } },
+        "DisplayName": {
+          "UserLocalizedLabel": {
+            "Label": "Priorität"
+          }
+        },
         "OptionSetType": "Picklist",
         "Options": [
-          { "Value": 1, "Label": { "UserLocalizedLabel": { "Label": "Hoch" } } },
-          { "Value": 2, "Label": { "UserLocalizedLabel": { "Label": "Normal" } } },
-          { "Value": 3, "Label": { "UserLocalizedLabel": { "Label": "Niedrig" } } }
+          {
+            "Value": 1,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Hoch"
+              }
+            }
+          },
+          {
+            "Value": 2,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Normal"
+              }
+            }
+          },
+          {
+            "Value": 3,
+            "Label": {
+              "UserLocalizedLabel": {
+                "Label": "Niedrig"
+              }
+            }
+          }
         ]
       }
     ]
