@@ -13,11 +13,9 @@
       "jbe_userstories": "PROJ-2001",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": {
-          "createAccount": true
-        },
         "steps": [
           {
+            "stepNumber": 1,
             "action": "CreateRecord",
             "entity": "lead",
             "alias": "lead1",
@@ -25,21 +23,54 @@
               "firstname": "{GENERATED:firstname}",
               "lastname": "{GENERATED:lastname}",
               "emailaddress1": "{GENERATED:email}",
-              "companyname": "Firma Alpha GmbH",
+              "companyname": "JBE Test Firma Alpha",
+              "subject": "JBE Test Bedarf {GENERATED:lastname}",
               "leadqualitycode": 1
             }
           },
           {
-            "action": "UpdateRecord",
-            "alias": "lead1",
+            "stepNumber": 2,
+            "action": "ExecuteRequest",
+            "requestName": "QualifyLead",
+            "description": "Lead qualifizieren und dabei eine Opportunity erzeugen lassen",
             "fields": {
-              "statuscode": 3
-            },
-            "waitForAsync": true
-          }
-        ],
-        "assertions": [
+              "LeadId": {
+                "$type": "EntityReference",
+                "entity": "lead",
+                "ref": "lead1"
+              },
+              "Status": {
+                "$type": "OptionSetValue",
+                "value": 3
+              },
+              "CreateAccount": false,
+              "CreateContact": false,
+              "CreateOpportunity": true
+            }
+          },
           {
+            "stepNumber": 3,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 4,
+            "action": "FindRecord",
+            "entity": "opportunity",
+            "alias": "opp_aus_lead",
+            "filter": {
+              "originatingleadid": "{lead1.id}"
+            },
+            "columns": [
+              "name"
+            ],
+            "trackForCleanup": true,
+            "onError": "continue",
+            "description": "Die von der Plattform erzeugte Opportunity für den Cleanup mitführen"
+          },
+          {
+            "stepNumber": 5,
+            "action": "Assert",
             "target": "Query",
             "entity": "opportunity",
             "filter": {
@@ -47,7 +78,9 @@
             },
             "field": "name",
             "operator": "Contains",
-            "value": "{lead1.lastname}"
+            "value": "{GENERATED:lastname}",
+            "onError": "continue",
+            "description": "Zum qualifizierten Lead ist eine Opportunity entstanden"
           }
         ]
       }
@@ -61,28 +94,70 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": {
-          "createAccount": true,
-          "createOpportunity": true
-        },
         "steps": [
           {
-            "action": "UpdateRecord",
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            }
+          },
+          {
+            "stepNumber": 2,
+            "action": "CreateRecord",
+            "entity": "opportunity",
             "alias": "opp1",
             "fields": {
-              "statuscode": 3,
-              "actualvalue": 50000,
-              "actualclosedate": "{TIMESTAMP}"
-            },
-            "waitForAsync": true
-          }
-        ],
-        "assertions": [
+              "name": "JBE Test Opportunity {GENERATED:guid}",
+              "customerid@odata.bind": "/accounts({account1.id})",
+              "estimatedvalue": 50000
+            }
+          },
           {
-            "target": "Record:account1",
+            "stepNumber": 3,
+            "action": "ExecuteRequest",
+            "requestName": "WinOpportunity",
+            "description": "Verkaufschance gewinnen (die Plattform lehnt ein direktes Status-Update ab)",
+            "fields": {
+              "OpportunityClose": {
+                "$type": "Entity",
+                "entity": "opportunityclose",
+                "fields": {
+                  "opportunityid": {
+                    "$type": "EntityReference",
+                    "entity": "opportunity",
+                    "ref": "opp1"
+                  },
+                  "subject": "JBE Test Abschluss",
+                  "actualrevenue": {
+                    "$type": "Money",
+                    "value": 50000
+                  }
+                }
+              },
+              "Status": {
+                "$type": "OptionSetValue",
+                "value": 3
+              }
+            }
+          },
+          {
+            "stepNumber": 4,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 5,
+            "action": "Assert",
+            "target": "Record",
+            "recordRef": "{RECORD:account1}",
             "field": "revenue",
             "operator": "GreaterThan",
-            "value": "0"
+            "value": "0",
+            "onError": "continue",
+            "description": "Der gewonnene Auftrag hat den Umsatz des Accounts erhöht"
           }
         ]
       }
@@ -131,23 +206,56 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": {
-          "createContact": true,
-          "createCase": true
-        },
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            }
+          },
+          {
+            "stepNumber": 2,
+            "action": "CreateRecord",
+            "entity": "contact",
+            "alias": "contact1",
+            "fields": {
+              "firstname": "{GENERATED:firstname}",
+              "lastname": "{GENERATED:lastname}",
+              "emailaddress1": "{GENERATED:email}",
+              "parentcustomerid@odata.bind": "/accounts({account1.id})"
+            }
+          },
+          {
+            "stepNumber": 3,
+            "action": "CreateRecord",
+            "entity": "incident",
+            "alias": "case1",
+            "fields": {
+              "title": "JBE Test Anliegen {GENERATED:guid}",
+              "customerid@odata.bind": "/accounts({account1.id})",
+              "primarycontactid@odata.bind": "/contacts({contact1.id})"
+            }
+          },
+          {
+            "stepNumber": 4,
             "action": "UpdateRecord",
             "alias": "contact1",
             "fields": {
               "address1_city": "Berlin",
               "address1_postalcode": "10115"
-            },
-            "waitForAsync": true
-          }
-        ],
-        "assertions": [
+            }
+          },
           {
+            "stepNumber": 5,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 6,
+            "action": "Assert",
             "target": "Query",
             "entity": "incident",
             "filter": {
@@ -155,7 +263,9 @@
             },
             "field": "customeraddress_city",
             "operator": "Equals",
-            "value": "Berlin"
+            "value": "Berlin",
+            "onError": "continue",
+            "description": "Die neue Contact-Adresse ist auf den Case durchgeschlagen"
           }
         ]
       }
@@ -208,29 +318,43 @@
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": {
-          "createAccount": true
-        },
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}",
+              "emailaddress1": "{GENERATED:email}"
+            }
+          },
+          {
+            "stepNumber": 2,
             "action": "CreateRecord",
             "entity": "account",
             "alias": "acc_dup",
             "fields": {
-              "name": "{account1.name}",
-              "emailaddress1": "{account1.emailaddress1}"
+              "name": "{GENERATED:company}",
+              "emailaddress1": "{GENERATED:email}"
             }
-          }
-        ],
-        "assertions": [
+          },
           {
+            "stepNumber": 3,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 4,
+            "action": "Assert",
             "target": "Query",
             "entity": "duplicaterecord",
             "filter": {
               "baserecordid": "{acc_dup.id}"
             },
-            "field": "duplicaterecordid",
-            "operator": "IsNotNull"
+            "operator": "Exists",
+            "onError": "continue",
+            "description": "Die Duplikaterkennung hat den doppelten Account gemeldet"
           }
         ]
       }
@@ -244,32 +368,62 @@
       "jbe_userstories": "PROJ-2001",
       "jbe_enabled": true,
       "jbe_definitionjson": {
-        "preconditions": {
-          "createOpportunity": true
-        },
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            }
+          },
+          {
+            "stepNumber": 2,
+            "action": "CreateRecord",
+            "entity": "opportunity",
+            "alias": "opp1",
+            "fields": {
+              "name": "JBE Test Pipeline {GENERATED:guid}",
+              "customerid@odata.bind": "/accounts({account1.id})",
+              "estimatedvalue": 25000
+            }
+          },
+          {
+            "stepNumber": 3,
             "action": "UpdateRecord",
             "alias": "opp1",
             "fields": {
               "stepname": "Propose",
               "salesstage": 2
-            },
-            "waitForAsync": true
-          }
-        ],
-        "assertions": [
-          {
-            "target": "Record:opp1",
-            "field": "salesstage",
-            "operator": "Equals",
-            "value": "2"
+            }
           },
           {
-            "target": "Record:opp1",
+            "stepNumber": 4,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 5,
+            "action": "Assert",
+            "target": "Record",
+            "recordRef": "{RECORD:opp1}",
+            "field": "salesstage",
+            "operator": "Equals",
+            "value": "2",
+            "onError": "continue",
+            "description": "Die Vertriebsphase steht auf Propose"
+          },
+          {
+            "stepNumber": 6,
+            "action": "Assert",
+            "target": "Record",
+            "recordRef": "{RECORD:opp1}",
             "field": "stepname",
             "operator": "Equals",
-            "value": "Propose"
+            "value": "Propose",
+            "onError": "continue",
+            "description": "Der Phasenname wurde mitgeführt"
           }
         ]
       }

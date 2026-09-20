@@ -26,19 +26,25 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 - **Kategorie:** Bridge
 - **Tags:** Lead, Opportunity, Sales
 - **User Story:** PROJ-2001
-- **Preconditions:** Account erstellen
 - **Steps:**
-  1. `CreateRecord` auf `lead` mit generiertem Vor-/Nachname, E-Mail, Firmenname und Bewertung "Heiß"
-  2. `UpdateRecord` auf den Lead mit `statuscode: 3` (qualifiziert), wartet auf asynchrone Verarbeitung
-- **Assertions:** Query auf `opportunity` gefiltert nach `originatingleadid` des Leads, prüft ob der Opportunity-Name den Nachnamen des Leads enthält
+  1. `CreateRecord` auf `lead` mit generiertem Vor-/Nachname, E-Mail, Firmenname, Betreff und Bewertung "Heiß"
+  2. `ExecuteRequest` mit `QualifyLead` (`CreateOpportunity: true`) qualifiziert den Lead und lässt die Plattform die Opportunity anlegen
+  3. `Wait` 5 Sekunden
+  4. `FindRecord` auf die entstandene `opportunity` mit `trackForCleanup: true`, damit der Cleanup sie mit abräumt
+  5. `Assert` auf `opportunity`: der Name enthält den Nachnamen aus dem Lead-Betreff
+- **Gemessen:** läuft grün gegen eine Standard-Sales-Umgebung (`name = "JBE Test Bedarf Fietz"`).
 
 #### STD-TC02: Opportunity auf Won: Account-Umsatz aktualisiert
 
 - **Kategorie:** Bridge
 - **Tags:** Opportunity, Account, Revenue
-- **Preconditions:** Account und Opportunity erstellen
-- **Steps:** `UpdateRecord` auf Opportunity mit `statuscode: 3` (Won), `actualvalue: 50000` und Abschlussdatum
-- **Assertions:** Prüft, ob `revenue` des Accounts größer als 0 ist
+- **Steps:**
+  1. `CreateRecord` auf `account` (Alias `account1`)
+  2. `CreateRecord` auf `opportunity` (Alias `opp1`) mit `customerid@odata.bind` auf den Account
+  3. `ExecuteRequest` mit `WinOpportunity` und einem `opportunityclose` von 50000; ein direktes Status-Update lehnt die Plattform ab
+  4. `Wait` 5 Sekunden
+  5. `Assert` auf den Account: `revenue` ist größer als 0
+- **Gemessen:** der Assert schlägt fehl (`revenue` bleibt `null`). `account.revenue` ist ein einfaches Währungsfeld ohne Rollup, die Standardplattform schreibt es beim Gewinnen einer Verkaufschance nicht fort. Der Testfall zeigt damit die Prüfung, nicht ein vorhandenes Standardverhalten.
 
 #### STD-TC03: Case-Eskalation: High Priority Routing
 
@@ -52,9 +58,14 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 
 - **Kategorie:** Bridge
 - **Tags:** Contact, Case, Adresse
-- **Preconditions:** Contact und Case erstellen
-- **Steps:** `UpdateRecord` auf Contact mit `address1_city: "Berlin"` und PLZ
-- **Assertions:** Query auf Incidents des Contacts, prüft ob die Kundenadresse "Berlin" enthält
+- **Steps:**
+  1. `CreateRecord` auf `account` (Alias `account1`)
+  2. `CreateRecord` auf `contact` (Alias `contact1`) unterhalb des Accounts
+  3. `CreateRecord` auf `incident` (Alias `case1`) mit dem Account als Kunde und dem Contact als Ansprechpartner
+  4. `UpdateRecord` auf den Contact mit `address1_city: "Berlin"` und PLZ
+  5. `Wait` 5 Sekunden
+  6. `Assert` per Query auf die Cases des Contacts: `customeraddress_city` ist "Berlin"
+- **Gemessen:** der Assert schlägt fehl. `incident` führt in der Standardplattform überhaupt kein Adressfeld, `customeraddress_city` existiert dort nicht. Das geprüfte Kaskadenverhalten gibt es in Standard-Dynamics nicht.
 
 #### STD-TC05: Task-Erinnerung: Workflow bei Fälligkeit
 
@@ -67,18 +78,25 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 
 - **Kategorie:** Merge
 - **Tags:** Account, Duplikat, DQM
-- **Preconditions:** Account erstellen
-- **Steps:** `CreateRecord` auf `account` mit identischem Namen und E-Mail wie der bestehende Account
-- **Assertions:** Query auf `duplicaterecord`, prüft ob ein Duplikat-Eintrag existiert (`IsNotNull`)
+- **Steps:**
+  1. `CreateRecord` auf `account` (Alias `account1`) mit generiertem Namen und generierter E-Mail
+  2. `CreateRecord` auf `account` (Alias `acc_dup`) mit denselben Werten; `{GENERATED:*}` liefert im selben Testfall denselben Wert
+  3. `Wait` 5 Sekunden
+  4. `Assert` per Query auf `duplicaterecord`: zum Duplikat existiert ein Eintrag
+- **Gemessen:** der Assert schlägt fehl (0 Treffer), solange in der Zielumgebung keine Duplikaterkennungsregel veröffentlicht und aktiv ist.
 
 #### STD-TC07: Opportunity-Pipeline: Phase-Wechsel Validierung
 
 - **Kategorie:** Bridge
 - **Tags:** Opportunity, BPF, Pipeline
 - **User Story:** PROJ-2001
-- **Preconditions:** Opportunity erstellen
-- **Steps:** `UpdateRecord` auf Opportunity mit `stepname: "Propose"` und `salesstage: 2`
-- **Assertions:** Prüft, ob `salesstage` den Wert 2 hat und `stepname` den Wert "Propose"
+- **Steps:**
+  1. `CreateRecord` auf `account` (Alias `account1`)
+  2. `CreateRecord` auf `opportunity` (Alias `opp1`) mit `customerid@odata.bind` auf den Account
+  3. `UpdateRecord` auf die Opportunity mit `stepname: "Propose"` und `salesstage: 2`
+  4. `Wait` 5 Sekunden
+  5. und 6. `Assert` auf die Opportunity: `salesstage` ist 2 und `stepname` ist "Propose"
+- **Gemessen:** läuft grün gegen eine Standard-Sales-Umgebung.
 
 #### STD-TC08: Case-SLA: Timer startet bei Erstellung
 
@@ -101,36 +119,18 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 
 ```json
 {
-  "preconditions": {
-    "createAccount": true,
-    "createContact": true
-  },
   "steps": [
-    {
-      "action": "CreateRecord",
-      "entity": "account",
-      "alias": "acc1",
-      "fields": {
-        "name": "Testfirma GmbH"
-      }
-    },
-    {
-      "action": "Wait",
-      "waitSeconds": 3
-    }
-  ],
-  "assertions": [
-    {
-      "target": "Record:acc1",
-      "field": "name",
-      "operator": "Equals",
-      "value": "Testfirma GmbH"
-    }
+    { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "acc1",
+      "fields": { "name": "Testfirma GmbH" } },
+    { "stepNumber": 2, "action": "Wait", "waitSeconds": 3 },
+    { "stepNumber": 3, "action": "Assert", "target": "Record", "recordRef": "{RECORD:acc1}",
+      "field": "name", "operator": "Equals", "value": "Testfirma GmbH",
+      "onError": "continue", "description": "Account-Name gesetzt" }
   ]
 }
 ```
 
-Dieser Testfall erstellt einen Account mit dem Namen "Testfirma GmbH", wartet 3 Sekunden und prüft anschließend, ob der Name korrekt gespeichert wurde.
+Dieser Testfall erstellt einen Account mit dem Namen "Testfirma GmbH", wartet 3 Sekunden und prüft anschließend, ob der Name korrekt gespeichert wurde. Ein Testfall ist seit ADR-0004 **eine einzige geordnete `steps`-Liste**; Vorbedingungen sind gewöhnliche `CreateRecord`-Schritte am Anfang, Prüfungen sind `Assert`-Schritte. Getrennte `preconditions`- oder `assertions`-Blöcke kennt die Engine nicht mehr, sie verwirft sie beim Einlesen still; `validate --pack` meldet sie als `PRECONDITIONS_OBSOLETE` beziehungsweise `ASSERTIONS_OBSOLETE`.
 
 ## Eigenes Demo-Paket erstellen
 
@@ -168,22 +168,25 @@ Dieser Testfall erstellt einen Account mit dem Namen "Testfirma GmbH", wartet 3 
             jbe_userstories: "PROJ-9999",
             jbe_enabled: true,
             jbe_definitionjson: JSON.stringify({
-                preconditions: { createAccount: true },
                 steps: [
                     {
+                        stepNumber: 1,
                         action: "CreateRecord",
-                        entity: "account",
+                        entity: "accounts",
                         alias: "acc1",
                         fields: { name: "Testfirma" }
                     },
-                    { action: "Wait", waitSeconds: 2 }
-                ],
-                assertions: [
+                    { stepNumber: 2, action: "Wait", waitSeconds: 2 },
                     {
-                        target: "Record:acc1",
+                        stepNumber: 3,
+                        action: "Assert",
+                        target: "Record",
+                        recordRef: "{RECORD:acc1}",
                         field: "name",
                         operator: "Equals",
-                        value: "Testfirma"
+                        value: "Testfirma",
+                        onError: "continue",
+                        description: "Account-Name gesetzt"
                     }
                 ]
             })
