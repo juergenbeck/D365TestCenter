@@ -9,7 +9,7 @@ Test-Autor nicht):
 - [`docs/01_architektur-spezifikation.md`](../../01_architektur-spezifikation.md), Tiefe Architektur-Spec
 - [`docs/02_datenmodell.md`](../../02_datenmodell.md), Entities im Detail
 - [`docs/03_api-referenz.md`](../../03_api-referenz.md), API-Referenz der Core-Engine
-- [`docs/04_testfall-spezifikation.md`](../../04_testfall-spezifikation.md), JSON-Spec formal
+- [`docs/04_testfall-spezifikation.md`](../../04_testfall-spezifikation.md), Einstieg ins Testfall-Format mit Verweis auf dieses Kapitel
 - [`docs/05_deployment-handbuch.md`](../../05_deployment-handbuch.md), Deployment (Owner-Thema)
 - [`docs/06_demo-pakete.md`](../../06_demo-pakete.md), Demo-Packs
 - [`docs/07_customization.md`](../../07_customization.md), Anpassungs-Optionen

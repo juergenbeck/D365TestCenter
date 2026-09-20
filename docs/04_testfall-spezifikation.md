@@ -58,7 +58,7 @@ Detail und weitere Prüfregeln in
 |---|---|
 | Top-Level-Felder, Aufbau eines Schritts, `onError`, `condition` | [01-json-schema.md](handbuch/02-testfall-schreiben/01-json-schema.md) |
 | Alle Actions mit ihren Parametern (`CreateRecord`, `UpdateRecord`, `DeleteRecord`, `ExecuteRequest`, `Wait`, die `WaitFor*`-Familie, `BrowserAction` und die übrigen) | [02-actions-referenz.md](handbuch/02-testfall-schreiben/02-actions-referenz.md) |
-| Platzhalter: `{GENERATED:*}`, die `{TIMESTAMP*}`-Familie, `{alias.id}`, `{alias.fields.X}`, `{RECORD:alias}`, `{ROW:*}` | [03-platzhalter.md](handbuch/02-testfall-schreiben/03-platzhalter.md) |
+| Platzhalter: `{GENERATED:*}`, die `{TIMESTAMP*}`-Familie (`{TIMESTAMP}` liefert `yyyyMMdd_HHmmss_fff`, ISO 8601 liefert `{TIMESTAMP_ISO}`), `{alias.id}`, `{alias.fields.X}`, `{RECORD:alias}`, `{ROW:*}` | [03-platzhalter.md](handbuch/02-testfall-schreiben/03-platzhalter.md) |
 | Lookups setzen, `@odata.bind`, polymorphe Ziele | [04-lookup-und-binding.md](handbuch/02-testfall-schreiben/04-lookup-und-binding.md) |
 | `Assert` mit `target: "Record"` und `target: "Query"`, Filter-Syntax, alle Operatoren | [05-assertions.md](handbuch/02-testfall-schreiben/05-assertions.md) |
 | Was ein Testfall abdecken muss, damit er etwas aussagt | [06-coverage-regeln.md](handbuch/02-testfall-schreiben/06-coverage-regeln.md) |
@@ -75,7 +75,8 @@ Detail und weitere Prüfregeln in
 Die Metadaten (Test-ID, Titel, Kategorie, Tags, User Stories) liegen als Felder des
 `jbe_testcase`-Datensatzes, die Definition im Memo-Feld `jbe_definitionjson`.
 
-**Validieren.** Beim Speichern wird das JSON syntaktisch geprüft. Die inhaltliche Prüfung
+**Validieren.** Der Editor des Test Center prüft beim Speichern die JSON-Syntax; das
+Dataverse-Feld selbst nimmt jeden Text an. Die inhaltliche Prüfung
 macht `validate --pack` vor dem Lauf, und der TestRunner wiederholt sie je Testfall: ein
 Befund der Stufe Error bricht den Testfall mit Outcome `Error` ab, statt ihn scheinbar laufen
 zu lassen.
@@ -85,7 +86,10 @@ zu lassen.
 und den Einzelergebnissen der Prüfungen. Die Schritte laufen der Reihe nach, Platzhalter
 werden dabei aufgelöst.
 
-**Ergebnis.** Ein Testfall ist `Passed`, wenn kein Schritt fehlgeschlagen ist, `Failed` bei
-mindestens einer fehlgeschlagenen Prüfung und `Error`, wenn ein Schritt mit `onError: "stop"`
-eine Ausnahme geworfen hat. Die Details stehen im Lauf-Log und in der History-Ansicht je
-Testfall-ID.
+**Ergebnis.** Es gibt vier Ausgänge. `Passed`, wenn kein Schritt fehlgeschlagen ist.
+`Failed`, wenn mindestens ein Schritt `Success=false` meldet; das umfasst eine fehlgeschlagene
+Prüfung und ebenso einen anderen Schritt mit ausdrücklichem `onError: "continue"`. `Error`,
+wenn ein Schritt mit `onError: "stop"` eine Ausnahme geworfen hat oder die Vorab-Prüfung einen
+Befund der Stufe Error meldet. `Skipped`, wenn der Testfall Prüfungen definiert, aber jede
+davon per `condition` übersprungen wurde (ADR-0011) -- sonst wäre er grün, ohne geprüft zu
+haben. Die Details stehen im Lauf-Log und in der History-Ansicht je Testfall-ID.

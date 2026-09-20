@@ -42,7 +42,7 @@ bleibt dabei immer SSOT.
 
 Ein Testfall wird als Markdown-Datei gepflegt: Frontmatter mit Metadaten, fachliche Pflicht-Sektionen
 (Zweck, Datenkonstellation, Vorbedingungen, Ablauf, Erwartetes Ergebnis) und ein eingebetteter D365TC-JSON-Block
-(`steps`). Das JSON-Schema beschreibt [04_testfall-spezifikation.md](04_testfall-spezifikation.md).
+(`steps`). Den Einstieg gibt [04_testfall-spezifikation.md](04_testfall-spezifikation.md), das vollständige Schema das Handbuch-Kapitel [01-json-schema.md](handbuch/02-testfall-schreiben/01-json-schema.md).
 
 ### 2. `build-pack`: Pack erzeugen
 
