@@ -3728,13 +3728,21 @@ const AliasAutocomplete = {
                 }
             }
         }
-        // System placeholders
-        const sysPlaceholders = ["TIMESTAMP", "TIMESTAMP_PLUS_1H", "TIMESTAMP_MINUS_1H", "GUID", "CONTACT_ID", "ACCOUNT_ID", "CURRENT_USER", "ENV_URL"];
+        // System placeholders. Quelle ist PlaceholderEngine.Resolve im C#-Core; diese Liste
+        // ist eine Kopie davon und muss mitgezogen werden, wenn die Engine sich ändert.
+        // CURRENT_USER und ENV_URL standen hier, ohne dass die Engine sie kennt (ADR-2026-09-20-1003).
+        const sysPlaceholders = ["TESTID", "PREFIX", "GUID", "CONTACT_ID", "ACCOUNT_ID",
+            "TIMESTAMP", "TIMESTAMP_COMPACT", "TIMESTAMP_ISO",
+            "TIMESTAMP_PLUS_1H", "TIMESTAMP_PLUS_2H", "TIMESTAMP_PLUS_1D",
+            "TIMESTAMP_MINUS_30M", "TIMESTAMP_MINUS_1H", "TIMESTAMP_MINUS_2H",
+            "TIMESTAMP_MINUS_3H", "TIMESTAMP_MINUS_1D", "NOW_UTC", "NOW_MINUS_1H"];
         for (const sp of sysPlaceholders) {
             if (sp.toLowerCase().includes(partial)) result.push({ text: sp, category: "System" });
         }
         // Generated
-        const genTypes = ["firstname", "lastname", "email", "phone", "mobile", "company", "text", "guid", "number", "city"];
+        // Quelle ist PlaceholderEngine.GenerateTypedValue im C#-Core, siehe Hinweis oben.
+        const genTypes = ["firstname", "lastname", "email", "phone", "mobile", "phone_international",
+            "company", "text", "guid", "number", "city", "street", "zip", "jobtitle", "website"];
         for (const g of genTypes) {
             const gt = "GENERATED:" + g;
             if (gt.toLowerCase().includes(partial)) result.push({ text: gt, category: "Generiert" });
