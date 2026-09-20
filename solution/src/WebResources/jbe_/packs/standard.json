@@ -1,7 +1,7 @@
 {
   "packId": "standard",
   "name": "Standard CRM (Sales & Service)",
-  "description": "Standardtabellen und -felder aus Dynamics 365 Sales und Service. Keine Custom-Entities erforderlich.",
+  "description": "Standardtabellen und -felder aus Dynamics 365 Sales und Service. Keine Custom-Entities erforderlich. Alle Testfälle dieses Pakets prüfen Plattformverhalten, das jede unkonfigurierte Standardumgebung zeigt; sie laufen ohne zusätzliche Einrichtung grün. Testfälle, die eine Konfiguration der Zielumgebung voraussetzen, stehen im Paket \"Standard CRM mit Konfiguration\".",
   "color": "#42a5f5",
   "testCases": [
     {
@@ -88,9 +88,9 @@
     {
       "jbe_testcaseid": "d1d2d3d4-0002-4000-8000-100000000002",
       "jbe_testid": "STD-TC02",
-      "jbe_title": "Opportunity auf Won: Account-Umsatz aktualisiert",
+      "jbe_title": "Verkaufschance gewinnen: Status und Abschlussaktivität",
       "jbe_category": 100000005,
-      "jbe_tags": "Opportunity,Account,Revenue",
+      "jbe_tags": "Opportunity,Account,Abschluss",
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
@@ -102,7 +102,8 @@
             "alias": "account1",
             "fields": {
               "name": "{GENERATED:company}"
-            }
+            },
+            "description": "Kunde der Verkaufschance"
           },
           {
             "stepNumber": 2,
@@ -113,7 +114,14 @@
               "name": "JBE Test Opportunity {GENERATED:guid}",
               "customerid@odata.bind": "/accounts({account1.id})",
               "estimatedvalue": 50000
-            }
+            },
+            "cleanupChildren": [
+              {
+                "entity": "opportunityclose",
+                "lookupField": "opportunityid"
+              }
+            ],
+            "description": "Verkaufschance zu diesem Kunden anlegen"
           },
           {
             "stepNumber": 3,
@@ -152,75 +160,24 @@
             "stepNumber": 5,
             "action": "Assert",
             "target": "Record",
-            "recordRef": "{RECORD:account1}",
-            "field": "revenue",
-            "operator": "GreaterThan",
-            "value": "0",
+            "recordRef": "{RECORD:opp1}",
+            "field": "statecode",
+            "operator": "Equals",
+            "value": "1",
             "onError": "continue",
-            "description": "Der gewonnene Auftrag hat den Umsatz des Accounts erhöht"
-          }
-        ]
-      }
-    },
-    {
-      "jbe_testcaseid": "d1d2d3d4-0003-4000-8000-100000000003",
-      "jbe_testid": "STD-TC03",
-      "jbe_title": "Case-Eskalation: High Priority Routing",
-      "jbe_category": 100000005,
-      "jbe_tags": "Case,Routing,Service",
-      "jbe_userstories": "PROJ-2002",
-      "jbe_enabled": true,
-      "jbe_definitionjson": {
-        "steps": [
-          {
-            "stepNumber": 1,
-            "action": "CreateRecord",
-            "entity": "account",
-            "alias": "account1",
-            "fields": {
-              "name": "{GENERATED:company}"
-            },
-            "description": "Kunde, dem der Case zugeordnet wird"
+            "description": "Die Verkaufschance steht auf gewonnen"
           },
           {
-            "stepNumber": 2,
-            "action": "CreateRecord",
-            "entity": "incident",
-            "alias": "case1",
-            "fields": {
-              "title": "Dringend: {GENERATED:text}",
-              "prioritycode": 1,
-              "caseorigincode": 1,
-              "customerid@odata.bind": "/accounts({account1.id})"
-            },
-            "description": "Case mit hoher Priorität anlegen"
-          },
-          {
-            "stepNumber": 3,
-            "action": "Wait",
-            "waitSeconds": 5
-          },
-          {
-            "stepNumber": 4,
-            "action": "Assert",
-            "target": "Record",
-            "recordRef": "{RECORD:case1}",
-            "field": "ticketnumber",
-            "operator": "IsNotNull",
-            "onError": "continue",
-            "description": "Die Plattform hat dem Case eine Ticketnummer vergeben"
-          },
-          {
-            "stepNumber": 5,
+            "stepNumber": 6,
             "action": "Assert",
             "target": "Query",
-            "entity": "queueitem",
+            "entity": "opportunityclose",
             "filter": {
-              "objectid": "{case1.id}"
+              "opportunityid": "{opp1.id}"
             },
             "operator": "Exists",
             "onError": "continue",
-            "description": "Das Routing hat den Case in eine Warteschlange gelegt; das setzt eine aktive Routingregel auf der Umgebung voraus"
+            "description": "Die Plattform hat die Abschlussaktivität angelegt"
           }
         ]
       }
@@ -228,9 +185,9 @@
     {
       "jbe_testcaseid": "d1d2d3d4-0004-4000-8000-100000000004",
       "jbe_testid": "STD-TC04",
-      "jbe_title": "Contact-Adresse: Kaskade auf verknüpfte Cases",
+      "jbe_title": "Kunde löschen: Kaskade auf verknüpfte Anfragen",
       "jbe_category": 100000005,
-      "jbe_tags": "Contact,Case,Adresse",
+      "jbe_tags": "Account,Case,Kaskade",
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
@@ -242,7 +199,8 @@
             "alias": "account1",
             "fields": {
               "name": "{GENERATED:company}"
-            }
+            },
+            "description": "Kunde"
           },
           {
             "stepNumber": 2,
@@ -253,8 +211,9 @@
               "firstname": "{GENERATED:firstname}",
               "lastname": "{GENERATED:lastname}",
               "emailaddress1": "{GENERATED:email}",
-              "parentcustomerid@odata.bind": "/accounts({account1.id})"
-            }
+              "parentcustomerid_account@odata.bind": "/accounts({account1.id})"
+            },
+            "description": "Ansprechpartner des Kunden"
           },
           {
             "stepNumber": 3,
@@ -265,35 +224,43 @@
               "title": "JBE Test Anliegen {GENERATED:guid}",
               "customerid@odata.bind": "/accounts({account1.id})",
               "primarycontactid@odata.bind": "/contacts({contact1.id})"
-            }
+            },
+            "description": "Anfrage zu diesem Kunden"
           },
           {
             "stepNumber": 4,
-            "action": "UpdateRecord",
-            "alias": "contact1",
-            "fields": {
-              "address1_city": "Berlin",
-              "address1_postalcode": "10115"
-            }
-          },
-          {
-            "stepNumber": 5,
-            "action": "Wait",
-            "waitSeconds": 5
-          },
-          {
-            "stepNumber": 6,
             "action": "Assert",
             "target": "Query",
             "entity": "incident",
             "filter": {
-              "primarycontactid": "{contact1.id}"
+              "customerid": "{account1.id}"
             },
-            "field": "customeraddress_city",
-            "operator": "Equals",
-            "value": "Berlin",
+            "operator": "Exists",
             "onError": "continue",
-            "description": "Die neue Contact-Adresse ist auf den Case durchgeschlagen"
+            "description": "Vor dem Löschen hängt die Anfrage am Kunden"
+          },
+          {
+            "stepNumber": 5,
+            "action": "DeleteRecord",
+            "alias": "account1",
+            "description": "Den Kunden löschen"
+          },
+          {
+            "stepNumber": 6,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 7,
+            "action": "Assert",
+            "target": "Query",
+            "entity": "incident",
+            "filter": {
+              "customerid": "{account1.id}"
+            },
+            "operator": "NotExists",
+            "onError": "continue",
+            "description": "Nach dem Löschen ist die Anfrage mitgelöscht"
           }
         ]
       }
@@ -301,9 +268,9 @@
     {
       "jbe_testcaseid": "d1d2d3d4-0005-4000-8000-100000000005",
       "jbe_testid": "STD-TC05",
-      "jbe_title": "Task-Erinnerung: Workflow bei Fälligkeit",
+      "jbe_title": "Aufgabe anlegen: Eintrag im Aktivitätsverzeichnis",
       "jbe_category": 100000005,
-      "jbe_tags": "Activity,Task,Workflow",
+      "jbe_tags": "Activity,Task,Aktivitäten",
       "jbe_userstories": "",
       "jbe_enabled": true,
       "jbe_definitionjson": {
@@ -362,56 +329,6 @@
             "value": "{GENERATED:lastname}",
             "onError": "continue",
             "description": "Die Plattform führt die Aufgabe im Aktivitätsverzeichnis"
-          }
-        ]
-      }
-    },
-    {
-      "jbe_testcaseid": "d1d2d3d4-0006-4000-8000-100000000006",
-      "jbe_testid": "STD-TC06",
-      "jbe_title": "Account-Deduplizierung: Warnung bei gleicher Email",
-      "jbe_category": 100000006,
-      "jbe_tags": "Account,Duplikat,DQM",
-      "jbe_userstories": "",
-      "jbe_enabled": true,
-      "jbe_definitionjson": {
-        "steps": [
-          {
-            "stepNumber": 1,
-            "action": "CreateRecord",
-            "entity": "account",
-            "alias": "account1",
-            "fields": {
-              "name": "{GENERATED:company}",
-              "emailaddress1": "{GENERATED:email}"
-            }
-          },
-          {
-            "stepNumber": 2,
-            "action": "CreateRecord",
-            "entity": "account",
-            "alias": "acc_dup",
-            "fields": {
-              "name": "{GENERATED:company}",
-              "emailaddress1": "{GENERATED:email}"
-            }
-          },
-          {
-            "stepNumber": 3,
-            "action": "Wait",
-            "waitSeconds": 5
-          },
-          {
-            "stepNumber": 4,
-            "action": "Assert",
-            "target": "Query",
-            "entity": "duplicaterecord",
-            "filter": {
-              "baserecordid": "{acc_dup.id}"
-            },
-            "operator": "Exists",
-            "onError": "continue",
-            "description": "Die Duplikaterkennung hat den doppelten Account gemeldet"
           }
         ]
       }
@@ -484,192 +401,63 @@
           }
         ]
       }
-    },
-    {
-      "jbe_testcaseid": "d1d2d3d4-0008-4000-8000-100000000008",
-      "jbe_testid": "STD-TC08",
-      "jbe_title": "Case-SLA: Timer startet bei Erstellung",
-      "jbe_category": 100000005,
-      "jbe_tags": "Case,SLA,Timer,Service",
-      "jbe_userstories": "PROJ-2002",
-      "jbe_enabled": true,
-      "jbe_definitionjson": {
-        "steps": [
-          {
-            "stepNumber": 1,
-            "action": "CreateRecord",
-            "entity": "account",
-            "alias": "account1",
-            "fields": {
-              "name": "{GENERATED:company}"
-            },
-            "description": "Kunde, dem der Case zugeordnet wird"
-          },
-          {
-            "stepNumber": 2,
-            "action": "CreateRecord",
-            "entity": "incident",
-            "alias": "sla_case",
-            "fields": {
-              "title": "SLA-Test {GENERATED:text}",
-              "prioritycode": 2,
-              "customerid@odata.bind": "/accounts({account1.id})"
-            },
-            "maxDurationMs": 10000,
-            "description": "Case anlegen, an dem ein SLA greifen soll"
-          },
-          {
-            "stepNumber": 3,
-            "action": "Wait",
-            "waitSeconds": 5
-          },
-          {
-            "stepNumber": 4,
-            "action": "Assert",
-            "target": "Record",
-            "recordRef": "{RECORD:sla_case}",
-            "field": "slainvokedid",
-            "operator": "IsNotNull",
-            "onError": "continue",
-            "description": "Beim Anlegen wurde ein SLA angewendet; das setzt ein aktives SLA für Cases auf der Umgebung voraus"
-          }
-        ]
-      }
     }
   ],
   "testRuns": [
     {
-      "jbe_testrunid": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunid": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_teststatus": 100000002,
-      "jbe_passed": 7,
-      "jbe_failed": 1,
-      "jbe_total": 8,
+      "jbe_passed": 5,
+      "jbe_failed": 0,
+      "jbe_total": 5,
       "jbe_startedon": "$date:0,10,0",
       "jbe_completedon": "$date:0,10,8",
       "jbe_testcasefilter": "*",
-      "jbe_testsummary": "8 Tests ausgeführt. 7 bestanden, 1 fehlgeschlagen.\nFehlgeschlagen: STD-TC06 (Duplikat-Erkennung nicht aktiv)",
-      "jbe_fulllog": "[10:00:01] Testlauf gestartet, Filter: *\n[10:00:03] STD-TC01 Lead-Qualifizierung ... BESTANDEN (1.8s)\n[10:00:06] STD-TC02 Opportunity Won ... BESTANDEN (2.1s)\n[10:00:09] STD-TC03 Case-Eskalation ... BESTANDEN (1.5s)\n[10:00:12] STD-TC04 Contact-Adresse ... BESTANDEN (1.3s)\n[10:00:15] STD-TC05 Task-Erinnerung ... BESTANDEN (1.1s)\n[10:00:18] STD-TC06 Account-Deduplizierung ... FEHLGESCHLAGEN (0.9s) - Keine Duplikat-Regel aktiv\n[10:00:21] STD-TC07 Opportunity-Pipeline ... BESTANDEN (1.4s)\n[10:00:24] STD-TC08 Case-SLA ... BESTANDEN (2.3s)\n[10:08:00] Testlauf abgeschlossen: 7 Passed, 1 Failed"
-    },
-    {
-      "jbe_testrunid": "e1e2e3e4-1002-4000-8000-100000001002",
-      "jbe_teststatus": 100000002,
-      "jbe_passed": 8,
-      "jbe_failed": 0,
-      "jbe_total": 8,
-      "jbe_startedon": "$date:2,8,30",
-      "jbe_completedon": "$date:2,8,38",
-      "jbe_testcasefilter": "*",
-      "jbe_testsummary": "8 Tests ausgeführt. Alle bestanden.",
-      "jbe_fulllog": "[08:30:01] Testlauf gestartet, Filter: *\n[08:38:00] Testlauf abgeschlossen: 8 Passed, 0 Failed"
-    },
-    {
-      "jbe_testrunid": "e1e2e3e4-1003-4000-8000-100000001003",
-      "jbe_teststatus": 100000002,
-      "jbe_passed": 3,
-      "jbe_failed": 0,
-      "jbe_total": 3,
-      "jbe_startedon": "$date:4,14,0",
-      "jbe_completedon": "$date:4,14,5",
-      "jbe_testcasefilter": "story:PROJ-2001",
-      "jbe_testsummary": "3 Tests für Story PROJ-2001. Alle bestanden.",
-      "jbe_fulllog": "[14:00:01] Testlauf gestartet, Filter: story:PROJ-2001\n[14:05:00] Testlauf abgeschlossen: 3 Passed, 0 Failed"
+      "jbe_testsummary": "5 Tests ausgeführt. Alle bestanden.",
+      "jbe_fulllog": "[10:00:01] Testlauf gestartet, Filter: *\n[10:00:03] STD-TC01 Lead-Qualifizierung: Opportunity wird  ... BESTANDEN (1.1s)\n[10:00:06] STD-TC02 Verkaufschance gewinnen: Status und Ab ... BESTANDEN (1.2s)\n[10:00:09] STD-TC04 Kunde löschen: Kaskade auf verknüpfte  ... BESTANDEN (1.3s)\n[10:00:12] STD-TC05 Aufgabe anlegen: Eintrag im Aktivitäts ... BESTANDEN (1.4s)\n[10:00:15] STD-TC07 Opportunity-Pipeline: Phase-Wechsel Va ... BESTANDEN (1.5s)\n[10:08:00] Testlauf abgeschlossen: 5 Passed, 0 Failed"
     }
   ],
   "testRunResults": [
     {
-      "jbe_testrunresultid": "f1f2f3f4-2001-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunresultid": "f1f2f3f4-1001-4000-8000-10010001",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_testid": "STD-TC01",
       "jbe_outcome": 100000000,
-      "jbe_durationms": 1800,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
+      "jbe_errormessage": ""
     },
     {
-      "jbe_testrunresultid": "f1f2f3f4-2002-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunresultid": "f1f2f3f4-1001-4000-8000-10010002",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_testid": "STD-TC02",
       "jbe_outcome": 100000000,
-      "jbe_durationms": 2100,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
+      "jbe_errormessage": ""
     },
     {
-      "jbe_testrunresultid": "f1f2f3f4-2003-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
-      "jbe_testid": "STD-TC03",
-      "jbe_outcome": 100000000,
-      "jbe_durationms": 1500,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
-    },
-    {
-      "jbe_testrunresultid": "f1f2f3f4-2004-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunresultid": "f1f2f3f4-1001-4000-8000-10010003",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_testid": "STD-TC04",
       "jbe_outcome": 100000000,
-      "jbe_durationms": 1300,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
+      "jbe_errormessage": ""
     },
     {
-      "jbe_testrunresultid": "f1f2f3f4-2005-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunresultid": "f1f2f3f4-1001-4000-8000-10010004",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_testid": "STD-TC05",
       "jbe_outcome": 100000000,
-      "jbe_durationms": 1100,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
+      "jbe_errormessage": ""
     },
     {
-      "jbe_testrunresultid": "f1f2f3f4-2006-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
-      "jbe_testid": "STD-TC06",
-      "jbe_outcome": 100000001,
-      "jbe_durationms": 900,
-      "jbe_errormessage": "Keine Duplikat-Erkennungsregel für Account aktiv",
-      "jbe_assertionresults": [
-        {
-          "passed": false,
-          "actual": null
-        }
-      ],
-      "createdon": "$date:0,10,0"
-    },
-    {
-      "jbe_testrunresultid": "f1f2f3f4-2007-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
+      "jbe_testrunresultid": "f1f2f3f4-1001-4000-8000-10010005",
+      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100100000001",
       "jbe_testid": "STD-TC07",
       "jbe_outcome": 100000000,
-      "jbe_durationms": 1400,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
-    },
-    {
-      "jbe_testrunresultid": "f1f2f3f4-2008-4000-8000-100000002001",
-      "_jbe_testrunid_value": "e1e2e3e4-1001-4000-8000-100000001001",
-      "jbe_testid": "STD-TC08",
-      "jbe_outcome": 100000000,
-      "jbe_durationms": 2300,
-      "jbe_errormessage": "",
-      "jbe_assertionresults": null,
-      "createdon": "$date:0,10,0"
+      "jbe_errormessage": ""
     }
   ],
   "userStories": [
     {
       "key": "PROJ-2001",
       "title": "Sales Pipeline Automatisierung"
-    },
-    {
-      "key": "PROJ-2002",
-      "title": "Service Eskalation und SLA"
     }
   ],
   "metadata": {

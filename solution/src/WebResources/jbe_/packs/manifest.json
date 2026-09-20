@@ -8,6 +8,10 @@
       "default": true
     },
     {
+      "packId": "standard-konfiguration",
+      "file": "standard-konfiguration.json"
+    },
+    {
       "packId": "empty",
       "file": "empty.json"
     }
