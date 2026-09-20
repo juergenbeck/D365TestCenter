@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using D365TestCenter.Core;
 using Microsoft.Xrm.Sdk;
@@ -431,6 +432,17 @@ public class CleanupTrackingTests
         Assert.Equal(0, result.CleanupFailedCount);
         Assert.True(svc.Deleted);
         Assert.Equal(2, svc.DeleteAttempts);   // ein Fehlschlag, dann Erfolg
+
+        // Kriterium aus ADR-2026-09-20-1547: der geheilte Fall muss sichtbar sein, und zwar
+        // NEBEN dem Log, weil jbe_fulllog im Worker-Modell leer bleibt (FB-55). Er landet
+        // deshalb als Cleanup-Eintrag mit passed=true im jbe_assertionresults-Blob.
+        var tc = result.Results.Single();
+        var cleanup = tc.StepResults.Single(x => x.Action == "Cleanup");
+        Assert.Contains("nach Folgeversuch geheilt", cleanup.Description);
+        Assert.Contains("transienter Konflikt", cleanup.Message);
+        var blob = AssertionResultsJson.Build(tc);
+        Assert.Contains("\"action\":\"Cleanup\"", blob);
+        Assert.Contains("nach Folgeversuch geheilt", blob);
     }
 
     [Fact]
@@ -469,6 +481,47 @@ public class CleanupTrackingTests
         Assert.Equal(1, result.CleanupFailedCount);
         Assert.False(svc.Deleted);
         Assert.Equal(1, svc.DeleteAttempts);   // genau ein Versuch, keine Wiederholung
+    }
+
+    [Fact]
+    public void CleanupDelete_MessageContainingTheDigits547_IsNotTreatedAsTransient()
+    {
+        // Grauzone, die der reine Berechtigungsfall NICHT bindet: Dataverse nennt in seinen
+        // Fault-Texten regelmäßig die Datensatz-Id, und eine GUID enthält irgendwann die
+        // Ziffernfolge 547. Ein Muster, das nur auf "547" prüft, würde jeden solchen Fehler
+        // dreimal wiederholen und ihn dabei verdecken. Nur die volle Wendung "Sql Number: 547"
+        // zählt.
+        var svc = new TransientDeleteService
+        {
+            FailuresBeforeSuccess = int.MaxValue,
+            Message = "account 0e547a31-1f2b-4c9d-8a10-547bc0de1234: The record is read-only and cannot be deleted."
+        };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase> { TransientCase("RETRY04") });
+
+        Assert.Equal(1, result.CleanupFailedCount);
+        Assert.Equal(1, svc.DeleteAttempts);
+    }
+
+    [Fact]
+    public void CleanupDelete_PermanentRestrictConflict_IsNotTreatedAsTransient()
+    {
+        // Zweite Grauzone: das Wort "conflict" allein darf nicht reichen. Ein dauerhafter
+        // Restrict-Fremdschlüssel formuliert sich fast wie der transiente Fall, ist aber
+        // durch keine Wiederholung zu heilen; er trägt weder "Sql Number: 547" noch den
+        // Dataverse-Text "concurrent Delete request".
+        var svc = new TransientDeleteService
+        {
+            FailuresBeforeSuccess = int.MaxValue,
+            Message = "The delete conflicted with a Restrict relationship: the record is referenced by another entity and cannot be deleted."
+        };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase> { TransientCase("RETRY05") });
+
+        Assert.Equal(1, result.CleanupFailedCount);
+        Assert.Equal(1, svc.DeleteAttempts);
     }
 
     private const string Sql547 =

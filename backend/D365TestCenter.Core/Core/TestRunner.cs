@@ -2478,7 +2478,7 @@ public sealed class TestRunner
             }
         }
 
-        int deleted = 0, failed = 0;
+        int deleted = 0, failed = 0, geheilt = 0;
         var firstError = "";
 
         foreach (var item in toDelete)
@@ -2527,7 +2527,10 @@ public sealed class TestRunner
                     _service.Delete(item.EntityName, item.Id);
                     deleted++;
                     if (versuche > 0)
+                    {
+                        geheilt++;
                         Log($"    Gelöscht nach {versuche} Folgeversuch(en): {item.EntityName} {item.Id}");
+                    }
                     break;
                 }
                 catch (FaultException<OrganizationServiceFault> ex)
@@ -2563,10 +2566,17 @@ public sealed class TestRunner
             (envSnapshots.Count > 0 ? $", {envRestored} EnvVars restored, {envFailed} EnvVar-Fehler" : ""));
 
         cleanupResult.Description = $"Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen" +
+            (geheilt > 0 ? $", {geheilt} nach Folgeversuch geheilt" : "") +
             (envSnapshots.Count > 0 ? $", {envRestored}/{envSnapshots.Count} EnvVars restored" : "");
         cleanupResult.Success = failed == 0 && envFailed == 0;
+        // Der geheilte Fall braucht einen Weg NEBEN dem Log: im Worker-Modell bleibt jbe_fulllog
+        // leer (FB-55), dort wäre die Log-Zeile oben nicht abholbar. Über die Message landet er
+        // im jbe_assertionresults-Blob, der Einzige, der dort je Testfall wirklich geschrieben
+        // wird. Der Outcome bleibt unberührt, es ist eine Sichtbarkeits- und keine Urteilsfrage.
         cleanupResult.Message = (failed > 0) ? firstError
-            : (envFailed > 0) ? firstEnvError : null;
+            : (envFailed > 0) ? firstEnvError
+            : (geheilt > 0) ? $"{geheilt} Record(s) erst nach Folgeversuch gelöscht (transienter Konflikt)."
+            : null;
         cleanupResult.DurationMs = sw.ElapsedMilliseconds;
         tcResult.StepResults.Add(cleanupResult);
 
