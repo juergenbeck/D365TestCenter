@@ -173,6 +173,17 @@
       "jbe_definitionjson": {
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            },
+            "description": "Kunde, dem der Case zugeordnet wird"
+          },
+          {
+            "stepNumber": 2,
             "action": "CreateRecord",
             "entity": "incident",
             "alias": "case1",
@@ -180,19 +191,36 @@
               "title": "Dringend: {GENERATED:text}",
               "prioritycode": 1,
               "caseorigincode": 1,
-              "customerid_account": "{ACCOUNT_ID}"
+              "customerid@odata.bind": "/accounts({account1.id})"
             },
-            "waitForAsync": true,
-            "stepNumber": 1
+            "description": "Case mit hoher Priorität anlegen"
           },
           {
+            "stepNumber": 3,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 4,
             "action": "Assert",
-            "target": "Record:case1",
-            "field": "ownerid",
-            "operator": "NotEquals",
-            "value": "{CURRENT_USER}",
+            "target": "Record",
+            "recordRef": "{RECORD:case1}",
+            "field": "ticketnumber",
+            "operator": "IsNotNull",
             "onError": "continue",
-            "stepNumber": 2
+            "description": "Die Plattform hat dem Case eine Ticketnummer vergeben"
+          },
+          {
+            "stepNumber": 5,
+            "action": "Assert",
+            "target": "Query",
+            "entity": "queueitem",
+            "filter": {
+              "objectid": "{case1.id}"
+            },
+            "operator": "Exists",
+            "onError": "continue",
+            "description": "Das Routing hat den Case in eine Warteschlange gelegt; das setzt eine aktive Routingregel auf der Umgebung voraus"
           }
         ]
       }
@@ -281,6 +309,30 @@
       "jbe_definitionjson": {
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            },
+            "description": "Firma des Ansprechpartners"
+          },
+          {
+            "stepNumber": 2,
+            "action": "CreateRecord",
+            "entity": "contact",
+            "alias": "contact1",
+            "fields": {
+              "firstname": "{GENERATED:firstname}",
+              "lastname": "{GENERATED:lastname}",
+              "emailaddress1": "{GENERATED:email}",
+              "parentcustomerid_account@odata.bind": "/accounts({account1.id})"
+            },
+            "description": "Ansprechpartner, auf den sich die Aufgabe bezieht"
+          },
+          {
+            "stepNumber": 3,
             "action": "CreateRecord",
             "entity": "task",
             "alias": "task1",
@@ -288,23 +340,28 @@
               "subject": "Rückruf {GENERATED:lastname}",
               "scheduledend": "{TIMESTAMP_PLUS_1H}",
               "prioritycode": 2,
-              "regardingobjectid_contact": "{CONTACT_ID}"
+              "regardingobjectid_contact@odata.bind": "/contacts({contact1.id})"
             },
-            "waitForAsync": true,
-            "stepNumber": 1
+            "description": "Aufgabe mit Fälligkeit in einer Stunde"
           },
           {
+            "stepNumber": 4,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 5,
             "action": "Assert",
             "target": "Query",
-            "field": "statuscode",
             "entity": "activitypointer",
             "filter": {
-              "regardingobjectid": "{task1.regardingobjectid}"
+              "activityid": "{task1.id}"
             },
-            "operator": "NotEquals",
-            "value": "5",
+            "field": "subject",
+            "operator": "Contains",
+            "value": "{GENERATED:lastname}",
             "onError": "continue",
-            "stepNumber": 2
+            "description": "Die Plattform führt die Aufgabe im Aktivitätsverzeichnis"
           }
         ]
       }
@@ -439,25 +496,42 @@
       "jbe_definitionjson": {
         "steps": [
           {
+            "stepNumber": 1,
+            "action": "CreateRecord",
+            "entity": "account",
+            "alias": "account1",
+            "fields": {
+              "name": "{GENERATED:company}"
+            },
+            "description": "Kunde, dem der Case zugeordnet wird"
+          },
+          {
+            "stepNumber": 2,
             "action": "CreateRecord",
             "entity": "incident",
             "alias": "sla_case",
             "fields": {
               "title": "SLA-Test {GENERATED:text}",
               "prioritycode": 2,
-              "customerid_account": "{ACCOUNT_ID}"
+              "customerid@odata.bind": "/accounts({account1.id})"
             },
-            "waitForAsync": true,
             "maxDurationMs": 10000,
-            "stepNumber": 1
+            "description": "Case anlegen, an dem ein SLA greifen soll"
           },
           {
+            "stepNumber": 3,
+            "action": "Wait",
+            "waitSeconds": 5
+          },
+          {
+            "stepNumber": 4,
             "action": "Assert",
-            "target": "Record:sla_case",
+            "target": "Record",
+            "recordRef": "{RECORD:sla_case}",
             "field": "slainvokedid",
             "operator": "IsNotNull",
             "onError": "continue",
-            "stepNumber": 2
+            "description": "Beim Anlegen wurde ein SLA angewendet; das setzt ein aktives SLA für Cases auf der Umgebung voraus"
           }
         ]
       }
