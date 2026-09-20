@@ -188,14 +188,16 @@ Die Execution Engine führt Testfälle direkt im Browser gegen die Dataverse Web
 
 #### PlaceholderResolver
 
-Löst dynamische Platzhalter in Testfall-Definitionen auf. 16 Patterns in vier Kategorien:
+Löst dynamische Platzhalter in Testfall-Definitionen auf, in vier Kategorien. Die
+vollständige Liste steht in
+[03-platzhalter.md](handbuch/02-testfall-schreiben/03-platzhalter.md).
 
 | Kategorie | Patterns | Beispiel |
 |-----------|----------|---------|
-| GENERATED | firstname, lastname, email, phone, mobile, company, text, guid, number, city | `{GENERATED:email}` ergibt zufällige Adresse |
-| TIMESTAMP | TIMESTAMP, TIMESTAMP_PLUS_1H, TIMESTAMP_PLUS_1D | `{TIMESTAMP}` ergibt aktuellen ISO-Zeitstempel |
-| KONTEXT | CONTACT_ID, ACCOUNT_ID, GUID, CURRENT_USER, ENV_URL | `{CURRENT_USER}` ergibt SystemUser-ID |
-| ALIAS | alias.id, alias.fieldname | `{myContact.contactid}` ergibt ID des Alias "myContact" |
+| GENERATED | firstname, lastname, email, phone, mobile, phone_international, company, text, guid, number, city, street, zip, jobtitle, website | `{GENERATED:email}` ergibt zufällige Adresse auf example.com |
+| Zeit | TIMESTAMP, TIMESTAMP_COMPACT, TIMESTAMP_ISO, TIMESTAMP_PLUS_1H/_2H/_1D, TIMESTAMP_MINUS_30M/_1H/_2H/_3H/_1D | `{TIMESTAMP}` ergibt `yyyyMMdd_HHmmss_fff`, ISO 8601 liefert `{TIMESTAMP_ISO}` |
+| Kontext | TESTID, GUID, PREFIX, CONTACT_ID, ACCOUNT_ID | `{TESTID}` ergibt die ID des laufenden Testfalls |
+| Alias | alias.id, alias.fields.X, RECORD:alias, RESULT:alias.X, alias.outputs.X, ROW:X | `{myContact.id}` ergibt die ID des Alias "myContact" |
 
 #### RecordTracker
 

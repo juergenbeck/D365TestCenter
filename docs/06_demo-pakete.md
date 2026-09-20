@@ -103,7 +103,7 @@ Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks
 - **Kategorie:** Bridge
 - **Tags:** Case, SLA, Timer, Service
 - **User Story:** PROJ-2002
-- **Steps:** `CreateRecord` auf `incident` mit Priorität 2 und Kundenzuordnung, `waitForAsync: true`, max. 10 Sekunden
+- **Steps:** `CreateRecord` auf `incident` mit Priorität 2 und Kundenzuordnung. Der Schritt trägt noch den Schlüssel `waitForAsync`, den die Engine nicht kennt und still verwirft; `validate --pack` meldet ihn als `STEP_KEY_UNKNOWN`. Zum Warten dienen `Wait` und die `WaitFor*`-Actions.
 - **Assertions:** Prüft, ob `slainvokedid` nicht null ist (SLA wurde aktiviert)
 
 ## Pack 2: Leere Vorlage

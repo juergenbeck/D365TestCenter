@@ -69,33 +69,22 @@ The app auto-detects it's outside Dynamics 365 and shows demo data.
 
 ## Step 6: Write your first test case
 
-Create a JSON file with three phases:
+Create a JSON file with one ordered list of actions. Setting up a record, changing it and
+checking the result are all steps in the same list:
 
 ```json
 {
-  "preconditions": [
-    {
-      "entity": "accounts",
-      "alias": "testAcc",
-      "fields": { "name": "My Test Company {TIMESTAMP}" }
-    }
-  ],
+  "testId": "MY-01",
+  "title": "Set the website on a new account",
   "steps": [
-    {
-      "action": "UpdateRecord",
-      "alias": "testAcc",
-      "fields": { "websiteurl": "https://example.com" }
-    }
-  ],
-  "assertions": [
-    {
-      "target": "Query",
-      "entity": "accounts",
+    { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "testAcc",
+      "fields": { "name": "My Test Company {GENERATED:guid}" } },
+    { "stepNumber": 2, "action": "UpdateRecord", "alias": "testAcc",
+      "fields": { "websiteurl": "https://example.com" } },
+    { "stepNumber": 3, "action": "Assert", "target": "Query", "entity": "accounts",
       "filter": { "accountid": "{testAcc.id}" },
-      "field": "websiteurl",
-      "operator": "Equals",
-      "value": "https://example.com"
-    }
+      "field": "websiteurl", "operator": "Equals", "value": "https://example.com",
+      "onError": "continue", "description": "Website was stored" }
   ]
 }
 ```
@@ -106,7 +95,8 @@ Create a JSON file with three phases:
 |-------------|--------|
 | `{GENERATED:firstname}` | Random first name ("JBE Test ...") |
 | `{GENERATED:email}` | Random email @example.com |
-| `{TIMESTAMP}` | Current ISO timestamp |
+| `{TIMESTAMP}` | Current UTC time as `yyyyMMdd_HHmmss_fff` (use `{TIMESTAMP_ISO}` for ISO 8601) |
+| `{GENERATED:guid}` | Short random hex string, handy for unique names |
 | `{alias.id}` | ID of a previously created record |
 | `{alias.fields.xxx}` | Field value from a previously created record |
 
