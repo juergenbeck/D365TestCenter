@@ -1,5 +1,6 @@
 using System.Linq;
 using D365TestCenter.Core.Validation;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace D365TestCenter.Tests;
@@ -210,6 +211,37 @@ public class PackFileReaderTests
 
         Assert.Contains("PRECONDITIONS_OBSOLETE", codes);
         Assert.Contains("ASSERTIONS_OBSOLETE", codes);
+    }
+
+    [Fact]
+    public void TypedFieldMarker_SurvivesReading_InEveryPackShape()
+    {
+        // The reader uses the engine's MetadataPropertyHandling.Ignore. Without it
+        // Newtonsoft swallows "$type" as its own type metadata and the property is gone
+        // from the step, which is what the CLI pack reader did before. The ExecuteRequest
+        // rules read that marker, so losing it silently weakens them. Pinned for every
+        // pack shape, not just the record pack that prompted the change.
+        const string step = """
+        { "stepNumber": 1, "action": "ExecuteRequest", "requestName": "QualifyLead",
+          "fields": { "LeadId": { "$type": "EntityReference", "entity": "lead", "ref": "lead1" } } }
+        """;
+
+        var shapes = new[]
+        {
+            "{ \"testCases\": [ { \"testId\": \"SUI-01\", \"steps\": [ " + step + " ] } ] }",
+            "[ { \"testId\": \"ARR-01\", \"steps\": [ " + step + " ] } ]",
+            "{ \"testId\": \"ONE-01\", \"steps\": [ " + step + " ] }",
+            "{ \"testCases\": [ { \"jbe_testid\": \"REC-01\", " +
+                "\"jbe_definitionjson\": { \"steps\": [ " + step + " ] } } ] }",
+        };
+
+        foreach (var json in shapes)
+        {
+            var tc = Assert.Single(PackFileReader.Read(json));
+            var fields = Assert.Single(tc.Steps).Fields;
+            var leadId = Assert.IsType<JObject>(fields["LeadId"]);
+            Assert.Equal("EntityReference", leadId["$type"]?.ToString());
+        }
     }
 
     [Fact]
