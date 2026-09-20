@@ -3720,17 +3720,24 @@ const AliasAutocomplete = {
             if (idText.toLowerCase().includes(partial)) {
                 result.push({ text: idText, category: "Aliase" });
             }
-            // alias.field
+            // RECORD:alias (Assert target "Record" erwartet recordRef "{RECORD:alias}")
+            const recText = "RECORD:" + al.alias;
+            if (recText.toLowerCase().includes(partial)) {
+                result.push({ text: recText, category: "Aliase" });
+            }
+            // alias.fields.feldname. Die Engine loest NUR diese Form auf, nicht
+            // alias.feldname; letztere schlug der Editor bis ADR-2026-09-20-1003 vor,
+            // und sie bleibt zur Laufzeit als Literal stehen.
             for (const f of fields.slice(0, 15)) {
-                const ft = al.alias + "." + f.logicalName;
+                const ft = al.alias + ".fields." + f.logicalName;
                 if (ft.toLowerCase().includes(partial)) {
                     result.push({ text: ft, category: "Aliase" });
                 }
             }
         }
         // System placeholders. Quelle ist PlaceholderEngine.Resolve im C#-Core; diese Liste
-        // ist eine Kopie davon und muss mitgezogen werden, wenn die Engine sich ändert.
-        // CURRENT_USER und ENV_URL standen hier, ohne dass die Engine sie kennt (ADR-2026-09-20-1003).
+        // ist eine Kopie davon und muss mitgezogen werden, wenn die Engine sich aendert.
+        // Zwei Eintraege standen hier, die die Engine nie kannte (ADR-2026-09-20-1003).
         const sysPlaceholders = ["TESTID", "PREFIX", "GUID", "CONTACT_ID", "ACCOUNT_ID",
             "TIMESTAMP", "TIMESTAMP_COMPACT", "TIMESTAMP_ISO",
             "TIMESTAMP_PLUS_1H", "TIMESTAMP_PLUS_2H", "TIMESTAMP_PLUS_1D",
@@ -7559,7 +7566,9 @@ const HelpContent = {
 <tr><td><code>{GENERATED:feld}</code></td><td>Generierter Wert, wiederverwendbar</td></tr>
 <tr><td><code>{CONTACT_ID}</code></td><td>ID des erstellten Contacts</td></tr>
 <tr><td><code>{ACCOUNT_ID}</code></td><td>ID des erstellten Accounts</td></tr>
-<tr><td><code>{CS:alias}</code></td><td>ID der ContactSource</td></tr>
+<tr><td><code>{alias.id}</code></td><td>ID eines per Alias angelegten Datensatzes</td></tr>
+<tr><td><code>{alias.fields.feld}</code></td><td>Feldwert daraus. Nur diese Form, nicht <code>{alias.feld}</code></td></tr>
+<tr><td><code>{RECORD:alias}</code></td><td>Dasselbe als recordRef eines Assert-Schritts</td></tr>
 <tr><td><code>{ROW:feld}</code></td><td>Wert aus Datenzeile</td></tr>
 </table>
 ` },
