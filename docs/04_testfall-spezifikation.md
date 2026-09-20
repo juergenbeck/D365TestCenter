@@ -90,6 +90,7 @@ werden dabei aufgelöst.
 `Failed`, wenn mindestens ein Schritt `Success=false` meldet; das umfasst eine fehlgeschlagene
 Prüfung und ebenso einen anderen Schritt mit ausdrücklichem `onError: "continue"`. `Error`,
 wenn ein Schritt mit `onError: "stop"` eine Ausnahme geworfen hat oder die Vorab-Prüfung einen
-Befund der Stufe Error meldet. `Skipped`, wenn der Testfall Prüfungen definiert, aber jede
-davon per `condition` übersprungen wurde (ADR-0011) -- sonst wäre er grün, ohne geprüft zu
-haben. Die Details stehen im Lauf-Log und in der History-Ansicht je Testfall-ID.
+Befund der Stufe Error meldet. `Skipped`, wenn der Testfall gar nicht erst
+lief (`enabled: false`, oder ein `dependsOn` ist nicht erfüllt) oder wenn er Prüfungen
+definiert, aber jede davon per `condition` übersprungen wurde (ADR-0011) -- sonst wäre er
+grün, ohne geprüft zu haben. Die Details stehen im Lauf-Log und in der History-Ansicht je Testfall-ID.
