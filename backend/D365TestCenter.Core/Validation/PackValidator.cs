@@ -182,11 +182,17 @@ public sealed class PackValidator : IPackValidator
     }
 
     /// <summary>
-    /// R10: flags an obsolete pre-ADR-0004 top-level array (preconditions/assertions).
+    /// R10: flags an obsolete pre-ADR-0004 top-level 'preconditions'/'assertions'.
     /// Since ADR-0004 a test is a single ordered steps[] list; Models.cs knows only
-    /// 'Steps', so Newtonsoft silently drops a top-level 'preconditions[]'/'assertions[]'.
-    /// Such a test parses clean but asserts nothing. [JsonExtensionData] on TestCase
-    /// preserves the dropped keys in AdditionalData so this rule can see them.
+    /// 'Steps', so Newtonsoft silently drops them. Such a test parses clean but asserts
+    /// nothing. [JsonExtensionData] on TestCase preserves the dropped keys in
+    /// AdditionalData so this rule can see them.
+    ///
+    /// Both legacy shapes are reported: the array form (<c>preconditions[]</c>) and the
+    /// older flag-object form (<c>{"createAccount": true}</c>) that the FG test tool wrote
+    /// and that migrate-testcase-schema-v2.py deliberately leaves alone. Counting only
+    /// array entries used to report "(0 entries)" for the object form, which reads like an
+    /// empty leftover rather than a live flag that the engine drops.
     /// </summary>
     private static void CheckObsoleteTopLevelArray(
         TestCase tc, string key, string code, ValidationReport report)
@@ -194,16 +200,23 @@ public sealed class PackValidator : IPackValidator
         if (tc.AdditionalData == null) return;
         if (!tc.AdditionalData.TryGetValue(key, out var token)) return;
 
-        var count = token is JArray arr ? arr.Count : 0;
+        var (shape, count) = token switch
+        {
+            JArray arr => ($"'{key}[]' array", arr.Count),
+            JObject obj => ($"'{key}' flag object", obj.Count),
+            _ => ($"obsolete '{key}' property", 0)
+        };
+        var entries = count == 1 ? "1 entry" : $"{count} entries";
+
         report.Add(new ValidationFinding
         {
             TestId = tc.Id,
             StepNumber = null,
             Severity = ValidationSeverity.Error,
             Code = code,
-            Message = $"Test case carries an obsolete top-level '{key}[]' array ({count} entries). " +
+            Message = $"Test case carries an obsolete top-level {shape} ({entries}). " +
                       "Since ADR-0004 a test is a single ordered 'steps[]' list; the engine knows only " +
-                      $"'Steps' and silently ignores '{key}[]', so these entries run as a no-op and the " +
+                      $"'Steps' and silently ignores '{key}', so these entries run as a no-op and the " +
                       "test asserts nothing.",
             Suggestion = string.Equals(key, "assertions", StringComparison.OrdinalIgnoreCase)
                 ? "Move each assertion into the 'steps[]' list as an 'Assert' action."

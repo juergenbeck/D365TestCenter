@@ -1058,52 +1058,11 @@ public static class Program
     }
 
     /// <summary>
-    /// Load a pack JSON. Supports the suite-wrapper format
-    /// <c>{ "testCases": [...] }</c> used by workspace packs as well as a
-    /// bare TestCase JSON. Maps the workspace-pack field <c>testId</c> onto
-    /// the model's <c>id</c> so the validator sees the correct test ID.
+    /// Load a pack JSON. Delegates to the shared <see cref="PackFileReader"/>, which knows
+    /// the bare array, the suite wrapper, the bare test case and the record pack (demo
+    /// format, definition inside <c>jbe_definitionjson</c>).
     /// </summary>
-    static List<TestCase> LoadPack(string path)
-    {
-        var json = File.ReadAllText(path);
-        var root = JToken.Parse(json);
-
-        if (root is JArray topArray)
-        {
-            NormalizeTestIds(topArray);
-            return topArray.ToObject<List<TestCase>>() ?? new List<TestCase>();
-        }
-
-        if (root is JObject obj)
-        {
-            if (obj["testCases"] is JArray tcArr)
-            {
-                NormalizeTestIds(tcArr);
-                return tcArr.ToObject<List<TestCase>>() ?? new List<TestCase>();
-            }
-
-            // Bare TestCase: pass through, mapping testId -> id if needed.
-            if (obj["id"] == null && obj["testId"] is JToken tid)
-            {
-                obj["id"] = tid;
-            }
-            var tc = obj.ToObject<TestCase>();
-            return tc != null ? new List<TestCase> { tc } : new List<TestCase>();
-        }
-
-        return new List<TestCase>();
-    }
-
-    static void NormalizeTestIds(JArray testCases)
-    {
-        foreach (var item in testCases.OfType<JObject>())
-        {
-            if (item["id"] == null && item["testId"] is JToken tid)
-            {
-                item["id"] = tid;
-            }
-        }
-    }
+    static List<TestCase> LoadPack(string path) => PackFileReader.ReadFile(path);
 
     // ════════════════════════════════════════════════════════════════
     //  Helpers
