@@ -3725,7 +3725,7 @@ const AliasAutocomplete = {
             if (recText.toLowerCase().includes(partial)) {
                 result.push({ text: recText, category: "Aliase" });
             }
-            // alias.fields.feldname. Die Engine loest NUR diese Form auf, nicht
+            // alias.fields.feldname. Die Engine löst NUR diese Form auf, nicht
             // alias.feldname; letztere schlug der Editor bis ADR-2026-09-20-1003 vor,
             // und sie bleibt zur Laufzeit als Literal stehen.
             for (const f of fields.slice(0, 15)) {
@@ -3736,8 +3736,8 @@ const AliasAutocomplete = {
             }
         }
         // System placeholders. Quelle ist PlaceholderEngine.Resolve im C#-Core; diese Liste
-        // ist eine Kopie davon und muss mitgezogen werden, wenn die Engine sich aendert.
-        // Zwei Eintraege standen hier, die die Engine nie kannte (ADR-2026-09-20-1003).
+        // ist eine Kopie davon und muss mitgezogen werden, wenn die Engine sich ändert.
+        // Zwei Einträge standen hier, die die Engine nie kannte (ADR-2026-09-20-1003).
         const sysPlaceholders = ["TESTID", "PREFIX", "GUID", "CONTACT_ID", "ACCOUNT_ID",
             "TIMESTAMP", "TIMESTAMP_COMPACT", "TIMESTAMP_ISO",
             "TIMESTAMP_PLUS_1H", "TIMESTAMP_PLUS_2H", "TIMESTAMP_PLUS_1D",
