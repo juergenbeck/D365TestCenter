@@ -416,6 +416,107 @@ public class CleanupTrackingTests
         Assert.False(svc.ParentDeleted); // der Delete kam nie durch — er warf 404
     }
 
+    [Fact]
+    public void CleanupDelete_TransientForeignKeyConflict_SucceedsOnFollowUpAttempt()
+    {
+        // ADR-2026-09-20-1547, live auf einer Kundenumgebung belegt: ein async Fremd-Plugin legt im
+        // Rennen einen abhängigen Record an, der Delete scheitert an dessen Fremdschlüssel
+        // (SQL 547). Beim Folgeversuch besteht das Rennen nicht mehr und der Delete gelingt.
+        var svc = new TransientDeleteService { FailuresBeforeSuccess = 1, Message = Sql547 };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase> { TransientCase("RETRY01") });
+
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.CleanupFailedCount);
+        Assert.True(svc.Deleted);
+        Assert.Equal(2, svc.DeleteAttempts);   // ein Fehlschlag, dann Erfolg
+    }
+
+    [Fact]
+    public void CleanupDelete_TransientConflictThatNeverClears_FailsAfterThreeFollowUps()
+    {
+        // Bleibt der Konflikt bestehen, gibt der Cleanup nach den Folgeversuchen auf und
+        // zählt den Record als Fehlschlag. Die CLEANUP-WARNUNG bleibt damit ein echter
+        // Rest-Indikator und wird nicht durch die Wiederholung verschluckt.
+        var svc = new TransientDeleteService { FailuresBeforeSuccess = int.MaxValue, Message = Sql547 };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase> { TransientCase("RETRY02") });
+
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(1, result.CleanupFailedCount);
+        Assert.False(svc.Deleted);
+        Assert.Equal(4, svc.DeleteAttempts);   // Erstversuch plus drei Folgeversuche
+    }
+
+    [Fact]
+    public void CleanupDelete_NonTransientError_FailsImmediatelyWithoutRetry()
+    {
+        // Der wichtigste der drei Fälle: ein Fehler, der NICHT zur transienten Klasse gehört,
+        // darf keinen einzigen Folgeversuch bekommen. Ein zu weites Muster würde jeden echten,
+        // dauerhaften Delete-Fehler dreimal wiederholen und ihn verdecken, falls er einmal
+        // zufällig durchgeht.
+        var svc = new TransientDeleteService
+        {
+            FailuresBeforeSuccess = int.MaxValue,
+            Message = "The user does not have permission to delete the record."
+        };
+        var runner = new TestRunner(svc);
+
+        var result = runner.RunAll(new List<TestCase> { TransientCase("RETRY03") });
+
+        Assert.Equal(1, result.CleanupFailedCount);
+        Assert.False(svc.Deleted);
+        Assert.Equal(1, svc.DeleteAttempts);   // genau ein Versuch, keine Wiederholung
+    }
+
+    private const string Sql547 =
+        "Sql error: Statement conflicted with a constraint. The DELETE statement conflicted with the " +
+        "REFERENCE constraint \"contoso_score_accountid_account\". CRM ErrorCode: -2147185375 Sql Number: 547";
+
+    private static TestCase TransientCase(string id) => new()
+    {
+        Id = id,
+        Title = "Parent-Delete mit transientem Konflikt",
+        Enabled = true,
+        Steps = new List<TestStep>
+        {
+            new() { StepNumber = 1, Action = "CreateRecord", Entity = "contoso_bestellung", Alias = "pos" }
+        }
+    };
+
+    /// <summary>
+    /// Fake für die Parent-Delete-Folgeversuche (ADR-2026-09-20-1547): Delete wirft die
+    /// eingestellte Meldung, bis <see cref="FailuresBeforeSuccess"/> Versuche verbraucht sind,
+    /// und zählt dabei jeden Versuch mit. Damit ist sowohl das Heilen als auch das Ausbleiben
+    /// jeder Wiederholung prüfbar.
+    /// </summary>
+    private sealed class TransientDeleteService : IOrganizationService
+    {
+        public int FailuresBeforeSuccess { get; set; }
+        public string Message { get; set; } = "";
+        public int DeleteAttempts { get; private set; }
+        public bool Deleted { get; private set; }
+
+        public Guid Create(Entity entity) => Guid.NewGuid();
+
+        public void Delete(string entityName, Guid id)
+        {
+            DeleteAttempts++;
+            if (DeleteAttempts <= FailuresBeforeSuccess)
+                throw new InvalidOperationException(Message);
+            Deleted = true;
+        }
+
+        public EntityCollection RetrieveMultiple(QueryBase query) => new EntityCollection();
+        public Entity Retrieve(string entityName, Guid id, ColumnSet columnSet) => new Entity(entityName, id);
+        public void Update(Entity entity) { }
+        public OrganizationResponse Execute(OrganizationRequest request) => new OrganizationResponse();
+        public void Associate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) { }
+        public void Disassociate(string entityName, Guid entityId, Relationship relationship, EntityReferenceCollection relatedEntities) { }
+    }
+
     /// <summary>
     /// Fake für die cleanupChildren-Wirkungstests: Create legt den Parent an, an dem
     /// zwei "plugin-erzeugte" Kinder (contoso_umsatzplan) hängen. RetrieveMultiple auf die
