@@ -173,14 +173,14 @@
     {
       "jbe_testrunid": "e1e2e3e4-1002-4000-8000-100200000001",
       "jbe_teststatus": 100000002,
-      "jbe_passed": 3,
-      "jbe_failed": 0,
+      "jbe_passed": 0,
+      "jbe_failed": 3,
       "jbe_total": 3,
       "jbe_startedon": "$date:0,10,0",
       "jbe_completedon": "$date:0,10,8",
       "jbe_testcasefilter": "*",
-      "jbe_testsummary": "3 Tests ausgeführt. Alle bestanden. Beispiel einer eingerichteten Umgebung: ohne Routingregel, Duplikaterkennungsregel und SLA schlagen diese Tests fehl.",
-      "jbe_fulllog": "[10:00:01] Testlauf gestartet, Filter: *\n[10:00:03] STD-TC03 Case-Eskalation: Routing in eine Warte ... BESTANDEN (1.1s)\n[10:00:06] STD-TC06 Account-Deduplizierung: Warnung bei gl ... BESTANDEN (1.2s)\n[10:00:09] STD-TC08 Case-SLA: Timer startet bei Erstellung ... BESTANDEN (1.3s)\n[10:08:00] Testlauf abgeschlossen: 3 Passed, 0 Failed"
+      "jbe_testsummary": "3 Tests ausgeführt, alle fehlgeschlagen. So sieht dieses Paket auf einer Umgebung ohne Routingregel, Duplikaterkennungsregel und SLA aus. Jede Meldung nennt die fehlende Voraussetzung; ist sie eingerichtet, werden die Tests grün.",
+      "jbe_fulllog": "[10:00:01] Testlauf gestartet, Filter: *\n[10:00:03] STD-TC03 Case-Eskalation: Routing in eine Warte ... FEHLGESCHLAGEN (1.1s) - Kein Record gefunden: keine aktive Routingregel in dieser Umgebung\n[10:00:06] STD-TC06 Account-Deduplizierung: Warnung bei gl ... FEHLGESCHLAGEN (1.2s) - Kein Record gefunden: keine veröffentlichte Duplikaterkennungsregel in dieser Umgebung\n[10:00:09] STD-TC08 Case-SLA: Timer startet bei Erstellung ... FEHLGESCHLAGEN (1.3s) - Erwartet: nicht null, Aktuell: null: kein aktives SLA für Cases in dieser Umgebung\n[10:08:00] Testlauf abgeschlossen: 0 Passed, 3 Failed"
     }
   ],
   "testRunResults": [
@@ -188,22 +188,22 @@
       "jbe_testrunresultid": "f1f2f3f4-1002-4000-8000-10020001",
       "_jbe_testrunid_value": "e1e2e3e4-1002-4000-8000-100200000001",
       "jbe_testid": "STD-TC03",
-      "jbe_outcome": 100000000,
-      "jbe_errormessage": ""
+      "jbe_outcome": 100000001,
+      "jbe_errormessage": "Kein Record gefunden: keine aktive Routingregel in dieser Umgebung"
     },
     {
       "jbe_testrunresultid": "f1f2f3f4-1002-4000-8000-10020002",
       "_jbe_testrunid_value": "e1e2e3e4-1002-4000-8000-100200000001",
       "jbe_testid": "STD-TC06",
-      "jbe_outcome": 100000000,
-      "jbe_errormessage": ""
+      "jbe_outcome": 100000001,
+      "jbe_errormessage": "Kein Record gefunden: keine veröffentlichte Duplikaterkennungsregel in dieser Umgebung"
     },
     {
       "jbe_testrunresultid": "f1f2f3f4-1002-4000-8000-10020003",
       "_jbe_testrunid_value": "e1e2e3e4-1002-4000-8000-100200000001",
       "jbe_testid": "STD-TC08",
-      "jbe_outcome": 100000000,
-      "jbe_errormessage": ""
+      "jbe_outcome": 100000001,
+      "jbe_errormessage": "Erwartet: nicht null, Aktuell: null: kein aktives SLA für Cases in dieser Umgebung"
     }
   ],
   "userStories": [

@@ -1,6 +1,6 @@
 # Demo-Pakete
 
-Das Integration Test Center enthält ein modulares Demo-Paket-System (`DemoPacks`), das im Demo-Modus realistische Testdaten bereitstellt. Zwei vordefinierte Pakete decken unterschiedliche Szenarien ab.
+Das Integration Test Center bringt Demo-Pakete mit, die im Demo-Modus realistische Testdaten bereitstellen. Jedes Paket ist eine JSON-Datei unter `packs/`, registriert in `packs/manifest.json`; die Oberfläche lädt sie beim Start und füllt daraus den Pack-Selector. Drei Pakete decken unterschiedliche Szenarien ab.
 
 ## Übersicht der 3 Demo-Pakete
 
@@ -197,7 +197,7 @@ Pack-Datei.
 
 ### Template-JSON
 
-```javascript
+```json
 "mein-pack": {
     name: "Mein Demo-Paket",
     description: "Beschreibung des Pakets.",
