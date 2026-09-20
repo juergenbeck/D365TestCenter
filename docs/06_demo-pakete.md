@@ -259,7 +259,7 @@ Pack-Datei.
 }
 ```
 
-### Integration in DemoPacks-Objekt
+### Integration über das Manifest
 
 Das neue Pack wird automatisch verfügbar, sobald es im Manifest steht. `PackLoader.loadAll()` lädt beim
 Start jede dort genannte Datei, und der Selector bekommt seine Einträge aus derselben Liste. Der
@@ -316,14 +316,18 @@ Bei Änderung des selektierten Packs wird `MockAPI.switchPack(packName)` aufgeru
 
 Die Methode führt folgende Schritte aus:
 
-1. **Validierung:** Prüft ob das Pack in `DemoPacks` existiert.
+1. **Laden:** Ruft `await PackLoader.loadPack(packName)` auf. Das Paket wird also bei Bedarf aus seiner
+   JSON-Datei nachgeladen, nicht nur in einem vorhandenen Objekt nachgeschlagen.
 2. **Pack-Wechsel:** Setzt `currentPack` auf den neuen Wert.
-3. **Store-Neuinitialisierung:** Setzt `_store` auf `null` und ruft `_reinitStore()` auf.
-4. **_reinitStore():** Klont die Testdaten des neuen Packs per `JSON.parse(JSON.stringify(...))` in den In-Memory-Store (testcases, testruns, testrunresults).
-5. **DemoData-Alias:** Aktualisiert `DemoData` auf das neue Pack-Objekt.
-6. **MetaCache leeren:** Setzt `MetaCache.entities`, `MetaCache.attributes`, `MetaCache.optionSets` und `MetaCache.customApis` auf `null`, damit beim nächsten Zugriff die Metadaten des neuen Packs geladen werden.
-7. **Pack-Indikator aktualisieren:** Ruft `updatePackIndicator()` auf, das den farbigen Banner unter der Navigation aktualisiert (Hintergrundfarbe, Text, Border).
-8. **View neu laden:** Ruft `handleRoute()` auf, damit die aktuelle Ansicht mit den neuen Daten gerendert wird.
+3. **Store-Neuinitialisierung:** Ruft `_reinitStore()` auf, das die Testdaten des neuen Pakets per
+   `JSON.parse(JSON.stringify(...))` in den In-Memory-Store klont (testcases, testruns, testrunresults).
+4. **MetaCache leeren:** Setzt `MetaCache.entities`, `MetaCache.optionSets` und `MetaCache.customApis` auf
+   `null` und `MetaCache.attributes` auf `{}`, damit beim nächsten Zugriff die Metadaten des neuen Pakets
+   geladen werden.
+5. **Pack-Indikator aktualisieren:** Ruft `updatePackIndicator()` auf, das den farbigen Banner unter der
+   Navigation aktualisiert (Hintergrundfarbe, Text, Border).
+6. **View neu laden:** Ruft `handleRoute()` auf, damit die aktuelle Ansicht mit den neuen Daten gerendert
+   wird.
 
 ### updatePackIndicator()
 
