@@ -39,6 +39,104 @@ public class ZephyrResultBuilderTests
         Assert.Equal("DYN-T2", (string?)items[1]["testCaseKey"]);
     }
 
+    [Fact]
+    public void BuildTestRunPayload_WithIssueKey_LinksCycleToIssue()
+    {
+        var p = ZephyrResultBuilder.BuildTestRunPayload(
+            "DYN", "Cycle X", new[] { "DYN-T1" }, " DYN-11692 ");
+
+        // trimmed; this is the field that makes the cycle show up on the Jira issue
+        Assert.Equal("DYN-11692", (string?)p["issueKey"]);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BuildTestRunPayload_WithoutIssueKey_OmitsField(string? issueKey)
+    {
+        var p = ZephyrResultBuilder.BuildTestRunPayload("DYN", "Cycle X", new[] { "DYN-T1" }, issueKey);
+
+        Assert.False(p.ContainsKey("issueKey"));   // never send an empty issueKey
+    }
+
+    // ── issueKey resolution: explicit option > uniform ticket of the mapped cases ──
+
+    [Fact]
+    public void ResolveIssueKey_ExplicitKey_WinsOverTickets()
+    {
+        var r = ZephyrResultBuilder.ResolveIssueKey(" DYN-1 ", new[] { "DYN-2", "DYN-3" });
+
+        Assert.Equal("DYN-1", r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.Explicit, r.Source);
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("NONE")]
+    public void ResolveIssueKey_ExplicitNone_DisablesLinking(string none)
+    {
+        var r = ZephyrResultBuilder.ResolveIssueKey(none, new[] { "DYN-2", "DYN-2" });
+
+        Assert.Null(r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.Disabled, r.Source);
+    }
+
+    [Fact]
+    public void ResolveIssueKey_AllMappedCasesSameTicket_DerivesIt()
+    {
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-11692", "dyn-11692", " DYN-11692 " });
+
+        Assert.Equal("DYN-11692", r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.Derived, r.Source);
+    }
+
+    [Fact]
+    public void ResolveIssueKey_MixedTickets_LeavesCycleUnlinked()
+    {
+        // Zephyr allows exactly one issueKey per cycle: a run spanning several
+        // stories is not attributed to an arbitrary one of them.
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-1", "DYN-2", "DYN-1" });
+
+        Assert.Null(r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.MixedTickets, r.Source);
+        Assert.Equal(new[] { "DYN-1", "DYN-2" }, r.Tickets);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void ResolveIssueKey_OneCaseWithoutTicket_LeavesCycleUnlinked(string? missing)
+    {
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-1", missing });
+
+        Assert.Null(r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.MissingTicket, r.Source);
+    }
+
+    [Fact]
+    public void ResolveIssueKey_NoMappedCases_LeavesCycleUnlinked()
+    {
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new string?[0]);
+
+        Assert.Null(r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.MissingTicket, r.Source);
+    }
+
+    [Theory]
+    [InlineData("41432")]            // e.g. an Azure-DevOps work-item id
+    [InlineData("Story 12")]
+    [InlineData("DYN-")]
+    public void ResolveIssueKey_UniformTicketThatIsNoJiraKey_IsNotSent(string ticket)
+    {
+        // A derived value that is no Jira issue key would make Zephyr reject the
+        // whole cycle (HTTP 400), so it is only sent when given explicitly.
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { ticket, ticket });
+
+        Assert.Null(r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.NotAnIssueKey, r.Source);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]

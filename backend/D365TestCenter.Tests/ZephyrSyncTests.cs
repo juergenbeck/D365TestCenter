@@ -75,6 +75,46 @@ public class ZephyrSyncTests
     }
 
     [Fact]
+    public void BuildPlan_RecordsTestIdsOfMappedResults()
+    {
+        var results = new List<TestCaseResult>
+        {
+            Tc("DYN10000-TC1", TestOutcome.Passed),
+            Tc("DYN10000-TC9", TestOutcome.Passed)      // no zephyr_key -> not mapped
+        };
+        var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["DYN10000-TC1"] = "DYN-T1"
+        };
+
+        var plan = ZephyrSync.BuildPlan(results, keys);
+
+        // the issueKey derivation looks only at the cases that land in the cycle
+        Assert.Equal(new[] { "DYN10000-TC1" }, plan.MappedTestIds);
+    }
+
+    [Fact]
+    public void LoadTickets_ReadsIdToTicketFromFrontmatter()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "tk_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(dir, "sub"));
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "sub", "tc1.md"),
+                "---\nid: DYN10000-TC1\nticket: DYN-10000\nweitere_tickets: [DYN-9999]\n---\n\n## Zweck\n\nx\n");
+            // No ticket -> absent from the map.
+            File.WriteAllText(Path.Combine(dir, "sub", "tc2.md"),
+                "---\nid: DYN10000-TC2\nzephyr_key: DYN-T2\n---\n\n## Zweck\n\ny\n");
+
+            var map = ZephyrSync.LoadTickets(dir);
+
+            Assert.Single(map);
+            Assert.Equal("DYN-10000", map["dyn10000-tc1"]);   // primary ticket only, id case-insensitive
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [Fact]
     public void LoadZephyrKeys_MissingDir_Throws()
     {
         Assert.Throws<DirectoryNotFoundException>(() =>

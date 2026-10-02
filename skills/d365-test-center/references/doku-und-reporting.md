@@ -153,7 +153,8 @@ der Ergebnisse. **Schreibt nach Zephyr -> freigabepflichtig.**
 ```
 sync-zephyr --run <guid> --defs <dir> --org <url> <dataverse-auth> \
             --server <jira-url> --project <KEY> --zephyr-pat <pat> \
-            [--env "<exakter Zephyr-environment-Name>"] [--script-results] [--cycle-name] [--config]
+            [--env "<exakter Zephyr-environment-Name>"] [--script-results] [--cycle-name] \
+            [--issue-key <jira-key>|none] [--config]
 ```
 
 - Core `ZephyrResultBuilder` (rein/testbar): Outcome-Mapping (`Passed->Pass`, `Failed->Fail`, **`Error->Fail`**
@@ -168,6 +169,16 @@ sync-zephyr --run <guid> --defs <dir> --org <url> <dataverse-auth> \
   OE-9-konsistent).
 - **Robust ohne `zephyr_key`:** Tests ohne `zephyr_key` im Frontmatter werden übersprungen + gemeldet; sind
   null Tests gemappt, wird **kein** Cycle angelegt (kein Leer-Upload). JSON-Body UTF-8 ohne BOM (Mojibake-Falle).
+- **Verknüpfung mit der User Story (`issueKey`, seit 02.10.2026):** Ein Cycle erscheint nur dann am
+  Jira-Vorgang (Abschnitt der Testläufe, mit Fortschritt und Status), wenn er beim Anlegen das Feld `issueKey`
+  trägt; ohne das Feld ist er an der Story unsichtbar, obwohl seine Testfälle dort verlinkt sind. Zephyr erlaubt
+  je Cycle genau einen Vorgang. `ZephyrResultBuilder.ResolveIssueKey` (rein/testbar) entscheidet:
+  `--issue-key <KEY>` gewinnt; ohne Angabe gilt das Frontmatter-`ticket` der gemappten Testfälle
+  (`ZephyrSync.LoadTickets`), aber nur wenn **alle** gemappten Fälle dasselbe Ticket tragen. Bei mehreren
+  Stories im Lauf, einem gemappten Fall ohne `ticket` oder einem Wert, der kein Jira-Schlüssel ist, bleibt der
+  Cycle unverknüpft und die Ausgabe nennt den Grund (keine stille Zuordnung zu einer beliebigen Story).
+  `--issue-key none` schaltet die Verknüpfung ab. `weitere_tickets` zählen nicht. Die Schlusszeile nennt den
+  Cycle samt verknüpftem Vorgang. Ein Projekt-Wrapper, der eine Story als Eingabe hat, reicht sie explizit durch.
 - **Datengrundlage:** Ein sinnvoller Live-Lauf braucht eine Def mit real existierendem Zephyr-Test-Case-Key
   (`<KEY>-T####`) im Frontmatter `zephyr_key`.
 - **Phase 1 (umgesetzt S33, live durch S34):** Gesamt-Status pro Testfall (status, environment, executionTime

@@ -200,7 +200,8 @@ Test-Run (Cycle) an und lädt die Ergebnisse als Bulk hoch (E5). **Schreibt in e
 ```
 sync-zephyr --org <url> <auth> --run <guid> --defs <dir>
             --server <jira-url> --project <key> --zephyr-pat <pat>
-            [--env "<exakter environment-Name>"] [--script-results] [--cycle-name <name>] [--config <profil>]
+            [--env "<exakter environment-Name>"] [--script-results] [--cycle-name <name>]
+            [--issue-key <jira-key>|none] [--config <profil>]
 ```
 
 | Option | Default | Beschreibung |
@@ -213,10 +214,19 @@ sync-zephyr --org <url> <auth> --run <guid> --defs <dir>
 | `--env` | (weggelassen) | Exakter, **im Zephyr-Projekt konfigurierter** environment-Name (kein Freitext). Ohne gültigen Wert wird das Feld weggelassen; ein nicht passender Wert wird mit HTTP 400 abgelehnt. |
 | `--script-results` | aus | Lädt zusätzlich per-Step-Ergebnisse (`scriptResults[]`). Nur sinnvoll, wenn die Script-Steps des Zephyr-Test-Cases die Ausführungs-Steps spiegeln (siehe Hinweise). |
 | `--cycle-name` | aus env + Datum + Run-Id | Name des anzulegenden Cycle |
+| `--issue-key` | aus dem `ticket`-Frontmatter | Jira-Vorgang (User Story), mit dem der Cycle verknüpft wird. Ohne Angabe wird das `ticket` der Definitionen verwendet, sofern alle gemappten Testfälle dasselbe tragen. `none` lässt den Cycle unverknüpft. |
 
 **Hinweise / Stolperfallen:**
 - **Outcome-Mapping:** `Passed -> Pass`, `Failed -> Fail`, `Error -> Fail`, `Skipped -> Not Executed`.
 - **Tests ohne `zephyr_key`** werden übersprungen und gemeldet; sind null Tests gemappt, wird kein Cycle angelegt.
+- **Verknüpfung mit der User Story (`issueKey`):** Nur ein Cycle mit `issueKey` erscheint am Jira-Vorgang
+  (Abschnitt der Testläufe, mit Fortschritt und Status); ohne das Feld ist er dort unsichtbar. Zephyr erlaubt
+  je Cycle genau einen Vorgang. Reihenfolge: `--issue-key` gewinnt; sonst wird das Frontmatter-Feld `ticket`
+  der gemappten Testfälle verwendet, aber nur wenn **alle** dasselbe Ticket tragen. Enthält der Lauf Testfälle
+  mehrerer Stories, hat ein gemappter Testfall kein `ticket` oder ist der Wert kein Jira-Schlüssel
+  (`PROJEKT-123`), bleibt der Cycle unverknüpft, statt einer beliebigen Story zugeschlagen zu werden; die
+  Ausgabe nennt den Grund. `weitere_tickets` werden nicht ausgewertet. Ein explizit angegebener Schlüssel,
+  den es in Jira nicht gibt, lässt die Cycle-Anlage scheitern.
 - **`--script-results` (per-Step):** Zephyr matcht die gesendeten `scriptResults` per **Index** auf die im
   Test-Case definierten Script-Steps; überzählige Einträge werden still verworfen. Die Ausführungs-Steps des
   Test Centers (CreateRecord/Assert/Wait/Cleanup) entsprechen nur dann den Zephyr-Script-Steps, wenn der

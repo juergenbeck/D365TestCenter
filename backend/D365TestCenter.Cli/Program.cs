@@ -194,9 +194,11 @@ public static class Program
             "Name of the Zephyr Test-Run/cycle to create (default: derived from env + run date + run id)."));
         syncZephyrCommand.AddOption(new Option<bool>("--script-results",
             "Also upload per-step results (scriptResults[]). Off by default: only sensible when the Zephyr test-case's script steps mirror the D365TestCenter execution steps (Decision 25)."));
+        syncZephyrCommand.AddOption(new Option<string?>("--issue-key",
+            "Jira issue (user story) the new cycle is linked to, e.g. DYN-1234; only a linked cycle shows up on the issue. Default: the front-matter ticket, if all mapped test cases share the same one. \"none\" leaves the cycle unlinked."));
         syncZephyrCommand.AddOption(new Option<string>("--config", () => "standard",
             "Config profile: standard (legacy profile names are accepted and mapped to standard)."));
-        syncZephyrCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string, string, string, string?, string?, bool, string>(
+        syncZephyrCommand.Handler = CommandHandler.Create<string, string?, string?, string?, string?, bool, string, string, string, string, string, string?, string?, bool, string?, string>(
             SyncZephyr);
         rootCommand.AddCommand(syncZephyrCommand);
 
@@ -675,7 +677,7 @@ public static class Program
         string org, string? clientId, string? clientSecret, string? tenantId,
         string? token, bool interactive, string run, string defs, string server,
         string project, string zephyrPat, string? env, string? cycleName,
-        bool scriptResults, string config)
+        bool scriptResults, string? issueKey, string config)
     {
         try
         {
@@ -708,12 +710,13 @@ public static class Program
                 $"env={(envLabel ?? "(ohne environment-Feld)")}, scriptResults={(scriptResults ? "an" : "aus")}):");
             var sum = await ZephyrSync.SyncAsync(
                 client, cfg, runId, defs, server, project, zephyrPat, envLabel, cycleName,
-                scriptResults, Console.WriteLine);
+                scriptResults, Console.WriteLine, issueKey);
 
             Console.WriteLine();
             Console.WriteLine(
                 $"  Fertig: {sum.Uploaded} Ergebnisse hochgeladen" +
-                (sum.RunKey != null ? $" (Zephyr Test-Run {sum.RunKey})" : "") +
+                (sum.RunKey != null ? $" (Zephyr Test-Run {sum.RunKey}" +
+                    (sum.IssueKey != null ? $", verknüpft mit {sum.IssueKey}" : ", ohne Story-Verknüpfung") + ")" : "") +
                 $", {sum.Mapped} gemappt, {sum.SkippedNoKey} ohne zephyr_key, {sum.Total} im Run.");
             return sum.Uploaded > 0 ? 0 : 1;
         }

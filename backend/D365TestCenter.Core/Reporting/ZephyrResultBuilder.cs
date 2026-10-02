@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using D365TestCenter.Core;
 using Newtonsoft.Json.Linq;
 
@@ -14,7 +15,7 @@ namespace D365TestCenter.Core.Reporting;
 ///
 /// Target is Zephyr Scale <b>Data Center / ATM 1.0</b> (NOT the cloud v2 API).
 /// Endpoints this feeds (Decision 24, a Jira Data Center server):
-///   POST /rest/atm/1.0/testrun                       create cycle, items[]
+///   POST /rest/atm/1.0/testrun                       create cycle, items[], optional issueKey
 ///   POST /rest/atm/1.0/testrun/{runKey}/testresults  bulk results array
 ///
 /// The result-object shape is verified against the official ATM 1.0 example:
@@ -67,13 +68,88 @@ public static class ZephyrResultBuilder
         _ => "Not Executed"
     };
 
+    /// <summary>Where the cycle's <c>issueKey</c> came from, or why it stays unset.</summary>
+    public enum IssueKeySource
+    {
+        /// <summary>Given explicitly (<c>--issue-key</c>).</summary>
+        Explicit,
+        /// <summary>All mapped test cases carry the same ticket.</summary>
+        Derived,
+        /// <summary>Linking switched off explicitly (<c>--issue-key none</c>).</summary>
+        Disabled,
+        /// <summary>No mapped case, or at least one mapped case without a ticket.</summary>
+        MissingTicket,
+        /// <summary>The mapped cases belong to more than one ticket.</summary>
+        MixedTickets,
+        /// <summary>The uniform ticket does not look like a Jira issue key.</summary>
+        NotAnIssueKey
+    }
+
+    /// <summary>Outcome of <see cref="ResolveIssueKey"/>.</summary>
+    public sealed class IssueKeyResolution
+    {
+        /// <summary>The issue key to send, or null when the cycle stays unlinked.</summary>
+        public string? IssueKey { get; set; }
+        public IssueKeySource Source { get; set; }
+        /// <summary>Distinct tickets found on the mapped cases (first-seen order), for the log.</summary>
+        public IReadOnlyList<string> Tickets { get; set; } = Array.Empty<string>();
+    }
+
+    /// <summary>Value of <c>--issue-key</c> that switches the issue link off.</summary>
+    public const string IssueKeyNone = "none";
+
+    static readonly Regex JiraIssueKey = new Regex(@"^[A-Za-z][A-Za-z0-9_]*-[0-9]+$", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Decides which Jira issue the new cycle is linked to. Zephyr allows exactly
+    /// one <c>issueKey</c> per cycle, and only a linked cycle shows up on the issue
+    /// (section "test runs", with progress and status).
+    /// <list type="number">
+    /// <item>An explicit key wins; the literal <c>none</c> disables the link.</item>
+    /// <item>Otherwise the key is derived from the tickets of the mapped test cases,
+    /// but only when every mapped case carries the same ticket. A run spanning
+    /// several stories, or containing a case without a ticket, stays unlinked
+    /// instead of being attributed to an arbitrary story.</item>
+    /// <item>A derived value that is no Jira issue key is not sent: Zephyr would
+    /// reject the whole cycle.</item>
+    /// </list>
+    /// </summary>
+    /// <param name="explicitIssueKey">Value of <c>--issue-key</c>, may be null.</param>
+    /// <param name="ticketsOfMappedCases">One entry per mapped test case: its primary ticket, or null/blank.</param>
+    public static IssueKeyResolution ResolveIssueKey(string? explicitIssueKey, IEnumerable<string?> ticketsOfMappedCases)
+    {
+        var all = (ticketsOfMappedCases ?? Enumerable.Empty<string?>())
+            .Select(t => (t ?? "").Trim()).ToList();
+        var distinct = all.Where(t => t.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+        if (!string.IsNullOrWhiteSpace(explicitIssueKey))
+        {
+            var given = explicitIssueKey!.Trim();
+            return string.Equals(given, IssueKeyNone, StringComparison.OrdinalIgnoreCase)
+                ? new IssueKeyResolution { Source = IssueKeySource.Disabled, Tickets = distinct }
+                : new IssueKeyResolution { IssueKey = given, Source = IssueKeySource.Explicit, Tickets = distinct };
+        }
+
+        if (distinct.Count > 1)
+            return new IssueKeyResolution { Source = IssueKeySource.MixedTickets, Tickets = distinct };
+        if (distinct.Count == 0 || all.Any(t => t.Length == 0))
+            return new IssueKeyResolution { Source = IssueKeySource.MissingTicket, Tickets = distinct };
+        if (!JiraIssueKey.IsMatch(distinct[0]))
+            return new IssueKeyResolution { Source = IssueKeySource.NotAnIssueKey, Tickets = distinct };
+
+        return new IssueKeyResolution { IssueKey = distinct[0], Source = IssueKeySource.Derived, Tickets = distinct };
+    }
+
     /// <summary>
     /// Builds the create-test-run (cycle) payload
-    /// <c>{ projectKey, name, items: [ { testCaseKey } ] }</c>. <c>items[]</c> are
+    /// <c>{ projectKey, name, items: [ { testCaseKey } ], issueKey? }</c>. <c>items[]</c> are
     /// the distinct Zephyr keys that will receive a result (case-insensitive dedupe,
-    /// blanks dropped).
+    /// blanks dropped). <c>issueKey</c> links the cycle to a Jira issue and is only
+    /// emitted when given (see <see cref="ResolveIssueKey"/>).
     /// </summary>
-    public static JObject BuildTestRunPayload(string projectKey, string name, IEnumerable<string> testCaseKeys)
+    public static JObject BuildTestRunPayload(
+        string projectKey, string name, IEnumerable<string> testCaseKeys, string? issueKey = null)
     {
         if (string.IsNullOrWhiteSpace(projectKey))
             throw new ArgumentException("projectKey is required.", nameof(projectKey));
@@ -88,12 +164,14 @@ public static class ZephyrResultBuilder
             items.Add(new JObject { ["testCaseKey"] = key });
         }
 
-        return new JObject
+        var payload = new JObject
         {
             ["projectKey"] = projectKey,
             ["name"] = name,
             ["items"] = items
         };
+        if (!string.IsNullOrWhiteSpace(issueKey)) payload["issueKey"] = issueKey!.Trim();
+        return payload;
     }
 
     /// <summary>

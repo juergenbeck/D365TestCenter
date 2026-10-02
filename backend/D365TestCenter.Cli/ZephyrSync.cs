@@ -28,6 +28,11 @@ namespace D365TestCenter.Cli;
 /// bulk-uploaded into it. Auth is a Jira PAT as a Bearer header (the CLI stays
 /// secret-agnostic; the PowerShell wrapper sources the PAT from TokenVault).
 /// Tests without a <c>zephyr_key</c> are skipped and reported.
+///
+/// The cycle is linked to a Jira issue (<c>issueKey</c>) so that it shows up on
+/// the story: explicitly via <c>--issue-key</c>, otherwise derived from the
+/// <c>ticket</c> front-matter when all mapped cases share one ticket
+/// (<see cref="ZephyrResultBuilder.ResolveIssueKey"/>).
 /// </summary>
 public static class ZephyrSync
 {
@@ -45,6 +50,8 @@ public static class ZephyrSync
         public int Uploaded { get; set; }
         /// <summary>Key of the created Zephyr Test-Run (cycle), e.g. DYN-R123.</summary>
         public string? RunKey { get; set; }
+        /// <summary>Jira issue the cycle was linked to; null when it stayed unlinked.</summary>
+        public string? IssueKey { get; set; }
         public List<string> SkippedIds { get; } = new();
     }
 
@@ -52,6 +59,8 @@ public static class ZephyrSync
     public sealed class SyncPlan
     {
         public List<ZephyrResultBuilder.ResultInput> Inputs { get; } = new();
+        /// <summary>testIds of <see cref="Inputs"/>, same order (basis of the issueKey derivation).</summary>
+        public List<string> MappedTestIds { get; } = new();
         public List<string> SkippedNoKey { get; } = new();
     }
 
@@ -93,6 +102,7 @@ public static class ZephyrSync
                     input.ScriptResults = steps;
                 }
                 plan.Inputs.Add(input);
+                plan.MappedTestIds.Add(r.TestId);
             }
             else
             {
@@ -166,6 +176,18 @@ public static class ZephyrSync
     /// are simply absent from the map (the plan then skips their results).
     /// </summary>
     public static Dictionary<string, string> LoadZephyrKeys(string defsDir)
+        => LoadFrontmatterScalar(defsDir, "zephyr_key");
+
+    /// <summary>
+    /// Reads <c>id -> ticket</c> (the primary user story; <c>weitere_tickets</c> are
+    /// ignored) from the front-matter of every *.md under <paramref name="defsDir"/>.
+    /// Definitions without a ticket are absent from the map.
+    /// </summary>
+    public static Dictionary<string, string> LoadTickets(string defsDir)
+        => LoadFrontmatterScalar(defsDir, "ticket");
+
+    /// <summary>Walks the definitions and maps <c>id</c> to one scalar front-matter field (first id wins).</summary>
+    static Dictionary<string, string> LoadFrontmatterScalar(string defsDir, string field)
     {
         if (!Directory.Exists(defsDir))
             throw new DirectoryNotFoundException($"Definitions directory not found: {defsDir}");
@@ -176,11 +198,35 @@ public static class ZephyrSync
             var content = MarkdownDocument.Normalize(File.ReadAllText(file));
             if (!MarkdownDocument.TrySplitFrontmatter(content, out var fm, out _)) continue;
             var id = MarkdownDocument.ReadScalar(fm, "id");
-            var zk = MarkdownDocument.ReadScalar(fm, "zephyr_key");
-            if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(zk) && !map.ContainsKey(id!))
-                map[id!] = zk!;
+            var value = MarkdownDocument.ReadScalar(fm, field);
+            if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(value) && !map.ContainsKey(id!))
+                map[id!] = value!.Trim();
         }
         return map;
+    }
+
+    /// <summary>Log line explaining where the cycle's issueKey came from, or why it is unset.</summary>
+    public static string DescribeIssueKey(ZephyrResultBuilder.IssueKeyResolution r)
+    {
+        var tickets = string.Join(", ", r.Tickets);
+        return r.Source switch
+        {
+            ZephyrResultBuilder.IssueKeySource.Explicit =>
+                $"  issueKey: {r.IssueKey} (aus --issue-key)",
+            ZephyrResultBuilder.IssueKeySource.Derived =>
+                $"  issueKey: {r.IssueKey} (alle gemappten Testfälle tragen dieses ticket)",
+            ZephyrResultBuilder.IssueKeySource.Disabled =>
+                "  issueKey: nicht gesetzt (--issue-key none); der Cycle erscheint an keiner Story.",
+            ZephyrResultBuilder.IssueKeySource.MixedTickets =>
+                $"  issueKey: nicht gesetzt, die gemappten Testfälle gehören zu mehreren Stories ({tickets}). " +
+                "Zephyr erlaubt je Cycle nur eine; bei Bedarf --issue-key angeben.",
+            ZephyrResultBuilder.IssueKeySource.NotAnIssueKey =>
+                $"  issueKey: nicht gesetzt, das ticket \"{tickets}\" ist kein Jira-Vorgangsschlüssel. " +
+                "Bei Bedarf --issue-key angeben.",
+            _ =>
+                "  issueKey: nicht gesetzt, mindestens ein gemappter Testfall hat kein ticket im Frontmatter. " +
+                "Bei Bedarf --issue-key angeben."
+        };
     }
 
     /// <summary>
@@ -192,7 +238,7 @@ public static class ZephyrSync
     public static async Task<SyncSummary> SyncAsync(
         IOrganizationService service, ITestCenterConfig cfg, Guid runId, string defsDir,
         string serverUrl, string projectKey, string pat, string? env, string? cycleName,
-        bool includeScriptResults = false, Action<string>? log = null)
+        bool includeScriptResults = false, Action<string>? log = null, string? issueKey = null)
     {
         var results = RunResultLoader.LoadResultsFromRun(service, cfg, runId);
         var summary = new SyncSummary { Total = results.Count };
@@ -236,9 +282,19 @@ public static class ZephyrSync
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat);
         var atm = serverUrl.TrimEnd('/') + "/rest/atm/1.0";
 
+        // Link the cycle to its user story: explicit --issue-key, otherwise the
+        // ticket shared by all mapped cases. Without the link the cycle is invisible
+        // on the Jira issue.
+        var tickets = LoadTickets(defsDir);
+        var issue = ZephyrResultBuilder.ResolveIssueKey(
+            issueKey,
+            plan.MappedTestIds.Select(id => tickets.TryGetValue(id, out var t) ? t : null));
+        summary.IssueKey = issue.IssueKey;
+        log?.Invoke(DescribeIssueKey(issue));
+
         // 1. Create the Zephyr Test-Run (cycle) with the distinct keys as items.
         var runPayload = ZephyrResultBuilder.BuildTestRunPayload(
-            projectKey, name, plan.Inputs.Select(i => i.ZephyrKey));
+            projectKey, name, plan.Inputs.Select(i => i.ZephyrKey), issue.IssueKey);
         var itemCount = ((JArray)runPayload["items"]!).Count;
         log?.Invoke($"  POST {atm}/testrun  (Cycle \"{name}\", {itemCount} Testfälle)");
         var runResp = await PostJsonAsync(http, atm + "/testrun", runPayload.ToString(Formatting.None));

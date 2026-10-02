@@ -106,7 +106,9 @@ Suite-Durchführungsbericht. Zwei Detailstufen (`--detail compact|full`) und dre
 ### 7. `sync-zephyr` — nach Zephyr Scale
 
 `sync-zephyr` spielt die Ergebnisse ins Test-Management (Zephyr Scale Data Center, ATM 1.0): pro Lauf ein neuer
-Cycle, dann Bulk-Upload. Matching über `zephyr_key` im Frontmatter. Optional per-Step `scriptResults`
+Cycle, dann Bulk-Upload. Matching über `zephyr_key` im Frontmatter. Der Cycle wird mit der User Story
+verknüpft (`issueKey`, aus `--issue-key` oder dem gemeinsamen `ticket` der Testfälle) und erscheint dadurch
+am Jira-Vorgang. Optional per-Step `scriptResults`
 (siehe CLI-Referenz, Stolperfalle Index-Matching). Schreibt in ein externes System.
 
 ### 8. `inventory` — Management-Sicht
