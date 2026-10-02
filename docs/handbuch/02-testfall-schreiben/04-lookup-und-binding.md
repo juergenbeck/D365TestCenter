@@ -40,8 +40,8 @@ parentcustomerid_account@odata.bind   <-- key
 | Teil | Regel |
 |---|---|
 | `<lookupfeldname>` | Der **LogicalName** des Lookup-Attributs (z.B. `parentcustomerid`, `regardingobjectid`). |
-| `<zielentity>` | Der **LogicalName** der Zielentity (Singular!) — `account`, `contact`, `opportunity`. |
-| `<zielentityplural>` | Der **EntitySetName** der Zielentity (Plural!) — `accounts`, `contacts`, `opportunities`. |
+| `<zielentity>` | Der **LogicalName** der Zielentity (Singular!), `account`, `contact`, `opportunity`. |
+| `<zielentityplural>` | Der **EntitySetName** der Zielentity (Plural!), `accounts`, `contacts`, `opportunities`. |
 | `<guid>` | GUID ohne Anführungszeichen, ohne `guid'...'`-Wrapping. |
 
 ## Typische Beispiele
@@ -74,13 +74,13 @@ Pflicht.
 "regardingobjectid_opportunity@odata.bind": "/opportunities({opp.id})"
 ```
 
-`regardingobjectid` ist noch breiter polymorph — der Zielentity-Suffix
+`regardingobjectid` ist noch breiter polymorph, der Zielentity-Suffix
 entscheidet die konkrete Zielentity.
 
 ### Nicht-polymorphe Lookups (ohne Zielentity-Suffix)
 
 Manche Lookups zeigen nur auf genau eine Entity. Dann kann der
-Zielentity-Teil entfallen — ist aber immer explizit erlaubt:
+Zielentity-Teil entfallen, ist aber immer explizit erlaubt:
 
 ```json
 "ownerid@odata.bind": "/systemusers({userId})"
@@ -91,7 +91,7 @@ Zielentity-Teil entfallen — ist aber immer explizit erlaubt:
 **Faustregel:** im Zweifel **immer den Zielentity-Suffix angeben**. Das
 funktioniert immer und ist eindeutig.
 
-## Was NICHT geht — die häufigen Fehler
+## Was NICHT geht: die häufigen Fehler
 
 ### FALSCH: Lookup ohne @odata.bind
 
@@ -108,7 +108,7 @@ Dataverse akzeptiert beim Create/Update **nur** den `@odata.bind`-Weg.
 "parentcustomerid_account@odata.bind": "/account({acc.id})"    <-- FEHLER
 ```
 
-Muss `/accounts(...)` heißen — Plural/EntitySetName.
+Muss `/accounts(...)` heißen, Plural/EntitySetName.
 
 ### FALSCH: GUID in Anführungszeichen
 

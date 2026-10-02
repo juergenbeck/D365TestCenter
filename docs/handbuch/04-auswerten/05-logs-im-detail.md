@@ -4,7 +4,7 @@ Für die meisten Fehlersuchen reicht der Steps-Tab. Für tiefere Analysen
 gibt es zwei Langtext-Felder mit Vollprotokoll: `jbe_fulllog` und
 `jbe_testsummary` am `jbe_testrun`.
 
-## jbe_testsummary — die Kurzform
+## jbe_testsummary: die Kurzform
 
 Schon am `jbe_testrun`-Formular direkt sichtbar. Plaintext, Zeile für
 Zeile, Kurzüberblick:
@@ -36,7 +36,7 @@ Batch <from>-<to> von <total-batches>:
 
 Für einen Überblick reicht das oft.
 
-## jbe_fulllog — das Vollprotokoll
+## jbe_fulllog: das Vollprotokoll
 
 Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 (Auszug):
@@ -62,10 +62,10 @@ Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 
 **Levels:**
 
-- `INFO` — wichtige Meilensteine (Testcase-Start, Batch-Ende)
-- `DEBUG` — jeder einzelne Step
-- `WARN` — ungewöhnliche Lage, Test läuft aber weiter
-- `ERROR` — fataler Fehler, Testcase abgebrochen
+- `INFO`, wichtige Meilensteine (Testcase-Start, Batch-Ende)
+- `DEBUG`, jeder einzelne Step
+- `WARN`, ungewöhnliche Lage, Test läuft aber weiter
+- `ERROR`, fataler Fehler, Testcase abgebrochen
 
 ## Wann lese ich jbe_fulllog?
 
@@ -76,7 +76,7 @@ Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 2. **Der Run hängt.** Im Full-Log steht der letzte Eintrag. Daraus
    siehst du wo die Engine steht.
 
-3. **Reproduktion eines alten Fehlers.** Der Full-Log ist dein Archiv —
+3. **Reproduktion eines alten Fehlers.** Der Full-Log ist dein Archiv,
    auch Wochen später kannst du nachvollziehen was passiert ist.
 
 4. **Plugin-Reihenfolge verstehen.** Wenn mehrere Plugins kaskadieren,
@@ -86,9 +86,9 @@ Mühevoll gefülltes Textfeld mit dem gesamten Plugin-Output. Format
 
 In der App ist `jbe_fulllog` ein "Mehrzeilentext"-Feld. Es kann einige
 Kilobyte groß werden. Die Standard-Textbox in Dynamics ist nicht
-ideal — einige Optionen:
+ideal, einige Optionen:
 
-- **Klick ins Feld, Strg+A, Strg+C** — rüber in VS Code / Notepad.
+- **Klick ins Feld, Strg+A, Strg+C**: rüber in VS Code / Notepad.
   Dort ist es lesbar.
 - **Bearbeiten-Button oben rechts am Feld** öffnet einen Vollbild-
   Dialog.
@@ -100,10 +100,10 @@ ideal — einige Optionen:
 Der `jbe_testsummary` und `jbe_fulllog` sind am **Testrun** angesiedelt.
 Pro Step gibt es separat:
 
-- `jbe_teststep.jbe_errormessage` — nur gefüllt bei `Fehler`-Steps
-- `jbe_teststep.jbe_inputdata` — das JSON mit dem der Step gestartet
+- `jbe_teststep.jbe_errormessage`, nur gefüllt bei `Fehler`-Steps
+- `jbe_teststep.jbe_inputdata`, das JSON mit dem der Step gestartet
   wurde (mit aufgelösten Platzhaltern)
-- `jbe_teststep.jbe_outputdata` — die Server-Antwort in Auszügen
+- `jbe_teststep.jbe_outputdata`, die Server-Antwort in Auszügen
 
 ## Browser DevTools
 
@@ -114,7 +114,7 @@ laden), ist manchmal die **Browser-Konsole** nützlich:
 F12 -> Console
 ```
 
-Dynamics-Client-API-Aufrufe, Network-Requests, Errors — alles da. Aber:
+Dynamics-Client-API-Aufrufe, Network-Requests, Errors, alles da. Aber:
 **Das hat mit der Test-Ausführung nichts zu tun** (die läuft am
 Server). Nur für App-Bedienungs-Probleme.
 

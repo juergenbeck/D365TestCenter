@@ -19,7 +19,7 @@ wichtigsten Felder kennst, verstehst du jeden Testlauf.
            jbe_teststep (1 Record pro Action im Testcase)
 ```
 
-## jbe_testcase — die Testfall-Definition
+## jbe_testcase: die Testfall-Definition
 
 Enthält die komplette Beschreibung eines Testfalls im JSON-Format. Du
 schreibst den Test einmal, und er liegt von da an dauerhaft in dieser
@@ -40,7 +40,7 @@ Entity. Gleichnamige Test-IDs pro Umgebung sind nicht erlaubt.
 Das Feld `jbe_definitionjson` ist das Herzstück. Alles was der Test tun
 soll, steht dort als JSON-Objekt.
 
-## jbe_testrun — ein konkreter Lauf
+## jbe_testrun: ein konkreter Lauf
 
 Du legst pro Testlauf einen neuen Record an. Das Anlegen selbst startet
 die Ausführung automatisch.
@@ -51,7 +51,7 @@ die Ausführung automatisch.
 |---|---|---|
 | `jbe_name` | String (Primary) | Beschreibung, z.B. `"Regression 24.04 nachmittags"`. |
 | `jbe_testcasefilter` | String | Welche Tests laufen sollen. Siehe unten. |
-| `jbe_teststatus` | OptionSet | `Geplant` (105710000), `Wird ausgeführt` (105710001), `Abgeschlossen` (105710002), `Fehlgeschlagen` (105710003). |
+| `jbe_teststatus` | OptionSet | `Ausstehend` (105710000), `Läuft` (105710001), `Abgeschlossen` (105710002), `Fehler` (105710003), `Aufteilung läuft` (105710004, Koordinator verteilt die Tests auf Teilläufe). |
 | `jbe_keeprecords` | Two Options | `Ja` behält Testdaten, `Nein` räumt am Ende auf. |
 | `jbe_passed` / `jbe_failed` / `jbe_total` | Integer | Werden vom Plugin gesetzt. |
 | `jbe_testsummary` | Mehrzeilentext | Kurzer Ergebnis-Text. |
@@ -71,10 +71,10 @@ ausgeführt werden:
 | `category:Integration` | Alle Tests der Kategorie `Integration` |
 
 **Der Start-Trigger:** Sobald du den `jbe_testrun` mit `jbe_teststatus =
-Geplant` speicherst, feuert das CRUD-Trigger-Plugin `RunTestsOnStatusChange`
+Ausstehend` speicherst, feuert das CRUD-Trigger-Plugin `RunTestsOnStatusChange`
 und der Lauf beginnt asynchron. Du musst also einfach den Record speichern.
 
-## jbe_testrunresult — Ergebnis pro Test
+## jbe_testrunresult: Ergebnis pro Test
 
 Pro Test im Lauf wird ein Ergebnis-Record geschrieben. Wenn dein Filter
 drei Tests trifft, hast du drei `jbe_testrunresult`-Records.
@@ -85,21 +85,21 @@ drei Tests trifft, hast du drei `jbe_testrunresult`-Records.
 |---|---|---|
 | `jbe_testid` | String | Welcher Test war das. |
 | `jbe_name` | String (Primary) | AutoNumber, Anzeige wie `RR-001671`. |
-| `jbe_outcome` | OptionSet | `Passed`, `Failed`, `Error`, `Skipped`. |
+| `jbe_outcome` | OptionSet | `Passed`, `Failed`, `Skipped`, `Error`. |
 | `jbe_errormessage` | Mehrzeilentext | Wenn Error/Failed: Grund. |
 | `jbe_testrunid` | Lookup | Rückverweis auf den `jbe_testrun`. |
 
 **Outcomes im Detail:**
 
-- **Passed** — alle Actions haben geklappt, alle Asserts waren erfolgreich.
-- **Failed** — alle Actions liefen durch, aber mindestens eine Assert hat
+- **Passed**: alle Actions haben geklappt, alle Asserts waren erfolgreich.
+- **Failed**: alle Actions liefen durch, aber mindestens eine Assert hat
   einen unerwarteten Wert gefunden.
-- **Error** — eine Action hat geworfen (Netzwerkfehler, ungültiger Alias,
+- **Error**: eine Action hat geworfen (Netzwerkfehler, ungültiger Alias,
   Plugin-Exception, ...). Der Test wurde abgebrochen.
-- **Skipped** — der Test wurde vor dem ersten Step abgebrochen, meist
+- **Skipped**: der Test wurde vor dem ersten Step abgebrochen, meist
   wegen einem Problem beim Parsen der JSON-Definition.
 
-## jbe_teststep — Detail pro Action
+## jbe_teststep: Detail pro Action
 
 Für jede Action im Test wird ein Step-Record geschrieben. Das ist dein
 Log zum Mitlesen.
@@ -137,7 +137,7 @@ Ausnahmen:
   Cleanup erfasst (selten gebraucht).
 
 Die Test-Records selbst (`jbe_testrun`, `jbe_testrunresult`, `jbe_teststep`)
-werden **nie** automatisch gelöscht — sie sind dein Audit-Log.
+werden **nie** automatisch gelöscht, sie sind dein Audit-Log.
 
 ---
 

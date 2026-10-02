@@ -19,8 +19,8 @@ public class InventoryBuilderTests
         "domaene: master-cascade\n" +
         "status: aktiv\n" +
         "suite_tags: [regression-cascade]\n" +
-        "ticket: DYN-9149\n" +
-        "weitere_tickets: [DYN-9558, DYN-9474]\n" +
+        "ticket: PROJ-9149\n" +
+        "weitere_tickets: [PROJ-9558, PROJ-9474]\n" +
         "d365tc_lauf_status: verifiziert\n" +
         "ergebnis_historie:\n" +
         "  - { datum: 2026-06-16, env: dev, modus: d365testcenter, ergebnis: \"8/8 PASS (47s)\" }\n" +
@@ -46,7 +46,7 @@ public class InventoryBuilderTests
         Assert.Equal("master-cascade", e.Domaene);
         Assert.Equal("aktiv", e.Status);
         Assert.Equal(new[] { "regression-cascade" }, e.SuiteTags);
-        Assert.Equal("DYN-9149, DYN-9558, DYN-9474", e.Ticket);   // ticket + weitere_tickets
+        Assert.Equal("PROJ-9149, PROJ-9558, PROJ-9474", e.Ticket);   // ticket + weitere_tickets
         Assert.Equal("verifiziert", e.LaufStatus);
         Assert.Equal(2, e.History.Count);
     }
@@ -115,7 +115,7 @@ public class InventoryBuilderTests
         "suite_tags: [regression-bridge]\n" +
         "verantwortlich: jbe\n" +
         "geschaetzt_min: 5\n" +
-        "quelle: DYN-10000\n" +
+        "quelle: PROJ-10000\n" +
         "---\n\n## Beschreibung\n\nx\n";
 
     [Fact]
@@ -125,7 +125,7 @@ public class InventoryBuilderTests
         Assert.Equal("2", e.Stufe);
         Assert.Equal("jbe", e.Verantwortlich);
         Assert.Equal("5", e.GeschaetztMin);
-        Assert.Equal("DYN-10000", e.Quelle);
+        Assert.Equal("PROJ-10000", e.Quelle);
         Assert.Equal("bridge/BR-CS-01.md", e.Datei);
     }
 
@@ -143,7 +143,7 @@ public class InventoryBuilderTests
         Assert.Contains("| 2 |", brRow);              // Stufe
         Assert.Contains("| jbe |", brRow);            // Verantwortlich
         Assert.Contains("| 5 |", brRow);              // Min
-        Assert.Contains("| DYN-10000 |", brRow);      // Quelle
+        Assert.Contains("| PROJ-10000 |", brRow);      // Quelle
         Assert.Contains("[bridge/BR-CS-01.md](bridge/BR-CS-01.md)", brRow);   // Datei-Link
 
         // additive: the def without these fields renders empty cells, still has its file link

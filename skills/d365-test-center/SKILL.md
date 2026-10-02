@@ -60,7 +60,7 @@ UI-Client: Sie legt `jbe_testrun`-Datensätze an und pollt `jbe_testrunresult` f
 D365TestCenter/
 +-- webresource/          # d365testcenter.html plus generische Packs (manifest.json, standard.json, ...)
 +-- backend/              # C#-Solution: Core (TestRunner, AssertionEngine, Models), CrmPlugin, Cli, Tests
-+-- scripts/              # Deploy-Solution.ps1, deploy-config.json, Spiegel-Sync
++-- scripts/              # Plugin-Paket, Recovery-Flow, Testfall-Import, UI-Smokes, Spiegel-Sync
 +-- skills/               # Quelle dieses Skills
 +-- docs/                 # Produktdokumentation (CLI-Referenz, Doku und Reporting, Handbuch)
 ```

@@ -46,7 +46,7 @@ Wenn das Plugin den Record gar nicht erzeugt, wartet der Test 120
 Sekunden umsonst. Bei 8 solchen Tests im Batch -> Timeout garantiert.
 
 **Besser:** Timeout realistisch setzen. Wenn dein Plugin typisch 5s
-braucht, reichen 15-20s Timeout — mit Puffer.
+braucht, reichen 15-20s Timeout, mit Puffer.
 
 ### 3. Sehr viele Records in einem Test
 
@@ -90,7 +90,7 @@ insgesamt**, nicht pro Test. Wenn ein Test 80 Sekunden braucht, bleiben
 anderen. Wenn du weißt dass ein Test 60 Sekunden braucht:
 
 - Tagge ihn `slow`
-- Starte separaten Run für `tag:slow` — dann ist er alleine im Batch
+- Starte separaten Run für `tag:slow`, dann ist er alleine im Batch
 - Oder markiere einen eigenen Filter-Präfix z.B. `SLOW-*`
 
 ## Throttling durch Dataverse

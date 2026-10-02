@@ -1,4 +1,4 @@
-# Entscheidungsbaum: Mein Test scheitert — was tun?
+# Entscheidungsbaum: Mein Test scheitert, was tun?
 
 Systematischer Ablauf um ein Testproblem einzugrenzen. Starte oben,
 folge den Verzweigungen.
@@ -6,16 +6,16 @@ folge den Verzweigungen.
 ## Der Baum
 
 ```
-                  +----------------------------+
-                  | Testrun-Status = "Geplant" |
-                  | seit > 2 Minuten?          |
-                  +------------+---------------+
+                  +-------------------------------+
+                  | Testrun-Status = "Ausstehend" |
+                  | seit > 2 Minuten?             |
+                  +------------+------------------+
                                |
                          Ja    |   Nein
                   +------------+----------+
                   v                       v
             Infra-Problem          Status normal erreicht?
-            (Plugin-Queue          (Geplant -> Running ->
+            (Plugin-Queue          (Ausstehend -> Läuft ->
              hängt, Auth-          Abgeschlossen)
              Fehler, Sandbox       
              erschöpft)                  |

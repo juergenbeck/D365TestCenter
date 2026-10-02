@@ -9,7 +9,6 @@ namespace D365TestCenter.Tests;
 /// <summary>
 /// Tests für die EnvironmentVariable-Actions SetEnvironmentVariable und
 /// RetrieveEnvironmentVariable.
-/// Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md.
 /// </summary>
 public class EnvironmentVariableTests
 {

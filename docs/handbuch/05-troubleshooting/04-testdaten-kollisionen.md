@@ -9,17 +9,17 @@ eindeutig**.
 Dataverse hat Constraints die Eindeutigkeit erzwingen:
 
 - **Alternate Keys** (z.B. `emailaddress1` auf `contact` kann alternate
-  key sein) — zwei Records mit demselben Wert gehen nicht.
+  key sein), zwei Records mit demselben Wert gehen nicht.
 - **Business-Plugins** die aktiv Duplicate-Detection machen (DQS,
-  Merge-Plugins, etc.) — blockieren einen Create wenn ein Ähnlicher
+  Merge-Plugins, etc.), blockieren einen Create wenn ein Ähnlicher
   existiert.
-- **Eindeutige AutoNumber-Felder** die nicht explizit gesetzt werden —
+- **Eindeutige AutoNumber-Felder** die nicht explizit gesetzt werden,
   kein Kollisionsproblem, aber nicht-deterministisch.
 
 ## Der Standard-Fix: `{TIMESTAMP}`
 
 In jeder `CreateRecord`-Action mindestens ein Feld mit `{TIMESTAMP}`
-einbauen — am besten das Primary-Name-Feld:
+einbauen, am besten das Primary-Name-Feld:
 
 ```json
 "fields": {
@@ -87,7 +87,7 @@ haben. Filter enger machen:
 
 Wenn `{TIMESTAMP}` nicht eindeutig genug ist und mehrere parallele Runs
 den gleichen Wert treffen, versucht der Cleanup den gleichen Record
-zweimal zu löschen — was manchmal in 404 endet.
+zweimal zu löschen, was manchmal in 404 endet.
 
 -> Aktuelle `{TIMESTAMP}` ist nicht das Problem; sie enthält die
 Sekunde. Solange Tests nicht exakt im selben Sekundenbereich starten,
@@ -98,7 +98,7 @@ ist alles gut.
 Mehrere Runs gleichzeitig starten:
 
 - Jeder Run bekommt eine eigene Engine-Instanz
-- `{TIMESTAMP}` wird pro Step berechnet — nicht pro Run
+- `{TIMESTAMP}` wird pro Step berechnet, nicht pro Run
 - Tests kollidieren **nicht** solange sie `{TIMESTAMP}` in ihren Daten
   haben
 
@@ -113,7 +113,7 @@ Mehrere Runs gleichzeitig starten:
 
 Fall 1: **Der erste Run hat `keeprecords: true`.** Dann sind die
 Testdaten noch da. Der zweite Run legt neue an mit anderer
-`{TIMESTAMP}` — kein Problem.
+`{TIMESTAMP}`, kein Problem.
 
 Fall 2: **Erster Run Cleanup fehlgeschlagen.** Records hinterlassen.
 Nächster Run läuft mit neuer `{TIMESTAMP}` -> keine Kollision. Der

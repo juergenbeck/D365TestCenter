@@ -1,7 +1,7 @@
 {
   "packId": "empty",
   "name": "Leere Vorlage",
-  "description": "Leere Umgebung zum Erstellen eigener Testfaelle und Demo-Daten.",
+  "description": "Leere Umgebung zum Erstellen eigener Testfälle und Demo-Daten.",
   "color": "#78909c",
   "testCases": [
     {

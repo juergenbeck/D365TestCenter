@@ -61,7 +61,7 @@ public class PackBuilderTests
     [Fact]
     public void ReadArray_Multiline_StripsQuotesAndStopsAtNextKey()
     {
-        var fm = "ausfuehrungs_modi:\n  - skript\n  - \"d365testcenter\"\nticket: DYN-9149";
+        var fm = "ausfuehrungs_modi:\n  - skript\n  - \"d365testcenter\"\nticket: PROJ-9149";
         Assert.Equal(new[] { "skript", "d365testcenter" }, MarkdownDocument.ReadArray(fm, "ausfuehrungs_modi"));
     }
 
@@ -80,8 +80,8 @@ public class PackBuilderTests
         "id: BR-CS-01\n" +
         "titel: \"ContactSource Mapping\"\n" +
         "status: aktiv\n" +
-        "ticket: DYN-9149\n" +
-        "weitere_tickets: [DYN-9558]\n" +
+        "ticket: PROJ-9149\n" +
+        "weitere_tickets: [PROJ-9558]\n" +
         "ausfuehrungs_modi: [skript, d365testcenter]\n" +
         "---\n\n" +
         "## Zweck\n\nMapping prüfen.\n\n" +
@@ -127,7 +127,7 @@ public class PackBuilderTests
 
         Assert.NotNull(tc);
         Assert.Equal("BR-CS-01", tc!.Value<string>("testId"));
-        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("userStories"));   // ticket + weitere_tickets
+        Assert.Equal("PROJ-9149,PROJ-9558", tc.Value<string>("userStories"));   // ticket + weitere_tickets
         var documentation = tc.Value<string>("documentation") ?? "";
         Assert.Contains("## Zweck", documentation);
         Assert.Contains("## Erwartetes Ergebnis", documentation);
@@ -183,7 +183,7 @@ public class PackBuilderTests
     [Fact]
     public void BuildTestCase_BlockUserStories_WinOverFrontmatter()
     {
-        var def = "---\nid: X\nticket: DYN-1\n---\n\n```json\n{ \"testId\": \"X\", \"userStories\": \"STORY-9\", \"steps\": [] }\n```\n";
+        var def = "---\nid: X\nticket: PROJ-1\n---\n\n```json\n{ \"testId\": \"X\", \"userStories\": \"STORY-9\", \"steps\": [] }\n```\n";
         var tc = PackBuilder.BuildTestCase(def, "X.md", new List<PackLintFinding>());
         Assert.Equal("STORY-9", tc!.Value<string>("userStories"));
     }
@@ -193,9 +193,9 @@ public class PackBuilderTests
     {
         // Some stored/edited definitions carry userStories as a JSON array. Value<string> would throw
         // InvalidCastException; the defensive read joins it to a CSV instead (surfaced by export-defs).
-        var def = "---\nid: X\n---\n\n```json\n{ \"testId\": \"X\", \"userStories\": [\"DYN-1\", \"DYN-2\"], \"steps\": [] }\n```\n";
+        var def = "---\nid: X\n---\n\n```json\n{ \"testId\": \"X\", \"userStories\": [\"PROJ-1\", \"PROJ-2\"], \"steps\": [] }\n```\n";
         var tc = PackBuilder.BuildTestCase(def, "X.md", new List<PackLintFinding>());
-        Assert.Equal("DYN-1,DYN-2", tc!.Value<string>("userStories"));
+        Assert.Equal("PROJ-1,PROJ-2", tc!.Value<string>("userStories"));
     }
 
     // ── MVP-3 Phase 6a: dedicated metadata extraction ────────────────
@@ -208,10 +208,10 @@ public class PackBuilderTests
         "stufe: 2\n" +
         "verantwortlich: Jürgen\n" +
         "geschaetzt_min: 15\n" +
-        "zephyr_key: DYN-T994\n" +
+        "zephyr_key: PROJ-T994\n" +
         "env_scope: [dev, test]\n" +
-        "ticket: DYN-9149\n" +
-        "weitere_tickets: [DYN-9558]\n" +
+        "ticket: PROJ-9149\n" +
+        "weitere_tickets: [PROJ-9558]\n" +
         "---\n\n" +
         "## Zweck\n\nx\n\n" +
         "## D365TestCenter-Definition\n\n```json\n" +
@@ -229,9 +229,9 @@ public class PackBuilderTests
         Assert.Equal("2", tc.Value<string>("stufe"));
         Assert.Equal("Jürgen", tc.Value<string>("verantwortlich"));
         Assert.Equal("15", tc.Value<string>("geschaetzt_min"));
-        Assert.Equal("DYN-T994", tc.Value<string>("zephyr_key"));
+        Assert.Equal("PROJ-T994", tc.Value<string>("zephyr_key"));
         Assert.Equal("dev,test", tc.Value<string>("env_scope"));          // YAML list -> comma-joined
-        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("tickets"));   // ticket + weitere_tickets
+        Assert.Equal("PROJ-9149,PROJ-9558", tc.Value<string>("tickets"));   // ticket + weitere_tickets
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public class PackBuilderTests
         var tc = PackBuilder.BuildTestCase(FullDef, "BR-CS-01.md", new List<PackLintFinding>());
 
         Assert.Equal("aktiv", tc!.Value<string>("status"));
-        Assert.Equal("DYN-9149,DYN-9558", tc.Value<string>("tickets"));
+        Assert.Equal("PROJ-9149,PROJ-9558", tc.Value<string>("tickets"));
         Assert.Null(tc["domaene"]);
         Assert.Null(tc["stufe"]);
         Assert.Null(tc["env_scope"]);
@@ -339,7 +339,7 @@ public class PackBuilderTests
     {
         var tc = JObject.Parse(
             "{ \"testId\": \"BR-CS-01\", \"title\": \"T\", \"tags\": [\"bridge\"], " +
-            "\"userStories\": \"DYN-1\", \"documentation\": \"## Zweck\", " +
+            "\"userStories\": \"PROJ-1\", \"documentation\": \"## Zweck\", " +
             "\"steps\": [ { \"stepNumber\": 1 } ] }");
 
         var def = JObject.Parse(ImportPack.BuildDefinitionJson(tc));

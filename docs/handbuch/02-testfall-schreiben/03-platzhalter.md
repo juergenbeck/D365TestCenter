@@ -1,7 +1,7 @@
 # Platzhalter
 
 Platzhalter sind die dynamischen Elemente in deinen Testdaten. Sie werden
-zur Laufzeit durch echte Werte ersetzt — Record-IDs, Zeitstempel, generierte
+zur Laufzeit durch echte Werte ersetzt, Record-IDs, Zeitstempel, generierte
 Namen. Ohne Platzhalter könntest du nur statische Tests schreiben.
 
 ## Übersicht
@@ -48,10 +48,10 @@ Löst sich z.B. zu `jbe_test_2026-04-24T11:45:32Z@example.com`.
 
 **Varianten:**
 
-- `{TIMESTAMP}` — jetzt
-- `{TIMESTAMP_MINUS_1H}` — vor 1 Stunde, nützlich für LUW-Tests wenn man
+- `{TIMESTAMP}`, jetzt
+- `{TIMESTAMP_MINUS_1H}`, vor 1 Stunde, nützlich für LUW-Tests wenn man
   "ältere" Quellen simuliert
-- `{TIMESTAMP_PLUS_1H}` — in 1 Stunde
+- `{TIMESTAMP_PLUS_1H}`, in 1 Stunde
 
 Alle liefern ISO-8601-UTC-Timestamps (`2026-04-24T11:45:32Z`).
 
@@ -124,7 +124,7 @@ Für realistisch wirkende, aber als Test erkennbare Testdaten.
 | `{GENERATED:guid}` | `3f2a1b4e-9c27-40d1-b9a2-0e5fa2c4a1d3` |
 
 **Wichtig:** `{GENERATED:firstname}` hängt automatisch "JBE Test" vor.
-Das ist Absicht — die Konvention macht Testdaten im Dataverse sofort als
+Das ist Absicht, die Konvention macht Testdaten im Dataverse sofort als
 Test erkennbar.
 
 ## Kombinationen
@@ -164,12 +164,12 @@ Platzhalter:
 
 ## Was NICHT geht
 
-- **Arithmetik**: `{acc.id + 1}` — nicht unterstützt.
+- **Arithmetik**: `{acc.id + 1}`, nicht unterstützt.
 - **Fällt zurück auf alten Wert**: wenn du den Record zwischendurch
   änderst, zeigt `{alias.fields.x}` den Wert zum Zeitpunkt des letzten
   `CreateRecord` / `RetrieveRecord`, nicht den aktuellen DB-Stand.
   Für aktuelle Werte: `RetrieveRecord` einschieben.
-- **Verschachtelte Platzhalter**: `{alias.{name_var}.id}` — nicht
+- **Verschachtelte Platzhalter**: `{alias.{name_var}.id}`, nicht
   unterstützt.
 - **In Zahlen-Feldern**: `"numberofemployees": "{TIMESTAMP_SECONDS}"` geht
   nicht, weil das Feld eine echte Zahl erwartet, und Platzhalter produzieren

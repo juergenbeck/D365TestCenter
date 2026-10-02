@@ -15,9 +15,8 @@ möglich (API-Anteil läuft überall, UI-Anteil nur im Cli).
 
 Die UI-Tests werden im Cli über `--browser-state <pfad>` aktiviert. Vollständige
 Cli-Optionen-Tabelle, `ui-setup`-Sub-Command, Storage-State-Lebensdauer (24h SPA),
-Selektor-Strategie und Frame-Fallback-Pattern: siehe
-`.github/skills/ui-automation/SKILL.md` (`ui-automation/SKILL.md` im Repo D365TestCenter-Workspace) Sektion
-"Produktiver Pfad" und `.github/skills/ui-automation/PROJEKT-KONTEXT.md` (`ui-automation/PROJEKT-KONTEXT.md` im Repo D365TestCenter-Workspace).
+Selektor-Strategie und Frame-Fallback-Pattern: siehe den Skill `ui-automation` des Projekt-Repos
+(Sektion "Produktiver Pfad") und dessen `PROJEKT-KONTEXT.md`, sofern vorhanden.
 
 ### Anmeldezustand anlegen: `ui-setup`
 
@@ -103,8 +102,8 @@ Phase 1d Diagnostics-Pipeline:
 
 ### Querverweise
 
-- `.github/skills/ui-automation/SKILL.md` (`ui-automation/SKILL.md` im Repo D365TestCenter-Workspace), Selektor-Strategie, Frame-Fallback, Strict-Mode, MCP-Integration
-- `.github/skills/ui-automation/PROJEKT-KONTEXT.md` (`ui-automation/PROJEKT-KONTEXT.md` im Repo D365TestCenter-Workspace), projektspezifische Selektoren, Lessons-Learned (Listen-First-Row vs. Direct-URL+formid, Modul-Scope-Stolperfalle, jbe_testcase-Schema-Stolperfalle)
-- `02_decisions/adr/ADR-0006-ui-automation-architektur.md` (`02_decisions/adr/ADR-0006-ui-automation-architektur.md` im Repo D365TestCenter-Workspace), Entscheidungs-Kontext
+- Skill `ui-automation` des Projekt-Repos, Selektor-Strategie, Frame-Fallback, Strict-Mode, MCP-Integration
+- dessen `PROJEKT-KONTEXT.md`, projektspezifische Selektoren, Lessons-Learned (Listen-First-Row vs. Direct-URL+formid, Modul-Scope-Stolperfalle, jbe_testcase-Schema-Stolperfalle)
+- ADR-0006 (UI-Automation-Architektur), Entscheidungs-Kontext
 
 ---

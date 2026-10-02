@@ -262,7 +262,7 @@ Subordinate prüfen.
 }
 ```
 
-## Rezept G: WaitForRecord — auf von Plugin erzeugten Record warten
+## Rezept G: WaitForRecord, auf von Plugin erzeugten Record warten
 
 **Wofür:** Ein Plugin erzeugt einen Folgerecord, du weißt nicht die GUID,
 musst aber darauf zugreifen.

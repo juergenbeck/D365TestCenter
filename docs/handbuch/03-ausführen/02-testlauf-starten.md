@@ -1,7 +1,7 @@
 # Testlauf starten
 
 Einen Testlauf starten heißt: einen `jbe_testrun`-Record anlegen mit
-Status "Geplant". Das Speichern triggert das Plugin, der Lauf beginnt
+Status "Ausstehend". Das Speichern triggert das Plugin, der Lauf beginnt
 automatisch.
 
 ## Schritt 1: Zu den Testläufen navigieren
@@ -31,7 +31,7 @@ Klick auf **+ Neu**.
 |                                                          |
 |  Name              * [ Regression 24.04              ]   |
 |  Testcase-Filter   * [ QS-*                          ]   |
-|  Test-Status         [ Geplant                     v ]   |
+|  Test-Status         [ Ausstehend                  v ]   |
 |  Records behalten    [ ] nein                            |
 |                                                          |
 |  Bestanden           (wird automatisch gesetzt)          |
@@ -44,13 +44,13 @@ Klick auf **+ Neu**.
 
 ### Die Felder im Detail
 
-**Name** — frei wählbar. Gute Beispiele:
+**Name**: frei wählbar. Gute Beispiele:
 - `Regression vor Release`
 - `Sprint 63 Testlauf`
 - `Smoke Test 24.04 nachmittags`
 - `MGR01 nach Plugin-Fix`
 
-**Testcase-Filter** — steuert WELCHE Tests laufen:
+**Testcase-Filter**: steuert WELCHE Tests laufen:
 
 | Filter | Wirkung |
 |---|---|
@@ -61,12 +61,12 @@ Klick auf **+ Neu**.
 | `tag:smoke` | Alle mit Tag `smoke` |
 | `category:Integration` | Alle mit Category `Integration` |
 
-**Test-Status** — muss auf **Geplant** stehen. Das ist der Trigger.
+**Test-Status**: muss auf **Ausstehend** stehen. Das ist der Trigger.
 
 **Records behalten** (`jbe_keeprecords`):
 
 - **Nicht angehakt** (Default): Testdaten werden nach dem Lauf gelöscht.
-- **Angehakt**: Testdaten bleiben — nützlich wenn du nach dem Lauf
+- **Angehakt**: Testdaten bleiben, nützlich wenn du nach dem Lauf
   manuell im Browser verifizieren willst was passiert ist.
 
 ## Schritt 3: Speichern = Start
@@ -80,14 +80,14 @@ geworden und arbeitet den Lauf im Hintergrund ab.
 ## Schritt 4: Zuschauen
 
 Auf derselben Seite siehst du live die Aktualisierungen (durch den Browser-
-Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
+Cache kann es 2-3 Sekunden brauchen, notfalls **F5** drücken):
 
 ```
 +-- Testlauf: Regression 24.04 ---------------------------+
 |                                                         |
 |  Name           Regression 24.04                        |
 |  Testcase-Filter QS-*                                   |
-|  Test-Status    [ Wird ausgeführt           v ]        |
+|  Test-Status    [ Läuft                     v ]        |
 |  Records behalten [ ] nein                              |
 |                                                         |
 |  Bestanden      2                                       |
@@ -106,14 +106,17 @@ Cache kann es 2-3 Sekunden brauchen — notfalls **F5** drücken):
 
 Der Status durchläuft:
 
-1. **Geplant** — Trigger wurde aufgenommen, aber das Plugin hat noch
+1. **Ausstehend**: Trigger wurde aufgenommen, aber das Plugin hat noch
    nicht gestartet (wenige Sekunden).
-2. **Wird ausgeführt** — Tests laufen aktiv ab.
-3. **Abgeschlossen** — alle Tests haben durchlaufen (egal ob passed oder
+2. **Läuft**: Tests laufen aktiv ab.
+3. **Abgeschlossen**: alle Tests haben durchlaufen (egal ob passed oder
    failed).
-4. **Fehlgeschlagen** — ein **technischer** Fehler hat den ganzen Run
+4. **Fehler**: ein **technischer** Fehler hat den ganzen Run
    abgebrochen (z.B. Serverfehler, Sandbox-Timeout). Nicht "einige Tests
-   sind failed" — das ist normal Abgeschlossen mit `failed > 0`.
+   sind failed", das ist normal Abgeschlossen mit `failed > 0`.
+
+Bei großen Läufen, die ein Koordinator auf Teilläufe verteilt, steht der Status
+zwischendurch auf **Aufteilung läuft**; der Lauf ist dann noch nicht fertig.
 
 ## Schritt 5: Wie lange dauert ein Lauf?
 
@@ -126,13 +129,13 @@ Richtlinien:
 
 **Sandbox-Timeout:** D365 Plugins haben eine 2-Minuten-Grenze pro Sync-
 Aufruf. Das Test-Center arbeitet asynchron in Batches zu je ~12 Tests;
-jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen
-— die Engine macht das automatisch.
+jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen,
+die Engine macht das automatisch.
 
 ## Run abbrechen?
 
 Gibt es **nicht**. Einmal gestartet läuft der Lauf durch. Du kannst aber
-den Testrun-Record löschen, während er läuft — das beendet nicht das
+den Testrun-Record löschen, während er läuft, das beendet nicht das
 Plugin im Hintergrund, aber der Record ist weg und du siehst kein Ergebnis
 mehr. Nur für Notfälle.
 

@@ -7,19 +7,22 @@
 
 ### 5.1 Generisch (Produkt-Repo)
 
+Erstinstallation und Entwicklungsumgebung: Paket aus dem Quellstand bauen und importieren.
+
 ```powershell
-# 1. Auth-Token setzen (projektspezifisch)
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
-
-# 2. Config anpassen
-# scripts/deploy-config.json: resource URL auf eigene Umgebung setzen
-
-# 3. Deployen
-cd <Produkt-Repo>/scripts
-.\Deploy-Solution.ps1
+pac auth create --environment https://<umgebung>.crm4.dynamics.com
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
 ```
 
-Das Skript erstellt idempotent: Publisher (itt), Solution, 5 OptionSets, 4 Entities, alle Attribute, Relationships, Web Resources, PublishAllXml.
+Test- und Produktivumgebungen bekommen eine managed Solution aus der Entwicklungsumgebung (5.5). Der
+Recovery-Flow ist nicht Teil der Solution und wird je Umgebung mit `scripts/Create-RecurrenceFlow.ps1` angelegt.
+
+**Stillgelegt (seit 2026-09-18):** `Deploy-Solution.ps1`, `Deploy-ProSolution.ps1`, `Create-TestingEntities.ps1`
+und `deploy-config.json`. Sie legten Publisher, Tabellen und OptionSets einzeln per Web API an, waren gegenüber
+der Solution veraltet (Outcome ohne Error, fehlende Tabellen und OptionSets) und scheiterten auf Umgebungen mit
+einer managed Solution am schreibgeschützten Publisher. Ein Wrapper, der sie noch aufruft, ist auf den
+Solution-Import umzustellen.
 
 ### 5.4 WICHTIG: Plugin-Package gehört zur Solution, kein separater Deploy-Schritt
 

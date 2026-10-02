@@ -78,7 +78,7 @@ Sinnvoll z.B. wenn das Update optional ist.
 
 ## Reihenfolge und Nummerierung
 
-- `stepNumber` **muss fortlaufend** sein: 1, 2, 3, ... — keine Lücken,
+- `stepNumber` **muss fortlaufend** sein: 1, 2, 3, ..., keine Lücken,
   keine Dopplungen. Die Engine sortiert aber danach, nicht nach
   JSON-Reihenfolge.
 - Konvention: fange mit 1 an, inkrementiere um 1.
@@ -123,7 +123,7 @@ du direkt im neuen Schema.
 
 ## JSON-Validität prüfen
 
-Das `jbe_definitionjson`-Feld nimmt jeden Text an — auch kaputtes JSON.
+Das `jbe_definitionjson`-Feld nimmt jeden Text an, auch kaputtes JSON.
 Der Test läuft dann aber als `Skipped` mit einem Parse-Fehler.
 
 Empfehlung: **JSON vor dem Einfügen in VS Code oder einem Online-
@@ -133,7 +133,7 @@ Validator prüfen.** Typische Fehler:
 - Einfache statt doppelte Anführungszeichen
 - Kommentare `//` oder `/* */` (JSON kennt keine Kommentare)
 - Umlaute ohne UTF-8 (Umlaute sind erlaubt, aber die Codierung muss UTF-8
-  sein — das macht der Browser automatisch)
+  sein, das macht der Browser automatisch)
 
 Als Plausibilitätscheck reicht oft: kopiere das JSON in VS Code, speichere
-als `.json` — VS Code markiert Syntaxfehler sofort rot.
+als `.json`, VS Code markiert Syntaxfehler sofort rot.

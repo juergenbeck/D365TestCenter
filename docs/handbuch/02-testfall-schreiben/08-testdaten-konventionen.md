@@ -2,7 +2,7 @@
 
 Testdaten sollen sofort als Testdaten erkennbar sein, nicht mit echten
 Daten kollidieren und beim Cleanup eindeutig gefunden werden können.
-Diese Konventionen machen das möglich — und sie sind nicht verhandelbar,
+Diese Konventionen machen das möglich, und sie sind nicht verhandelbar,
 sondern durch `{GENERATED:*}`-Platzhalter bereits vorgegeben.
 
 ## Die 4 Grundregeln
@@ -115,7 +115,7 @@ Präfixe:
 Die Präfixe helfen beim Filtern (`category:STD*` oder `STD*` als
 Filter-Value im Testrun).
 
-## Record-Cleanup — verlass dich auf's Framework
+## Record-Cleanup: verlass dich auf's Framework
 
 Das Test Center räumt nach jedem Lauf automatisch auf (Record-Tracker
 sammelt alle `CreateRecord`-Ergebnisse, löscht sie am Ende in umgekehrter

@@ -86,7 +86,7 @@ Oben rechts findest du **+ Neu**.
 - **Test-ID:** derselbe Wert wie `testId` im JSON. Bei Abweichung nimmt
   die Engine den Wert aus dem JSON.
 - **Titel:** Anzeigename, wird auch als Primary Name verwendet.
-- **Definition:** das komplette JSON. **Paste mit Strg+V** — die Textbox
+- **Definition:** das komplette JSON. **Paste mit Strg+V**, die Textbox
   akzeptiert beliebige Mehrzeilentexte.
 
 **Optional aber empfohlen:**

@@ -8,8 +8,7 @@ namespace D365TestCenter.Tests;
 
 /// <summary>
 /// Tests für GenericRecordWaiter.BuildQuery — insbesondere die orderBy-
-/// und top-Erweiterungen (1c Option A aus
-/// D365TestCenter-Workspace/03_implementation/findrecord-orderby-fetchxml.md).
+/// und top-Erweiterungen (Ausbaustufe 1c, Option A).
 /// </summary>
 public class GenericRecordWaiterTests
 {

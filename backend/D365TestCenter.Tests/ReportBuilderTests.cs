@@ -17,12 +17,12 @@ namespace D365TestCenter.Tests;
 public class ReportBuilderTests
 {
     const string Tc8 =
-        "---\nid: DYN10000-TC8\ntitel: \"Adresse beim Anlegen\"\n---\n\n" +
+        "---\nid: PROJ10000-TC8\ntitel: \"Adresse beim Anlegen\"\n---\n\n" +
         "## Zweck\n\nKontakt erbt Adresse beim Create.\n\n## Erwartetes Ergebnis\n\ncontoso_adresse gesetzt.\n";
     const string Tc1 =
-        "---\nid: DYN10000-TC1\ntitel: \"Create setzt Adresse\"\n---\n\n## Zweck\n\nBasisfall.\n";
+        "---\nid: PROJ10000-TC1\ntitel: \"Create setzt Adresse\"\n---\n\n## Zweck\n\nBasisfall.\n";
     const string Readme =
-        "# DYN-10000 Adressvererbung\n\n## Worum es geht\n\nThema.\n\n## Träger-Modell\n\n| m | t |\n";
+        "# PROJ-10000 Adressvererbung\n\n## Worum es geht\n\nThema.\n\n## Träger-Modell\n\n| m | t |\n";
 
     static TestCaseResult Tc(string id, TestOutcome o, long ms, string? err = null)
         => new TestCaseResult { TestId = id, Outcome = o, DurationMs = ms, ErrorMessage = err };
@@ -32,8 +32,8 @@ public class ReportBuilderTests
         var dir = Path.Combine(Path.GetTempPath(), "rb_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(dir, "contact-address"));
         File.WriteAllText(Path.Combine(dir, "README.md"), Readme);
-        File.WriteAllText(Path.Combine(dir, "contact-address", "DYN10000-TC8.md"), Tc8);
-        File.WriteAllText(Path.Combine(dir, "contact-address", "DYN10000-TC1.md"), Tc1);
+        File.WriteAllText(Path.Combine(dir, "contact-address", "PROJ10000-TC8.md"), Tc8);
+        File.WriteAllText(Path.Combine(dir, "contact-address", "PROJ10000-TC1.md"), Tc1);
         return dir;
     }
 
@@ -47,26 +47,26 @@ public class ReportBuilderTests
             {
                 StartedOn = new DateTime(2026, 6, 18, 10, 0, 0, DateTimeKind.Utc),
                 CompletedOn = new DateTime(2026, 6, 18, 10, 0, 49, DateTimeKind.Utc),
-                Filter = "DYN10000-*"
+                Filter = "PROJ10000-*"
             };
             var results = new List<TestCaseResult>
             {
-                Tc("DYN10000-TC8", TestOutcome.Passed, 16000),
-                Tc("DYN10000-TC1", TestOutcome.Passed, 5000)
+                Tc("PROJ10000-TC8", TestOutcome.Passed, 16000),
+                Tc("PROJ10000-TC1", TestOutcome.Passed, 5000)
             };
             var m = ReportBuilder.BuildModel(header, results, dir, "dev",
                 Guid.Parse("787a059e-8c6a-f111-a826-7c1e528427dd"));
 
-            Assert.Equal("DYN-10000 Adressvererbung", m.SuiteTitle);
+            Assert.Equal("PROJ-10000 Adressvererbung", m.SuiteTitle);
             Assert.Contains("Thema.", m.SuiteIntro);
-            Assert.Equal("DYN10000-*", m.Filter);
+            Assert.Equal("PROJ10000-*", m.Filter);
             Assert.Equal("2026-06-18", m.RunDate);
             Assert.Equal(49, m.DurationSeconds);   // wall-clock from header
             Assert.Equal(2, m.Total);
             Assert.Equal(2, m.Passed);
             // sorted by testId: TC1 before TC8
-            Assert.Equal("DYN10000-TC1", m.Items[0].TestId);
-            Assert.Equal("DYN10000-TC8", m.Items[1].TestId);
+            Assert.Equal("PROJ10000-TC1", m.Items[0].TestId);
+            Assert.Equal("PROJ10000-TC8", m.Items[1].TestId);
             Assert.Equal("Adresse beim Anlegen", m.Items[1].Titel);
             Assert.Contains("erbt Adresse", m.Items[1].Sections["Zweck"]);
         }
@@ -99,8 +99,8 @@ public class ReportBuilderTests
         {
             var results = new List<TestCaseResult>
             {
-                Tc("DYN10000-TC8", TestOutcome.Passed, 16000),
-                Tc("DYN10000-TC1", TestOutcome.Passed, 5000)
+                Tc("PROJ10000-TC8", TestOutcome.Passed, 16000),
+                Tc("PROJ10000-TC1", TestOutcome.Passed, 5000)
             };
             var m = ReportBuilder.BuildModel(null, results, dir, "dev", Guid.NewGuid());
             Assert.Equal("", m.RunDate);
@@ -117,15 +117,15 @@ public class ReportBuilderTests
         {
             var results = new List<TestCaseResult>
             {
-                Tc("DYN10000-TC8", TestOutcome.Passed, 16000),
-                Tc("DYN10000-TC1", TestOutcome.Passed, 5000)
+                Tc("PROJ10000-TC8", TestOutcome.Passed, 16000),
+                Tc("PROJ10000-TC1", TestOutcome.Passed, 5000)
             };
             var m = ReportBuilder.BuildModel(null, results, dir, "dev", Guid.NewGuid());
             var md = MarkdownReportGenerator.Render(m, ReportDetail.Compact);
-            Assert.Contains("# Durchführungsbericht: DYN-10000 Adressvererbung", md);
+            Assert.Contains("# Durchführungsbericht: PROJ-10000 Adressvererbung", md);
             Assert.Contains("2/2 PASS", md);
-            Assert.Contains("DYN10000-TC1", md);
-            Assert.Contains("DYN10000-TC8", md);
+            Assert.Contains("PROJ10000-TC1", md);
+            Assert.Contains("PROJ10000-TC8", md);
             Assert.Contains("Basisfall.", md);
         }
         finally { Directory.Delete(dir, true); }

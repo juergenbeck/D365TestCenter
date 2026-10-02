@@ -63,7 +63,7 @@ Create im Default-State, dann Update auf den Ziel-Status:
 
 ## Plattform-Exception vs Plugin-Exception
 
-`expectException` matched **alles** was an Exception kommt — auch
+`expectException` matched **alles** was an Exception kommt, auch
 Plattform-Fehler die nicht von deinem Plugin stammen.
 
 ### Symptom
@@ -79,12 +79,11 @@ Plugin überhaupt zum Zug kam.
 `jbe_assertionresults` enthält bei FAILED-Outcome heute (Plugin v5.3.1)
 nur die Match-Fehlschlag-Information, nicht den Text der tatsächlich
 geworfenen Exception. Workaround: temporär das `expectException`
-entfernen und den Test als reines `Step-Error` laufen lassen — dann
+entfernen und den Test als reines `Step-Error` laufen lassen, dann
 zeigt `jbe_errormessage` die echte Exception.
 
 Geplant für nächste Version: `actualException`-Detail wird auch im
-FAILED-Fall mitgeliefert. Siehe Plan
-`03_implementation/testcenter-erweiterungen-plan.md` (A13).
+FAILED-Fall mitgeliefert.
 
 ### Pattern
 

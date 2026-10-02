@@ -281,7 +281,7 @@ if ($customApiTypeId) {
     $apisUri = "$BaseUrl/customapis?" + '$filter=uniquename eq ' + "'jbe_RunIntegrationTests'" + '&$select=customapiid,uniquename,_plugintypeid_value'
     $apis = (Invoke-DataverseApi -Uri $apisUri).value
     if ($apis.Count -eq 0) {
-        Write-Host "Custom API jbe_RunIntegrationTests nicht vorhanden - muss separat angelegt werden (Deploy-ProSolution.ps1)"
+        Write-Host "Custom API jbe_RunIntegrationTests nicht vorhanden - kommt mit dem Import der Solution D365TestCenter"
     } elseif ($apis[0]._plugintypeid_value -ne $customApiTypeId) {
         Write-Host "Custom API jbe_RunIntegrationTests: updating PluginType binding..."
         $patchBody = @{ "plugintypeid@odata.bind" = "/plugintypes($customApiTypeId)" } | ConvertTo-Json

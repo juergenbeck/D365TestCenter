@@ -24,17 +24,17 @@ typische Fallen, und wofür sie da sind.
 
 **Negative-Path-Tests (v5.3+):** Für Steps die als erwartetes Ergebnis
 einen Fehler werfen sollen, gibt es zwei optionale Felder
-`expectFailure` und `expectException` — siehe [09-negative-path.md](09-negative-path.md).
+`expectFailure` und `expectException`, siehe [09-negative-path.md](09-negative-path.md).
 
 **Cleanup-Steuerung:** Für Records, die nicht der Test selbst, sondern die
 getestete API oder ein Plugin erzeugt, gibt es die optionalen Felder
 `trackForCleanup` (WaitForRecord/FindRecord), die Action `TrackRecord` und
-die Kind-Deklaration `cleanupChildren` — ausführlich in
+die Kind-Deklaration `cleanupChildren`, ausführlich in
 [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md).
 
 **Konditionale Steps (ADR-0011):** Jeder Step kann ein optionales Feld
 `condition` tragen, das ihn überspringt, wenn eine Laufzeit-Bedingung nicht
-zutrifft — siehe Abschnitt [condition](#condition).
+zutrifft, siehe Abschnitt [condition](#condition).
 
 ## condition
 
@@ -115,13 +115,13 @@ Legt einen neuen Record an.
 | `fields` | ja | Feldwerte als Objekt. Inkl. Platzhalter. |
 | `alias` | nein | Name zum späteren Referenzieren. Empfohlen. |
 | `columns` | nein | Felder, die nach dem Create zurückgelesen werden sollen (für AutoNumber, Server-generierte Werte). |
-| `cleanupChildren` | nein | Kind-Beziehungen, die der Cleanup VOR diesem Record abräumt (plugin-erzeugte Kinder, z.B. Restrict-Delete-Monatszeilen) — siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
+| `cleanupChildren` | nein | Kind-Beziehungen, die der Cleanup VOR diesem Record abräumt (plugin-erzeugte Kinder, z.B. Restrict-Delete-Monatszeilen), siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 | `description` | nein | Log-Kommentar. |
 
 **Besonderheiten:**
 
 - Ohne `alias` kannst du den Record später nicht mehr referenzieren.
-- Lookup-Felder brauchen `@odata.bind`-Syntax — siehe
+- Lookup-Felder brauchen `@odata.bind`-Syntax, siehe
   [04-lookup-und-binding.md](04-lookup-und-binding.md).
 - `columns` ist nützlich für Felder die du nicht setzt, aber im Test
   brauchst: z.B. `"columns": ["accountnumber"]` lädt die nach dem Create
@@ -184,7 +184,7 @@ modifiziert wurde und du im nächsten Step die neuen Werte brauchst.
 
 **Wann brauchst du das?** Wenn `{alias.fields.xyz}` in einem späteren
 Step einen aktuellen Wert liefern muss, der sich nach dem Create geändert
-hat. Für reine Asserts ist `RetrieveRecord` nicht nötig — die
+hat. Für reine Asserts ist `RetrieveRecord` nicht nötig, die
 Assertion-Engine liest frisch aus der DB.
 
 ## Wait
@@ -207,7 +207,7 @@ nötig und bei Timeouts klar scheitern.
 ## WaitForRecord / FindRecord
 
 Pollt bis ein Record mit bestimmten Kriterien existiert. `FindRecord`
-ist ein Alias für denselben Step-Typ — semantisch passender wenn der
+ist ein Alias für denselben Step-Typ, semantisch passender wenn der
 Record sicher schon existiert (statt darauf zu warten).
 
 ```json
@@ -225,13 +225,13 @@ Record sicher schon existiert (statt darauf zu warten).
 | Feld | Pflicht | Bedeutung |
 |---|:---:|---|
 | `entity` | ja | EntitySetName (Plural). |
-| `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax)). |
+| `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax-target-query)). |
 | `alias` | nein | Wenn gesetzt: der gefundene Record bekommt diesen Alias. |
 | `columns` | nein | Welche Felder laden. |
 | `timeoutSeconds` | nein | Default 120. |
 | `orderBy` | nein | Sortierung (Plugin v5.3+), siehe unten. |
 | `top` | nein | Max-Treffer (Plugin v5.3+), Default 1. |
-| `trackForCleanup` | nein | Default **false** (gefundener Record ist Bestand). `true` NUR für Records, die die getestete API in DIESEM Lauf serverseitig erzeugt hat — dann räumt der Cleanup sie mit ab. Siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
+| `trackForCleanup` | nein | Default **false** (gefundener Record ist Bestand). `true` NUR für Records, die die getestete API in DIESEM Lauf serverseitig erzeugt hat, dann räumt der Cleanup sie mit ab. Siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 | `cleanupChildren` | nein | Kind-Beziehungen für den Cleanup; nur zusammen mit `trackForCleanup: true` wirksam. Siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 
 **Typisches Szenario:** Ein Plugin legt einen abhängigen Record an,
@@ -273,7 +273,7 @@ nur Feldname angegeben.
 - Letzten verarbeiteten Bridge-Event finden.
 - Contact mit höchstem Retry-Count zur Diagnose.
 
-**`top`** ist standardmäßig 1, kann höher gesetzt werden — aber der
+**`top`** ist standardmäßig 1, kann höher gesetzt werden: aber der
 Standard-Alias-Mechanismus registriert nur den ersten Treffer. Höheres
 `top` ohne weitere Logik liefert nicht mehr nutzbare Records (Stretch
 für zukünftige Versionen).
@@ -294,7 +294,7 @@ Pollt bis **ein** Feld des Alias-Records einen erwarteten Wert hat.
 | Feld | Pflicht | Bedeutung |
 |---|:---:|---|
 | `alias` (oder `recordRef`) | ja | Alias eines vorhandenen Records. |
-| `fields` | ja | Single-Key-Map. Der **Key** ist der zu beobachtende Feldname; der Wert wird ignoriert (Konvention: `null` setzen). Mehrere Keys werden nicht unterstützt — nur der erste wird ausgewertet. |
+| `fields` | ja | Single-Key-Map. Der **Key** ist der zu beobachtende Feldname; der Wert wird ignoriert (Konvention: `null` setzen). Mehrere Keys werden nicht unterstützt, nur der erste wird ausgewertet. |
 | `expectedValue` | ja | Der erwartete Wert für das Feld. Platzhalter wie `{alias.id}` werden aufgelöst. |
 | `entity` | nein | Logical-Name der Entity. Default: aus dem Alias-Record. |
 | `timeoutSeconds` | nein | Default 120. |
@@ -302,7 +302,7 @@ Pollt bis **ein** Feld des Alias-Records einen erwarteten Wert hat.
 
 Schema-Hintergrund: WaitForFieldValue ist als Single-Field-Polling konzipiert
 (`GenericRecordWaiter.WaitForFieldValue(entityName, recordId, fieldName, expectedValue, ...)`).
-Multi-Field-AND ist heute nicht implementiert — bei Bedarf zwei separate
+Multi-Field-AND ist heute nicht implementiert, bei Bedarf zwei separate
 WaitForFieldValue-Steps oder einen FindRecord/Assert-Schritt verwenden.
 
 ## WaitForNotExists
@@ -326,7 +326,7 @@ zu raten.
 | Feld | Pflicht | Bedeutung |
 |---|:---:|---|
 | `entity` | ja | EntitySetName (Plural). |
-| `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax)). |
+| `filter` | ja | Filter-Array (siehe [05-assertions.md](05-assertions.md#filter-syntax-target-query)). |
 | `timeoutSeconds` | nein | Default 120. **Empfohlen 90** für async-Delete: Puffer über die typische Job-Laufzeit, klar unter dem 2-min-Sandbox-Limit. |
 | `pollingIntervalMs` | nein | Default 2000. |
 | `maxDurationMs` | nein | Performance-Assertion: wirft, wenn die Löschung länger als X ms dauert. |
@@ -351,7 +351,7 @@ mehr nötig.
 ## TrackRecord
 
 Registriert einen Record mit **bereits bekannter ID** in Registry und
-Cleanup-Löschliste — für Records, die die getestete API serverseitig erzeugt
+Cleanup-Löschliste, für Records, die die getestete API serverseitig erzeugt
 und deren ID als Output liefert (dann braucht es keine `WaitForRecord`-Query).
 
 ```json
@@ -367,7 +367,7 @@ und deren ID als Output liefert (dann braucht es keine `WaitForRecord`-Query).
 | `entity` | ja | EntitySetName (Plural). |
 | `recordId` | ja | GUID des Records, platzhalterauflösbar (typisch `{alias.outputs.X}`). |
 | `alias` | nein | Name zum späteren Referenzieren. |
-| `cleanupChildren` | nein | Kind-Beziehungen für den Cleanup — siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
+| `cleanupChildren` | nein | Kind-Beziehungen für den Cleanup, siehe [12-cleanup-und-testdaten-hygiene.md](12-cleanup-und-testdaten-hygiene.md). |
 
 **Besonderheiten:**
 
@@ -382,7 +382,7 @@ und deren ID als Output liefert (dann braucht es keine `WaitForRecord`-Query).
 ## ExecuteRequest
 
 Ruft eine SDK-Message auf. Seit Plugin v5.3.7 (ADR-0007) **die einzige
-kanonische Aktion für alle SDK-Message-Aufrufe** — Microsoft-Standard-Messages
+kanonische Aktion für alle SDK-Message-Aufrufe**, Microsoft-Standard-Messages
 (Merge, QualifyLead, Assign, SetState, ...) **und** Custom Actions / Custom APIs.
 Legacy-Verben `CallCustomApi` und `ExecuteAction` werden als Aliasse durchgereicht
 (siehe ["Legacy-Aliasse (ADR-0007)"](#legacy-aliasse-adr-0007) unten).
@@ -465,11 +465,11 @@ zwei EntityReferences `Target` + `Revokee`):
 
 **Häufige SDK-Messages:**
 
-- `QualifyLead` — Lead qualifizieren
-- `Merge` — zwei Records zusammenführen
-- `WinOpportunity` / `LoseOpportunity` — Opportunity schließen
-- `Assign` — Owner ändern
-- `SetState` — statecode/statuscode ändern (einfacher als Update)
+- `QualifyLead`, Lead qualifizieren
+- `Merge`, zwei Records zusammenführen
+- `WinOpportunity` / `LoseOpportunity`, Opportunity schließen
+- `Assign`, Owner ändern
+- `SetState`, statecode/statuscode ändern (einfacher als Update)
 - `AddPrivilegesRole`, `RetrieveUserSettings`, ...
 
 Die vollständige Liste steht in der Microsoft-Dokumentation unter
@@ -544,8 +544,8 @@ zu `ExecuteRequest` behandelt (Konsolidierung, siehe ADR-0007):
 
 | Legacy-Verb | Legacy-Schema | Mapping zu kanonisch |
 |---|---|---|
-| `CallCustomApi` | `entity` + `fields` | Verb → `ExecuteRequest`; `entity` → `requestName` |
-| `ExecuteAction` | `actionName` + `parameters` | Verb → `ExecuteRequest`; `actionName` → `requestName`; `parameters` → `fields` |
+| `CallCustomApi` | `entity` + `fields` | Verb -> `ExecuteRequest`; `entity` -> `requestName` |
+| `ExecuteAction` | `actionName` + `parameters` | Verb -> `ExecuteRequest`; `actionName` -> `requestName`; `parameters` -> `fields` |
 | `ExecuteAction` | `apiName` + `parameters` | wie oben, `apiName` ist Synonym zu `actionName` |
 | `ExecuteAction` | `entity` + `fields` | wie oben (Mischform) |
 
@@ -557,7 +557,7 @@ Aliasse bleiben für mindestens zwei Plugin-Major-Versionen erhalten.
 
 Setzt eine Environment-Variable für die Dauer des Tests. Mit `alias`
 wird der Vorher-Zustand gemerkt und am Testende automatisch
-wiederhergestellt — selbst wenn der Test in der Mitte fehlschlägt.
+wiederhergestellt, selbst wenn der Test in der Mitte fehlschlägt.
 
 ```json
 { "action": "SetEnvironmentVariable",
@@ -622,7 +622,7 @@ Record im Alias-Store ab.
 
 **Source-Semantik:**
 
-- `effective` (Default): wie Plugins lesen — CurrentValue wenn da,
+- `effective` (Default): wie Plugins lesen, CurrentValue wenn da,
   sonst DefaultValue.
 - `currentValue`: nur aus `environmentvariablevalue`. Liefert `null`
   wenn kein Value-Record existiert. Nützlich für `IsNull`-Asserts:

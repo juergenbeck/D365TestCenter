@@ -188,14 +188,16 @@ Die Execution Engine führt Testfälle direkt im Browser gegen die Dataverse Web
 
 #### PlaceholderResolver
 
-Löst dynamische Platzhalter in Testfall-Definitionen auf. 16 Patterns in vier Kategorien:
+Löst dynamische Platzhalter in Testfall-Definitionen auf, in vier Kategorien. Die
+vollständige Liste steht in
+[03-platzhalter.md](handbuch/02-testfall-schreiben/03-platzhalter.md).
 
 | Kategorie | Patterns | Beispiel |
 |-----------|----------|---------|
-| GENERATED | firstname, lastname, email, phone, mobile, company, text, guid, number, city | `{GENERATED:email}` ergibt zufällige Adresse |
-| TIMESTAMP | TIMESTAMP, TIMESTAMP_PLUS_1H, TIMESTAMP_PLUS_1D | `{TIMESTAMP}` ergibt aktuellen ISO-Zeitstempel |
-| KONTEXT | CONTACT_ID, ACCOUNT_ID, GUID, CURRENT_USER, ENV_URL | `{CURRENT_USER}` ergibt SystemUser-ID |
-| ALIAS | alias.id, alias.fieldname | `{myContact.contactid}` ergibt ID des Alias "myContact" |
+| GENERATED | firstname, lastname, email, phone, mobile, phone_international, company, text, guid, number, city, street, zip, jobtitle, website | `{GENERATED:email}` ergibt zufällige Adresse auf example.com |
+| Zeit | TIMESTAMP, TIMESTAMP_COMPACT, TIMESTAMP_ISO, TIMESTAMP_PLUS_1H/_2H/_1D, TIMESTAMP_MINUS_30M/_1H/_2H/_3H/_1D | `{TIMESTAMP}` ergibt `yyyyMMdd_HHmmss_fff`, ISO 8601 liefert `{TIMESTAMP_ISO}` |
+| Kontext | TESTID, GUID, PREFIX, CONTACT_ID, ACCOUNT_ID | `{TESTID}` ergibt die ID des laufenden Testfalls |
+| Alias | alias.id, alias.fields.X, RECORD:alias, RESULT:alias.X, alias.outputs.X, ROW:X | `{myContact.id}` ergibt die ID des Alias "myContact" |
 
 #### RecordTracker
 
@@ -383,11 +385,15 @@ jbe_testcase                    jbe_testrun                     jbe_testrunresul
 
 | OptionSet | Werte |
 |-----------|-------|
-| `jbe_teststatus` | 0: Geplant, 1: Läuft, 2: Abgeschlossen, 3: Fehler |
-| `jbe_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen |
+| `jbe_teststatus` | 0: Ausstehend, 1: Läuft, 2: Abgeschlossen, 3: Fehler, 4: Aufteilung läuft (Offset auf 105710000) |
+| `jbe_testoutcome` | 0: Bestanden, 1: Fehlgeschlagen, 2: Übersprungen, 3: Fehler |
 | `jbe_testcategory` | 0: Update Source, 1: Create Source, 2: Delete Source, 3: Multi-Source, 4: Merge, 5: Custom API, 6: Config, 7: End-to-End, 8: Error Handling |
-| `jbe_stepphase` | 0: Precondition, 1: Step, 2: Assertion, 3: Cleanup |
 | `jbe_stepstatus` | 0: Success, 1: Failed, 2: Skipped |
+| `jbe_chunkstatus` | 0: Neu, 1: Läuft, 2: Fortsetzen, 3: Verarbeitet, 4: Fehler |
+| `jbe_lifecyclestatus` | 0: Entwurf, 1: Aktiv, 2: Instabil, 3: Historisch, 4: Archiviert |
+
+Alle Werte sind Offsets auf 105710000 (Quelle: `solution/src/OptionSets/*.xml`). Das frühere OptionSet
+`jbe_stepphase` gehört nicht mehr zur Solution (ADR-0004: eine Step-Liste statt Phasen).
 
 ### 3.3 Relationships
 
@@ -442,7 +448,7 @@ User: Play-Button (einzeln) oder Multi-Select "Testlauf starten"
   _startRunWithFilter(filter, keepRecords)
         |
         v
-  API.create("jbe_testruns", { status: Geplant, filter, keeprecords })
+  API.create("jbe_testruns", { status: Ausstehend, filter, keeprecords })
         |
         v
   TestRunner.execute(runId)    [fire-and-forget]
@@ -603,8 +609,8 @@ User: #metadata -> Tabellen-Tab
 
 | Komponente | Typ | Dataverse-Name |
 |---|---|---|
-| Publisher | Publisher | `itt` (Prefix: `itt`, OptionValue: 10571) |
-| Solution | Solution | `IntegrationTestCenter` |
+| Publisher | Publisher | `JBE` (Prefix: `jbe`; OptionSet-Werte 10571xxxx, siehe unten) |
+| Solution | Solution | `D365TestCenter` |
 | Entity | Entity | `jbe_testcase` |
 | Entity | Entity | `jbe_testrun` |
 | Entity | Entity | `jbe_testrunresult` |
@@ -612,8 +618,9 @@ User: #metadata -> Tabellen-Tab
 | OptionSet | Global OptionSet | `jbe_teststatus` |
 | OptionSet | Global OptionSet | `jbe_testoutcome` |
 | OptionSet | Global OptionSet | `jbe_testcategory` |
-| OptionSet | Global OptionSet | `jbe_stepphase` |
 | OptionSet | Global OptionSet | `jbe_stepstatus` |
+| OptionSet | Global OptionSet | `jbe_chunkstatus` |
+| OptionSet | Global OptionSet | `jbe_lifecyclestatus` |
 | Relationship | N:1 | `jbe_testrunresult_testrun` |
 | Relationship | N:1 (Cascade Delete) | `jbe_teststep_testrunresult` |
 | Web Resource | HTML | `jbe_/testcenter.html` |
@@ -624,30 +631,22 @@ User: #metadata -> Tabellen-Tab
 ### 5.2 Deployment-Ablauf
 
 ```
-deploy-itt-solution.ps1
+pac solution pack   (solution/src -> solution/out/D365TestCenter.zip)
         |
         v
-  TokenVault: Get-VaultHeaders -System 'dataverse_dev'
+pac solution import --publish-changes --activate-plugins
         |
         v
-  1. Publisher "itt" anlegen (oder skip)
-  2. Solution "IntegrationTestCenter" anlegen (oder skip)
-  3. Globale OptionSets (5x) anlegen (oder skip)
-  4. Entity jbe_testcase + 7 Attribute
-  5. Entity jbe_testrun + 10 Attribute (inkl. jbe_keeprecords)
-  6. Entity jbe_testrunresult + 5 Attribute
-  7. Entity jbe_teststep + 14 Attribute
-  8. Relationship jbe_testrunresult_testrun
-  9. Relationship jbe_teststep_testrunresult (Cascade Delete)
-  10. Web Resources (10 Dateien) hochladen
-  11. Import-Skript für Testfälle (optional)
-  12. PublishAllXml
+  optional: scripts/Create-RecurrenceFlow.ps1 (Recovery-Flow je Umgebung)
         |
         v
   URL: https://{env}.crm4.dynamics.com/WebResources/jbe_/testcenter.html
 ```
 
-Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already exists"-Fehler werden als Skip behandelt.
+Die Einrichtung läuft ausschließlich über den Solution-Import; die früheren Skripte, die Tabellen und
+OptionSets einzeln per Web API anlegten, sind stillgelegt (ADR-2026-09-18-1258). Die OptionSet-Werte stehen fest in `solution/src/OptionSets/*.xml` (Bereich 10571xxxx) und werden beim
+Import unverändert übernommen. `Solution.xml` nennt für den Publisher `JBE` den Options-Präfix `39507`;
+der gilt nur für Optionen, die jemand später im Maker Portal neu anlegt, und ändert keinen bestehenden Wert.
 
 ---
 
@@ -678,13 +677,6 @@ Alle Schritte sind **idempotent**: Existenzprüfung vor jedem Create, "already e
 
 ## 8. Projektorganisation
 
-Die Projektdokumentation folgt der XrmForge-Struktur mit 6 Sektoren im `projekt/`-Ordner (parallel zu `webresource/`):
-
-| Sektor | Inhalt |
-|--------|--------|
-| `00_start-here/` | Einstieg, 10 Goldene Regeln für die Arbeit am ITT |
-| `01_architecture/` | Verweis auf diese Architekturübersicht und Detail-Dokumente unter `webresource/docs/` |
-| `02_decisions/` | ADRs (Architecture Decision Records), offene Entscheidungen |
-| `03_implementation/` | Roadmap mit 6 Phasen |
-| `04_quality/` | Review-Checkliste mit 4 Dimensionen |
-| `05_traceability/` | Session-State, Changelog |
+Dieses Repo enthält das Produkt: Code, Solution, Skripte und die Dokumentation unter `docs/`.
+Entscheidungsprotokolle (ADRs), Umsetzungspläne und Arbeitsstände werden außerhalb dieses Repos geführt;
+wo die Doku eine ADR-Kennung nennt, dient sie nur als Herkunftsangabe.

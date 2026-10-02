@@ -4,64 +4,42 @@ This guide walks you through deploying D365 Test Center to your Dynamics 365 env
 
 ## Prerequisites
 
-- A Dynamics 365 / Dataverse environment (any edition)
-- PowerShell 5.1+ (Windows) or PowerShell 7+ (cross-platform)
-- A valid Bearer token for your Dataverse environment (MSAL, Client Credentials, or interactive login)
+- A Dynamics 365 / Dataverse environment (any edition) and a user with the System Customizer or System
+  Administrator role
+- The Power Platform CLI (`pac`)
 - A modern browser (Chrome, Edge, Firefox)
 
-## Step 1: Configure your environment
-
-Edit `scripts/deploy-config.json`:
-
-```json
-{
-    "resource": "https://YOUR-ORG.crm4.dynamics.com/",
-    "solutionUniqueName": "IntegrationTestCenter",
-    "publisherUniqueName": "itt",
-    "publisherPrefix": "itt",
-    "publisherOptionValuePrefix": 10571
-}
-```
-
-Replace `YOUR-ORG` with your Dataverse organization name.
-
-## Step 2: Authenticate
-
-Set the `$headers` variable with your Bearer token before running the deployment:
+## Step 1: Sign in
 
 ```powershell
-# Option A: MSAL interactive login
-$token = (Get-MsalToken -ClientId "YOUR-APP-ID" -TenantId "YOUR-TENANT" -Scopes "https://YOUR-ORG.crm4.dynamics.com/.default").AccessToken
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
-
-# Option B: Client credentials (service principal)
-$token = (Get-MsalToken -ClientId "APP-ID" -ClientSecret (ConvertTo-SecureString "SECRET" -AsPlainText -Force) -TenantId "TENANT" -Scopes "https://YOUR-ORG.crm4.dynamics.com/.default").AccessToken
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
-
-# Option C: Azure CLI (if already logged in)
-$token = (az account get-access-token --resource "https://YOUR-ORG.crm4.dynamics.com" --query accessToken -o tsv)
-$headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
+pac auth create --environment https://YOUR-ORG.crm4.dynamics.com
 ```
 
-## Step 3: Deploy
+## Step 2: Build the solution package
 
 ```powershell
-cd scripts
-.\Deploy-Solution.ps1
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
 ```
 
-The script creates everything idempotently (safe to run multiple times):
+## Step 3: Import
 
-| Component | What gets created |
-|-----------|------------------|
+```powershell
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
+```
+
+The solution `D365TestCenter` contains everything the Test Center needs:
+
+| Component | Content |
+|-----------|---------|
 | Publisher | "JBE" with prefix `jbe` |
-| Solution | "IntegrationTestCenter" |
-| 5 OptionSets | Test status, outcome, category, step phase, step status |
-| 4 Entities | jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep |
-| All attributes | On all 4 entities |
-| 2 Relationships | testrunresult to testrun, teststep to testrunresult |
-| Web Resources | HTML app + JSON packs |
-| PublishAllXml | Makes everything visible |
+| Tables | jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep, jbe_testchunk |
+| Option sets | test status, outcome, category, step status, chunk status, lifecycle status |
+| App | model-driven app `jbe_D365TestCenter` with forms and views |
+| Web resources | `jbe_/testcenter.html`, `jbe_/handbuch.html`, demo packs |
+| Plugin package | `jbe_D365TestCenter` with the engine, plugin steps and custom APIs |
+
+The recurring recovery flow for stalled chunk runs is created per environment with
+`scripts/Create-RecurrenceFlow.ps1` (optional).
 
 ## Step 4: Open the Test Center
 
@@ -91,33 +69,22 @@ The app auto-detects it's outside Dynamics 365 and shows demo data.
 
 ## Step 6: Write your first test case
 
-Create a JSON file with three phases:
+Create a JSON file with one ordered list of actions. Setting up a record, changing it and
+checking the result are all steps in the same list:
 
 ```json
 {
-  "preconditions": [
-    {
-      "entity": "accounts",
-      "alias": "testAcc",
-      "fields": { "name": "My Test Company {TIMESTAMP}" }
-    }
-  ],
+  "testId": "MY-01",
+  "title": "Set the website on a new account",
   "steps": [
-    {
-      "action": "UpdateRecord",
-      "alias": "testAcc",
-      "fields": { "websiteurl": "https://example.com" }
-    }
-  ],
-  "assertions": [
-    {
-      "target": "Query",
-      "entity": "accounts",
+    { "stepNumber": 1, "action": "CreateRecord", "entity": "accounts", "alias": "testAcc",
+      "fields": { "name": "My Test Company {GENERATED:guid}" } },
+    { "stepNumber": 2, "action": "UpdateRecord", "alias": "testAcc",
+      "fields": { "websiteurl": "https://example.com" } },
+    { "stepNumber": 3, "action": "Assert", "target": "Query", "entity": "accounts",
       "filter": { "accountid": "{testAcc.id}" },
-      "field": "websiteurl",
-      "operator": "Equals",
-      "value": "https://example.com"
-    }
+      "field": "websiteurl", "operator": "Equals", "value": "https://example.com",
+      "onError": "continue", "description": "Website was stored" }
   ]
 }
 ```
@@ -128,7 +95,8 @@ Create a JSON file with three phases:
 |-------------|--------|
 | `{GENERATED:firstname}` | Random first name ("JBE Test ...") |
 | `{GENERATED:email}` | Random email @example.com |
-| `{TIMESTAMP}` | Current ISO timestamp |
+| `{TIMESTAMP}` | Current UTC time as `yyyyMMdd_HHmmss_fff` (use `{TIMESTAMP_ISO}` for ISO 8601) |
+| `{GENERATED:guid}` | Short random hex string, handy for unique names |
 | `{alias.id}` | ID of a previously created record |
 | `{alias.fields.xxx}` | Field value from a previously created record |
 
@@ -149,7 +117,7 @@ Create a JSON file with three phases:
 }
 ```
 
-3. Re-run `Deploy-Solution.ps1` (it will update the web resources)
+3. Copy the pack and the manifest to `solution/src/WebResources/jbe_/packs/`, then rebuild and re-import the solution
 
 ## Waiting for async plugins
 

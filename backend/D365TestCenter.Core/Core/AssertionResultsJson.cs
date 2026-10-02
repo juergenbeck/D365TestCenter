@@ -47,13 +47,20 @@ public static class AssertionResultsJson
                         actualDisplay = s.ActualDisplay
                     });
                 }
-                else if (string.Equals(s.Action, "Cleanup", StringComparison.OrdinalIgnoreCase) && !s.Success)
+                else if (string.Equals(s.Action, "Cleanup", StringComparison.OrdinalIgnoreCase)
+                         && (!s.Success || !string.IsNullOrEmpty(s.Message)))
                 {
+                    // Ein GESCHEITERTER Cleanup steht hier seit FB-54 Teil C. Seit
+                    // ADR-2026-09-20-1547 kommt der geheilte Fall dazu, also einer, der erst nach
+                    // einem Folgeversuch gelang: er trägt eine Message bei Success=true. Ohne
+                    // diesen Weg wäre er auf einer Worker-Umgebung nirgends sichtbar, weil
+                    // jbe_fulllog dort leer bleibt (FB-55). 'passed' bildet den Ausgang ab, der
+                    // Leser unterscheidet beide Fälle also am Feld und nicht am Vorhandensein.
                     entries.Add(new
                     {
                         action = "Cleanup",
                         description = s.Description,
-                        passed = false,
+                        passed = s.Success,
                         skipped = false,
                         message = s.Message
                     });

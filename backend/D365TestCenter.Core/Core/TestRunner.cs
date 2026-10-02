@@ -1746,7 +1746,7 @@ public sealed class TestRunner
 
     // ================================================================
     //  EnvironmentVariable-Actions (Set / Retrieve)
-    //  Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md
+    //  Nutzung: docs/handbuch/02-testfall-schreiben/09-negative-path.md
     // ================================================================
 
     private void StepSetEnvironmentVariable(TestStep step, TestContext ctx)
@@ -1912,7 +1912,7 @@ public sealed class TestRunner
 
     // ================================================================
     //  expectFailure / expectException Helpers (1b)
-    //  Siehe D365TestCenter-Workspace/03_implementation/expectfailure-feature.md
+    //  Nutzung: docs/handbuch/02-testfall-schreiben/09-negative-path.md
     // ================================================================
 
     /// <summary>
@@ -2478,7 +2478,7 @@ public sealed class TestRunner
             }
         }
 
-        int deleted = 0, failed = 0;
+        int deleted = 0, failed = 0, geheilt = 0;
         var firstError = "";
 
         foreach (var item in toDelete)
@@ -2514,26 +2514,50 @@ public sealed class TestRunner
                 }
             }
 
-            try
+            // ADR-2026-09-20-1547: Ein transienter Fehlschlag bekommt Folgeversuche. Ein async
+            // Fremd-Plugin, das im Rennen einen abhängigen Record anlegt, lässt den Delete am
+            // Fremdschlüssel scheitern; beim nächsten Versuch existiert der Record bereits und
+            // die Plattform räumt den Lookup gemäß Delete-Verhalten selbst weg. Live gemessen
+            // (Kunden-DEV-Umgebung, 20.09.2026): beide getroffenen Rennen heilten im ERSTEN Folgeversuch.
+            var versuche = 0;
+            while (true)
             {
-                _service.Delete(item.EntityName, item.Id);
-                deleted++;
-            }
-            catch (FaultException<OrganizationServiceFault> ex)
-                when (ex.Detail?.ErrorCode == ObjectDoesNotExistErrorCode)
-            {
-                // Bereits geräumt — typisch: die Plattform-Cascade beim Delete eines
-                // Eltern-Records hat den getrackten Record mitgenommen (z.B. eine Position
-                // beim Delete ihres Kopf-Records). Kein Datenleck, darum kein Cleanup-Fehlschlag;
-                // die CLEANUP-WARNUNG-Zahl bleibt so ein echter Rest-Indikator.
-                deleted++;
-                Log($"    Bereits gelöscht (kaskadiert): {item.EntityName} {item.Id}");
-            }
-            catch (Exception ex)
-            {
-                failed++;
-                if (string.IsNullOrEmpty(firstError)) firstError = $"{item.EntityName} {item.Id}: {ex.Message}";
-                Log($"    Löschen fehlgeschlagen: {item.EntityName} {item.Id} -- {ex.Message}");
+                try
+                {
+                    _service.Delete(item.EntityName, item.Id);
+                    deleted++;
+                    if (versuche > 0)
+                    {
+                        geheilt++;
+                        Log($"    Gelöscht nach {versuche} Folgeversuch(en): {item.EntityName} {item.Id}");
+                    }
+                    break;
+                }
+                catch (FaultException<OrganizationServiceFault> ex)
+                    when (ex.Detail?.ErrorCode == ObjectDoesNotExistErrorCode)
+                {
+                    // Bereits geräumt — typisch: die Plattform-Cascade beim Delete eines
+                    // Eltern-Records hat den getrackten Record mitgenommen (z.B. eine Position
+                    // beim Delete ihres Kopf-Records). Kein Datenleck, darum kein Cleanup-Fehlschlag;
+                    // die CLEANUP-WARNUNG-Zahl bleibt so ein echter Rest-Indikator.
+                    deleted++;
+                    Log($"    Bereits gelöscht (kaskadiert): {item.EntityName} {item.Id}");
+                    break;
+                }
+                catch (Exception ex) when (IsTransientDeleteConflict(ex) && versuche < MaxParentDeleteRetries)
+                {
+                    versuche++;
+                    Log($"    Löschen vorübergehend blockiert, Folgeversuch {versuche}/{MaxParentDeleteRetries}: " +
+                        $"{item.EntityName} {item.Id} -- {ex.Message}");
+                    System.Threading.Thread.Sleep(ParentDeleteRetryDelayMs);
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    if (string.IsNullOrEmpty(firstError)) firstError = $"{item.EntityName} {item.Id}: {ex.Message}";
+                    Log($"    Löschen fehlgeschlagen: {item.EntityName} {item.Id} -- {ex.Message}");
+                    break;
+                }
             }
         }
 
@@ -2542,10 +2566,17 @@ public sealed class TestRunner
             (envSnapshots.Count > 0 ? $", {envRestored} EnvVars restored, {envFailed} EnvVar-Fehler" : ""));
 
         cleanupResult.Description = $"Cleanup: {deleted} gelöscht, {failed} fehlgeschlagen" +
+            (geheilt > 0 ? $", {geheilt} nach Folgeversuch geheilt" : "") +
             (envSnapshots.Count > 0 ? $", {envRestored}/{envSnapshots.Count} EnvVars restored" : "");
         cleanupResult.Success = failed == 0 && envFailed == 0;
+        // Der geheilte Fall braucht einen Weg NEBEN dem Log: im Worker-Modell bleibt jbe_fulllog
+        // leer (FB-55), dort wäre die Log-Zeile oben nicht abholbar. Über die Message landet er
+        // im jbe_assertionresults-Blob, der Einzige, der dort je Testfall wirklich geschrieben
+        // wird. Der Outcome bleibt unberührt, es ist eine Sichtbarkeits- und keine Urteilsfrage.
         cleanupResult.Message = (failed > 0) ? firstError
-            : (envFailed > 0) ? firstEnvError : null;
+            : (envFailed > 0) ? firstEnvError
+            : (geheilt > 0) ? $"{geheilt} Record(s) erst nach Folgeversuch gelöscht (transienter Konflikt)."
+            : null;
         cleanupResult.DurationMs = sw.ElapsedMilliseconds;
         tcResult.StepResults.Add(cleanupResult);
 
@@ -2644,6 +2675,33 @@ public sealed class TestRunner
     }
 
     /// <summary>
+    /// Folgeversuche je Datensatz beim Parent-Delete (ADR-2026-09-20-1547). Bewusst kleiner als die
+    /// zehn Runden von <see cref="DeleteCleanupChildren"/>: dort geht es um eine ganze Kindermenge
+    /// mit erneuter Abfrage, hier um einen einzelnen Record, und jede Runde verlängert im echten
+    /// Fehlerfall den Lauf. Beide live gemessenen Rennen heilten im ersten Folgeversuch.
+    /// </summary>
+    private const int MaxParentDeleteRetries = 3;
+
+    /// <summary>Abstand zwischen zwei Folgeversuchen des Parent-Deletes, in Millisekunden.</summary>
+    private const int ParentDeleteRetryDelayMs = 1000;
+
+    /// <summary>
+    /// Ist der Delete-Fehlschlag erkennbar vorübergehend? Nur dann bekommt er Folgeversuche
+    /// (ADR-2026-09-20-1547). Genau zwei Fehlerbilder zählen dazu:
+    ///
+    /// 1. Der Dataverse-Konflikt "concurrent Delete request" (zwei Prozesse löschen zugleich).
+    /// 2. Ein Fremdschlüssel-Konflikt mit "Sql Number: 547" — ein async Fremd-Plugin hat im Rennen
+    ///    einen abhängigen Record angelegt. Beim nächsten Versuch besteht das Rennen nicht mehr.
+    ///
+    /// Alles andere bleibt ein sofortiger Fehlschlag. Die Erkennung ist bewusst eng: ein zu weites
+    /// Muster würde einen echten, dauerhaften Delete-Fehler dreimal wiederholen und ihn dabei
+    /// verdecken, falls er zufällig einmal durchgeht.
+    /// </summary>
+    private static bool IsTransientDeleteConflict(Exception ex)
+        => IsConcurrentDeleteConflict(ex)
+           || (ex.Message?.IndexOf("Sql Number: 547", StringComparison.OrdinalIgnoreCase) >= 0);
+
+    /// <summary>
     /// Erkennt den Dataverse-Konflikt "More than one concurrent Delete requests
     /// detected for an Entity ..." (zwei Prozesse löschen denselben Record).
     /// Message-basiert, weil der Fault über beide Service-Verpackungen (SDK-Fault,
@@ -2655,7 +2713,6 @@ public sealed class TestRunner
 
     /// <summary>
     /// Stellt den Vor-Set-Zustand einer EnvironmentVariable wieder her.
-    /// Siehe D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md Abschnitt 6.1.
     /// </summary>
     private void RestoreEnvVarSnapshot(EnvVarSnapshot snap)
     {

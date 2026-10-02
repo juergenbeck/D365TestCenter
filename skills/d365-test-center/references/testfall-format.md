@@ -5,7 +5,7 @@
 
 ## 3. Testfall schreiben: Das JSON-Format
 
-Seit ADR-0004 (`02_decisions/adr/ADR-0004-actions-statt-phasen.md` im Repo D365TestCenter-Workspace) ist ein Testfall **eine einzige geordnete Liste von Actions**. Kein getrenntes `preconditions`-Array, kein getrenntes `assertions`-Array. Die JSON-Reihenfolge ist die Ausführungsreihenfolge. Assert ist eine Action wie jede andere.
+Seit ADR-0004 ist ein Testfall **eine einzige geordnete Liste von Actions**. Kein getrenntes `preconditions`-Array, kein getrenntes `assertions`-Array. Die JSON-Reihenfolge ist die Ausführungsreihenfolge. Assert ist eine Action wie jede andere.
 
 ```json
 {
@@ -44,7 +44,7 @@ Setup-Schritte sind ganz normale `CreateRecord`-Actions am Anfang der `steps`-Li
 | `ExecuteRequest` | Beliebige SDK-Message (v5.2): Merge, QualifyLead, SetState, Assign, **Custom Actions, Custom APIs** (ADR-0007 ab v5.3.7) | `requestName`, `fields` mit `$type`-System, optional **`outputAlias`** (v5.3.5) für `{alias.outputs.X}`-Platzhalter. Legacy-Verben `CallCustomApi`/`ExecuteAction` sind Aliasse (ADR-0007). |
 | `RetrieveRecord` | Record neu laden (v5.2) | `alias`, optional `columns` |
 | `WaitForRecord` / `FindRecord` | Auf Record-Existenz warten | `entity`, `filter`, optional `alias`, `columns`, **`orderBy`** (v5.3), **`top`** (v5.3), **`trackForCleanup`** (FB-54, Default false: gefundener Record ist Bestand; `true` NUR für während des Laufs von der getesteten API SERVERSEITIG erzeugte Records, dann räumt der Cleanup sie mit ab), optional **`cleanupChildren`** (nur mit `trackForCleanup:true` wirksam) |
-| **`TrackRecord`** (FB-54, ADR 2026-07-17 1801 (`02_decisions/adr/ADR-2026-07-17-1801-cleanup-serverseitig-erzeugte-records.md` im Repo D365TestCenter-Workspace)) | Bekannten, serverseitig erzeugten Record ohne Query in Registry + Cleanup-Löschliste aufnehmen (z.B. Custom-API-Output-ID). Unaufgelöster Platzhalter = Error (kein stilles Nichts-Tracken); Dedup gegen bereits getrackte Records. | `entity`, `recordId` (Platzhalter erlaubt, z.B. `{result.outputs.InvoiceId}`), optional `alias`, optional **`cleanupChildren`** |
+| **`TrackRecord`** (FB-54, ADR 2026-07-17 1801) | Bekannten, serverseitig erzeugten Record ohne Query in Registry + Cleanup-Löschliste aufnehmen (z.B. Custom-API-Output-ID). Unaufgelöster Platzhalter = Error (kein stilles Nichts-Tracken); Dedup gegen bereits getrackte Records. | `entity`, `recordId` (Platzhalter erlaubt, z.B. `{result.outputs.InvoiceId}`), optional `alias`, optional **`cleanupChildren`** |
 | `WaitForFieldValue` | Auf Feldwert warten | `alias`, `fields`, `expectedValue` |
 | **`WaitForNotExists`** (v5.3.12) | Auf Record-Abwesenheit warten (async-Lösch-Tests), Polling-Pendant zu `WaitForFieldValue`. Pollt bis 0 Treffer oder Timeout. | `entity`, `filter`, optional `timeoutSeconds` (Default 120, empfohlen 90), `pollingIntervalMs`, `maxDurationMs` |
 | **`WaitForAsyncCompletion`** (ADR 2026-06-28, **verifiziert**) | Wartet auf das **Ende einer mehrstufigen async-Plugin-Kette** (asyncoperation-Quiescence) statt auf einen geratenen Endzustand mit festem Timeout. **CLI-/Core-only** (Plugin-Sandbox skippt, 2-min-Limit). Siehe Pitfall 3.4d. | optional `aliases` (regardingobjectid-Verengung), `timeoutSeconds` (Sicherheits-Obergrenze, KEIN Rate-Wert), `pollingIntervalMs`, `stableChecks` (Default 3), `lookbackSeconds` (Default 20), `initialWaitMs` (Default 2000) |
@@ -182,7 +182,7 @@ falls da, sonst DefaultValue. Ergebnis als virtueller Record im
 Alias-Store mit Feldern `value`, `schemaname`, `resolvedsource`,
 nutzbar als `{env.fields.value}` in nachfolgenden Steps.
 
-Detail-Doku: `D365TestCenter-Workspace/03_implementation/envvar-handling-in-tests.md`.
+Anwendung im Handbuch: `docs/handbuch/02-testfall-schreiben/09-negative-path.md`.
 
 ### 3.2c BrowserAction für UI-Tests (ADR-0006, Phase 1)
 
@@ -499,15 +499,14 @@ Beim Bau von 14 Umsatzverteilungs- und Pipeline-Coverage-Tests in einem Nutzerpr
     **Zeitfenster (`createdon`)**. CLI-/Core-only (im Plugin-Sandbox-Pfad sauber geskippt). **Hybrid (Richtung C)
     empfohlen:** WaitForAsyncCompletion als Haupt-Sync + abschließender `WaitForRecord`-Wert-Backstop.
     **STATUS 2026-06-28 (verifiziert + Last-getestet):** Engine + 628 Unit-Tests grün (inkl. Gegenprobe), ADR
-    2026-06-28 0015 (`02_decisions/adr/ADR-2026-06-28-0015-engine-waitforasynccompletion.md` im Repo D365TestCenter-Workspace). **Finale
+    2026-06-28 0015. **Finale
     Korrelations-Wahl: regobj-Set `aliases:["pos","detail"]` + 20s-Zeitfenster + 90s-WaitForRecord-Wert-Backstop
     (Hybrid).** Der Referenztest lief gegen die erholte DEV-Umgebung **8x grün in Folge** (5x isoliert + 3x im
     138er-Volllauf unter Parallel-Last), **kein Falsch-Grün**, Quiescence schnell (19-26s, weit unter der
     240s-Sicherheits-Obergrenze). Das reine Zeitfenster (Plan B) war nicht nötig. **Gate-Lehre:** der
     offene-Jobs-Zähler ist **nicht** an der rohen Gesamtzahl zu messen, dauerhaft suspendierte uralte System-Jobs
     (statecode 1, altes createdon) blockieren frische Kette-Jobs nicht (regobj- UND Zeitfenster-Korrelation
-    ignorieren sie); maßgeblich sind aktive (statecode 0/2) + frische (<=5min) Jobs. Volle Empirie:
-    `03_implementation/vorgaenge/2026-06-27-engine-waitforasynccompletion/` (plattform-verifikation + korrelation-zeitfenster).
+    ignorieren sie); maßgeblich sind aktive (statecode 0/2) + frische (<=5min) Jobs.
 - **Query-Assert-Filter matcht exakt (`eq`), nicht startswith: bricht bei `{TIMESTAMP}`-Namen (belegt 2026-06-27).** Ein `Assert target:Query` mit `filter:{contoso_bezeichnung:"JBE X"}` sucht den Wert **exakt**; Records,
   die mit `"JBE X {TIMESTAMP}"` angelegt wurden, werden NICHT gefunden -> 0 Records -> FAIL, obwohl die API/das Plugin
   korrekt lief (an einem Kopier-Test beweisbar: sogar der in Step 2 erzeugte Quell-Record wird nicht gefunden). Wurzel der
@@ -566,12 +565,12 @@ Beim Bau von 14 Umsatzverteilungs- und Pipeline-Coverage-Tests in einem Nutzerpr
   als Freitext (`isproductoverridden:true`) mit explizitem `extendedamount` braucht kein Produkt/UoM.
 - **Cleanup räumt NUR von Test-Steps getrackte Records -- serverseitig (von der getesteten API/dem Plugin)
   erzeugte Records bleiben liegen und können als Abhängige den Delete der getrackten Eltern-Records blockieren
-  (FB-54 (`06_referenzkataloge/fehlerbildkatalog.md` im Repo D365TestCenter-Workspace), belegt 2026-07-17 auf einer DEV-Org: 19 Account-Waisen nach
+  (FB-54, belegt 2026-07-17 auf einer DEV-Org: 19 Account-Waisen nach
   einem Beleg-API-Pack, Belege an `customerid` blockierten den Account-Delete; Lauf blieb GRÜN, der
   Delete-Fehler steht nur im Steps-Tab/`jbe_fulllog`).** In die Cleanup-Löschliste kommt automatisch nur
   `CreateRecord`; `FindRecord`/`WaitForRecord` trackt per Default nie (Stammdaten-Schutz 2026-06-23),
   Query-Asserts und `CallCustomApi`-Outputs tracken nie. **Fix (umgesetzt + live-verifiziert 2026-07-17,
-  ADR 2026-07-17 1801 (`02_decisions/adr/ADR-2026-07-17-1801-cleanup-serverseitig-erzeugte-records.md` im Repo D365TestCenter-Workspace)):
+  ADR 2026-07-17 1801):
   Tests, deren getestete API Records erzeugt, deklarieren diese explizit** -- per `WaitForRecord` mit
   `trackForCleanup: true` (gefundenen Beleg in die Löschliste; LIFO löscht ihn VOR dem Eltern-Record) oder
   per `TrackRecord` (`entity` + `recordId` aus dem API-Output, ohne Query). Zusätzlich weist der Lauf
@@ -583,7 +582,7 @@ Beim Bau von 14 Umsatzverteilungs- und Pipeline-Coverage-Tests in einem Nutzerpr
   Beleg-erzeugenden APIs trotzdem den Waisen-Check per Namenspräfix-Query fahren (Goldene Regel 3),
   solange nicht alle Packs nachgezogen sind.
 - **Plugin-erzeugte Kind-MENGEN dynamischer Größe: `cleanupChildren` deklarieren (2026-07-23,
-  ADR 2026-07-23 0808 (`02_decisions/adr/ADR-2026-07-23-0808-cleanup-kind-deklaration.md` im Repo D365TestCenter-Workspace)).**
+  ADR 2026-07-23 0808).**
   `trackForCleanup`/`TrackRecord` deklarieren EINZELNE bekannte Records, für N asynchron entstehende,
   im Testverlauf wandernde Kinder (z.B. `contoso_umsatzplan`-Monatszeilen an Test-Positionen, Restrict-Delete-Härtung)
   nicht abbildbar. Deshalb deklarativ am Step des Parents:
@@ -643,7 +642,7 @@ Erweiterte Variante mit Match auf die konkrete Exception:
 Actions (Assert hat eigene Negativ-Operatoren wie `NotEquals`,
 `IsNull`, `NotExists`).
 
-Detail-Doku: `D365TestCenter-Workspace/03_implementation/expectfailure-feature.md`.
+Anwendung im Handbuch: `docs/handbuch/02-testfall-schreiben/09-negative-path.md`.
 
 ### 3.5 Platzhalter
 

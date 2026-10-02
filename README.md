@@ -14,7 +14,7 @@ A single C# core engine (`D365TestCenter.Core`) is invoked from three callers (S
 - **Async plugin polling** waits for plugin chains to complete before assertions
 - **Negative-path tests** with `expectFailure` / `expectException` and sandbox-safe error capture (ADR-0005)
 - **UI tests via Microsoft.Playwright** as `BrowserAction` steps in the CLI flow (ADR-0006)
-- **Documentation & reporting lifecycle** (ADR-0008): documentation pass-through into the test center, result round-trip back into the Markdown SSOT, run reports (Markdown / HTML / PDF), result upload to Zephyr Scale, pack build/import, and a management inventory — all driven by the CLI
+- **Documentation & reporting lifecycle** (ADR-0008): documentation pass-through into the test center, result round-trip back into the Markdown SSOT, run reports (Markdown / HTML / PDF), result upload to Zephyr Scale, pack build/import, and a management inventory, all driven by the CLI
 - **Visual test editor** with drag-drop, templates, alias autocomplete
 - **Dashboard** with trend sparklines, regression detection, flaky test detection
 - **Demo mode** works outside Dynamics 365 with generated mock data
@@ -54,11 +54,13 @@ Test cases are organized in JSON pack files. Each pack contains an array of test
 ### 1. Deploy to your Dynamics 365 environment
 
 ```powershell
-# Adjust deploy-config.json with your environment URL
-.\scripts\Deploy-Solution.ps1
+pac auth create --environment https://your-org.crm4.dynamics.com
+pac solution pack --zipfile solution/out/D365TestCenter.zip --folder solution/src --packagetype Unmanaged
+pac solution import --path solution/out/D365TestCenter.zip --publish-changes --activate-plugins
 ```
 
-The script creates the publisher, solution, entities, option sets, web resources and the plugin package idempotently.
+The solution brings the publisher, tables, option sets, app, web resources, plugin package, custom APIs and
+plugin steps. Details: `docs/05_deployment-handbuch.md`.
 
 ### 2. Import test cases
 

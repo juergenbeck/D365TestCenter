@@ -42,10 +42,11 @@ SHORT_HASHES = {
     "6dea2fd9a583c0282664e60a3098927a9c03e657aca81dbce4933918ef8de56c",
     "2727b4974efc6e191938f31d75db92d22711c008f936c3b2448fbecc6a076d6e",
     "8d2879f8b70960bb38cb9eeb42d50003ddf169edbd660194ce9952b8fb33668d",
+    "599af8b0b1a3ddc2cc5b01de2261b5b441b410878fe4752a850b811939de4671",
 }
 # long terms that may only match at a token or camelCase-part start
 ANCHORED_HASHES = {"42780bfa47f3261b690457d19b72bcc3e30a957f4ba096c350f257aee612b5ab"}
-EXPECTED_TERM_COUNT = 9
+EXPECTED_TERM_COUNT = 10
 
 EXCLUDED_PREFIXES = (".claude/", ".githooks/", ".codex/")
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+")

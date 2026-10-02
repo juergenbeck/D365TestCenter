@@ -55,7 +55,7 @@ Codierung.
 - Oder: aus VS Code (UTF-8 default) kopieren.
 - Prüfe `$PSVersionTable.PSVersion`: wenn PowerShell < 7.4, lässt sich
   das Problem durch explizites `-ContentType "application/json; charset=utf-8"`
-  lösen — betrifft dich aber nur wenn du PS-Skripte für das Anlegen
+  lösen, betrifft dich aber nur wenn du PS-Skripte für das Anlegen
   verwendest.
 
 ## 4. "Alias 'xxx' existiert nicht"
@@ -73,7 +73,7 @@ erfolgreich registriert.
 gescheitert (oft sichtbar als Error in einer früheren Step).
 
 **Fix:** Alias-Schreibweisen im JSON überall vergleichen (case-
-sensitive!). Die früheren Steps auf rotes Ergebnis prüfen — bei Error
+sensitive!). Die früheren Steps auf rotes Ergebnis prüfen, bei Error
 ist `con` nie angelegt worden.
 
 ## 5. `Assert` mit `target: Record` liefert `null`, obwohl Feld gesetzt ist
@@ -94,7 +94,7 @@ geändert hat, sieht der Record-Assert den alten Cache.
 
 - Option A: `RetrieveRecord` vor dem Assert einschieben, `columns` mit
   dem Feld setzen.
-- Option B: auf `target: Query` umstellen — Query liest immer frisch.
+- Option B: auf `target: Query` umstellen, Query liest immer frisch.
 
 ```json
 { "action": "RetrieveRecord", "alias": "con", "columns": ["firstname"] },
@@ -214,7 +214,7 @@ anzupassen.
 
 ## Für Infrastruktur-Probleme
 
-Wenn du hier nichts findest und der Fehler mysteriös ist — insbesondere
-bei wiederholten Sandbox-Timeouts oder "Plugin nicht gefunden" —
+Wenn du hier nichts findest und der Fehler mysteriös ist, insbesondere
+bei wiederholten Sandbox-Timeouts oder "Plugin nicht gefunden",
 Projekt-Owner kontaktieren. Diese Klasse von Fehlern ist nichts was
 Test-Autoren reparieren können.
