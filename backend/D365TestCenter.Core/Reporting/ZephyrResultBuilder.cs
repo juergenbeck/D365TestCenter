@@ -138,7 +138,11 @@ public static class ZephyrResultBuilder
         if (!JiraIssueKey.IsMatch(distinct[0]))
             return new IssueKeyResolution { Source = IssueKeySource.NotAnIssueKey, Tickets = distinct };
 
-        return new IssueKeyResolution { IssueKey = distinct[0], Source = IssueKeySource.Derived, Tickets = distinct };
+        // Jira issue keys are upper-case; a ticket typed in lower case is normalised.
+        return new IssueKeyResolution
+        {
+            IssueKey = distinct[0].ToUpperInvariant(), Source = IssueKeySource.Derived, Tickets = distinct
+        };
     }
 
     /// <summary>

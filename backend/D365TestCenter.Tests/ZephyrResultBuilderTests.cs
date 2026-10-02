@@ -92,6 +92,17 @@ public class ZephyrResultBuilderTests
     }
 
     [Fact]
+    public void ResolveIssueKey_DerivedKeyWrittenInLowerCase_IsSentUpperCase()
+    {
+        // Jira issue keys are upper-case; a ticket typed in lower case must not
+        // reach Zephyr as-is.
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "proj-11692", "proj-11692" });
+
+        Assert.Equal("PROJ-11692", r.IssueKey);
+        Assert.Equal(ZephyrResultBuilder.IssueKeySource.Derived, r.Source);
+    }
+
+    [Fact]
     public void ResolveIssueKey_MixedTickets_LeavesCycleUnlinked()
     {
         // Zephyr allows exactly one issueKey per cycle: a run spanning several
