@@ -79,18 +79,18 @@ public class ZephyrSyncTests
     {
         var results = new List<TestCaseResult>
         {
-            Tc("DYN10000-TC1", TestOutcome.Passed),
-            Tc("DYN10000-TC9", TestOutcome.Passed)      // no zephyr_key -> not mapped
+            Tc("PROJ10000-TC1", TestOutcome.Passed),
+            Tc("PROJ10000-TC9", TestOutcome.Passed)      // no zephyr_key -> not mapped
         };
         var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["DYN10000-TC1"] = "DYN-T1"
+            ["PROJ10000-TC1"] = "PROJ-T1"
         };
 
         var plan = ZephyrSync.BuildPlan(results, keys);
 
         // the issueKey derivation looks only at the cases that land in the cycle
-        Assert.Equal(new[] { "DYN10000-TC1" }, plan.MappedTestIds);
+        Assert.Equal(new[] { "PROJ10000-TC1" }, plan.MappedTestIds);
     }
 
     [Fact]
@@ -101,15 +101,15 @@ public class ZephyrSyncTests
         try
         {
             File.WriteAllText(Path.Combine(dir, "sub", "tc1.md"),
-                "---\nid: DYN10000-TC1\nticket: DYN-10000\nweitere_tickets: [DYN-9999]\n---\n\n## Zweck\n\nx\n");
+                "---\nid: PROJ10000-TC1\nticket: PROJ-10000\nweitere_tickets: [PROJ-9999]\n---\n\n## Zweck\n\nx\n");
             // No ticket -> absent from the map.
             File.WriteAllText(Path.Combine(dir, "sub", "tc2.md"),
-                "---\nid: DYN10000-TC2\nzephyr_key: DYN-T2\n---\n\n## Zweck\n\ny\n");
+                "---\nid: PROJ10000-TC2\nzephyr_key: PROJ-T2\n---\n\n## Zweck\n\ny\n");
 
             var map = ZephyrSync.LoadTickets(dir);
 
             Assert.Single(map);
-            Assert.Equal("DYN-10000", map["dyn10000-tc1"]);   // primary ticket only, id case-insensitive
+            Assert.Equal("PROJ-10000", map["proj10000-tc1"]);   // primary ticket only, id case-insensitive
         }
         finally { Directory.Delete(dir, true); }
     }

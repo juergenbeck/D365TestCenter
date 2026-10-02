@@ -43,10 +43,10 @@ public class ZephyrResultBuilderTests
     public void BuildTestRunPayload_WithIssueKey_LinksCycleToIssue()
     {
         var p = ZephyrResultBuilder.BuildTestRunPayload(
-            "DYN", "Cycle X", new[] { "DYN-T1" }, " DYN-11692 ");
+            "PROJ", "Cycle X", new[] { "PROJ-T1" }, " PROJ-11692 ");
 
         // trimmed; this is the field that makes the cycle show up on the Jira issue
-        Assert.Equal("DYN-11692", (string?)p["issueKey"]);
+        Assert.Equal("PROJ-11692", (string?)p["issueKey"]);
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public class ZephyrResultBuilderTests
     [InlineData("   ")]
     public void BuildTestRunPayload_WithoutIssueKey_OmitsField(string? issueKey)
     {
-        var p = ZephyrResultBuilder.BuildTestRunPayload("DYN", "Cycle X", new[] { "DYN-T1" }, issueKey);
+        var p = ZephyrResultBuilder.BuildTestRunPayload("PROJ", "Cycle X", new[] { "PROJ-T1" }, issueKey);
 
         Assert.False(p.ContainsKey("issueKey"));   // never send an empty issueKey
     }
@@ -65,9 +65,9 @@ public class ZephyrResultBuilderTests
     [Fact]
     public void ResolveIssueKey_ExplicitKey_WinsOverTickets()
     {
-        var r = ZephyrResultBuilder.ResolveIssueKey(" DYN-1 ", new[] { "DYN-2", "DYN-3" });
+        var r = ZephyrResultBuilder.ResolveIssueKey(" PROJ-1 ", new[] { "PROJ-2", "PROJ-3" });
 
-        Assert.Equal("DYN-1", r.IssueKey);
+        Assert.Equal("PROJ-1", r.IssueKey);
         Assert.Equal(ZephyrResultBuilder.IssueKeySource.Explicit, r.Source);
     }
 
@@ -76,7 +76,7 @@ public class ZephyrResultBuilderTests
     [InlineData("NONE")]
     public void ResolveIssueKey_ExplicitNone_DisablesLinking(string none)
     {
-        var r = ZephyrResultBuilder.ResolveIssueKey(none, new[] { "DYN-2", "DYN-2" });
+        var r = ZephyrResultBuilder.ResolveIssueKey(none, new[] { "PROJ-2", "PROJ-2" });
 
         Assert.Null(r.IssueKey);
         Assert.Equal(ZephyrResultBuilder.IssueKeySource.Disabled, r.Source);
@@ -85,9 +85,9 @@ public class ZephyrResultBuilderTests
     [Fact]
     public void ResolveIssueKey_AllMappedCasesSameTicket_DerivesIt()
     {
-        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-11692", "dyn-11692", " DYN-11692 " });
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "PROJ-11692", "proj-11692", " PROJ-11692 " });
 
-        Assert.Equal("DYN-11692", r.IssueKey);
+        Assert.Equal("PROJ-11692", r.IssueKey);
         Assert.Equal(ZephyrResultBuilder.IssueKeySource.Derived, r.Source);
     }
 
@@ -96,11 +96,11 @@ public class ZephyrResultBuilderTests
     {
         // Zephyr allows exactly one issueKey per cycle: a run spanning several
         // stories is not attributed to an arbitrary one of them.
-        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-1", "DYN-2", "DYN-1" });
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "PROJ-1", "PROJ-2", "PROJ-1" });
 
         Assert.Null(r.IssueKey);
         Assert.Equal(ZephyrResultBuilder.IssueKeySource.MixedTickets, r.Source);
-        Assert.Equal(new[] { "DYN-1", "DYN-2" }, r.Tickets);
+        Assert.Equal(new[] { "PROJ-1", "PROJ-2" }, r.Tickets);
     }
 
     [Theory]
@@ -108,7 +108,7 @@ public class ZephyrResultBuilderTests
     [InlineData("")]
     public void ResolveIssueKey_OneCaseWithoutTicket_LeavesCycleUnlinked(string? missing)
     {
-        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "DYN-1", missing });
+        var r = ZephyrResultBuilder.ResolveIssueKey(null, new[] { "PROJ-1", missing });
 
         Assert.Null(r.IssueKey);
         Assert.Equal(ZephyrResultBuilder.IssueKeySource.MissingTicket, r.Source);
@@ -126,7 +126,7 @@ public class ZephyrResultBuilderTests
     [Theory]
     [InlineData("41432")]            // e.g. an Azure-DevOps work-item id
     [InlineData("Story 12")]
-    [InlineData("DYN-")]
+    [InlineData("PROJ-")]
     public void ResolveIssueKey_UniformTicketThatIsNoJiraKey_IsNotSent(string ticket)
     {
         // A derived value that is no Jira issue key would make Zephyr reject the
