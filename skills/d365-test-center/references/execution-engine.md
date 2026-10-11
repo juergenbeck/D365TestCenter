@@ -60,6 +60,19 @@ Ein „X/X grün" ist erst dann ein Beweis, wenn vier Dinge stimmen (Betriebsreg
    `success`, siehe 8c). `withAsserts == Gesamtzahl` => kein Test ohne Assertion.
 4. **CLI-Pfad für Vollläufe**, nicht den Trigger-Teillauf (2-min-Sandbox-Limit; der Sync-Pfad liefert zudem
    keine Per-Test-Asserts, siehe 8c).
+5. **Laufstatus „Fehler“ heißt unvollständig** (ADR 2026-10-11 2041, Plugin ab 5.3.27): Hat die
+   Stale-Recovery einen Chunk aufgegeben (dieselbe Gruppe dreimal ins 2-Minuten-Limit), endet der Lauf mit
+   Status 105710003 statt Abgeschlossen, das Summary beginnt mit „N Chunk(s) aufgegeben, Lauf
+   unvollständig“, und jeder Test des Chunks ohne Ergebnis steht als Error-Ergebnis mit der Ursache da
+   (`jbe_errordetails` des Chunks nennt Gruppen-Cursor und Testkennungen). Vorher endete so ein Lauf als
+   „Abgeschlossen“ mit 0/0 und war von einem Lauf ohne passende Testfälle nicht zu unterscheiden.
+
+**Worker-Ablauf in Kürze (Plugin-Pfad):** Chunks zu `jbe_chunksize` Tests (Default 8), je Chunk Gruppe für
+Gruppe (`dependsOn`-Gruppen), Budget `jbe_worker_budget_seconds` (Default 60) nur VOR jeder Gruppe geprüft,
+Ergebnisse und Gruppen-Cursor werden seit 5.3.27 NACH JEDER Gruppe gespeichert (vorher erst am Ende des
+Aufrufs, wodurch ein harter Abbruch in Gruppe 2 auch Gruppe 1 verlor, FB-60). Eine Gruppe muss zusammen mit dem
+Budget unter 120 s bleiben. Umgehung für einen langen Einzeltest: allein starten oder `jbe_chunksize` am
+Testlauf auf 1.
 
 ---
 

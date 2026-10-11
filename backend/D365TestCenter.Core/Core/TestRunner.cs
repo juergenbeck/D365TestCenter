@@ -133,10 +133,15 @@ public sealed class TestRunner
     /// gruppenintern selbst auf, ohne Re-Seed (Gruppen-Grenzen-Continuation).
     /// Datengetriebene Tests werden pro Gruppe beim Lauf expandiert.
     /// <paramref name="clock"/> ist injizierbar für deterministische Mock-Budget-Tests.
+    /// <paramref name="onGroupCompleted"/> wird nach jeder abgeschlossenen Gruppe mit dem Index
+    /// der nächsten Gruppe und genau den Ergebnissen dieser Gruppe aufgerufen (ADR-2026-10-11-2041):
+    /// der Worker speichert dort, damit ein harter Sandbox-Abbruch in einer späteren Gruppe die
+    /// bereits gelaufenen nicht mitnimmt.
     /// </summary>
     public BudgetedRunResult RunGroupsBudgeted(
         List<List<TestCase>> groups, int startGroupIndex, int budgetSeconds,
-        Func<DateTime>? clock = null)
+        Func<DateTime>? clock = null,
+        Action<int, List<TestCaseResult>>? onGroupCompleted = null)
     {
         if (groups == null) throw new ArgumentNullException(nameof(groups));
         var now = clock ?? (() => DateTime.UtcNow);
@@ -162,6 +167,7 @@ public sealed class TestRunner
             // beim Lauf expandieren (deterministisch -> stabiler Gruppen-Cursor).
             var expanded = ExpandDataDrivenTests(groups[gi]);
             Log($"-- Gruppe {gi}: {expanded.Count} Test(s) --");
+            var resultsBefore = result.Results.Count;
             var idx = 0;
             foreach (var (tc, dataRow) in expanded)
             {
@@ -169,6 +175,7 @@ public sealed class TestRunner
                 RunExpandedTest(tc, dataRow, idx, expanded.Count, result);
             }
             ranThisCall++;
+            onGroupCompleted?.Invoke(gi + 1, result.Results.Skip(resultsBefore).ToList());
         }
 
         result.CompletedAt = now();

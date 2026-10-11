@@ -542,6 +542,8 @@ Timing</a>
 <ul>
 <li><a href="#die-2-minuten-grenze" id="toc-die-2-minuten-grenze">Die
 2-Minuten-Grenze</a></li>
+<li><a href="#wenn-ein-chunk-aufgegeben-wird" id="toc-wenn-ein-chunk-aufgegeben-wird">Wenn ein Chunk aufgegeben
+wird</a></li>
 <li><a href="#typische-zeitfresser" id="toc-typische-zeitfresser">Typische Zeitfresser</a></li>
 <li><a href="#richtlinien-für-testgröße" id="toc-richtlinien-für-testgröße">Richtlinien für Testgröße</a></li>
 <li><a href="#fehler-pattern-erkennen" id="toc-fehler-pattern-erkennen">Fehler-Pattern erkennen</a></li>
@@ -6329,9 +6331,11 @@ länger.</li>
 <strong>sequenziell</strong> (nicht parallel).</li>
 </ul>
 <p><strong>Sandbox-Timeout:</strong> D365 Plugins haben eine
-2-Minuten-Grenze pro Sync- Aufruf. Das Test-Center arbeitet asynchron in
-Batches zu je ~12 Tests; jeder Batch hat 2 Minuten. Bei &gt;96 Tests
-kann es mehrere Runde brauchen, die Engine macht das automatisch.</p>
+2-Minuten-Grenze pro Aufruf. Das Test-Center arbeitet asynchron in
+Chunks (Standard 8 Tests) mit Zeitbudget und speichert nach jeder
+Testgruppe; Fortsetzungen startet die Engine automatisch. Was passiert,
+wenn ein Test allein zu lang ist, steht unter Troubleshooting,
+Sandbox-Limits und Timing.</p>
 <h2 id="run-abbrechen">Run abbrechen?</h2>
 <p>Gibt es <strong>nicht</strong>. Einmal gestartet läuft der Lauf
 durch. Du kannst aber den Testrun-Record löschen, während er läuft, das
@@ -7739,18 +7743,54 @@ die wichtigsten.</p>
 <h2 id="die-2-minuten-grenze">Die 2-Minuten-Grenze</h2>
 <p><strong>Jeder synchrone Plugin-Aufruf darf maximal 2 Minuten
 laufen.</strong> Danach bricht die Sandbox den Aufruf ab.</p>
-<p>Der Test Center CRUD-Trigger läuft <strong>asynchron</strong>, hat
-damit technisch erst einmal mehr Luft. Aber intern arbeitet er in
-Batches:</p>
+<p>Ein Testlauf in Dataverse läuft <strong>asynchron</strong> über
+Worker, und jeder Worker-Aufruf unterliegt wieder dem
+2-Minuten-Limit:</p>
 <ul>
-<li>Ein Batch = ca. <strong>12 Testcases</strong></li>
-<li>Jeder Batch läuft wieder <strong>innerhalb eines
-2-Min-Limits</strong></li>
-<li>Nach dem Limit startet der nächste Batch automatisch</li>
+<li>Der Lauf wird in <strong>Chunks</strong> aufgeteilt (Standard 8
+Testfälle, Umgebungsvariable <code>jbe_chunksize</code>, je Lauf
+überschreibbar über das Feld <code>jbe_chunksize</code> am
+Testlauf).</li>
+<li>Ein Worker arbeitet einen Chunk <strong>Gruppe für Gruppe</strong>
+ab. Eine Gruppe ist ein Testfall oder mehrere über
+<code>dependsOn</code> verbundene Testfälle.</li>
+<li>Vor jeder Gruppe prüft der Worker sein <strong>Zeitbudget</strong>
+(Standard 60 s, Umgebungsvariable
+<code>jbe_worker_budget_seconds</code>). Ist es erreicht, endet der
+Aufruf sauber und ein neuer setzt an der nächsten Gruppe fort.</li>
+<li><strong>Nach jeder Gruppe</strong> sind deren Ergebnisse
+gespeichert. Läuft eine Gruppe trotzdem ins harte Limit, ist nur sie
+betroffen; die Wiederherstellung (Stale-Recovery, nach 180 s) setzt bei
+ihr neu an.</li>
 </ul>
-<p><strong>Was das für dich bedeutet:</strong> Einzelne Tests sollten
-unter <strong>90 Sekunden</strong> bleiben. Darüber hinaus wirst du
-unzuverlässig: mal läuft&#39;s, mal Timeout.</p>
+<p><strong>Was das für dich bedeutet:</strong> Eine Gruppe muss zusammen
+mit dem Budget unter 120 Sekunden bleiben. Bei 60 s Budget heißt das:
+ein einzelner Test sollte unter <strong>60 Sekunden</strong> bleiben,
+sicher unter <strong>90 Sekunden</strong>. Darüber wirst du
+unzuverlässig.</p>
+<h2 id="wenn-ein-chunk-aufgegeben-wird">Wenn ein Chunk aufgegeben
+wird</h2>
+<p>Läuft dieselbe Gruppe dreimal hintereinander ins harte Limit, ohne
+dass ein Ergebnis dazukommt, gibt die Wiederherstellung den Chunk auf
+(Umgebungsvariable <code>jbe_max_recoveries</code>, Standard 3). Dann
+gilt:</p>
+<ul>
+<li>Der Chunk steht auf <strong>Fehler</strong>.
+<code>jbe_errordetails</code> nennt die Gruppe, an der er hängt, und die
+Testkennungen des Chunks.</li>
+<li>Jeder Test des Chunks, der kein Ergebnis hat, erscheint beim
+Laufabschluss als Ergebnis <strong>Error</strong> mit der Ursache in der
+Meldung. So fehlt er in keiner Zählung und keinem Bericht.</li>
+<li>Der Testlauf endet mit Status <strong>Fehler</strong> statt
+Abgeschlossen, und die Zusammenfassung beginnt mit „N Chunk(s)
+aufgegeben, Lauf unvollständig“. In Trend, Regressionen und Zeitleiste
+der App zählen nur abgeschlossene Läufe; ein unvollständiger Lauf fließt
+dort nicht ein.</li>
+</ul>
+<p><strong>Abhilfe:</strong> Den betroffenen Test kürzen (lange
+<code>Wait</code>-Schritte durch <code>WaitForFieldValue</code>
+ersetzen) oder aufteilen. Als Sofortmaßnahme den Test allein starten
+oder <code>jbe_chunksize</code> am Testlauf auf 1 setzen.</p>
 <h2 id="typische-zeitfresser">Typische Zeitfresser</h2>
 <h3 id="1-lange-wait-schritte">1. Lange <code>Wait</code>-Schritte</h3>
 <div class="sourceCode" id="cb184"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb184-1"><a href="#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;Wait&quot;</span><span class="fu">,</span> <span class="dt">&quot;waitSeconds&quot;</span><span class="fu">:</span> <span class="dv">60</span> <span class="fu">}</span></span></code></pre></div>

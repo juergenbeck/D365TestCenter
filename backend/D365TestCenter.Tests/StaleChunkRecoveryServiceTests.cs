@@ -213,11 +213,33 @@ public class StaleChunkRecoveryServiceTests
         Assert.Equal(0, r.ChunksRecovered);
         Assert.Equal(1, r.ChunksPoisoned);
         Assert.Equal(WorkerSchema.ChunkError, ChunkStatusOf(fake, chunkId));
-        // Der Fehler-Chunk zählt zum Plateau -> Lauf abgeschlossen (kein Deadlock).
+        // Der Fehler-Chunk zählt zum Plateau -> Lauf abgeschlossen (kein Deadlock). Seit
+        // ADR-2026-10-11-2041 mit Status Fehler, und der verlorene Test TC1 steht als Error-Ergebnis da.
         Assert.Equal(1, r.RunsCompleted);
-        Assert.Equal(WorkerSchema.StatusCompleted, RunStatusOf(fake, runId));
-        Assert.Equal(1, fake.Get(WorkerSchema.TestRunEntity, runId)
-            .GetAttributeValue<int>(WorkerSchema.RunChunksFailed));
+        Assert.Equal(WorkerSchema.StatusError, RunStatusOf(fake, runId));
+        var run = fake.Get(WorkerSchema.TestRunEntity, runId);
+        Assert.Equal(1, run.GetAttributeValue<int>(WorkerSchema.RunChunksFailed));
+        Assert.Equal(1, run.GetAttributeValue<int>(WorkerSchema.RunTotal));
+        var lost = Assert.Single(fake.All(WorkerSchema.TestRunResultEntity));
+        Assert.Equal("TC1", lost.GetAttributeValue<string>(WorkerSchema.ResultTestId));
+        Assert.Equal(WorkerSchema.OutcomeError, lost.GetAttributeValue<OptionSetValue>(WorkerSchema.ResultOutcome).Value);
+    }
+
+    [Fact]
+    public void LoopBreaker_PoisonMessage_NamesGroupCursorAndTestIds()
+    {
+        var fake = new FakeDataverse();
+        var runId = SeedRun(fake, 2); // second chunk outstanding -> no plateau, message stays focused
+        var chunkId = SeedRunningChunk(fake, runId, lastClaimedOn: T0.AddSeconds(-300),
+            recoveryCount: 3, groupCursor: 1, testIds: new[] { "BR-A", "BR-B" });
+
+        new StaleChunkRecoveryService(fake).Sweep(Stale, MaxRecov, () => T0);
+
+        var details = fake.Get(WorkerSchema.TestChunkEntity, chunkId)
+            .GetAttributeValue<string>(WorkerSchema.ChunkErrorDetails);
+        Assert.Contains("Gruppe 1", details);
+        Assert.Contains("BR-A", details);
+        Assert.Contains("BR-B", details);
     }
 
     [Fact]

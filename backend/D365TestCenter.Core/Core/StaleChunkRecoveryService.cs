@@ -125,7 +125,8 @@ public sealed class StaleChunkRecoveryService
         try
         {
             fresh = _service.Retrieve(WorkerSchema.TestChunkEntity, chunkId,
-                new ColumnSet(WorkerSchema.ChunkStatus, WorkerSchema.ChunkRecoveryCount));
+                new ColumnSet(WorkerSchema.ChunkStatus, WorkerSchema.ChunkRecoveryCount,
+                    WorkerSchema.ChunkGroupCursor, WorkerSchema.ChunkTestIds));
         }
         catch
         {
@@ -159,10 +160,15 @@ public sealed class StaleChunkRecoveryService
     /// <summary>Loop-Breaker: zu oft recovert ohne Fortschritt -> "Fehler" per OC (Plateau-fähig).</summary>
     private bool PoisonStale(Entity fresh, int prevRecoveryCount, Func<DateTime> now)
     {
+        // Seit ADR-2026-10-11-2041 speichert der Worker nach jeder Gruppe; wiederholtes Aufgeben
+        // ohne Fortschritt heißt deshalb: die Gruppe am Cursor überschreitet allein das harte Limit.
+        var cursor = fresh.GetAttributeValue<int?>(WorkerSchema.ChunkGroupCursor) ?? 0;
+        var testIds = fresh.GetAttributeValue<string>(WorkerSchema.ChunkTestIds) ?? "[]";
         var msg = $"Stale-Chunk-Recovery: Chunk lief wiederholt ins Hard-Timeout ohne Fortschritt " +
-                  $"({prevRecoveryCount} Recoveries). Wahrscheinlich ein Einzeltest, dessen Schrittkette " +
-                  "das Wellen-Budget übersteigt. Abhilfe: kleinere jbe_chunksize oder Step-Level-" +
-                  "Checkpointing (ADR-0009 Entscheidung 7, vertagt).";
+                  $"({prevRecoveryCount} Recoveries), jeweils ab Gruppe {cursor}. Die Testgruppe an " +
+                  "dieser Stelle überschreitet allein das 2-Minuten-Limit der Sandbox (lange Wartezeiten " +
+                  "oder Schrittketten; Step-Level-Checkpointing ist vertagt, ADR-0009 Entscheidung 7). " +
+                  $"Tests des Chunks: {testIds}. Tests ohne Ergebnis erscheinen beim Laufabschluss als Error.";
         var update = new Entity(WorkerSchema.TestChunkEntity, fresh.Id)
         {
             [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkError),

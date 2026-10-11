@@ -127,10 +127,11 @@ Richtlinien:
 - **Merge-Tests** mit 45s-Waits dauern entsprechend länger.
 - **Batch mit N Tests** läuft **sequenziell** (nicht parallel).
 
-**Sandbox-Timeout:** D365 Plugins haben eine 2-Minuten-Grenze pro Sync-
-Aufruf. Das Test-Center arbeitet asynchron in Batches zu je ~12 Tests;
-jeder Batch hat 2 Minuten. Bei >96 Tests kann es mehrere Runde brauchen,
-die Engine macht das automatisch.
+**Sandbox-Timeout:** D365 Plugins haben eine 2-Minuten-Grenze pro
+Aufruf. Das Test-Center arbeitet asynchron in Chunks (Standard 8 Tests)
+mit Zeitbudget und speichert nach jeder Testgruppe; Fortsetzungen startet
+die Engine automatisch. Was passiert, wenn ein Test allein zu lang ist,
+steht unter Troubleshooting, Sandbox-Limits und Timing.
 
 ## Run abbrechen?
 

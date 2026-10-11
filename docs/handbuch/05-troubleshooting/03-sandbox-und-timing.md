@@ -9,16 +9,46 @@ wichtigsten.
 **Jeder synchrone Plugin-Aufruf darf maximal 2 Minuten laufen.** Danach
 bricht die Sandbox den Aufruf ab.
 
-Der Test Center CRUD-Trigger läuft **asynchron**, hat damit technisch
-erst einmal mehr Luft. Aber intern arbeitet er in Batches:
+Ein Testlauf in Dataverse läuft **asynchron** über Worker, und jeder
+Worker-Aufruf unterliegt wieder dem 2-Minuten-Limit:
 
-- Ein Batch = ca. **12 Testcases**
-- Jeder Batch läuft wieder **innerhalb eines 2-Min-Limits**
-- Nach dem Limit startet der nächste Batch automatisch
+- Der Lauf wird in **Chunks** aufgeteilt (Standard 8 Testfälle,
+  Umgebungsvariable `jbe_chunksize`, je Lauf überschreibbar über das
+  Feld `jbe_chunksize` am Testlauf).
+- Ein Worker arbeitet einen Chunk **Gruppe für Gruppe** ab. Eine Gruppe
+  ist ein Testfall oder mehrere über `dependsOn` verbundene Testfälle.
+- Vor jeder Gruppe prüft der Worker sein **Zeitbudget** (Standard 60 s,
+  Umgebungsvariable `jbe_worker_budget_seconds`). Ist es erreicht, endet
+  der Aufruf sauber und ein neuer setzt an der nächsten Gruppe fort.
+- **Nach jeder Gruppe** sind deren Ergebnisse gespeichert. Läuft eine
+  Gruppe trotzdem ins harte Limit, ist nur sie betroffen; die
+  Wiederherstellung (Stale-Recovery, nach 180 s) setzt bei ihr neu an.
 
-**Was das für dich bedeutet:** Einzelne Tests sollten unter **90 Sekunden**
-bleiben. Darüber hinaus wirst du unzuverlässig: mal läuft's, mal
-Timeout.
+**Was das für dich bedeutet:** Eine Gruppe muss zusammen mit dem
+Budget unter 120 Sekunden bleiben. Bei 60 s Budget heißt das: ein
+einzelner Test sollte unter **60 Sekunden** bleiben, sicher unter
+**90 Sekunden**. Darüber wirst du unzuverlässig.
+
+## Wenn ein Chunk aufgegeben wird
+
+Läuft dieselbe Gruppe dreimal hintereinander ins harte Limit, ohne dass
+ein Ergebnis dazukommt, gibt die Wiederherstellung den Chunk auf
+(Umgebungsvariable `jbe_max_recoveries`, Standard 3). Dann gilt:
+
+- Der Chunk steht auf **Fehler**. `jbe_errordetails` nennt die Gruppe,
+  an der er hängt, und die Testkennungen des Chunks.
+- Jeder Test des Chunks, der kein Ergebnis hat, erscheint beim
+  Laufabschluss als Ergebnis **Error** mit der Ursache in der Meldung.
+  So fehlt er in keiner Zählung und keinem Bericht.
+- Der Testlauf endet mit Status **Fehler** statt Abgeschlossen, und die
+  Zusammenfassung beginnt mit „N Chunk(s) aufgegeben, Lauf
+  unvollständig“. In Trend, Regressionen und Zeitleiste der App zählen
+  nur abgeschlossene Läufe; ein unvollständiger Lauf fließt dort nicht
+  ein.
+
+**Abhilfe:** Den betroffenen Test kürzen (lange `Wait`-Schritte durch
+`WaitForFieldValue` ersetzen) oder aufteilen. Als Sofortmaßnahme den
+Test allein starten oder `jbe_chunksize` am Testlauf auf 1 setzen.
 
 ## Typische Zeitfresser
 

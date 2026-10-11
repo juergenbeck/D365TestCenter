@@ -133,41 +133,55 @@ public sealed class ChunkWorkerOrchestrator
             CaptureRecordNames = true
         };
 
-        var budget = runner.RunGroupsBudgeted(groups, groupCursor, budgetSeconds, now);
-        var wave = budget.Run;
-
-        // ── H1: ERST alle Result-Upserts committen ──────────────────
+        // ── Je Gruppe speichern (ADR-2026-10-11-2041, FB-60) ─────────
+        // H1 bleibt je Gruppe gewahrt: ERST die Result-Upserts der Gruppe, DANN Cursor + Zähler.
+        // Ein harter Sandbox-Abbruch (120 s) in einer späteren Gruppe verliert damit nur die
+        // laufende Gruppe; die Recovery setzt am gespeicherten Cursor an. Fortschritt setzt den
+        // Loop-Breaker-Zähler zurück (OE-12). Der Rückruf ruft die Uhr bewusst nicht auf.
         var writer = new ChunkResultWriter(_service, _log);
-        foreach (var tc in wave.Results)
-            writer.UpsertResult(testRunId, tc);
-
-        // ── DANN Chunk-Zähler + Cursor + Status-Flip ───────────────
-        var prevProcessed = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkProcessedCount) ?? 0;
-        var prevFailed = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkFailedCount) ?? 0;
+        var processedTotal = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkProcessedCount) ?? 0;
+        var failedTotal = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkFailedCount) ?? 0;
         var prevContinuations = chunk.GetAttributeValue<int?>(WorkerSchema.ChunkContinuations) ?? 0;
-        var waveProcessed = wave.Results.Count;
-        var waveFailed = wave.Results.Count(r =>
-            r.Outcome == TestOutcome.Failed || r.Outcome == TestOutcome.Error);
+
+        void PersistGroup(int nextGroupIndex, List<TestCaseResult> groupResults)
+        {
+            foreach (var tc in groupResults)
+                writer.UpsertResult(testRunId, tc);
+
+            processedTotal += groupResults.Count;
+            failedTotal += groupResults.Count(r =>
+                r.Outcome == TestOutcome.Failed || r.Outcome == TestOutcome.Error);
+
+            _service.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
+            {
+                [WorkerSchema.ChunkGroupCursor] = nextGroupIndex,
+                [WorkerSchema.ChunkProcessedCount] = processedTotal,
+                [WorkerSchema.ChunkFailedCount] = failedTotal,
+                [WorkerSchema.ChunkRecoveryCount] = 0
+            });
+            _log?.Invoke($"Worker: Gruppe gespeichert ({groupResults.Count} Ergebnis(se)), Cursor {nextGroupIndex}.");
+        }
+
+        var budget = runner.RunGroupsBudgeted(groups, groupCursor, budgetSeconds, now, PersistGroup);
 
         if (budget.Done)
         {
             var completedOn = now();
-            var update = new Entity(WorkerSchema.TestChunkEntity, chunkId)
+            _service.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
             {
                 [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkProcessed),
                 [WorkerSchema.ChunkGroupCursor] = budget.NextGroupIndex,
-                [WorkerSchema.ChunkProcessedCount] = prevProcessed + waveProcessed,
-                [WorkerSchema.ChunkFailedCount] = prevFailed + waveFailed,
+                [WorkerSchema.ChunkProcessedCount] = processedTotal,
+                [WorkerSchema.ChunkFailedCount] = failedTotal,
                 [WorkerSchema.ChunkCompletedOn] = completedOn,
                 [WorkerSchema.ChunkDurationMs] =
                     (int)Math.Max(0, (completedOn - chunkStartedOn).TotalMilliseconds),
                 // Fortschritt -> Loop-Breaker-Zähler zurücksetzen (OE-12): nur wiederholte
                 // Recoveries OHNE Fortschritt sollen Richtung Poison akkumulieren.
                 [WorkerSchema.ChunkRecoveryCount] = 0
-            };
-            _service.Update(update);
-            _log?.Invoke($"Worker: Chunk verarbeitet ({prevProcessed + waveProcessed} Test(s), " +
-                         $"{prevFailed + waveFailed} fehlgeschlagen).");
+            });
+            _log?.Invoke($"Worker: Chunk verarbeitet ({processedTotal} Test(s), " +
+                         $"{failedTotal} fehlgeschlagen).");
 
             // Plateau: wenn dies der letzte fertige Chunk war, Lauf abschließen (Completion-Guard).
             new RunCompletionService(_service, _log).TryComplete(testRunId, now);
@@ -175,13 +189,13 @@ public sealed class ChunkWorkerOrchestrator
         }
 
         // Budget gerissen -> Self-Trigger (Fortsetzen). Mindestens eine Gruppe lief (Budget-Check
-        // vor jeder Gruppe) -> Fortschritt -> Loop-Breaker-Zähler zurücksetzen (OE-12).
+        // vor jeder Gruppe) und ist bereits gespeichert -> Fortschritt -> Zähler zurücksetzen (OE-12).
         _service.Update(new Entity(WorkerSchema.TestChunkEntity, chunkId)
         {
             [WorkerSchema.ChunkStatus] = new OptionSetValue(WorkerSchema.ChunkResume),
             [WorkerSchema.ChunkGroupCursor] = budget.NextGroupIndex,
-            [WorkerSchema.ChunkProcessedCount] = prevProcessed + waveProcessed,
-            [WorkerSchema.ChunkFailedCount] = prevFailed + waveFailed,
+            [WorkerSchema.ChunkProcessedCount] = processedTotal,
+            [WorkerSchema.ChunkFailedCount] = failedTotal,
             [WorkerSchema.ChunkContinuations] = prevContinuations + 1,
             [WorkerSchema.ChunkRecoveryCount] = 0
         });

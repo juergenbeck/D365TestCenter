@@ -11,7 +11,9 @@ namespace D365TestCenter.Core;
 /// Plateau-Erkennung + Run-Abschluss (ADR-0009 B.2 / C-04). Wird sowohl vom Worker (nach jedem
 /// fertigen Chunk) als auch vom Koordinator (nach dem Setzen von <c>jbe_chunks_total</c>) aufgerufen
 /// -- wer als Letzter beobachtet, dass alle Chunks Verarbeitet/Fehler sind, rechnet das
-/// Run-Aggregat EINMAL aus den Result-Records und setzt <c>jbe_testrun</c> auf Completed.
+/// Run-Aggregat EINMAL aus den Result-Records und setzt <c>jbe_testrun</c> auf Completed, bei mindestens
+/// einem aufgegebenen Chunk auf Error; dessen Tests ohne Ergebnis werden vorher als Error-Ergebnis
+/// geschrieben (ADR-2026-10-11-2041).
 ///
 /// Completion-Guard: das finale Update läuft mit <see cref="ConcurrencyBehavior.IfRowVersionMatches"/>
 /// -- bei einem Plateau-Race gewinnt genau ein Aufrufer, die Verlierer erhalten eine
@@ -51,13 +53,23 @@ public sealed class RunCompletionService
 
         // Chunk-Status-Verteilung zählen.
         var chunks = LoadChunks(testRunId);
-        var done = chunks.Count(c => c == WorkerSchema.ChunkProcessed);
-        var failed = chunks.Count(c => c == WorkerSchema.ChunkError);
+        var done = chunks.Count(c => c.Status == WorkerSchema.ChunkProcessed);
+        var failed = chunks.Count(c => c.Status == WorkerSchema.ChunkError);
         if (done + failed < total)
             return false; // noch nicht alle Chunks fertig
 
         // ── Plateau erreicht: Aggregat aus den Result-Records rechnen ──
         var results = LoadResults(testRunId);
+
+        // Aufgegebene Chunks (ADR-2026-10-11-2041): jeder Test ohne Ergebnis wird ein Error-Ergebnis
+        // mit der Ursache des Chunks, damit er in Zählung, Berichten und Zephyr-Abgleich auftaucht.
+        // Idempotent über den Alternate-Key-Upsert; ein Plateau-Race-Verlierer schreibt dieselben Zeilen.
+        if (failed > 0)
+        {
+            var lost = WriteLostTestResults(testRunId, chunks, results);
+            if (lost > 0) results = LoadResults(testRunId);
+        }
+
         var agg = TestRunner.ComputeRunAggregate(results);
 
         var startedOn = run.GetAttributeValue<DateTime?>(WorkerSchema.RunStartedOn);
@@ -69,10 +81,15 @@ public sealed class RunCompletionService
         var summary = $"{agg.Passed}/{agg.Total} bestanden, {agg.Failed + agg.Errored} fehlgeschlagen" +
                       (agg.Skipped > 0 ? $", {agg.Skipped} übersprungen" : "") +
                       $" ({done} Chunks" + (failed > 0 ? $", {failed} fehlerhaft" : "") + ")";
+        // Ein aufgegebener Chunk macht den Lauf unvollständig: Status Fehler statt Abgeschlossen
+        // (dieselbe Bedeutung wie bei einem technisch abgebrochenen Lauf), Hinweis vorne im Summary.
+        if (failed > 0)
+            summary = $"{failed} Chunk{(failed == 1 ? "" : "s")} aufgegeben, Lauf unvollständig. " + summary;
+        var finalStatus = failed > 0 ? WorkerSchema.StatusError : WorkerSchema.StatusCompleted;
 
         var update = new Entity(WorkerSchema.TestRunEntity, testRunId)
         {
-            [WorkerSchema.RunStatus] = new OptionSetValue(WorkerSchema.StatusCompleted),
+            [WorkerSchema.RunStatus] = new OptionSetValue(finalStatus),
             [WorkerSchema.RunCompletedOn] = completedOn,
             [WorkerSchema.RunTotal] = agg.Total,
             [WorkerSchema.RunPassed] = agg.Passed,
@@ -114,18 +131,71 @@ public sealed class RunCompletionService
         }
     }
 
-    private List<int> LoadChunks(Guid testRunId)
+    private sealed class ChunkInfo
+    {
+        public int Status { get; set; }
+        public string? TestIdsJson { get; set; }
+        public string? ErrorDetails { get; set; }
+    }
+
+    private List<ChunkInfo> LoadChunks(Guid testRunId)
     {
         var query = new QueryExpression(WorkerSchema.TestChunkEntity)
         {
-            ColumnSet = new ColumnSet(WorkerSchema.ChunkStatus),
+            ColumnSet = new ColumnSet(
+                WorkerSchema.ChunkStatus, WorkerSchema.ChunkTestIds, WorkerSchema.ChunkErrorDetails),
             NoLock = true
         };
         query.Criteria.AddCondition(WorkerSchema.ChunkTestRunId, ConditionOperator.Equal, testRunId);
 
         return _service.RetrieveMultiple(query).Entities
-            .Select(e => e.GetAttributeValue<OptionSetValue>(WorkerSchema.ChunkStatus)?.Value ?? -1)
+            .Select(e => new ChunkInfo
+            {
+                Status = e.GetAttributeValue<OptionSetValue>(WorkerSchema.ChunkStatus)?.Value ?? -1,
+                TestIdsJson = e.GetAttributeValue<string>(WorkerSchema.ChunkTestIds),
+                ErrorDetails = e.GetAttributeValue<string>(WorkerSchema.ChunkErrorDetails)
+            })
             .ToList();
+    }
+
+    /// <summary>
+    /// Schreibt für jede Testkennung eines aufgegebenen Chunks, zu der kein Ergebnis existiert,
+    /// ein Error-Ergebnis. Ein datengetriebener Test zählt als vorhanden, sobald eine seiner Zeilen
+    /// (<c>ID[n]</c>) ein Ergebnis hat. Unlesbares <c>jbe_testids</c> wird übersprungen.
+    /// Gibt die Zahl der geschriebenen Ergebnisse zurück.
+    /// </summary>
+    private int WriteLostTestResults(Guid testRunId, List<ChunkInfo> chunks, List<TestCaseResult> results)
+    {
+        var present = new HashSet<string>(results.Select(r => r.TestId), StringComparer.Ordinal);
+        bool HasResult(string id) =>
+            present.Contains(id) || present.Any(p => p.StartsWith(id + "[", StringComparison.Ordinal));
+
+        var writer = new ChunkResultWriter(_service, _log);
+        var written = 0;
+        foreach (var chunk in chunks.Where(c => c.Status == WorkerSchema.ChunkError))
+        {
+            List<string>? ids;
+            try { ids = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(chunk.TestIdsJson ?? ""); }
+            catch (Newtonsoft.Json.JsonException) { ids = null; }
+            if (ids == null) continue;
+
+            var cause = string.IsNullOrWhiteSpace(chunk.ErrorDetails) ? "ohne Angabe" : chunk.ErrorDetails!.Trim();
+            foreach (var id in ids.Where(i => !string.IsNullOrWhiteSpace(i) && !HasResult(i)).Distinct())
+            {
+                writer.UpsertResult(testRunId, new TestCaseResult
+                {
+                    TestId = id,
+                    Title = id,
+                    Outcome = TestOutcome.Error,
+                    ErrorMessage = "Test nicht ausgeführt: sein Chunk wurde aufgegeben. Ursache: " + cause
+                });
+                present.Add(id);
+                written++;
+            }
+        }
+        if (written > 0)
+            _log?.Invoke($"Plateau: {written} verlorene(r) Test(s) aus aufgegebenen Chunks als Error-Ergebnis geschrieben.");
+        return written;
     }
 
     private List<TestCaseResult> LoadResults(Guid testRunId)

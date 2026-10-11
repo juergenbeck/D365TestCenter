@@ -162,10 +162,12 @@ public class ChunkWorkerOrchestratorTests
 
         Assert.Equal(ChunkWorkerOutcome.Poison, outcome);
         Assert.Equal(WorkerSchema.ChunkError, ChunkStatusOf(fake, chunk.Id));
+        // Unreadable jbe_testids -> no test ids to report as Error results.
         Assert.Equal(0, ResultCount(fake));
-        // Ein Fehler-Chunk zählt zum Plateau -> Lauf wird (mit 0 Tests) abgeschlossen.
+        // Ein Fehler-Chunk zählt zum Plateau -> Lauf wird abgeschlossen, seit
+        // ADR-2026-10-11-2041 mit Status Fehler statt Abgeschlossen (aufgegebener Chunk).
         var run = fake.Get(WorkerSchema.TestRunEntity, runId);
-        Assert.Equal(WorkerSchema.StatusCompleted,
+        Assert.Equal(WorkerSchema.StatusError,
             run.GetAttributeValue<OptionSetValue>(WorkerSchema.RunStatus).Value);
         Assert.Equal(1, run.GetAttributeValue<int>(WorkerSchema.RunChunksFailed));
     }
@@ -196,6 +198,60 @@ public class ChunkWorkerOrchestratorTests
         Assert.Equal(WorkerSchema.StatusRunning,
             fake.Get(WorkerSchema.TestRunEntity, runId)
                 .GetAttributeValue<OptionSetValue>(WorkerSchema.RunStatus).Value);
+    }
+
+    [Fact]
+    public void GroupResultAndCursor_ArePersisted_BeforeTheNextGroupStarts()
+    {
+        // ADR-2026-10-11-2041 / FB-60: a hard sandbox abort during group 2 must not lose
+        // group 1. Snapshot the store while group 2 is executing (its CreateRecord step).
+        var fake = new FakeDataverse();
+        var runId = SeedRun(fake, 1);
+        SeedTestCase(fake, "TC1");
+        var def = JsonConvert.SerializeObject(new
+        {
+            id = "TC2",
+            title = "TC2",
+            steps = new object[]
+            {
+                new { action = "CreateRecord", entity = "account", alias = "acc",
+                      fields = new Dictionary<string, object> { ["name"] = "FB60" } }
+            }
+        });
+        var tc2 = new Entity(WorkerSchema.TestCaseEntity, Guid.NewGuid());
+        tc2[WorkerSchema.TcTestId] = "TC2";
+        tc2[WorkerSchema.TcTitle] = "TC2";
+        tc2[WorkerSchema.TcDefinition] = def;
+        tc2[WorkerSchema.TcEnabled] = true;
+        fake.Seed(tc2);
+        var chunkId = SeedChunk(fake, runId, 0, new[] { "TC1", "TC2" }); // independent -> 2 groups
+
+        int? cursorDuringGroup2 = null;
+        int? processedDuringGroup2 = null;
+        List<string>? resultIdsDuringGroup2 = null;
+        fake.OnCreate = e =>
+        {
+            if (e.LogicalName != "account" || cursorDuringGroup2.HasValue) return;
+            var c = fake.Get(WorkerSchema.TestChunkEntity, chunkId);
+            cursorDuringGroup2 = c.GetAttributeValue<int>(WorkerSchema.ChunkGroupCursor);
+            processedDuringGroup2 = c.GetAttributeValue<int>(WorkerSchema.ChunkProcessedCount);
+            resultIdsDuringGroup2 = fake.All(WorkerSchema.TestRunResultEntity)
+                .Select(r => r.GetAttributeValue<string>(WorkerSchema.ResultTestId)).ToList();
+        };
+
+        var outcome = new ChunkWorkerOrchestrator(fake).Run(chunkId, 80, SeqClock(T0));
+
+        Assert.Equal(ChunkWorkerOutcome.Processed, outcome);
+        // While group 2 ran, group 1 was already safe.
+        Assert.Equal(1, cursorDuringGroup2);
+        Assert.Equal(1, processedDuringGroup2);
+        Assert.Equal(new[] { "TC1" }, resultIdsDuringGroup2);
+        // End state is not double counted.
+        var chunk = fake.Get(WorkerSchema.TestChunkEntity, chunkId);
+        Assert.Equal(2, chunk.GetAttributeValue<int>(WorkerSchema.ChunkGroupCursor));
+        Assert.Equal(2, chunk.GetAttributeValue<int>(WorkerSchema.ChunkProcessedCount));
+        Assert.Equal(0, chunk.GetAttributeValue<int>(WorkerSchema.ChunkContinuations));
+        Assert.Equal(2, ResultCount(fake));
     }
 
     [Fact]

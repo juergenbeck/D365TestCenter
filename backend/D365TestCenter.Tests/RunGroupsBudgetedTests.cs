@@ -52,6 +52,42 @@ public class RunGroupsBudgetedTests
         => r.Run.Results.Select(x => x.TestId).ToList();
 
     [Fact]
+    public void GroupCompletedCallback_ReportsEachGroupWithItsResultsAndNextIndex()
+    {
+        // ADR-2026-10-11-2041 Entscheidung 1: the worker persists after every group, so the
+        // runner must hand over exactly that group's results plus the cursor of the next group.
+        var groups = Groups(
+            new[] { WaitTest("A"), WaitTest("B", new[] { "A" }) },
+            new[] { WaitTest("C") });
+        var calls = new List<(int Next, List<string> Ids)>();
+
+        var r = NewRunner().RunGroupsBudgeted(groups, 0, budgetSeconds: 1000, clock: SeqClock(T0),
+            onGroupCompleted: (next, results) => calls.Add((next, results.Select(x => x.TestId).ToList())));
+
+        Assert.True(r.Done);
+        Assert.Equal(2, calls.Count);
+        Assert.Equal(1, calls[0].Next);
+        Assert.Equal(new[] { "A", "B" }, calls[0].Ids);
+        Assert.Equal(2, calls[1].Next);
+        Assert.Equal(new[] { "C" }, calls[1].Ids);
+    }
+
+    [Fact]
+    public void GroupCompletedCallback_NotCalledForGroupsLeftForTheNextWave()
+    {
+        var groups = Groups(new[] { WaitTest("A") }, new[] { WaitTest("B") });
+        var calls = new List<int>();
+
+        // Clock: start T0, check before group 1 at T0+100 (>= 80) -> continuation.
+        var r = NewRunner().RunGroupsBudgeted(groups, 0, budgetSeconds: 80,
+            clock: SeqClock(T0, T0.AddSeconds(100)),
+            onGroupCompleted: (next, _) => calls.Add(next));
+
+        Assert.False(r.Done);
+        Assert.Equal(new[] { 1 }, calls);
+    }
+
+    [Fact]
     public void AllGroupsFitBudget_RunsAll_DoneTrue()
     {
         var groups = Groups(
