@@ -345,6 +345,24 @@ public class AssertionEngineTests
     }
 
     [Fact]
+    public void DateTime_OffsetExpected_InAmbiguousLocalHour_IsConvertedDirectlyToUtc()
+    {
+        // 2026-10-25T02:30:00+02:00 is 00:30Z. In W. Europe the wall clock 02:30 occurs twice
+        // that night (DST ends at 03:00 CEST). Parsing via RoundtripKind first converts to local
+        // time and then back, which picks standard time and lands on 01:30Z. The offset must be
+        // applied directly. On a host without such a transition the test passes either way.
+        var actual = new DateTime(2026, 10, 25, 0, 30, 0, DateTimeKind.Utc);
+        const string expected = "2026-10-25T02:30:00+02:00";
+
+        Assert.True(EvalOperator("Equals", actual, expected).Passed);
+        Assert.False(EvalOperator("GreaterThan", actual, expected).Passed);
+        Assert.False(EvalOperator("LessThan", actual, expected).Passed);
+        // String path of GreaterThan/LessThan (condition path, string actual).
+        Assert.False(EvalOperator("GreaterThan", "2026-10-25T00:30:00Z", expected).Passed);
+        Assert.False(EvalOperator("LessThan", "2026-10-25T00:30:00Z", expected).Passed);
+    }
+
+    [Fact]
     public void Equals_DateTime_UnparseableExpected_FallsBackToText()
     {
         // Not a date -> the previous O-format text comparison decides (and fails).

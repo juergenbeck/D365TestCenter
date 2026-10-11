@@ -179,7 +179,8 @@ Den Wert eines anderen Datensatzes übernimmst du per `RetrieveRecord` und
 und ist damit direkt als Erwartungswert verwendbar.
 
 `Contains`, `StartsWith` und `EndsWith` bleiben auf einem Datumsfeld Textvergleiche
-gegen die ISO-Form mit sieben Nachkommastellen und `Z`.
+gegen die ISO-Form des gelesenen Werts. Dataverse liefert Datumswerte in UTC, die Form
+lautet dann `2026-06-01T08:00:00.0000000Z` (sieben Nachkommastellen und `Z`).
 
 Bis Oktober 2026 verglichen `Equals`/`NotEquals` hier Text, und der Pack-Import kürzte
 `.0000000Z` beim Einlesen zu `Z`. Ein korrekter Wert scheiterte dadurch; ein Fenster
