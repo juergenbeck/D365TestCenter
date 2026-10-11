@@ -348,9 +348,10 @@ public class AssertionEngineTests
     public void DateTime_OffsetExpected_InAmbiguousLocalHour_IsConvertedDirectlyToUtc()
     {
         // 2026-10-25T02:30:00+02:00 is 00:30Z. In W. Europe the wall clock 02:30 occurs twice
-        // that night (DST ends at 03:00 CEST). Parsing via RoundtripKind first converts to local
-        // time and then back, which picks standard time and lands on 01:30Z. The offset must be
-        // applied directly. On a host without such a transition the test passes either way.
+        // that night (DST ends at 03:00 CEST). RoundtripKind converts the value to local time
+        // first; .NET keeps the ambiguous-DST flag on that local value, so ToUniversalTime
+        // returns 00:30Z and not 01:30Z (measured on net10.0 and .NET Framework 4.6.2). This
+        // test pins that behaviour. On a host without such a transition it passes either way.
         var actual = new DateTime(2026, 10, 25, 0, 30, 0, DateTimeKind.Utc);
         const string expected = "2026-10-25T02:30:00+02:00";
 
