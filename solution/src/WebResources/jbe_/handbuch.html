@@ -7770,9 +7770,10 @@ sicher unter <strong>90 Sekunden</strong>. Darüber wirst du
 unzuverlässig.</p>
 <h2 id="wenn-ein-chunk-aufgegeben-wird">Wenn ein Chunk aufgegeben
 wird</h2>
-<p>Läuft dieselbe Gruppe dreimal hintereinander ins harte Limit, ohne
-dass ein Ergebnis dazukommt, gibt die Wiederherstellung den Chunk auf
-(Umgebungsvariable <code>jbe_max_recoveries</code>, Standard 3). Dann
+<p>Läuft dieselbe Gruppe auch nach drei Wiederaufnahmen noch ins harte
+Limit, ohne dass ein Ergebnis dazukommt (also beim vierten Abbruch),
+gibt die Wiederherstellung den Chunk auf (Umgebungsvariable
+<code>jbe_max_recoveries</code>, Standard 3 Wiederaufnahmen). Dann
 gilt:</p>
 <ul>
 <li>Der Chunk steht auf <strong>Fehler</strong>.

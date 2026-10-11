@@ -61,7 +61,8 @@ Ein „X/X grün" ist erst dann ein Beweis, wenn vier Dinge stimmen (Betriebsreg
 4. **CLI-Pfad für Vollläufe**, nicht den Trigger-Teillauf (2-min-Sandbox-Limit; der Sync-Pfad liefert zudem
    keine Per-Test-Asserts, siehe 8c).
 5. **Laufstatus „Fehler“ heißt unvollständig** (ADR 2026-10-11 2041, Plugin ab 5.3.27): Hat die
-   Stale-Recovery einen Chunk aufgegeben (dieselbe Gruppe dreimal ins 2-Minuten-Limit), endet der Lauf mit
+   Stale-Recovery einen Chunk aufgegeben (dieselbe Gruppe auch nach `jbe_max_recoveries` = 3 Wiederaufnahmen ohne
+   Fortschritt, also beim vierten Abbruch im 2-Minuten-Limit), endet der Lauf mit
    Status 105710003 statt Abgeschlossen, das Summary beginnt mit „N Chunk(s) aufgegeben, Lauf
    unvollständig“, und jeder Test des Chunks ohne Ergebnis steht als Error-Ergebnis mit der Ursache da
    (`jbe_errordetails` des Chunks nennt Gruppen-Cursor und Testkennungen). Vorher endete so ein Lauf als

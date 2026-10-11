@@ -31,9 +31,10 @@ einzelner Test sollte unter **60 Sekunden** bleiben, sicher unter
 
 ## Wenn ein Chunk aufgegeben wird
 
-Läuft dieselbe Gruppe dreimal hintereinander ins harte Limit, ohne dass
-ein Ergebnis dazukommt, gibt die Wiederherstellung den Chunk auf
-(Umgebungsvariable `jbe_max_recoveries`, Standard 3). Dann gilt:
+Läuft dieselbe Gruppe auch nach drei Wiederaufnahmen noch ins harte
+Limit, ohne dass ein Ergebnis dazukommt (also beim vierten Abbruch),
+gibt die Wiederherstellung den Chunk auf (Umgebungsvariable
+`jbe_max_recoveries`, Standard 3 Wiederaufnahmen). Dann gilt:
 
 - Der Chunk steht auf **Fehler**. `jbe_errordetails` nennt die Gruppe,
   an der er hängt, und die Testkennungen des Chunks.
