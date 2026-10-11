@@ -12,7 +12,7 @@ Namen. Ohne Platzhalter könntest du nur statische Tests schreiben.
 | `{TIMESTAMP_MINUS_1H}` | Timestamp vor 1 Stunde |
 | `{TIMESTAMP_PLUS_1H}` | Timestamp in 1 Stunde |
 | `{alias.id}` | GUID eines per Alias registrierten Records |
-| `{alias.fields.xxx}` | Feldwert eines Alias-Records |
+| `{alias.fields.xxx}` | Feldwert eines Alias-Records (Datum als ISO-8601 `2026-10-11T15:34:33.0000000Z`, Zahlen mit Dezimalpunkt, unabhängig von der Spracheinstellung) |
 | `{RECORD:alias}` | Ebenfalls GUID, aber für `recordRef` und Filter-Werte |
 | `{GENERATED:firstname}` | Zufallsname mit "JBE Test"-Prefix |
 | `{GENERATED:lastname}` | Zufallsname |

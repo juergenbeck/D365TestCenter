@@ -70,7 +70,7 @@ erreicht wurde. Dieses Dokument erklärt alle Varianten von
 
 | Operator | Erklärung | Beispiel |
 |---|---|---|
-| `Equals` | Exakt gleich (trimmed) | `"operator": "Equals", "value": "Anna"` |
+| `Equals` | Exakt gleich (trimmed); Zahlen- und Datumsfelder siehe unten | `"operator": "Equals", "value": "Anna"` |
 | `NotEquals` | Ungleich | `"operator": "NotEquals", "value": ""` |
 | `Contains` | Teilstring enthalten | `"operator": "Contains", "value": "Test"` |
 | `StartsWith` | Beginnt mit | `"operator": "StartsWith", "value": "JBE"` |
@@ -153,7 +153,39 @@ Beispiele:
 
 | Operator | Erklärung |
 |---|---|
+| `Equals` | Gleicher Zeitpunkt, unabhängig von der Schreibweise |
+| `NotEquals` | Anderer Zeitpunkt |
+| `GreaterThan` / `LessThan` | Später / früher als |
 | `DateSetRecently` | Feld wurde in den letzten X Sekunden gesetzt, `value` ist die Sekundenzahl |
+
+Auf einem Datumsfeld vergleichen `Equals` und `NotEquals` **Zeitpunkte, keinen Text**.
+Der erwartete Wert wird als ISO-8601 gelesen, beide Seiten werden auf UTC normalisiert.
+Damit sind `"2026-06-01T08:00:00Z"`, `"2026-06-01T08:00:00.0000000Z"` und
+`"2026-06-01T10:00:00+02:00"` derselbe erwartete Wert. Ein Wert ohne Zonenangabe
+(`"2026-06-01T08:00:00"`) gilt als UTC, genau wie bei `GreaterThan` und `LessThan`.
+Lässt sich der erwartete Wert nicht als Datum lesen, vergleicht der Operator wie früher
+den Text der ISO-Form (`2026-06-01T08:00:00.0000000Z`).
+
+```json
+{ "action": "Assert", "target": "Record", "recordRef": "{RECORD:appt}",
+  "field":    "scheduledstart",
+  "operator": "Equals",
+  "value":    "2026-06-01T08:00:00Z"
+}
+```
+
+Den Wert eines anderen Datensatzes übernimmst du per `RetrieveRecord` und
+`{alias.fields.<feld>}`; der Platzhalter liefert ein Datum immer in der ISO-Form
+und ist damit direkt als Erwartungswert verwendbar.
+
+`Contains`, `StartsWith` und `EndsWith` bleiben auf einem Datumsfeld Textvergleiche
+gegen die ISO-Form mit sieben Nachkommastellen und `Z`.
+
+Bis Oktober 2026 verglichen `Equals`/`NotEquals` hier Text, und der Pack-Import kürzte
+`.0000000Z` beim Einlesen zu `Z`. Ein korrekter Wert scheiterte dadurch; ein Fenster
+aus `GreaterThan` und `LessThan` war der Ausweg. Mit dem aktuellen Stand ist es nicht
+mehr nötig. Im Plugin-Pfad (Ausführung in Dataverse) wirkt der neue Vergleich erst mit
+einer Plugin-Version, die ihn enthält.
 
 ```json
 { "action": "Assert", "target": "Record", "recordRef": "{RECORD:opp}",

@@ -257,6 +257,13 @@ Assert ist eine Action wie jede andere. Sie steht irgendwo in der `steps`-Liste,
     `"1000"`. **Pack-Werte invariant mit Dezimal-Punkt schreiben** (`"1234.56"`, nicht `"1234,56"`); der Vergleich ist
     kulturunabhängig (FB-52, vorher brach jeder Money-Equals mit Nachkommaanteil unter de-DE/de-CH). String-actuals
     (Text-Felder, Condition-Pfad) bleiben bewusst textuell -- `"00123"` ist nicht `"123"`.
+    **DateTime:** native DateTime-Werte vergleichen als Zeitpunkt: Erwartungswert per `DateTime.TryParse`
+    (InvariantCulture, RoundtripKind), beide Seiten über `NormalizeToUtc`. `...08:00:00Z`, `...08:00:00.0000000Z` und
+    `...10:00:00+02:00` matchen denselben Wert; ohne Zonenangabe gilt UTC. Nicht parsebarer Erwartungswert: Textvergleich
+    gegen die O-Form. Vorher reiner O-Textvergleich, und der Pack-Weg (build-pack, import-pack) kürzte `.0000000Z` per
+    Json.NET-Datumserkennung zu `Z`; beides behoben, Pack-Weg liest seitdem mit `DateParseHandling.None`
+    (`VerbatimJson`). `{alias.fields.x}` liefert DateTime als O-Form und Zahlen invariant (vorher `ToString()`,
+    unter de-DE `11.10.2026 15:34:33`).
   - `Contains`, `StartsWith`, `EndsWith`: String-Vergleich, case-insensitiv; numerische Felder werden invariant
     (Dezimal-Punkt) als String extrahiert.
   - Null: `IsNull`, `IsNotNull`.

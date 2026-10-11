@@ -100,7 +100,7 @@ public static class PackBuilder
         JObject block;
         try
         {
-            block = JObject.Parse(jsonBlock);
+            block = VerbatimJson.ParseObject(jsonBlock);
         }
         catch (Exception ex)
         {

@@ -149,6 +149,35 @@ public class PlaceholderEngineTests
         Assert.Equal("MaxTest", result);
     }
 
+    [Fact]
+    public void Resolve_AliasFields_DateTimeAndMoney_AreCultureInvariant()
+    {
+        // Regression: {alias.fields.x} used val.ToString(), so a DateTime resolved to
+        // "11.10.2026 15:34:33" under de-DE and could no longer serve as an expected instant.
+        var original = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+            var ctx = CreateContext();
+            var entity = new Entity("contact", Guid.NewGuid());
+            var modified = new DateTime(2026, 10, 11, 15, 34, 33, DateTimeKind.Utc);
+            entity["modifiedon"] = modified;
+            entity["revenue"] = new Money(1000.5m);
+            entity["donotemail"] = true;
+            ctx.Records["con"] = ("contact", entity.Id);
+            ctx.FoundRecords["con"] = entity;
+
+            Assert.Equal("2026-10-11T15:34:33.0000000Z", _engine.Resolve("{con.fields.modifiedon}", ctx));
+            Assert.Equal("1000.5", _engine.Resolve("{con.fields.revenue}", ctx));
+            // bool keeps its previous spelling for {alias.fields.x}.
+            Assert.Equal("True", _engine.Resolve("{con.fields.donotemail}", ctx));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = original;
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     //  {RESULT:alias.field} - Feldwert aus FoundRecords
     // ═══════════════════════════════════════════════════════════════════

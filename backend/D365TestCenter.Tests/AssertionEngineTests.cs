@@ -297,6 +297,69 @@ public class AssertionEngineTests
         Assert.False(EvalOperator("LessThan", actual, expected).Passed);
     }
 
+    // -- Equals/NotEquals on native DateTime: compared as an instant, not as O-format text --
+
+    private static readonly DateTime InstantUtc = new(2026, 6, 1, 8, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>The same instant as <see cref="InstantUtc"/> in each DateTimeKind.</summary>
+    private static DateTime InstantAs(DateTimeKind kind) => kind switch
+    {
+        DateTimeKind.Utc => InstantUtc,
+        // Dataverse semantics: Unspecified carries the UTC wall clock (FB-44).
+        DateTimeKind.Unspecified => DateTime.SpecifyKind(InstantUtc, DateTimeKind.Unspecified),
+        _ => InstantUtc.ToLocalTime()
+    };
+
+    [Theory]
+    [InlineData(DateTimeKind.Utc, "2026-06-01T08:00:00.0000000Z")]
+    [InlineData(DateTimeKind.Utc, "2026-06-01T08:00:00Z")]
+    [InlineData(DateTimeKind.Utc, "2026-06-01T10:00:00+02:00")]
+    [InlineData(DateTimeKind.Utc, "2026-06-01T08:00:00")]
+    [InlineData(DateTimeKind.Unspecified, "2026-06-01T08:00:00.0000000Z")]
+    [InlineData(DateTimeKind.Unspecified, "2026-06-01T08:00:00Z")]
+    [InlineData(DateTimeKind.Unspecified, "2026-06-01T10:00:00+02:00")]
+    [InlineData(DateTimeKind.Local, "2026-06-01T08:00:00.0000000Z")]
+    [InlineData(DateTimeKind.Local, "2026-06-01T08:00:00Z")]
+    [InlineData(DateTimeKind.Local, "2026-06-01T10:00:00+02:00")]
+    public void Equals_DateTime_SameInstant_Passes_NotEquals_Fails(DateTimeKind kind, string expected)
+    {
+        // Regression: Equals compared ExtractString(actual) = ToString("O") as text, so
+        // "...08:00:00Z" against "...08:00:00.0000000Z" failed although the value was right.
+        var actual = InstantAs(kind);
+
+        Assert.True(EvalOperator("Equals", actual, expected).Passed);
+        Assert.False(EvalOperator("NotEquals", actual, expected).Passed);
+    }
+
+    [Theory]
+    [InlineData(DateTimeKind.Utc)]
+    [InlineData(DateTimeKind.Unspecified)]
+    [InlineData(DateTimeKind.Local)]
+    public void Equals_DateTime_DifferentInstant_Fails_NotEquals_Passes(DateTimeKind kind)
+    {
+        var actual = InstantAs(kind);
+        const string oneSecondLater = "2026-06-01T08:00:01Z";
+
+        Assert.False(EvalOperator("Equals", actual, oneSecondLater).Passed);
+        Assert.True(EvalOperator("NotEquals", actual, oneSecondLater).Passed);
+    }
+
+    [Fact]
+    public void Equals_DateTime_UnparseableExpected_FallsBackToText()
+    {
+        // Not a date -> the previous O-format text comparison decides (and fails).
+        Assert.False(EvalOperator("Equals", InstantUtc, "gestern").Passed);
+        // Text path still works for the exact O form.
+        Assert.True(EvalOperator("Equals", InstantUtc, InstantUtc.ToString("O")).Passed);
+    }
+
+    [Fact]
+    public void Equals_StringActualLookingLikeDate_StaysTextual()
+    {
+        // String actuals (text fields, condition path) are not interpreted as instants.
+        Assert.False(EvalOperator("Equals", "2026-06-01T08:00:00Z", "2026-06-01T08:00:00.0000000Z").Passed);
+    }
+
     [Fact]
     public void DateSetRecently_RecentDate_Passes()
     {

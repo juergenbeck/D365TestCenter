@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Xrm.Sdk;
@@ -137,10 +138,13 @@ public sealed class PlaceholderEngine
             {
                 if (entity.Contains(field))
                 {
+                    // Kulturunabhängig wie {alias.outputs.x} und {RESULT:...}: ein
+                    // DateTime per ToString() ergab unter de-DE "11.10.2026 15:34:33",
+                    // auf dem Plugin-Server eine andere Form, und war als Erwartungswert
+                    // nicht mehr als Zeitpunkt lesbar. bool bleibt "True"/"False" wie bisher.
                     var val = entity[field];
-                    if (val is EntityReference er) return er.Id.ToString();
-                    if (val is OptionSetValue osv) return osv.Value.ToString();
-                    return val?.ToString() ?? "";
+                    if (val is bool b) return b.ToString();
+                    return FormatValueForPlaceholder(val);
                 }
                 throw new InvalidOperationException(
                     $"Platzhalter '{m.Value}': Feld '{field}' nicht im geladenen Record '{alias}'. " +
@@ -256,15 +260,21 @@ public sealed class PlaceholderEngine
         }
     }
 
+    /// <summary>
+    /// Formatiert einen nativen Dataverse-Wert für einen Platzhalter. Kulturunabhängig
+    /// (InvariantCulture, DateTime als ISO-O), weil der Wert als Maschinenwert weiterläuft
+    /// (Erwartungswert eines Asserts, Feldwert eines Steps) und die Culture des Aufrufers
+    /// (CLI, Plugin-Server) nicht kontrollierbar ist.
+    /// </summary>
     private static string FormatValueForPlaceholder(object? value)
     {
         if (value == null) return "";
         if (value is string s) return s;
-        if (value is OptionSetValue osv) return osv.Value.ToString();
+        if (value is OptionSetValue osv) return osv.Value.ToString(CultureInfo.InvariantCulture);
         if (value is EntityReference er) return er.Id.ToString();
-        if (value is DateTime dt) return dt.ToString("O");
-        if (value is Money m) return m.Value.ToString();
+        if (value is DateTime dt) return dt.ToString("O", CultureInfo.InvariantCulture);
+        if (value is Money m) return m.Value.ToString(CultureInfo.InvariantCulture);
         if (value is bool b) return b.ToString().ToLowerInvariant();
-        return value.ToString() ?? "";
+        return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
     }
 }

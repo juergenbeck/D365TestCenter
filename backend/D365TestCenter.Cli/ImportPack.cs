@@ -36,7 +36,7 @@ public static class ImportPack
     /// <summary>Reads the pack file and returns its test-case objects. Pure (IO only).</summary>
     public static List<JObject> LoadTestCases(string packFile)
     {
-        var root = JObject.Parse(File.ReadAllText(packFile));
+        var root = VerbatimJson.ParseObject(File.ReadAllText(packFile));
         return (root["testCases"] as JArray)?.OfType<JObject>().Select(o => o).ToList()
                ?? new List<JObject>();
     }

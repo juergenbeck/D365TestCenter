@@ -154,8 +154,9 @@ public static class ValueComparator
     }
 
     /// <summary>
-    /// Gleichheitsvergleich: extrahiert den Actualwert als String und vergleicht
-    /// getrimmt, case-insensitiv. Leerer Erwartungswert matcht Whitespace-Actual.
+    /// Gleichheitsvergleich: native Zahlen numerisch, native DateTime-Werte als
+    /// UTC-normalisierter Zeitpunkt, sonst extrahiert er den Actualwert als String und
+    /// vergleicht getrimmt, case-insensitiv. Leerer Erwartungswert matcht Whitespace-Actual.
     /// Boolean wird über ExtractString zu "True"/"False" -- der case-insensitive
     /// Vergleich matcht daher auch gegen "true"/"false" (ADR-0011 Korrektur 2).
     /// </summary>
@@ -174,6 +175,20 @@ public static class ValueComparator
             && decimal.TryParse(expected, NumberStyles.Any, CultureInfo.InvariantCulture, out var expectedNum))
         {
             return actualNum == expectedNum;
+        }
+
+        // Zeitpunkt-Gleichheit für native DateTime-Werte: dieselbe Semantik wie
+        // TryCompareOrdered (GreaterThan/LessThan). Ein reiner O-Format-Textvergleich
+        // scheitert an jeder anderen gültigen Schreibweise desselben Zeitpunkts
+        // ("...08:00:00Z" vs "...08:00:00.0000000Z", Offset statt Z) und am Kind des
+        // Istwerts (Unspecified ohne Z, Local mit Offset). Beide Seiten laufen über
+        // NormalizeToUtc; ein Erwartungswert ohne Zonenangabe gilt damit als UTC.
+        // String-actuals bleiben textuell (analog zur Zahlenregel oben).
+        if (expected != null
+            && actual is DateTime actualDt
+            && DateTime.TryParse(expected.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expectedDt))
+        {
+            return NormalizeToUtc(actualDt) == NormalizeToUtc(expectedDt);
         }
 
         var actualStr = ExtractString(actual);

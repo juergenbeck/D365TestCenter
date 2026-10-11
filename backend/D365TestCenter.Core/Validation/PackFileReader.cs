@@ -53,7 +53,7 @@ public static class PackFileReader
     /// <summary>Reads pack JSON and returns its test cases. Never returns null.</summary>
     public static List<TestCase> Read(string json)
     {
-        var root = JToken.Parse(json);
+        var root = VerbatimJson.ParseToken(json);
 
         if (root is JArray topArray) return ReadEntries(topArray);
 
@@ -133,7 +133,7 @@ public static class PackFileReader
             case JValue { Type: JTokenType.String } v:
                 var raw = v.Value<string>();
                 if (string.IsNullOrWhiteSpace(raw) || !raw!.TrimStart().StartsWith("{")) return null;
-                try { return JObject.Parse(raw); }
+                try { return VerbatimJson.ParseObject(raw); }
                 catch (JsonException) { return null; }
             default:
                 return null;

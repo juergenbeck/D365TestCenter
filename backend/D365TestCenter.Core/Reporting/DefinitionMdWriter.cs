@@ -85,7 +85,7 @@ public static class DefinitionMdWriter
         if (raw.Length == 0) return "{}";
         try
         {
-            var src = JObject.Parse(raw);
+            var src = VerbatimJson.ParseObject(raw);
             var testId = src.Value<string>("testId") ?? src.Value<string>("id");
 
             var obj = new JObject();
