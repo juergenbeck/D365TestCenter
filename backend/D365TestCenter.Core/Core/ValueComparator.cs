@@ -89,8 +89,9 @@ public static class ValueComparator
     }
 
     /// <summary>
-    /// Normalisiert einen DateTime auf UTC. Dataverse liefert Zeitwerte mit
-    /// Kind=Unspecified; diese sind bereits UTC und dürfen NICHT über
+    /// Normalisiert einen DateTime auf UTC. Werte mit Kind=Unspecified tragen bei
+    /// Dataverse die UTC-Uhrzeit (über ServiceClient.Retrieve kommt Kind=Utc an,
+    /// gemessen 11.10.2026; Unspecified entsteht etwa aus ISO-Text ohne Zone) und dürfen NICHT über
     /// ToUniversalTime() laufen, das sie als Lokalzeit interpretiert und den
     /// Offset abzieht (beobachtet als +7200s-Drift in CEST, FB-44). Nur echte
     /// Local-Werte werden umgerechnet. Einzige Quelle für alle zeitbasierten

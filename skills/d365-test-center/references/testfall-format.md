@@ -673,10 +673,11 @@ Anwendung im Handbuch: `docs/handbuch/02-testfall-schreiben/09-negative-path.md`
 **Platzhalter-Auflösung: verifiziertes Engine-Verhalten (S43, `PlaceholderEngine.cs`).** Zwei
 Fallstricke, die bei `condition`-/Assert-Vergleichen auf gelesene Feldwerte zählen:
 
-- **Boolean-Format hängt vom Platzhalter-Pfad ab.** `{alias.fields.<feld>}` formatiert einen Boolean
-  über `val.ToString()` zu **`"True"`/`"False"` (Großschreibung)** -- NICHT lowercase. Nur
-  `{alias.outputs.x}` und `{RESULT:alias.field}` laufen über `FormatValueForPlaceholder` und liefern
-  `"true"`/`"false"`. OptionSetValue wird zur Zahl, EntityReference zur GUID (beide Pfade). Konsequenz:
+- **Boolean-Format hängt vom Platzhalter-Pfad ab.** Alle drei Pfade (`{alias.fields.<feld>}`,
+  `{alias.outputs.x}`, `{RESULT:alias.field}`) formatieren über `FormatValueForPlaceholder`
+  kulturunabhängig (DateTime als O-Form, Zahlen mit Dezimalpunkt, OptionSetValue als Zahl,
+  EntityReference als GUID). Einzige Ausnahme ist Boolean: `{alias.fields.<feld>}` liefert
+  **`"True"`/`"False"` (Großschreibung)**, die beiden anderen `"true"`/`"false"`. Konsequenz:
   Vergleiche auf gelesene Boolean-Felder **müssen case-insensitiv** sein (die Assert-Operatoren
   `Equals`/`NotEquals` sind es). Ein case-sensitiver Eigenvergleich gegen `"true"` schlägt fehl.
 - **Unbekannter Alias wirft NICHT, er bleibt wörtlich stehen.** `{xyz.fields.f}` mit unbekanntem Alias
