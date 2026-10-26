@@ -1,23 +1,16 @@
 ---
 name: d365-test-center
 description: >-
-  D365 Test Center: Integrationstest-Framework für Dynamics 365 / Dataverse. Single-Page Web Resource plus
-  C#-Core-Engine (ADR-0003 Single-Engine) mit drei Aufrufern (CRUD-Plugin, Custom API, CLI); ein Testfall ist
-  seit ADR-0004 eine geordnete Action-Liste (Assert ist eine Action). USE FOR: D365TestCenter, Integration
-  Test Center, jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep, Testfall-JSON, steps,
-  Assert-Action, target Record, target Query, recordRef, CreateRecord, UpdateRecord, DeleteRecord, Wait,
-  ExecuteAction, ExecuteRequest, RetrieveRecord, WaitForRecord, WaitForFieldValue, WaitForNotExists,
-  TrackRecord, onError continue, onError stop, condition, GENERATED, TIMESTAMP, alias.outputs, outputAlias,
-  Governance-Polling, waitForAsync, Pack-System, manifest.json, CONFIG.governance, AssertionEngine, Equals,
-  IsNull, DateSetRecently, RecordCount, FindRecord, expectException, messageContains, errorCode,
-  SetEnvironmentVariable, Negative-Path-Test, QualifyLead, SetState, Single-File, d365testcenter.html,
-  BrowserAction, UI-Test, Playwright, evidence-dir, evidence-report, Testdokumentation, docSteps, docStep,
-  caption, highlightFields, hideOverlays, hideSelectors, frameFallback, Belegbild, ADR-0003, ADR-0004,
-  ADR-0006, D365TestCenter.Core, D365TestCenter.Cli, D365TestCenter.CrmPlugin, RunTestsOnStatusChange,
-  jbe_RunIntegrationTests, jbe_fulllog, sync-docs, sync-results, report, sync-zephyr, build-pack,
-  import-pack, inventory. DO NOT USE FOR: Dataverse Web API per PowerShell (use dataverse-web-api), C#
-  Plugins allgemein (use dataverse-plugin-development), Xrm.WebApi Form Scripts (use webresources),
-  Deployment per pac CLI allgemein (use deployment-alm), Jira- und Zephyr-Pflege (use jira-zephyr-scale).
+  D365 Test Center: Integrationstest-Framework für Dynamics 365 / Dataverse. Single-Page Web Resource
+  plus C#-Core-Engine (ADR-0003 Single-Engine) mit drei Aufrufern (CRUD-Plugin, Custom API, CLI); ein
+  Testfall ist seit ADR-0004 eine geordnete Action-Liste (Assert ist eine Action). USE FOR:
+  D365TestCenter, Integration Test Center, jbe_testcase, jbe_testrun, Testfall-JSON, Assert-Action,
+  WaitForRecord, Pack-System, manifest.json, AssertionEngine, expectException, Negative-Path-Test,
+  d365testcenter.html, BrowserAction, UI-Test, Playwright, evidence-report, Testdokumentation,
+  Belegbild, D365TestCenter.Cli, sync-zephyr, build-pack, import-pack. DO NOT USE FOR: Dataverse Web
+  API per PowerShell (use dataverse-web-api), C# Plugins allgemein (use dataverse-plugin-development),
+  Xrm.WebApi Form Scripts (use webresources), Deployment per pac CLI allgemein (use deployment-alm),
+  Jira- und Zephyr-Pflege (use jira-zephyr-scale).
 ---
 
 # D365 Test Center
@@ -126,3 +119,9 @@ Im Produkt-Repo: `docs/08_cli-referenz.md` (Kommandos und Schalter), `docs/09_do
 (Doku-Lebenszyklus, Testdokumentation), `docs/handbuch/02-testfall-schreiben/02-actions-referenz.md`
 (Actions mit allen Feldern), `docs/05_deployment-handbuch.md`. Öffentlich:
 `https://github.com/juergenbeck/D365TestCenter`.
+
+## Vollständige Auslöser-Liste
+
+Diese Fassung stand bis zum 26.10.2026 als Beschreibung im Frontmatter. Anthropics Skill-Guide begrenzt die Beschreibung auf 1024 Zeichen, deshalb steht sie jetzt wörtlich hier (claudecode ADR-2026-10-26-230008).
+
+D365 Test Center: Integrationstest-Framework für Dynamics 365 / Dataverse. Single-Page Web Resource plus C#-Core-Engine (ADR-0003 Single-Engine) mit drei Aufrufern (CRUD-Plugin, Custom API, CLI); ein Testfall ist seit ADR-0004 eine geordnete Action-Liste (Assert ist eine Action). USE FOR: D365TestCenter, Integration Test Center, jbe_testcase, jbe_testrun, jbe_testrunresult, jbe_teststep, Testfall-JSON, steps, Assert-Action, target Record, target Query, recordRef, CreateRecord, UpdateRecord, DeleteRecord, Wait, ExecuteAction, ExecuteRequest, RetrieveRecord, WaitForRecord, WaitForFieldValue, WaitForNotExists, TrackRecord, onError continue, onError stop, condition, GENERATED, TIMESTAMP, alias.outputs, outputAlias, Governance-Polling, waitForAsync, Pack-System, manifest.json, CONFIG.governance, AssertionEngine, Equals, IsNull, DateSetRecently, RecordCount, FindRecord, expectException, messageContains, errorCode, SetEnvironmentVariable, Negative-Path-Test, QualifyLead, SetState, Single-File, d365testcenter.html, BrowserAction, UI-Test, Playwright, evidence-dir, evidence-report, Testdokumentation, docSteps, docStep, caption, highlightFields, hideOverlays, hideSelectors, frameFallback, Belegbild, ADR-0003, ADR-0004, ADR-0006, D365TestCenter.Core, D365TestCenter.Cli, D365TestCenter.CrmPlugin, RunTestsOnStatusChange, jbe_RunIntegrationTests, jbe_fulllog, sync-docs, sync-results, report, sync-zephyr, build-pack, import-pack, inventory. DO NOT USE FOR: Dataverse Web API per PowerShell (use dataverse-web-api), C# Plugins allgemein (use dataverse-plugin-development), Xrm.WebApi Form Scripts (use webresources), Deployment per pac CLI allgemein (use deployment-alm), Jira- und Zephyr-Pflege (use jira-zephyr-scale).
