@@ -418,6 +418,7 @@ Legacy-Verben `CallCustomApi` und `ExecuteAction` werden als Aliasse durchgereic
 | Entity | `{ "$type": "Entity", "entity": "<logicalname>", "fields": { ... } }` | New entity; optional `ref` or `id` targets an existing record |
 | EntityCollection | `{ "$type": "EntityCollection", "entities": [ ... ] }` | Z.B. activityparty-Partylists (`requiredattendees`) |
 | PrincipalAccess | `{ "$type": "PrincipalAccess", "principal": { "$type": "EntityReference", ... }, "accessMask": "<AccessRights-Komma-Flags>" }` | Für `GrantAccess`/`ModifyAccess` (Record-Sharing) |
+| ColumnSet | `{ "$type": "ColumnSet", "columns": ["<spalte>", ...] }` oder `{ "$type": "ColumnSet", "allColumns": true }` | Pflichtparameter z.B. von `GenerateQuoteFromOpportunity`, `ConvertQuoteToSalesOrder` |
 
 **Entity identity for xMultiple requests:** An Entity without `ref` or `id` keeps
 `Guid.Empty` and is suitable for `CreateMultiple`. For `UpdateMultiple`, set exactly one
@@ -462,6 +463,23 @@ zwei EntityReferences `Target` + `Revokee`):
   `None`, `ReadAccess`, `WriteAccess`, `AppendAccess`, `AppendToAccess`, `CreateAccess`,
   `DeleteAccess`, `ShareAccess`, `AssignAccess`. Ungültige Werte brechen den Step mit
   einer Fehlermeldung ab, die die erlaubten Flags auflistet.
+
+**ColumnSet im Detail** (für Plattformnachrichten mit Pflichtparameter `ColumnSet`):
+
+```json
+{ "stepNumber": 2, "action": "ExecuteRequest",
+  "requestName": "GenerateQuoteFromOpportunity",
+  "fields": {
+    "OpportunityId": { "$type": "Guid", "ref": "opp" },
+    "ColumnSet":     { "$type": "ColumnSet", "columns": ["quoteid", "name"] }
+  }
+}
+```
+
+- Entweder `columns` als nicht leeres Array logischer Spaltennamen (Platzhalter erlaubt) oder
+  `allColumns: true` ohne `columns`. Beides zusammen, ein leeres Array, ein leerer Name oder
+  `allColumns: false` ohne `columns` brechen den Step vor dem Absenden mit einer Fehlermeldung ab.
+- `ConvertQuoteToSalesOrder` nutzt dieselbe Form (`QuoteId` als `$type Guid` plus `ColumnSet`).
 
 **Häufige SDK-Messages:**
 

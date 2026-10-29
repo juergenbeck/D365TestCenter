@@ -1583,9 +1583,10 @@ public sealed class TestRunner
                 "ENTITY" => ResolveEntityParam(obj, ctx),
                 "ENTITYCOLLECTION" => ResolveEntityCollectionParam(obj, ctx),
                 "PRINCIPALACCESS" => ResolvePrincipalAccessParam(obj, ctx),
+                "COLUMNSET" => ResolveColumnSetParam(obj, ctx),
                 _ => throw new InvalidOperationException(
                     $"Unbekannter $type: '{typeName}'. " +
-                    $"Erlaubt: EntityReference, Guid, GuidArray, OptionSetValue, Money, Entity, EntityCollection, PrincipalAccess")
+                    $"Erlaubt: EntityReference, Guid, GuidArray, OptionSetValue, Money, Entity, EntityCollection, PrincipalAccess, ColumnSet")
             };
         }
 
@@ -1690,6 +1691,41 @@ public sealed class TestRunner
     /// "accessMask" sind AccessRights-Komma-Flags (case-insensitiv, Platzhalter
     /// erlaubt). netstandard2.0: nicht-generisches Enum.Parse.
     /// </summary>
+    /// <summary>
+    /// $type ColumnSet: entweder "allColumns": true (ohne "columns") oder eine nicht leere
+    /// "columns"-Liste logischer Spaltennamen (Platzhalter erlaubt). Pflichtparameter z.B. von
+    /// GenerateQuoteFromOpportunity und ConvertQuoteToSalesOrder.
+    /// </summary>
+    private ColumnSet ResolveColumnSetParam(JObject obj, TestContext ctx)
+    {
+        var allColumns = obj["allColumns"]?.Value<bool>() ?? false;
+        var columnsToken = obj["columns"];
+
+        if (allColumns)
+        {
+            if (columnsToken != null)
+                throw new InvalidOperationException(
+                    "ColumnSet: 'allColumns': true und 'columns' schließen sich aus.");
+            return new ColumnSet(true);
+        }
+
+        if (columnsToken is not JArray columnsArray || columnsArray.Count == 0)
+            throw new InvalidOperationException(
+                "ColumnSet braucht 'columns' (nicht leeres Array von Spaltennamen) oder 'allColumns': true.");
+
+        var columns = new List<string>();
+        foreach (var item in columnsArray)
+        {
+            var raw = item.Type == JTokenType.String ? item.Value<string>() : null;
+            var name = raw == null ? null : _placeholderEngine.Resolve(raw, ctx);
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidOperationException(
+                    "ColumnSet: jeder Eintrag in 'columns' muss ein nicht leerer Spaltenname sein.");
+            columns.Add(name!);
+        }
+        return new ColumnSet(columns.ToArray());
+    }
+
     private PrincipalAccess ResolvePrincipalAccessParam(JObject obj, TestContext ctx)
     {
         if (obj["principal"] is not JObject principalObj)

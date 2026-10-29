@@ -789,6 +789,25 @@ Seit ADR-2026-07-23 (Backlog O) kennt das `$type`-System
 - Core-only-Feature: CLI sofort, Plugin-/Worker-Pfad erst nach Plugin-Deploy mit
   Core >= Commit vom 2026-07-23.
 
+**Plattformnachrichten mit Pflichtparameter `ColumnSet`** (`GenerateQuoteFromOpportunity`,
+`ConvertQuoteToSalesOrder` und ähnliche): Seit 29.10.2026 kennt das `$type`-System `ColumnSet`.
+
+```json
+{ "stepNumber": 2, "action": "ExecuteRequest", "requestName": "ConvertQuoteToSalesOrder",
+  "fields": {
+    "QuoteId":   { "$type": "Guid", "ref": "quote" },
+    "ColumnSet": { "$type": "ColumnSet", "columns": ["salesorderid"] }
+  } }
+```
+
+- `columns` = nicht leeres Array von Spaltennamen (Platzhalter erlaubt) **oder**
+  `allColumns: true` ohne `columns`. Beides zusammen, leeres Array, leerer Name oder
+  `allColumns: false` ohne `columns` = Step-Error vor dem Absenden.
+- Vorher wies die Engine `ColumnSet` als unbekannten `$type` ab; ein Pack mit diesen
+  Nachrichten war damit nicht baubar.
+- Core-only-Feature: CLI sofort, Plugin-/Worker-Pfad erst nach Plugin-Deploy mit
+  Core >= Commit vom 2026-10-29.
+
 ### 3.6 Vollständiges Beispiel
 
 ```json
